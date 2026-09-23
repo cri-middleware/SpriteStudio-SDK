@@ -5793,9 +5793,8 @@ mod tests {
     }
 
     /// Drives an independent instance child for `ticks` one-frame steps and
-    /// returns how many of them reported `child_looped`. Mirrors the host loop
-    /// documented in `docs/40_components/10_instance.ja.md`: `play()` on the
-    /// transition edge, then `step` once per frame.
+    /// returns how many of them reported `child_looped`. Mirrors a Player's host
+    /// loop: `play()` on the transition edge, then `step` once per frame.
     fn count_independent_child_loops(ev: crate::types::ss_event_instance_info, ticks: usize) -> usize {
         let ssab = load_ringo_resource();
         let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");

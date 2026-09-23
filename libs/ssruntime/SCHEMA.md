@@ -92,13 +92,13 @@ Complex attributes are stored in pools within `FrameData` to avoid duplicating l
 
 ## Draw Plan: Order, Batches, Mask Slice
 
-`FrameData` carries not just per-part state but also a **cross-engine draw plan**: a stable, pre-sorted ordering of parts plus a contiguous batch list that the Player walks once per frame. This is the "DrawBatch contract"; the [Batched Rendering Contract](./docs/30_core/30_render_loop.md) is the reference for consuming it.
+`FrameData` carries not just per-part state but also a **cross-engine draw plan**: a stable, pre-sorted ordering of parts plus a contiguous batch list that the Player walks once per frame. This is the "DrawBatch contract"; the [Batched Rendering Contract](./docs/30_core/40_render_loop.md) is the reference for consuming it.
 
 | FrameData Field | Type | Description |
 |:---|:---|:---|
 | `draw_order` | `[ushort]` (required) | Parts ordered for rendering. Each value is an **index into `FrameData.parts`** (not `part_index`). Parts that are hidden, masked-out, or otherwise non-drawable are not included. |
 | `draw_batches` | `[DrawBatch]` (required) | Pre-merged draw commands. Each batch covers a contiguous slice of `draw_order` whose entries share the same renderable kind, blend mode, and texture. The Player issues one draw call per batch. |
-| `mask_indices` | `[ushort]` (required) | Indices into `FrameData.parts` for the frame's **pure-mask** parts (`PartTypeMask` and `draw_as_mask`), in the same order as `draw_order`. **Not the writer list**: it excludes clipping (`mask_write`) and does not drop masks with `Hide == true`, so it does not agree with `draw_order`. Settle the writers by walking `draw_order` — see [Mask implementation §3-3](./docs/40_components/40_mask.md#3-3-common-notes). |
+| `mask_indices` | `[ushort]` (required) | Indices into `FrameData.parts` for the frame's **pure-mask** parts (`PartTypeMask` and `draw_as_mask`), in the same order as `draw_order`. **Not the writer list**: it excludes clipping (`mask_write`) and does not drop masks with `Hide == true`, so it does not agree with `draw_order`. Settle the writers by walking `draw_order` — see [Mask §3](./docs/40_parts/40_mask.md#3-what-to-read-from-framedata). |
 
 ### `DrawBatch`
 
@@ -111,9 +111,9 @@ Inline `struct` (fixed-size, no vtable) keyed by position in `draw_batches`:
 | `texture_hash` | uint32 | fnv1a hash of the texture the batch binds — normally `cellmap_name_hash` (the cellmap name without `.ssce`), but the texture *name* hash of an authored `TextureChange` (`TCHG`) when one overrides the parts in this slice. A TCHG override participates in the batch key, so parts sharing a cellmap but bound to different textures are split into separate batches. Players must resolve both hash spaces: cellmap names and `external_textures` entries (every TCHG texture name is guaranteed present there). `0` if the kind does not need a texture (e.g. `Shape`). |
 | `vertex_count` | ushort | Total vertex count contributed by all parts in this batch (sum across the slice). |
 | `index_count` | ushort | Total index count contributed by all parts in this batch. |
-| `blend_type` | BlendType | Shared blend mode for the slice — matches the parts' `part_color.blend_type`. |
+| `blend_type` | BlendType | Shared framebuffer blend mode for the slice, from the ssab's `PartData.blend_type`. Not the parts color `blend_type`, which blends with the texture. |
 | `kind` | DrawBatchKind | Renderable category (see below). Determines which geometry / data the Player should fetch for parts in the slice. |
-| `flags` | ubyte | Per-batch flag bits. Currently defined: bit `0x01` = `MASK_INFLUENCE` (parts in this slice are masked by the active mask slice). Remaining bits are reserved — unrecognised bits should be ignored. See the [Batched Rendering Contract](./docs/30_core/30_render_loop.md) for the full contract. |
+| `flags` | ubyte | Per-batch flag bits. Currently defined: bit `0x01` = `MASK_INFLUENCE` (parts in this slice are masked by the active mask slice). Remaining bits are reserved — unrecognised bits should be ignored. See the [Batched Rendering Contract](./docs/30_core/40_render_loop.md) for the full contract. |
 
 ### `DrawBatchKind`
 
@@ -125,7 +125,7 @@ Inline `struct` (fixed-size, no vtable) keyed by position in `draw_batches`:
 | `Effect` | Particle quads from the matching `EffectSlot` (see `effect_draw_plan.fbs`). |
 | `Mesh` | Indexed mesh with bone-skinned vertices using `PartMeshBinding`. |
 | `Text` | A text part's slot in the draw order — one part per batch, with no geometry (`vertex_count` / `index_count` are `0`) and no `texture_hash`. Glyph layout, rasterisation and font resolution are the Player's (see [Limitations](./docs/10_introduction/20_limitations.md)); text parts authored as masks are omitted from the plan. |
-| `Nines` | 9-patch grid built from `PartTypeNines` — vertices, UVs and indices come from the Nines SoA buffers, sliced per part (see [Special part types](./docs/40_components/95_special_parts.md)). |
+| `Nines` | 9-patch grid built from `PartTypeNines` — vertices, UVs and indices come from the Nines SoA buffers, sliced per part (see [9-Slice, Shape and Text](./docs/40_parts/30_special_parts.md)). |
 | `Mask` | Stencil-write batch — does not produce colour output; entries are also listed in `mask_indices`. |
 
 > **Walking the plan:** for each `batch` in `draw_batches`, iterate `draw_order[batch.start_rank .. batch.start_rank + batch.count]`, fetch each `PartState`, and emit geometry of `batch.kind`. Switch GPU state (texture, blend) once per batch rather than per part.

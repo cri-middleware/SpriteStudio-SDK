@@ -1,6 +1,6 @@
 # Maintaining the official Players — getting started
 
-**Who this is for: whoever maintains the official Players.** It is a working agreement about our own repositories — what their READMEs answer, and what their bundled samples have to do — not a requirement on anyone porting SpriteStudio to a new engine. The porting guide states what a Player has to be; this states how we keep the seven we ship consistent with each other. If you are writing your own Player, the document you want is the [Player API conventions](./libs/ssruntime/docs/20_design/40_api_conventions.md), which is about the artifact rather than about our repositories.
+**Who this is for: whoever maintains the official Players.** It is a working agreement about our own repositories — what their READMEs answer, and what their bundled samples have to do — not a requirement on anyone porting SpriteStudio to a new engine. The porting guide states what a Player has to be; this states how we keep the seven we ship consistent with each other. If you are writing your own Player, the document you want is the [Player API conventions](./libs/ssruntime/docs/20_design/30_api_conventions.md), which is about the artifact rather than about our repositories.
 
 The API conventions stop the same feature from growing a different name in every Player. But an aligned API loses most of its value **if the first five minutes are a different experience in every Player.** The shared vocabulary pays off for the reader moving to their second Player; the reader touching their first one meets the README.
 
@@ -112,4 +112,4 @@ from the first door's line rather than growing a row for it.
 
 ## 5. Departing from this document
 
-The same as [Player API conventions §9](./libs/ssruntime/docs/20_design/40_api_conventions.md#9-departing-from-this-document). Depart when the host's conventions genuinely collide with this one. **Write the reason where the departure is.**
+The same as [Player API conventions §9](./libs/ssruntime/docs/20_design/30_api_conventions.md#9-departing-from-this-document). Depart when the host's conventions genuinely collide with this one. **Write the reason where the departure is.**

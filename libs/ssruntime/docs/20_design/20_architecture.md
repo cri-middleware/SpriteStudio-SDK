@@ -1,100 +1,49 @@
 > [日本語](./20_architecture.ja.md) | **English**
 
-# Division of Roles between the Player and libssruntime
+# Player design decisions
 
-The SpriteStudio-SDK playback environment is split in two: **libssruntime**, which handles the computation logic, and the **Player**, which handles the actual rendering and platform-dependent processing.
+This page lists what to decide before you start implementing. Changing any of these later means rewriting a lot. The names and shapes of a Player's public API are fixed by the [Player API conventions](./30_api_conventions.md), so this page covers the internal structure.
 
-Thanks to this split, once you have implemented a Player, changes to the logic (added animation features, for example) can be absorbed simply by updating libssruntime, which gives high portability and maintainability.
+## 1. How to integrate the library
 
-## 1. Overview of the division of roles
+| Form | When to use it |
+| :--- | :--- |
+| Static library (`.lib` / `.a`) | Linking into a C / C++ engine |
+| Dynamic library (`.dll` / `.so` / `.dylib`) | Calling over FFI from C# or a scripting language |
+| WebAssembly (`.wasm`) | Running in a browser |
 
-| Feature category | libssruntime's role (compute / manage) | The Player's role (render / execute) |
-| :--- | :--- | :--- |
-| **Data management** | Parsing the range needed for animation computation, expanding the change-point data | **Parsing ssab metadata** (part composition, asset information) |
-| **Time management** | Computing the frame number from elapsed time, loop control | Supplying the delta time (elapsed time) |
-| **Value computation** | Interpolation between keyframes, merging attributes | - |
-| **Coordinates / matrices** | Emitting the computed **local attributes (position, rotation, and so on)** | **Transforming into world coordinates**, matching the engine's coordinate system |
-| **Rendering** | - | Loading textures, the actual drawing, optimization |
-| **Events** | Extracting event data | Retrieving user data and invoking callbacks |
-| **Sound** | - | Loading audio files, performing playback |
+In an environment without the OS standard library, or where you want to use the engine's own allocator, build the `no_std` configuration ([Integrating into no_std environments](./40_no_std_integration.md)).
 
-## 2. libssruntime's main responsibilities (the Brain)
-libssruntime acts as the "animation calculator".
+## 2. How ssab memory is held
 
-- **Expanding animations**: it analyzes the change-point information inside the ssab data and computes the state (attributes) of every part on the specified frame.
-- **Sub-frame (floating-point frame) support**: libssruntime manages the frame number internally as a float (`f32`). This lets it correctly compute, by interpolation, the state of "fractional frames" that fall between keyframes, giving smooth animation even on high-refresh-rate displays.
-- **Interpolation**: it computes values between frames correctly, including complex curve interpolation such as Hermite and Bezier.
-- **Playback state management**: it holds state such as whether playback is running, where in the loop it is, and what the playback speed is.
+Decide how to hand the ssab bytes to the Brain. The goal is not to hold the same bytes in both the Player and the Brain.
 
-## 3. The Player's main responsibilities (Body / Renderer)
-The Player is responsible for "bridging to the game engine" and "integrating the data".
+| Scheme | Owner | When to use it | C-API |
+| :--- | :--- | :--- | :--- |
+| **borrow** (recommended) | Player | Languages that can pass a pointer as-is (C++, C#, and so on), when the engine keeps holding the ssab as an asset | `ss_resource_create_borrow` |
+| **copy** | Brain | Environments that cannot share a pointer. In WebAssembly in particular, the JavaScript heap and WebAssembly memory are separate, so passing the bytes always makes a copy | `ss_resource_create_copy` |
 
-- **Referencing and validating ssab metadata**: **libssruntime does not return the metadata needed for rendering (part names, parent/child relationships, texture paths, and so on), and for performance reasons it does not validate the data either.** Parse the ssab with FlatBuffers on the Player side to obtain that information, and when using files obtained from outside, perform corruption / integrity checks on the Player side as needed.
-- **Holding resources**: hold textures, sounds, and the libssruntime context as instances.
-- **Coordinate / matrix transformation (important)**: libssruntime returns the **local attributes (position, rotation, scale, and so on)** with the parent/child hierarchy state taken into account, as a FlatBuffers binary chunk.
-    - **Pattern 1 (direct drawing / batch rendering)**: the Player computes world coordinates itself using a matrix stack or similar, while referencing the ssab's parent/child relationships (`parent_index`). This is the efficient approach in modern data-driven architectures.
-    - **Pattern 2 (scene graph / hierarchical nodes)**: build the parent/child hierarchy out of engine objects and feed the obtained values straight into their transforms, leaving matrix computation to the engine. This is easy to implement but incurs overhead when there are many parts.
-- **Performing the drawing**: output the final picture using the engine's rendering features.
+With borrow, keep the bytes in the Player until every Context that uses that resource has been destroyed ([Limitations §6](../10_introduction/20_limitations.md#6-the-player-keeps-the-bytes-of-a-borrowed-ssab-alive)).
 
-## 4. Why this division
-- **Better portability**: by leaving rendering (DirectX, Metal, OpenGL, and so on) to the Player, libssruntime can be written once in Rust and carried to any platform.
-- **Uniform quality**: sharing the complex animation computation (interpolation, parts-color computation, and so on) means every game engine produces the same animation result.
+### 2-1. Holding it in WebAssembly
 
----
+Choose one of the following three, depending on what you do with the original bytes after the copy.
 
-# Deciding on your Player implementation approach
+1. **Release them immediately (the basic case)**: after copying with `new SSRuntimeResource(data)`, drop the JavaScript-side reference and let the garbage collector reclaim it. Only one ssab remains, in WebAssembly memory.
+2. **Read WebAssembly memory directly**: if you also want to read the ssab with FlatBuffers on the JavaScript side, get the location of the bytes the Brain holds with the Context's `get_ssab_buf()` / `get_ssab_len()`, and read them as `new Uint8Array(memory.buffer, ptr, len)`. No copy is added. However, when WebAssembly memory grows, every view created before that becomes invalid. Recreate a view right before you use it.
+3. **Hold them in both**: if you cannot recreate views (the framework requires holding on to the same buffer, you also pass the same ssab to a Web Worker, the engine's asset cache holds the original buffer, and so on), accept holding them twice. In exchange, once they are no longer needed, release both the engine-side asset and the Brain-side resource (`free()` / `ss_resource_destroy`).
 
-Before you start implementing a Player, consider and decide the following technical specifications according to the characteristics of your target game engine and platform.
+## 3. Class structure
 
-## 1. How to integrate libssruntime
-Decide how the native library will be incorporated in your environment.
+Think of a Player's classes as split into the following three responsibilities. The existing Players differ in how they group the three, but every one of them follows this split.
 
-### Library type
-- **Static library (.lib / .a)**: when linking into a C/C++ project.
-- **Dynamic library (.dll / .so / .dylib)**: when calling over FFI from C# or a scripting language.
-- **WebAssembly (.wasm)**: when running in a browser environment.
+- **(1) Internal engine** — holds the Context and the resource, reads FrameData and the SoA buffers, builds vertices and DrawBatches, and resolves textures. It does not depend on the engine's display node, so it can be used from headless tests and from several display targets.
+- **(2) Playback control** — play, stop, seek, speed, looping, events, and elapsed-time input.
+- **(3) Display node (optional)** — the layer that holds (1) and (2) inside the engine's display node (`MonoBehaviour` / `Node2D` / `Displayable` / a widget, and so on). Some Players issue draw calls in (1), others in (3).
 
-### On supporting `no_std` environments (embedded / game consoles)
-The SDK can be integrated into `no_std` environments that have no filesystem or OS standard features, and into environments where you want to plug in your own memory allocator for a game console. For the concrete approach to building for `no_std` in a C/C++ project (using `libc_alloc`, injecting a custom allocator), see [Integrating into no_std Embedded Environments](../50_reference/10_no_std_integration.md).
+Put the state of the children of instance parts and effect parts (the slots) in the layer that holds the child Contexts ([Instance parts](../40_parts/50_instance.md)).
 
-### Memory-management strategy and avoiding duplicated data (zero duplication)
-Decide how to hand the `ssab` data read from the network or disk to `libssruntime`. Especially in environments such as WebAssembly (WASM), it is important to design against **duplicated memory**, where the same binary exists both "on the Player side (the JS heap)" and "on the library side (the WASM heap)".
-
-- **Borrow scheme (recommended)**:
-  The Player fully manages ownership of the main memory and the library only references a pointer to the data. No unnecessary copy occurs at all, so this is the most memory-efficient and performant option.
-  - **For C++ / C# and similar**: this is complete simply by passing `libssruntime` a pointer to memory read via file mapping (mmap) or a standard asset bundle.
-
-- **Copy scheme and immediate GC (for special environments such as WASM)**:
-  The library copies the memory once and takes ownership of it. In environments where the "JS heap" and the "WASM heap" are physically separated, as with WASM (JS), passing raw data always incurs a copy into the WASM heap, so this becomes the standard scheme.
-  To avoid duplication in a WASM environment, adopt one of the following patterns.
-
-  **Pattern A: discard immediately (basic)**
-  ```typescript
-  const data = await response.arrayBuffer();
-  // 1. Copy the data to the Rust (WASM) side and create the resource (WASM becomes the owner)
-  const resource = SSRuntimeResource.new(new Uint8Array(data));
-
-  // 2. The raw data on the JS side is no longer needed: drop the reference so the garbage
-  //    collector reclaims it immediately.
-  //    This leaves exactly one copy of the ssab binary in memory, inside WASM.
-  ```
-  From then on, when the Player needs metadata such as animation names, obtain it through the library's API - for example `resource.get_animation_names()` - rather than parsing the raw binary yourself.
-
-  **Pattern B: back-reference WASM memory (when you want to parse on the JS side)**
-  If you have a requirement to parse the raw binary directly on the JS side with the `flatbuffers` library, do not keep holding the data on the JS side. Instead receive the data pointer (`ptr`) from the Rust side and **back-reference (borrow) the WASM-side memory** as `new Uint8Array(wasmMemory.buffer, ptr, len)`, which completely prevents allocating the memory twice.
-
-## 2. Internal structure and rendering strategy
-Decide how the Player manages and renders animations.
-
-### Class-design best practice (separation of responsibilities and the recommended layering)
-
-Split the Player's classes into **three responsibilities** (derived from the orthogonal concerns of **FFI lifetime management, playback state, and host integration**; every existing Player has converged on this shape). Beneath each responsibility sit the language's generated **FFI bindings** (csbindgen / ffigen / wasm-bindgen / ctypes, and so on).
-
-- **(1) Internal engine (rendering core)** - holds the `libssruntime` context, obtains FrameData / SoA, performs world transformation, builds vertices, resolves textures, and issues draws. It is **host-independent** and reusable for headless tests and multiple views.
-- **(2) Playback control (Player / Controller)** - `play` / `stop` / `seek`, speed, looping, events, playback state, delta input. **Plus management of instance / effect child slots** (children are *recursive sub-players*; this layer handles creation, destruction, independent playback, and sub-frame propagation, while `step` and vertex composition belong to (1). For details see [Instance Parts](../40_components/10_instance.md)).
-- **(3) Display node (View / Adapter) - optional** - a thin layer that **holds the core by composition** inside the engine's standard display node (`MonoBehaviour` / `Node2D` / `Displayable` / a widget) and passes it to rendering.
-
-**The core (Layers 1-3) is the deliverable; the display node (Layer 4) is glue**: the bindings plus the internal engine plus playback control - **L1-3 - form a host-independent "core Player"**, and that alone is sufficient for playback. A host that runs its own drawing loop (custom C++ / SDL / raw OpenGL / many graphics libraries) can drive the core directly with `update(dt)` → obtain the DrawBatch, or `paint`, and needs no L4. **L4 is optional**, added only for idiomatic integration with engines that have a retained scene graph or widgets (Unity / Godot / Flutter).
+(1) and (2), plus the per-language FFI bindings they use, are enough for playback. A host that runs its own drawing loop (C++ / SDL / OpenGL and so on) only needs to pass the elapsed time and draw the DrawBatches; it does not need (3). Add (3) when you integrate idiomatically into an engine that has a scene graph or widgets (Unity, Godot, Flutter and so on).
 
 ```mermaid
 graph TD
@@ -102,145 +51,103 @@ graph TD
     classDef ffi fill:#e6e6e6,stroke:#333,stroke-width:2px,color:#000,stroke-dasharray: 5 5;
     classDef brain fill:#dea584,stroke:#333,stroke-width:2px,color:#000;
 
-    subgraph L4 [Layer 4 / Responsibility 3: Display node View / Adapter - optional]
-        V1["Display node A<br/>e.g. MeshRenderer / Node2D / Canvas / Displayable"]:::core
-        V2["Display node B<br/>UI / another backend"]:::core
+    subgraph L3 [Display node, optional]
+        V1["Display node A<br/>e.g. MeshRenderer / Node2D / Displayable"]:::core
+        V2["Display node B<br/>UI / another render target"]:::core
     end
-    subgraph L3 [Layer 3 / Responsibility 2: Playback control Player / Controller]
-        P["play / stop / seek / loop / events / playback state / time driving<br/>instance & effect child-slot management (recursive sub-players)"]:::core
+    subgraph L2 [Playback control]
+        P["play / stop / seek / loop / events<br/>instance / effect slots"]:::core
     end
-    subgraph L2 [Layer 2 / Responsibility 1: Internal engine, rendering core]
-        E["Internal Player<br/>Context / FrameData & SoA / world transform / vertex building / textures"]:::core
+    subgraph L1 [Internal engine]
+        E["Context / FrameData / SoA<br/>vertex building / textures"]:::core
     end
-    subgraph L1 [Layer 1: FFI bindings, generated]
+    subgraph FFI [FFI bindings]
         B["csbindgen / ffigen / wasm-bindgen / ctypes"]:::ffi
     end
     subgraph Native [Brain: libssruntime]
-        R["interpolation / DrawBatch computation"]:::brain
+        R["interpolation / draw plan"]:::brain
     end
 
-    V1 -->|"hold by composition, tick"| P
-    V2 -->|"hold by composition, tick"| P
-    P -->|"contains, update(dt)"| E
-    E -->|"C-API"| B
+    V1 -->|"holds / tick"| P
+    V2 -->|"holds / tick"| P
+    P -->|"holds / update(dt)"| E
+    E --> B
     B <-->|"C-API"| R
-    E -.->|"vertices / batches"| V1
-    E -.->|"vertices / batches"| V2
-    style L4 stroke-dasharray: 6 4
+    E -.->|"vertices / DrawBatch"| V1
+    E -.->|"vertices / DrawBatch"| V2
+    style L3 stroke-dasharray: 6 4
 ```
 
-**Iron rule**: separate the core from the display node **by composition, not inheritance** (no implementation has a display node inherit from the core). The composition chain in the diagram is the backbone, and it lets one playback state feed **several display methods** (Unity = world / uGUI, Web = PixiJS / RMMZ, Ren'Py = transform / mesh).
+Have the display node **hold (1) and (2) as members, not inherit from them**. This lets one playback state feed several display methods (world and uGUI in Unity, PixiJS and RPG Maker MZ on the Web, transform and mesh in Ren'Py).
 
-#### How you bundle them is up to the host (the actual implementations)
+### 3-1. How the existing Players split them
 
-| Player | Language | (1) Internal engine | (2) Playback control | (3) Display node | Bundling |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| Unity | C# | `SpriteStudioNativeContext` + `SpriteStudioInternalPlayer` + `GeometryBuilder` | `SpriteStudioPlaybackCore` | `SpriteStudioPlayer` (Mesh) / `SpriteStudioGraphic` (uGUI) | (1) standalone / each View holds (2) |
-| Web | TS | `SSRuntimeManager` | `InternalPlayerBase` / `DirectInternalPlayer` | `SSPlayer` (PixiJS) | (1)+(2) tightly coupled / (3) separate |
-| Godot | C++ | `SsInternalPlayer` | (contained in the same) | `SpriteStudioPlayer2D` (Node2D) | (1)+(2) fused / (3) separate |
-| Ren'Py | Python | `SSRuntime` + framedata + rigs | `SSInternalPlayer` | `SSPlayer` (Displayable) | (1)/(2)/(3) separate (bindings contained in (1)) |
-| Flutter (design) | Dart | `SpriteStudioInternalPlayer` | `SpriteStudioPlayer` | `SpriteStudioView` and others | bindings (`ffigen`) + (1)(2)(3) all independent = **4 layers** |
+| Player | Language | Bindings | (1) Internal engine | (2) Playback control | (3) Display node | How they are grouped |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Unity | C# | csbindgen | `SpriteStudioNativeContext` (lifetime of the Context and resource) + `SpriteStudioInternalPlayer` + `SpriteStudioGeometryBuilder` | `SpriteStudioInternalPlayer` (through a thin `SpriteStudioPlaybackCore` shared by the display nodes) | `SpriteStudioPlayer` (Mesh) / `SpriteStudioGraphic` (uGUI) | Only lifetime management is separate; (1) and (2) are combined |
+| Web | TypeScript | wasm-bindgen | `SSRuntimeManager` + `FrameDataRaw` + `GeometryBuilder` | `InternalPlayerBase` / `DirectInternalPlayer` | `SSPlayer` (one each for PixiJS / WebGL / RPG Maker MZ) | (1) and (2) tightly coupled; draws issued in (3) |
+| Godot | C++ | `ssruntime.h` directly | `SsInternalPlayer` | (same as left) | `SpriteStudioPlayer2D` (Node2D) | (1) and (2) combined; (3) separate |
+| Ren'Py | Python | ctypes | `SSInternalPlayer` (up to the draw plan) | (same as left) | `SSPlayer` (Displayable) | (1) and (2) combined; draws issued in (3) |
+| Flutter | Dart | ffigen | `SpriteStudioInternalPlayer` + `GeometryBuilder` | `SpriteStudioPlayer` | `SpriteStudioView` / `SpriteStudioAnimation` / Flame's `SpriteStudioComponent` | All three separate |
+| React Native | TypeScript + C++ | Nitro Modules | `HybridSsContext` (C++) / `SsInternalPlayer` | `SpriteStudioPlayer` | `SpriteStudioView` / `SpriteStudioSprite` / `SpriteStudioScene` | All three separate; the heavy work of (1) is in C++ |
+| Wgpu | Rust | the `ssruntime` crate directly | `SSPlayer` + `SSScene` + `SSRenderer` | `SSPlayer` | Bevy's `SsPlayer`, the Web's `SsPlayerWeb`, the C-API's `SsPlayer` | (1) and (2) combined; GPU drawing in a separate class |
 
-- **(1)+(2) may be fused** (Web / Godot) - when a thin wrapper over the C-API is enough for playback control.
-- **Always separate (2) from (3)** - when the display node is recreated (Flutter widgets) or when several views share one playback state. If there are base-class constraints as in Unity (`MonoBehaviour` and `Graphic`), factor (2) out into a `PlaybackCore` that each View holds.
-- **When in doubt, separate fully** (Ren'Py / Flutter). **Design by responsibility, not by name** (the layer that "InternalPlayer" refers to differs between implementations).
+- **(1) and (2) may be combined** — when a thin wrapper over the C-API is enough for playback control.
+- **Separate (2) from (3)** — when the display node is recreated (Flutter widgets), or when several display nodes share one playback state.
+- **When in doubt, separate all three.** Separate by responsibility, not by class name. The layer the name "InternalPlayer" refers to differs between Players.
 
-#### Reference implementations
-For the hard parts (masks, parts color, Instance/Effect, lifetime management), the source of the existing Players is the best model.
+For masks, parts color, instances, effects and native lifetime management, the source of the existing Players is a good model.
 
-- **SSPlayerForUnity** (C#) - Job System vertex building, two adapters for world / uGUI, `IDisposable` plus Burst job synchronization.
-- **SSPlayerForWeb** (TS / PixiJS) - wasm-bindgen, zero-copy views, `FinalizationRegistry`, `IResourceManager`.
-- **SSPlayerForGodot** (C++) - direct drawing through `RenderingServer`, Node2D composition, destruction order in the destructor.
-- **SSPlayerForRenPy** (Python) - coverage-based masking, `Displayable` integration, headless tests of the core.
+### 3-2. Native lifetime
 
-#### Notes (lifetime management, ECS)
-- **Native lifetime**: concentrate lifetime management in one place and **strictly observe the destruction order** (Context → Resource; release asynchronous work only after it completes). Provide both explicit disposal and a GC finalizer.
-- **ECS (Unity DOTS, Bevy, and so on)**: implement with **components plus systems** rather than an object hierarchy. The class structure changes, but keep the "core / control / integration" separation of responsibilities.
+- Keep the creation and destruction of Contexts and resources in one place. In addition to explicit destruction, also release them in a finalizer on hosts with GC.
+- Do not destroy a Context while drawing on another thread is reading its SoA buffers ([Render loop §4-1](../30_core/40_render_loop.md#4-1-multi-threaded-drawing-and-destruction)).
 
-### Choosing a drawing method
-- **Direct drawing / batch rendering**:
-    - Loop over every part inside a single drawing component and draw them.
-    - Pros: high drawing performance. Suits data-driven designs and offscreen rendering.
-    - Cons: linking engine objects to specific parts takes a little extra work.
-- **Scene graph / hierarchical nodes**:
-    - Create as many engine objects (nodes and so on) as there are parts and build a hierarchy.
-    - Pros: easy to use engine features per part (collision, attaching effects, and so on).
-    - Cons: engine-side overhead grows when there are many parts. In recent game engines, direct drawing is becoming mainstream from a drawing-cost perspective.
+### 3-3. ECS engines
 
-### Matching the coordinate system (important)
-Consider how to absorb the difference between SpriteStudio's coordinate system and your target engine's.
-The standard coordinate system of SpriteStudio and **`libssruntime` is "Y-Up (up is positive)", "origin at the center", and "pixel units"**.
+In an ECS such as Unity DOTS or Bevy, you build with components and systems rather than an object hierarchy. The shape of the classes changes, but the split into three responsibilities is the same.
 
-#### Why the coordinate-system setting is needed
-The "canvas" in the SpriteStudio editor and the "world space" in a game engine typically treat coordinates differently.
-- **Y-axis direction**: in the editor, down is positive (Y-Down), whereas 3D engines and many 2D engines take up as positive (Y-Up) by default.
-- **Origin position**: in the editor the origin (0,0) is the top-left, whereas in a game engine you often want the character's center to be (0,0).
+## 4. Drawing method
 
-Recomputing these by hand on the Player side invites mistakes in rotation direction and offset computation within parent/child structures. Using `libssruntime`'s **`Context` configuration APIs**, the library absorbs all of this consistently and you obtain values you can feed straight into your engine.
+| Method | What it does | Where it fits |
+| :--- | :--- | :--- |
+| **Direct drawing** (recommended) | One drawing component draws every part, DrawBatch by DrawBatch | Most cases. Drawing is fast, and you do not create large numbers of engine nodes |
+| **Scene graph** | Creates an engine node per part and builds a hierarchy | When you want to attach engine features (collision and so on) per part. With many parts, the load on the engine side is high |
 
-- **Y-axis direction (`ss_runtime_set_coordinate_system`)**: up (Y-Up) or down (Y-Down).
-    - Specifying `Y-Down` (1) makes the library flip the Y coordinate and the rotation direction automatically. Choose this when your engine's 2D coordinate system is Y-Down.
-- **Origin position (`ss_runtime_set_origin`)**: center or top-left.
-    - Specifying `Top-Left` (1) applies an offset based on the canvas size automatically. This is useful when you want to place things relative to the top-left, as in a UI system.
-- **Units (`ss_runtime_set_unit`)**: pixels or normalized coordinates.
-    - Specifying `Normalized` (1) divides every coordinate value by the canvas size, normalizing it into the 0.0-1.0 range. This suits resolution-independent drawing.
+Your choice changes the `RenderMode` you set on the Brain ([Render loop §3](../30_core/40_render_loop.md#3-rendermode)).
 
-## 3. Asset-management strategy
-Decide how the assets inside the ssab (textures and so on) are loaded and held.
+## 5. Coordinate system
 
-### Deciding which ssab types to support
-Choose the `ssab` types to support according to your Player's target. Implementing only one, or both, are equally fine.
+The Brain's default coordinate system is the same as SpriteStudio's: **Y-Up, origin at the center, pixel units**. If the engine's coordinate system differs, do not recompute coordinates in the Player; set it on the Context and let the Brain match it. Correcting parent/child rotation direction or offsets in the Player invites mistakes.
 
-- **Reference**:
-    - **Characteristics**: assets are referenced as external files.
-    - **Target**: game engines such as Unity and Godot. Best when you want to use the engine's standard asset management and loading mechanisms (AssetBundle, resource loading) as-is.
-- **Embedded**:
-    - **Characteristics**: assets are embedded as data inside the ssab itself.
-    - **Target**: web ads, simple applications, or any case where you want the resource files bundled into one. Best when you want to avoid distributing and managing asset files individually.
+| Setting | Function | Values |
+| :--- | :--- | :--- |
+| Y-axis direction | `ss_runtime_set_coordinate_system` | `0` = Y-Up (default) / `1` = Y-Down. With Y-Down, the Brain flips the Y coordinate and the rotation direction |
+| Origin | `ss_runtime_set_origin` | `0` = center (default) / `1` = top-left. With top-left, the Brain adds an offset based on the canvas size |
+| Units | `ss_runtime_set_unit` | `0` = pixels (default) / `1` = normalized. Normalized divides coordinates by the canvas size, giving 0.0–1.0 |
 
-## 4. Deciding the feature scope
-Implementing every feature at once is difficult, so we recommend planning staged support.
+With Y-Down set, the local vertices are already flipped. Flipping the Y axis again in the world matrix flips it twice, so do not do that. For effect vertices, specify it separately with the `y_flip` argument of `ss_effect_slot_step` ([Effect parts §2](../40_parts/60_effect.md#2-arguments-of-ss_effect_slot_step)).
 
-- **Required (basic)**: basic attributes, parent/child inheritance, blend modes.
-- **Recommended**: instance playback, user data.
-- **Advanced**: mesh, bones, effects, shaders.
-- **Optional**: audio, text, 9-slice.
+## 6. ssab types
 
-## 5. Usability and toolchain
-Consider the surrounding implementation that improves convenience for your users.
+There are two kinds of ssab. You may support either one, or both.
 
-- **Automatic conversion**: an extension that runs the `sspj` → `ssab` conversion automatically inside the engine's editor (the Unity Editor, for example).
+| Type | Where the assets live | Where it fits |
+| :--- | :--- | :--- |
+| **Reference** | Files outside the ssab | Game engines that use the engine's asset management (AssetBundles, resource loading) as-is |
+| **Embedded** | Inside the ssab | When you want to distribute a single file, as with web ads or small apps |
 
-## 6. Player APIs you will need
+How textures are loaded differs by type ([Loading and initialization §3](../30_core/10_initialization.md#3-loading-textures)).
 
-Design guidelines for the minimum API interface a user needs in order to control animations in your Player implementation.
+## 7. Scope of supported features
 
-### Playback control
-- **set_animation(name)**: sets up the animation to play. Because `ss_runtime_setup_animation` performs internal allocation at this point, do this **before** playback.
-- **play(loop, startFrame)**: starts playing the already set-up animation with the given play count and start frame (a light operation with no allocation).
-- **stop()**: stops animation playback completely.
-- **pause()**: pauses the playing animation.
-- **resume()**: resumes a paused animation. Map it to `ss_runtime_resume`, not to a second `play` — `play` heads out and would lose the playhead.
-- **isPlaying()**: returns whether an animation is currently playing. Stays true while paused; publish `isPaused` from `ss_runtime_is_pausing` alongside it.
+Implementing everything at once is hard, so we recommend working in stages. The order to work in is under ["Implementation steps" in the contents](../README.md#1-implementation-steps).
 
-The exact semantics of these five, and what each does to the playhead, are in [Playback Control & Events](../30_core/20_playback_control.md#the-transport-contract).
-
-### Time / frame control
-- **setFrame(frame) / getFrame()**: directly specifies (seeks) or obtains the current playback frame.
-- **setSpeed(speed) / getSpeed()**: sets or obtains the playback speed (time scale).
-- **getTotalFrames()**: obtains the total frame count of the current animation.
-
-### Part manipulation
-- **setPartVisible(partName, visible)**: toggles visibility by part name.
-
-### Event notification
-We recommend that the Player poll events from `libssruntime` internally and provide the following callbacks or event mechanisms (a C# delegate, a Godot signal, and so on) so the game's scripts and systems can receive them.
-- **setAnimationFinishedCallback(callback)**: notified when animation playback completes, including loops.
-- **setAnimationLoopedCallback(callback)**: notified when the animation completes a cycle and returns to the start.
-- **setUserDataCallback(callback)**: notified when user data on the timeline is detected.
-- **setSignalCallback(callback)**: notified when a signal command is detected.
-
-For the exact meaning of `finished` / `looped` and how to poll them, see [Playback Control & Events](../30_core/20_playback_control.md).
+| Stage | Features |
+| :--- | :--- |
+| Basic | Attributes, parent/child inheritance, blend modes, events |
+| Next | [Parts color](../40_parts/10_parts_color.md), [Mesh](../40_parts/20_mesh.md), [Mask](../40_parts/40_mask.md), [Instance parts](../40_parts/50_instance.md), [Effect parts](../40_parts/60_effect.md) |
+| As needed | [9-slice, shapes and text](../40_parts/30_special_parts.md), [Audio](../50_features/50_audio.md), [Animation mixing](../50_features/10_animation_mixing.md), [Part overrides](../50_features/20_part_overrides.md), [Editor integration](../50_features/60_editor_integration.md) |
 
 ---
-[Back to Table of Contents](../README.md)
+[Back to contents](../README.md)

@@ -1,98 +1,104 @@
 > **日本語** | [English](./20_playback_control.md)
 
-# 再生制御とイベント処理 (Playback & Events)
+# 再生制御
 
-アニメーションの再生状態（再生・停止・ループ）の管理と、タイムライン上のイベント（ユーザーデータ・シグナル）をゲームロジックへ通知する仕組みを実装します。
+Brain の再生制御（セットアップ・再生・一時停止・停止・速度・ループ）の意味と、毎フレームの更新の手順です。これを Player の公開 API としてどう見せるかは、[Player API 規約 §8](../20_design/30_api_conventions.ja.md#8-アニメーションの選択と再生) にあります。
 
-## 1. アニメーションのセットアップと再生
+## 1. 1 フレームの流れ
 
-`libssruntime` コンテキストに対して、再生したいアニメーションを名前で指定し、再生を開始します。
+Player は毎フレーム、次の順で Brain を呼びます。
 
 ```cpp
-// 1. アニメーションのセットアップ
-ss_runtime_setup_animation(context, "attack_pose");
+void MyPlayer::tick(float delta_seconds) {
+    // 1. 時間を進める。経過時間はミリ秒で渡す。戻り値は描画するフレーム番号
+    float frame_no = ss_runtime_update(ctx, delta_seconds * 1000.0f);
 
-// 2. 再生設定 (ループ回数: -1=無限, 1=1回のみ)
-ss_runtime_set_loop_count(context, -1);
+    // 2. ループと終了を通知する（§7）
+    // 3. そのフレームで通過したイベントを通知する（イベントのページ）
 
-// 3. 再生開始
-ss_runtime_play(context);
+    // 4. そのフレームの状態を計算させる（§6）
+    float draw_frame = sub_frame_enabled ? frame_no : floorf(frame_no);
+    const uint8_t* fd; size_t fd_len;
+    ss_runtime_get_frame_data(ctx, draw_frame, &fd, &fd_len);
+
+    // 5. インスタンスパーツ・エフェクトパーツの子を進め、描画する（描画ループのページ）
+}
 ```
 
-### `ss_runtime_set_loop_count` の値
+イベントは [イベント](./30_events.ja.md)、描画は [描画ループ](./40_render_loop.ja.md) で説明します。
+
+## 2. セットアップと再生
+
+再生するアニメーションを名前で選び（セットアップ）、再生を始めます。
+
+```cpp
+// 1. アニメーションを選ぶ。Brain の内部でメモリを確保する
+ss_runtime_setup_animation(ctx, "attack");
+
+// 2. ループ回数を設定する（セットアップで既定値に戻るので、その後に設定する）
+ss_runtime_set_loop_count(ctx, 1);
+
+// 3. 再生を始める
+ss_runtime_play(ctx);
+```
+
+**`ss_runtime_play` を呼ぶまで、`ss_runtime_update` は何も進めません。** セットアップしただけの Context を毎フレーム更新しても、アニメーションは動きません。
+
+`ss_runtime_set_loop_count` の値は次のとおりです。
 
 | 値 | 意味 |
 | :--- | :--- |
-| `n` (> 0) | `n` 周再生して停止する。`1` = 1回のみ |
-| `-1` | 無限ループ |
-| `0` | 無限ループ（`-1` の別名。0 以下は全て `-1` に正規化される） |
+| `n`（> 0） | `n` 周再生して止まる。`1` は 1 回だけ |
+| `-1` | 無限にループする（既定） |
+| `0` 以下 | `-1` と同じ |
 
-### `setup_animation` が戻すもの
+`ss_runtime_set_loop_count` は、書き込むたびに残りのループ回数を設定し直します。`ss_runtime_play` も、その時点のループ回数で残りの回数を設定し直します。ループ回数は、セットアップの後、`ss_runtime_play` の前に設定してください。
 
-`setup_animation` は、Player のステートマシンが遷移のたびに呼ぶプリミティブです。何を戻すかは **「誰が設定するか」** という一本の線で決まっています。
+## 3. セットアップが戻す設定
 
-| 設定 | `setup_animation` を跨ぐか | 理由 |
+`ss_runtime_setup_animation` は、Player のステートマシンが遷移のたびに呼ぶ操作です。どの設定を既定値に戻すかは、**その設定を誰が決めるか**で分かれています。
+
+| 設定 | セットアップで | 理由 |
 | :--- | :--- | :--- |
-| 再生区間 | 跨がない | フレーム番号は別のクリップに対して意味を持たない |
-| authored フレームレート | 跨がない | クリップ自身のデータ。毎回読み直す |
-| ループ回数 | 跨がない | 遷移が指定するもの（下記） |
-| **再生方向 / スタイル (`set_playback_direction`)** | **跨ぐ** | 「逆再生する」は再生についての決定であって、たまたま読み込まれているクリップの性質ではありません |
-| **速度 (`set_speed_scale`)** | **跨ぐ** | *別の* システムが設定する — スローモー、ヘイスト、難易度スケール |
-| **フレームレート上書き (`set_frame_rate`)** | **跨ぐ** | Player のポリシー — クリップの authored 値に関わらず「このプレイヤーは 60fps で回す」 |
-| **フレームスキップ** | **跨ぐ** | Player のポリシー — 収録やフレーム単位の演出で「全フレームを見せる」 |
+| 再生区間 | 戻る | フレーム番号は、別のアニメーションに対しては意味を持たない |
+| アニメーションのフレームレート | 戻る | アニメーション自身のデータなので、毎回読み直す |
+| ループ回数 | 戻る | 遷移ごとに指定するもの |
+| **再生方向・スタイル**（`ss_runtime_set_playback_direction`） | **保持** | 「逆再生する」は再生についての決定で、読み込まれているアニメーションの性質ではない |
+| **速度**（`ss_runtime_set_speed_scale`） | **保持** | スローモーションや難易度など、別のシステムが決める |
+| **フレームレートの上書き**（`ss_runtime_set_frame_rate`） | **保持** | Player の方針（「この Player は 60fps で回す」） |
+| **フレームスキップ**（`ss_runtime_set_skip_frames`） | **保持** | Player の方針（収録のために全フレームを見せる、など） |
 
-跨ぐのは再生方向であって、*進行中の向き* ではありません。ping-pong の復路の途中でアニメーションが切り替わった場合、新しいアニメーションは往路から walk を始めます。遷移が跳ね返りの途中から始まることはありません。
+遷移が指定するものを戻すのは、**遷移をそれぞれ独立させるため**です。ループ回数が持ち越されると、攻撃のために設定した `1` が歩行にもついて回り、不具合の再現条件が遷移の履歴に埋もれます。速度やフレームスキップはステートマシンが設定しないものなので、戻すと、アニメーションの遷移が無関係な設定を壊すことになります。
 
-レート系の 2 つはどちらもホスト側のもので合成されますが、意味が異なります。
-`set_speed_scale` は authored 値に対する **倍率** なので、どのクリップに対しても同じ意味になります。`set_frame_rate` は **絶対値** なので、効果はクリップに依存します（30fps のクリップに 60 を指定すれば 2 倍、60fps のクリップなら等速）。それがこの API の目的で、倍率がスケールするのに対しこちらは正規化します。`set_frame_rate(0)` で上書きを解除し、authored 値へ戻します。
+保持するのは再生方向の設定で、**往復の途中の向き**ではありません。往復（PingPong）の復路の途中でアニメーションを切り替えると、新しいアニメーションは往路から始まります。
 
-遷移自身が指定するものは戻ります。これにより **各遷移が直前の遷移から独立** します。ループ回数が持ち越されると、attack のために設定した `1` がそのまま walk について回り、不具合の再現条件が遷移そのものではなく遷移の履歴に埋まってしまいます。
+セットアップは、再生の状態も **Stopped** に戻し、一時停止の保持も解きます（§4）。
 
-速度とフレームスキップは逆です。ステートマシンはこれらを設定しないため、ここで戻すと「アニメーションの遷移が、それとは無関係な設定を破壊する」ことになります。Player 側のサブフレームフラグも同じ種類の設定で、C-API の Player 側に置かれているという理由だけで既にこの挙動になっています。
+## 4. 再生の状態
 
-> [!NOTE]
-> `play` はその時点のループ回数でカウンタを再武装するため、完了したアニメを再生し直すと同じ回数がもう一度適用されます。ループ回数は `setup_animation` の後、`play` の前に設定してください。
+### 4-1. 各操作の意味
 
-### 再生ヘッドの操作
-- **シーク**: `ss_runtime_set_frame_no(context, frame)` で任意のフレームへジャンプできます。
-- **一時停止 / 再開**: `ss_runtime_pause(context)` がその場で保持し、`ss_runtime_resume(context)` が保持を解除します。どちらも冪等です。
-
-### トランスポートの契約
-
-各 Player が公開すべきセマンティクスです。`resume` を `play` に畳み込まず、4 つの動詞として公開してください。
+`resume` を `play` にまとめず、4 つの操作として扱ってください。
 
 | 呼び出し | 意味 | 再生ヘッド | `is_playing` | `is_pausing` |
 | :--- | :--- | :--- | :--- | :--- |
-| `ss_runtime_play` | **先頭出し。** 区間の先頭（逆方向なら末尾）へ巻き戻し、ループカウンタを再武装します | 巻き戻る | `true` | `false` |
-| `ss_runtime_play_with_start_frame` | 指定フレームからの先頭出し | そのフレーム | `true` | `false` |
-| `ss_runtime_pause` | その場で保持します。冪等 | 保持 | `true` | `true` |
-| `ss_runtime_resume` | 保持を解除し、その場から再開します。冪等で、停止中のアニメを**開始はしません** | 保持 | `true` | `false` |
-| `ss_runtime_stop` | 再生を終了します。巻き戻さないため、停止したフレームを描画し続けます | 保持 | `false` | `false` |
+| `ss_runtime_play` | **先頭から再生する。** 区間の先頭（逆方向なら末尾）へ巻き戻し、ループの残り回数を設定し直す | 巻き戻る | `true` | `false` |
+| `ss_runtime_play_with_start_frame` | 指定したフレームから再生する | そのフレーム | `true` | `false` |
+| `ss_runtime_pause` | その場で保持する | そのまま | `true` | `true` |
+| `ss_runtime_resume` | 保持を解き、その場から続ける。停止しているアニメーションを**始めはしない** | そのまま | `true` | `false` |
+| `ss_runtime_stop` | 再生を終える。巻き戻さないので、止めたフレームを描き続ける | そのまま | `false` | `false` |
 
-### 速度とフレームレート
+- **`play` は再開ではありません。** 常に先頭から始めるので、一時停止の解除に使うと再生ヘッドが先頭に戻ります。
+- **一時停止は「保持」で、「停止」ではありません。** 一時停止中も `ss_runtime_is_playing` は `true` です。両者を区別するのが `ss_runtime_is_pausing` です。
+- **`stop` は巻き戻しません。** 別の位置を表示したい場合は、シークしてください。
 
-`ss_runtime_set_speed_scale` は実効フレームレートに対する倍率です。
+### 4-2. 状態遷移
 
-| 値 | 効果 |
-| :--- | :--- |
-| `1.0` | authored のまま |
-| `0.5` / `2.0` | 半分 / 倍 |
-| **`0.0`** | **再生ヘッドが止まります。** 時間は流れ `is_playing` も `true` のままで、進行だけがありません |
-| **負値** | **同じく停止します。** 逆再生は `ss_runtime_set_playback_direction` の担当であって、速度の担当ではありません |
-
-> [!NOTE]
-> 以前は `0.0` と負値が `1.0` に正規化されていました。そのため速度スライダーを最小まで下げたホストは、値が示すのとは逆に全速再生になり、逆再生を期待して負値を渡したホストは「未対応である」という手掛かりのないまま順方向の全速再生を得ていました。
-
-`ss_runtime_get_speed_scale` で倍率を読み戻せます。Player 側が最後に設定した値を自前で保持する必要はありません（その控えこそが実体とずれる原因です）。返るのは **保持された**値であり、渡された値とは限りません。上表でクランプされる 2 行は `0.0` として読み戻るため、渡した負値が逆再生ではなく停止になったことをホスト側から判別できます。
-
-### 再生の状態遷移
-
-2 つのフラグが表す状態は **3 つだけ**です。`is_pausing` が真なら `is_playing` も真であり、「停止しているのに一時停止中」には到達できません。これにより Player 側は
-`is_playing` を併せて見ることなく `is_pausing` 単独で判定できます。
+2 つのフラグが表す状態は **3 つだけ**です。`is_pausing` が真なら `is_playing` も真なので、`is_pausing` だけで一時停止中かを判定できます。
 
 | 状態 | `is_playing` | `is_pausing` | `update` で進むか |
 | :--- | :--- | :--- | :--- |
-| **Stopped**（初期状態でもある） | `false` | `false` | 進まない |
+| **Stopped**（初期状態） | `false` | `false` | 進まない |
 | **Playing** | `true` | `false` | 進む |
 | **Held**（一時停止） | `true` | `true` | 進まない |
 
@@ -102,55 +108,101 @@ stateDiagram-v2
     Stopped --> Playing : play
     Playing --> Held : pause
     Held --> Playing : resume
-    Held --> Playing : play (巻き戻る)
-    Playing --> Playing : play (巻き戻る)
+    Held --> Playing : play（巻き戻る）
+    Playing --> Playing : play（巻き戻る）
     Playing --> Stopped : stop
     Held --> Stopped : stop
 ```
 
-上図に無い呼び出しはすべて意図的に **no-op** です。ホストは現在の状態を先に調べることなく、意図どおりの動詞を呼べます。
+図に無い組み合わせは、何もしません。ホストは現在の状態を調べずに、意図どおりの操作を呼べます。
 
 | 現在の状態 | `play` | `pause` | `resume` | `stop` |
 | :--- | :--- | :--- | :--- | :--- |
-| **Stopped** | → Playing（区間の先頭から） | *no-op* | *no-op* | *no-op* |
-| **Playing** | → Playing（区間の先頭へ巻き戻す） | → Held | *no-op* | → Stopped（再生ヘッド保持） |
-| **Held** | → Playing（巻き戻し、保持も解除） | *no-op* | → Playing（再生ヘッド保持） | → Stopped（再生ヘッド保持） |
+| **Stopped** | → Playing（区間の先頭から） | 何もしない | 何もしない | 何もしない |
+| **Playing** | → Playing（区間の先頭へ巻き戻す） | → Held | 何もしない | → Stopped（再生ヘッドはそのまま） |
+| **Held** | → Playing（巻き戻し、保持も解く） | 何もしない | → Playing（再生ヘッドはそのまま） | → Stopped（再生ヘッドはそのまま） |
 
-`setup_animation` は状態を **Stopped** に戻し、前のアニメーションが残した保持も落とします。
+### 4-3. シーク
 
-Player 側で取り違えられやすいのは次の 2 点です。
+`ss_runtime_set_frame_no(ctx, frame)` で再生ヘッドを動かします。再生区間の外の値は、区間の端になります。シークしても再生の状態は変わりません。
 
-- **`play` を呼ぶまで何も進みません。** `update` は `is_playing` でゲートしているため、セットアップしただけのコンテキストを毎フレーム tick しても動きません。
-- **`stop` は巻き戻しません。** 再生ヘッドはその場に留まるため、ホストは停止したフレームを描画し続けます。別の位置にしたい場合はシークしてください。
+シークの後の最初の `update` は、移動先のフレームのイベントを報告します。移動元との間のイベントは報告しません（[イベント §3](./30_events.ja.md#3-イベントが報告されるフレーム)）。
 
-> [!IMPORTANT]
-> **`play` は再開ではありません。** 常に先頭出しになるため、一時停止の解除に使うと再生ヘッドが無言で先頭に戻ります。再開は `ss_runtime_resume` を使ってください。
->
-> **一時停止は「保持」であって「停止」ではありません。** 一時停止中も `ss_runtime_is_playing` は `true` のままで、両者を区別するのが `ss_runtime_is_pausing` です。Player が `is_paused` を公開する場合は `is_pausing` をそのまま渡して構いません。一度も再生していないアニメでは `false`、`stop` 後も `false` になります。
+`ss_runtime_next_frame` / `ss_runtime_prev_frame` は、再生方向にかかわらず 1 フレーム先 / 前へシークします。区間の端では動きません。
 
-## 2. 毎フレームの更新と終了検知
+## 5. 速度・フレームレート・再生方向
 
-Player は毎フレーム、ゲームエンジンのデルタタイムをライブラリに渡して状態を更新します。
+### 5-1. 速度
 
-### 実装の型
+`ss_runtime_set_speed_scale` は、実際のフレームレートに対する倍率です。
 
-`looped` / `finished` の通知は、**以下の形で実装してください**。フラグごとに寿命が違うため、扱い方も異なります。
+| 値 | 効果 |
+| :--- | :--- |
+| `1.0` | アニメーションのとおり |
+| `0.5` / `2.0` | 半分 / 2 倍 |
+| **`0.0`** | **再生ヘッドが止まる。** `is_playing` は `true` のままで、時間が経っても進まない |
+| **負の値** | **`0.0` と同じく止まる。** 逆再生は再生方向（§5-3）で指定する |
+
+`ss_runtime_get_speed_scale` は、Brain が保持している値を返します。負の値を渡した場合は `0.0` が返るので、逆再生にならず止まったことをホストが確かめられます。Player は、設定した値を自分で控えておく必要はありません。
+
+### 5-2. フレームレート
+
+`ss_runtime_set_frame_rate` は、アニメーションのフレームレートを**絶対値**で上書きします。速度が倍率なのでどのアニメーションにも同じように効くのに対し、フレームレートの上書きは、アニメーションのフレームレートをそろえるためのものです（30fps のアニメーションに 60 を指定すれば 2 倍、60fps のアニメーションなら等速）。`0` を渡すと上書きを解除します。速度とフレームレートの上書きは、掛け合わせて効きます。
+
+### 5-3. 再生方向
+
+`ss_runtime_set_playback_direction(ctx, direction, style)` で指定します。
+
+| 引数 | `0` | `1` |
+| :--- | :--- | :--- |
+| `direction` | `Forward`（順方向） | `Backward`（逆方向） |
+| `style` | `Normal`（一方向） | `PingPong`（往復） |
+
+実際にいま進んでいる向き（往復の復路や逆方向の設定を反映したもの）は、`ss_runtime_is_playing_forward` で読めます。
+
+### 5-4. 再生区間
+
+`ss_runtime_set_animation_section(ctx, start_frame, end_frame)` で、再生する範囲をフレーム番号で限定します。範囲外の値（`-1` など）を渡すと、その側はアニメーションの端になります。設定すると、再生ヘッドは区間の先頭（逆方向なら末尾）に移ります。
+
+## 6. サブフレーム
+
+Brain はフレーム番号を `float` で扱い、整数フレームの間の状態を補間して計算できます。高いリフレッシュレートやゆっくりした再生でも、動きが滑らかになります。
+
+サブフレームを使うかどうかは Player が決めます。使う場合は `ss_runtime_update` が返したフレーム番号をそのまま、使わない場合は切り捨てた値を `ss_runtime_get_frame_data` に渡します（§1）。インスタンスパーツの子にも、親と同じ設定を渡してください（[インスタンスパーツ §4](../40_parts/50_instance.ja.md#4-子に渡すもの)）。
+
+### 6-1. 受け付けるフレーム番号
+
+`ss_runtime_get_frame_data` が受け付けるフレーム番号は、半開区間 **`[先頭フレーム, 最終フレーム + 1)`** です。フレーム N が、時間の上で `[N, N+1)` を占めると考えてください。
+
+- 終端やループ境界では、再生ヘッドが一瞬 `(最終フレーム, 最終フレーム + 1)` の小数になります。この範囲は**有効**で、最終フレームと同じポーズが返ります。終端を越えた外挿はしません。**`frame_no` を最終フレームに丸める必要はありません。**
+- 範囲外（先頭フレームより小さい、最終フレーム + 1 以上、`NaN`）では、FrameData を返さず、失敗します（`ss_runtime_get_last_error` が `InvalidParameter`）。そのフレームは何も描けないので、全パーツが一瞬消えます。
+
+この範囲は**アニメーション全体**の範囲です。再生区間（§5-4）を設定していても、Brain は区間の端で丸めず、区間を越えた位置のキーフレームを評価します。再生区間とサブフレームを併用する場合は、描画に使う `frame_no` を Player で区間の端に丸めてください。
+
+### 6-2. 小数を捨てない
+
+`ss_runtime_update` やスロットの `step` が返すフレーム番号は、小数を含む値です。**状態として持つフレーム番号を、整数に丸めたり区間の端に丸めたりして書き戻さないでください。** 丸めた値を書き戻すと、次の更新が丸めた位置から始まるので、1 回の更新で進む量が 1 フレームに満たない環境では、進んだ分が毎回捨てられ、アニメーションが止まります。丸めるのは、描画に渡す値だけにしてください。
+
+## 7. ループと終了の検知
+
+### 7-1. 実装の形
+
+`looped` と `finished` の通知は、次の形で実装してください。2 つのフラグは寿命が違うので、扱い方も違います。
 
 ```cpp
 class MyPlayer {
-    bool prev_finished = false;   // finished の立ち上がりエッジ検出用
+    bool prev_finished = false;   // finished の立ち上がりを検出するため
 
-    void update(float delta_seconds) {
-        // 1. 更新実行 (デルタタイムはミリ秒で渡す)
-        ss_runtime_update(context, delta_seconds * 1000.0f);
+    void tick(float delta_seconds) {
+        ss_runtime_update(ctx, delta_seconds * 1000.0f);
 
-        // 2. looped は「パルス」。update の直後にそのまま読む
-        if (ss_runtime_just_looped(context)) {
+        // looped はパルス。update の直後にそのまま読む
+        if (ss_runtime_just_looped(ctx)) {
             emit_looped();
         }
 
-        // 3. finished は「状態」。立ち上がりエッジで 1 回だけ通知する
-        bool finished = ss_runtime_is_finished(context);
+        // finished は状態。立ち上がりで 1 回だけ通知する
+        bool finished = ss_runtime_is_finished(ctx);
         if (finished && !prev_finished) {
             emit_finished();
         }
@@ -158,205 +210,45 @@ class MyPlayer {
     }
 
     void play() {
-        prev_finished = false;   // 再生し直しに備えてラッチを戻す
-        ss_runtime_play(context);
+        prev_finished = false;   // 再生し直しに備えて戻す
+        ss_runtime_play(ctx);
     }
 };
 ```
 
-### 2つのフラグの違い
-
-| API | 意味 | 寿命 | 扱い方 |
+| 関数 | 意味 | 寿命 | 扱い方 |
 | :--- | :--- | :--- | :--- |
-| `ss_runtime_just_looped` | 再生ヘッドが**頭に戻った**（＝1周した） | **パルス**。`update` の先頭で毎回クリアされる | そのまま通知 |
-| `ss_runtime_is_finished` | 指定ループ回数を**すべて完了した** | **状態**。次の `play` / `setup_animation` まで `true` のまま | **エッジを取って**通知 |
+| `ss_runtime_just_looped` | 直近の `update` で、再生ヘッドが先頭に戻った（1 周した） | **パルス**。`update` のたびに消える | そのまま通知する |
+| `ss_runtime_is_finished` | 設定したループ回数をすべて再生し終えた | **状態**。次の `play` かセットアップまで `true` のまま | **立ち上がりを取って**通知する |
 
-- `just_looped` は 1 回の `update` で複数周した場合も 1 回にまとまります（大きな `delta` ＋ フレームスキップ有効時）。
-- `is_finished` は `stop()` では立ちません。指定ループ回数を完走した場合のみです。
-- `is_finished` は無限ループ（既定値）では永久に立ちません。無限ループの終了は `just_looped` を数えるか、Player 側で `stop()` を呼んで判断してください。
+- 1 回の `update` で複数周した場合（大きな経過時間とフレームスキップ）も、`just_looped` は 1 回です。
+- `is_finished` は `stop` では立ちません。設定したループ回数を最後まで再生したときだけです。
+- 無限ループ（既定）では `is_finished` は立ちません。無限ループの終わりは、`just_looped` を数えるか、Player が `stop` を呼んで判断してください。
 
-### よくある誤り
+### 7-2. よくある誤り
 
-実際に複数の Player で起きた不具合です。いずれも `is_finished` を上記の型で使えば起きません。
+どれも、既存の Player で実際に起きた不具合です。§7-1 の形で実装すれば起きません。
 
 | 誤った実装 | 症状 |
 | :--- | :--- |
-| エッジを取らずに `is_finished` をそのまま通知する | 完了後、**毎フレーム発火し続ける** |
-| `prev_finished` を `play` でリセットしない | 完了 → 再生し直しの際、次の完了を**取りこぼす**ことがある |
-| `!is_playing` を `finished` として代用する | `stop()` や再生開始前と区別できず**誤発火**する |
-| 「最終フレームに到達したか」で終了を判定する | 有限ループで**毎周発火**する。無限ループでは**一度も発火しない**。再生ループをそこで止めると**1周目で再生が打ち切られる** |
+| `is_finished` を立ち上がりを取らずに通知する | 終了後、**毎フレーム通知し続ける** |
+| `prev_finished` を `play` で戻さない | 終了した後に再生し直すと、次の終了を**取りこぼす**ことがある |
+| `!is_playing` を終了とみなす | `stop` や再生前と区別できず、**誤って通知する** |
+| 「最終フレームに着いたか」で終了を判定する | 有限のループでは**毎周通知する**。無限ループでは**一度も通知しない**。そこで再生を止めると、**1 周目で打ち切られる** |
 
-> [!NOTE]
-> 「最終フレームを表示中」という内部状態（`end_frame_reached`）は、かつて C-API / WASM に公開されていましたが、**これを終了判定に使った Player がすべてバグを踏んだ**ため、Player 向け API から外しました。終了判定は `is_finished` だけを使ってください。
+`is_playing` が偽の間は `tick` の先頭で戻る作りなら、その判定が立ち上がりの検出を兼ねるので、`prev_finished` が無くても動きます。ただしその依存は目に見えず、後で判定の位置を動かすと壊れます。`prev_finished` を明示的に持ってください。
 
-> [!NOTE]
-> `is_playing` が false の間は `update` 自体を早期 return する作りなら、その guard がエッジ検出を兼ねるため `prev_finished` は理屈の上では不要です。しかし依存関係が暗黙になり、後から guard を動かすと壊れます。**上記の型どおり明示的にラッチを持つことを推奨します。**
+### 7-3. 通知の順
 
-### イベント列の例
-
-`set_loop_count(3)` で 0〜4 フレームのアニメを再生した場合:
+`set_loop_count(3)` で 0〜4 フレームのアニメーションを再生した場合:
 
 | 周 | 通知 |
 | :--- | :--- |
-| 1周目の末尾 → 頭に戻る | `looped` |
-| 2周目の末尾 → 頭に戻る | `looped` |
-| 3周目の末尾 | `finished`（頭には戻らず最終フレームで停止、`is_playing` が false になる） |
+| 1 周目の終わり → 先頭に戻る | `looped` |
+| 2 周目の終わり → 先頭に戻る | `looped` |
+| 3 周目の終わり | `finished`（先頭に戻らず最終フレームで止まり、`is_playing` が偽になる） |
 
-無限ループ（`-1` / `0`）では `looped` のみが繰り返し発火し、`finished` は永久に発火しません。
-
-## 3. イベントの取得 (ポーリング)
-
-`libssruntime` は更新中に通過したイベント（ユーザーデータ、シグナル、サウンド）を収集します。Player は `update` の直後にこれらを一括取得（ポーリング）します。
-
-```cpp
-// 通過したイベント数を取得
-int count = ss_runtime_get_passed_event_count(context);
-
-for (int i = 0; i < count; i++) {
-    // イベントデータのインデックスを取得
-    int event_idx = ss_runtime_get_passed_event_index(context, i);
-    
-    // SSAB (FlatBuffers) から具体的なデータを参照
-    auto events = ssab_binary->events()->Get(event_idx);
-    
-    // UserData の処理
-    if (events->users()) {
-        for (auto user : *events->users()) {
-            emit_signal("user_data", user->part_index(), user->value());
-        }
-    }
-    // Signal の処理
-    if (events->signals()) {
-        for (auto sig : *events->signals()) {
-            if (!sig || !sig->value() || !sig->value()->active()) continue;
-            
-            auto val = sig->value();
-            const char* command = val->command_id() ? val->command_id()->c_str() : "";
-            
-            // パラメータの展開処理 (C++の汎用的な map 等に格納する例)
-            std::map<std::string, MyVariant> params_map;
-            if (auto params = val->params()) {
-                for (uint32_t k = 0; k < params->size(); k++) {
-                    auto param = params->Get(k);
-                    if (!param || !param->param_id()) continue;
-                    std::string p_id = param->param_id()->c_str();
-
-                    // FlatBuffers の Union 型から値を取り出して格納する
-                    switch (param->value_type()) {
-                        case ss::format::SignalCommandParamValue_Bool:
-                            if (auto b = param->value_as_Bool()) params_map[p_id] = b->value();
-                            break;
-                        case ss::format::SignalCommandParamValue_Index:
-                            if (auto i = param->value_as_Index()) params_map[p_id] = i->value();
-                            break;
-                        case ss::format::SignalCommandParamValue_Integer:
-                            if (auto i = param->value_as_Integer()) params_map[p_id] = i->value();
-                            break;
-                        case ss::format::SignalCommandParamValue_Floating:
-                            if (auto f = param->value_as_Floating()) params_map[p_id] = f->value();
-                            break;
-                        case ss::format::SignalCommandParamValue_Text:
-                            if (auto t = param->value_as_Text()) {
-                                if (t->value()) params_map[p_id] = t->value()->c_str();
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-            emit_signal("signal", command, params_map);
-        }
-    }
-    
-    // Audio の処理
-    if (events->audios()) {
-        for (auto audio : *events->audios()) {
-            if (!audio || !audio->value()) continue;
-            
-            auto val = audio->value();
-            const char* sound_name = val->sound_name() ? val->sound_name()->c_str() : "";
-            int loop_num = val->loop_num();
-            
-            emit_signal("audio", audio->part_index(), sound_name, loop_num);
-        }
-    }
-}
-```
-
-## 4. 推奨される Player API (設計指針)
-
-利用者がアニメーションを容易に扱えるよう、以下の API インターフェースを提供することを推奨します。
-
-| カテゴリ | 推奨 API | 内容 |
-| :--- | :--- | :--- |
-| **基本操作** | `set_animation(name)`, `play(loop)`, `stop()`, `pause()` | アニメーション設定・再生・停止・一時停止 |
-| **パラメータ** | `set_speed(f32)`, `set_frame(f32)` | 速度と現在のフレーム位置 |
-| **コールバック** | `finished`, `looped`, `user_data`, `signal` | 各種イベント発生時の通知（本章 2. 参照） |
-
-### `set_animation` と `play` の分離（推奨）
-
-アニメーションの**セットアップ**（`set_animation`）と**再生開始**（`play`）は、別メソッドへ分けて公開することを推奨します（Godot / Unity 移植が採用）。内部的には C-API の `ss_runtime_setup_animation` → `ss_runtime_play`（本章 1. 参照）をそのまま 2 つの公開 API に割り当てます。
-
-> **なぜ分けるか（メモリアロケーション）**: `set_animation`（`ss_runtime_setup_animation`）はアニメーションのセットアップ時に ssruntime 内部でヒープアロケーションを伴います。これを `play` の内部で毎回行うと、再生のたびにアロケートが走ってしまいます。**アロケーションを伴うセットアップは再生前に済ませ、`play()` はアロケーションの無い軽い操作に保つ**のが狙いです。
-
-| API | 内容 |
-| :--- | :--- |
-| `set_animation(name)` | アニメのデータをロード・設定し、先頭フレームで待機する（**再生は開始しない**）。ここで内部アロケーションが発生する |
-| `play()` / `play(startFrame)` | セットアップ済みのアニメをその場（または指定フレーム）から再生開始する |
-
-利点:
-
-- `play()` の直前までに重い準備（`setup_animation` や、そのアニメが必要とするアセットのロード）を済ませられるため、再生開始を即時にできる。
-- 再生せずに先頭フレームを posed 表示できる（待機ポーズ）。
-- 再生中でなくてもアニメを差し替えられる（次に `play()` を呼ぶまで開始しない）。
-
-この設計では、再生開始時の通知として `started` コールバックを併せて提供すると、`set_animation`（差し替え）と `play`（開始）の区別が利用側で扱いやすくなります。
-
-> [!NOTE]
-> ループ回数と再生区間は `setup_animation` が既定値へ戻すため、`setAnimation` 内で（または `play` の前に）設定してください。速度・フレームレート上書き・フレームスキップ・再生方向 / スタイルはいずれも跨いで保持されるので（[`setup_animation` が戻すもの](#setup_animation-が戻すもの) を参照）、Player 側で再適用する必要は **ありません**。再適用しても同じ値を書き戻すだけです。
-
-#### すでに選択済みのアニメーションを指定したときは何もしない
-
-`set_animation(name)` は `ss_runtime_setup_animation` の 1:1 のラッパーでは **ありません**。`name` がすでにセットアップ済みのアニメーションであれば、C-API を呼ばずに戻ってください。
-
-これは「切り替え」であり、切り替え先が無いなら何もすることはありません。そして C-API の呼び出しは決して「何もしない」ものではありません。コントローラを **Stopped** に戻し、再生ヘッドを巻き戻し、再生区間を捨て、`Permanent` 以外のオーバーライドをすべて解除します。現在のクリップを毎フレーム主張する state machine は —
-
-```cpp
-// ごく普通のホストコード。ガードが無いと、このアニメーションは永久に再生されません。
-player.set_animation(state.clip);
-```
-
-— その毎フレームでアニメーションを巻き戻すことになります。
-
-理由はもう一つあり、`setup_animation` を滅多に呼ばない Player にも効きます。多くの Player はセットアップ後に自前のループ回数を再適用しますが（上の表がその理由です）、`ss_runtime_set_loop_count` は **書き込みのたびに残りループ数を再武装します**。つまり現在のアニメーションを毎フレーム再セットアップする Player は、ループ予算も毎フレームリセットしてしまい、有限のループ回数が永久に尽きませんでした。ガードは **その再適用より手前**に置く必要があります。ネイティブのセットアップ内側では遅すぎます。
-
-**「すでに選択済み」はランタイムが持っているものと突き合わせ**、リソースをバインドしたら必ず無効化してください。
-
-- **ホストが最後に要求した名前**と比べるのは二重に間違いです。アニメーション名をシリアライズして持つコンポーネントは最初のセットアップ前からその値を持っているので、最初の `set_animation` がスキップされ、何もセットアップされないまま終わります。
-- `ss_runtime_bind_resource`（およびそれを呼ぶロード処理）の後は何もセットアップされていません。バインドで選択が消えるように追跡してください。さもないと、1 つ目と同じ名前のアニメーションを持つ 2 つ目のパックが「すでに選択済み」と判定され、そのパックはバインドされたまま再生不能になります。しかも無言で、名前が衝突したパックだけで起きます。1 つのプロジェクトから書き出したキャラクター一式では、それは例外ではなく通常のケースです。
-
-アニメーションを **再スタート**したいなら `play` を呼んでください。頭出しはそちらの役目です。オーバーライドを捨てたいなら clear-overrides API を、区間を捨てたいならアニメーション全体を覆う区間を設定してください。いずれも、これまでは「切り替えでない切り替え」の副作用としてしか到達できませんでした。
-
-> [!NOTE]
-> 公式 Player 7 本すべてがこの挙動です。C-API を包む内部層は C-API の名前と意味論をそのまま保ちます（`SpriteStudioInternalPlayer.SetupAnimation`、`SsInternalPlayer.setupAnimation` など）。ガードはその上の、利用者に向いた層のものです。
-
-### サブフレーム (Sub-frame) 再生
-`libssruntime` はフレーム番号を `f32` で管理しており、整数フレーム間の「補間」が可能です。高リフレッシュレート環境での滑らかな動きを実現するため、Player 側でも `f32` でのフレーム管理をサポートすることを推奨します。
-
-#### 受け付けるフレーム範囲と終端の扱い
-`ss_runtime_get_frame_data(frame_no)` が受け付ける `frame_no` は、半開区間 **`[start_frame, end_frame + 1)`** です。これは「フレーム N は連続的な再生タイムライン上で時間区間 `[N, N+1)` を占有する」という考え方に対応します。
-
-- サブフレーム再生では、終端・ループ境界で再生ヘッドが一瞬 `(end_frame, end_frame + 1)` の小数値になります。この区間は **有効** で、最終キーフレームの値を保持したポーズ（`end_frame` ちょうどと同一）が返ります。終端を越えた外挿は行われません。
-- 範囲外（`frame_no < start_frame` / `frame_no >= end_frame + 1` / `NaN`）は `InvalidParameter` を返します。この場合 **FrameData が得られず、そのフレームの描画が消える**（全パーツが一瞬消失する）ため注意してください。
-
-> [!NOTE]
-> サブフレーム再生時に、終端での消失を避ける目的で `frame_no` を `end_frame` へクランプする必要は **ありません**。ランタイムが末尾区間 `(end_frame, end_frame + 1)` を正しく扱います。
->
-> ただしこの範囲は **アニメーションデータ全体（クリップ）** の範囲です。`set_animation_section` で再生区間を限定している場合、ランタイムはセクション端へのクランプを行わず、セクションを越えてもクリップ内の実キーフレームを評価します。セクション再生とサブフレームを併用する場合は、表示用に **Player 側で `frame_no` をセクション端へクランプ** してください。
-
-### 複数アニメーションのブレンド (State machine / Locomotion blend)
-クロスフェードやアニメーションの重ね合わせを実装する場合は [アニメーションミキシング](../40_components/60_animation_mixing.ja.md) を参照。トラックと `alpha`、加算オーバーレイ、1トラックに複数アニメを weight で混ぜる方法を解説します。
+無限ループ（`-1` / `0`）では `looped` だけが繰り返され、`finished` は来ません。
 
 ---
 [目次に戻る](../README.ja.md)

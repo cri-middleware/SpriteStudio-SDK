@@ -1,126 +1,106 @@
 > [日本語](./20_playback_control.ja.md) | **English**
 
-# Playback Control & Events
+# Playback Control
 
-Here you implement management of the animation playback state (play, stop, loop) and the mechanism that notifies your game logic of timeline events (user data, signals).
+This page covers what the Brain's playback controls mean (setup, play, pause, stop, speed, loop) and how to update every frame. How to expose them in the Player's public API is in [Player API Conventions §8](../20_design/30_api_conventions.md#8-selecting-and-playing-an-animation).
 
-## 1. Setting up and playing an animation
+## 1. The flow of one frame
 
-Specify the animation you want to play on the `libssruntime` context by name and start playback.
+Every frame, the Player calls the Brain in the following order.
 
 ```cpp
-// 1. Set up the animation
-ss_runtime_setup_animation(context, "attack_pose");
+void MyPlayer::tick(float delta_seconds) {
+    // 1. Advance time. Pass the elapsed time in milliseconds. The return value is the frame number to draw
+    float frame_no = ss_runtime_update(ctx, delta_seconds * 1000.0f);
 
-// 2. Playback settings (loop count: -1 = infinite, 1 = once)
-ss_runtime_set_loop_count(context, -1);
+    // 2. Notify loops and the end (§7)
+    // 3. Notify the events passed in this frame (the Events page)
 
-// 3. Start playback
-ss_runtime_play(context);
+    // 4. Have the Brain compute the state of that frame (§6)
+    float draw_frame = sub_frame_enabled ? frame_no : floorf(frame_no);
+    const uint8_t* fd; size_t fd_len;
+    ss_runtime_get_frame_data(ctx, draw_frame, &fd, &fd_len);
+
+    // 5. Advance the children of instance parts and effect parts, and draw (the Render Loop page)
+}
 ```
 
-### Values for `ss_runtime_set_loop_count`
+Events are explained in [Events](./30_events.md), and drawing in [Render Loop](./40_render_loop.md).
+
+## 2. Setup and play
+
+Select the animation to play by name (setup), then start playback.
+
+```cpp
+// 1. Select the animation. The Brain allocates memory internally
+ss_runtime_setup_animation(ctx, "attack");
+
+// 2. Set the loop count (setup resets it to the default, so set it afterwards)
+ss_runtime_set_loop_count(ctx, 1);
+
+// 3. Start playback
+ss_runtime_play(ctx);
+```
+
+**`ss_runtime_update` advances nothing until you call `ss_runtime_play`.** If a Context has only been set up, updating it every frame does not move the animation.
+
+The values of `ss_runtime_set_loop_count` are as follows.
 
 | Value | Meaning |
 | :--- | :--- |
-| `n` (> 0) | Play `n` cycles and stop. `1` = once |
-| `-1` | Infinite loop |
-| `0` | Infinite loop (an alias of `-1`; anything ≤ 0 is normalized to `-1`) |
+| `n` (> 0) | Play `n` cycles and stop. `1` plays once |
+| `-1` | Loop forever (default) |
+| `0` or less | Same as `-1` |
 
-### What `setup_animation` resets
+`ss_runtime_set_loop_count` resets the remaining loop count every time you write it. `ss_runtime_play` also resets the remaining count from the loop count at that moment. Set the loop count after setup and before `ss_runtime_play`.
 
-`setup_animation` is the primitive a Player's state machine calls on every
-transition, so what it resets is drawn along one line: **who sets it.**
+## 3. What setup resets
 
-| Setting | Survives `setup_animation`? | Why |
+`ss_runtime_setup_animation` is the operation a Player's state machine calls on every transition. Which settings it resets to their defaults depends on **who decides the setting**.
+
+| Setting | On setup | Why |
 | :--- | :--- | :--- |
-| Playback section | no | Frame indices mean nothing against a different clip |
-| Authored frame rate | no | It is the clip's own data, re-read every time |
-| Loop count | no | The transition states it; see below |
-| **Direction / style (`set_playback_direction`)** | **yes** | "Play this backwards" describes the playback, not the clip that happens to be loaded |
-| **Speed (`set_speed_scale`)** | **yes** | A *different* system sets it — slow motion, a haste buff, a difficulty scale |
-| **Frame-rate override (`set_frame_rate`)** | **yes** | A Player policy — "this player runs at 60fps", whatever a clip was authored at |
-| **Frame skip** | **yes** | A Player policy — "show every frame" for a capture or a frame-counted cutscene |
+| Playback section | Reset | A frame number means nothing for a different animation |
+| Animation frame rate | Reset | It is the animation's own data, so it is re-read every time |
+| Loop count | Reset | It is specified per transition |
+| **Playback direction / style** (`ss_runtime_set_playback_direction`) | **Kept** | "Play backwards" is a decision about playback, not a property of the loaded animation |
+| **Speed** (`ss_runtime_set_speed_scale`) | **Kept** | Another system decides it, such as slow motion or difficulty |
+| **Frame-rate override** (`ss_runtime_set_frame_rate`) | **Kept** | Player policy ("this Player runs at 60fps") |
+| **Frame skip** (`ss_runtime_set_skip_frames`) | **Kept** | Player policy (show every frame for a recording, for example) |
 
-The direction survives; the *heading* does not. A ping-pong that was on its
-return leg when the animation changed starts the new one walking outward again,
-so a transition never begins mid-bounce.
+What a transition specifies is reset **to keep each transition independent**. If the loop count carried over, a `1` set for an attack would follow the character into its walk, and the conditions to reproduce the bug would be buried in the transition history. The state machine does not set speed or frame skip, so resetting them would let an animation transition break a setting unrelated to it.
 
-The two rate controls are both the host's and compose, but they say different
-things. `set_speed_scale` is a **multiple** of whatever the clip was authored
-at, so it means the same thing against every clip. `set_frame_rate` is an
-**absolute** rate, so its effect does depend on the clip — 60 against a 30fps
-clip is double speed and against a 60fps clip is none. That is the point of it:
-it normalizes, where the multiplier scales. `set_frame_rate(0)` clears the
-override and hands playback back to the authored rate.
+What is kept is the playback direction setting, not **the heading partway through a round trip**. If you switch animations partway through the return leg of a round trip (PingPong), the new animation starts on the outward leg.
 
-Anything the transition itself specifies is reset, so **transitions stay
-independent of the one before them**. Were the loop count to persist, a `1` meant
-for an attack would quietly follow the character into its walk, and the bug's
-reproduction would live in the transition history rather than in the transition.
+Setup also returns the playback state to **Stopped** and releases any pause hold (§4).
 
-Speed and frame skip are the other way round: nothing in the state machine sets
-them, so resetting them would let an animation transition clobber a setting it
-never knew about. A Player's own sub-frame flag is the same kind of setting and
-already behaves this way, simply because it lives on the Player's side of the
-C-API.
+## 4. Playback state
 
-> [!NOTE]
-> `play` re-arms the loop counter with the count in effect at that moment, so
-> replaying a finished animation applies the same count again. Set the loop count
-> after `setup_animation` and before `play`.
+### 4-1. What each operation means
 
-### Moving the playhead
-- **Seek**: jump to an arbitrary frame with `ss_runtime_set_frame_no(context, frame)`.
-- **Pause / resume**: `ss_runtime_pause(context)` holds playback in place and `ss_runtime_resume(context)` lifts the hold. Both are idempotent.
-
-### The transport contract
-
-These are the semantics every Player is expected to publish. Expose them as four
-distinct verbs — do not fold `resume` into `play`.
+Treat these as four operations. Do not fold `resume` into `play`.
 
 | Call | Meaning | Playhead | `is_playing` | `is_pausing` |
 | :--- | :--- | :--- | :--- | :--- |
-| `ss_runtime_play` | **Head-out.** Rewinds to the section start (its end when the direction is backward) and re-arms the loop counter | rewinds | `true` | `false` |
-| `ss_runtime_play_with_start_frame` | Head-out from the given frame | that frame | `true` | `false` |
-| `ss_runtime_pause` | Holds playback where it stands. Idempotent | kept | `true` | `true` |
-| `ss_runtime_resume` | Lifts the hold, carrying on in place. Idempotent; does **not** start a stopped animation | kept | `true` | `false` |
-| `ss_runtime_stop` | Ends playback. Nothing rewinds, so the host keeps drawing the frame it stopped on | kept | `false` | `false` |
+| `ss_runtime_play` | **Plays from the start.** Rewinds to the start of the section (the end when backward) and resets the remaining loop count | Rewinds | `true` | `false` |
+| `ss_runtime_play_with_start_frame` | Plays from the given frame | That frame | `true` | `false` |
+| `ss_runtime_pause` | Holds in place | Unchanged | `true` | `true` |
+| `ss_runtime_resume` | Releases the hold and continues from there. Does **not start** a stopped animation | Unchanged | `true` | `false` |
+| `ss_runtime_stop` | Ends playback. It does not rewind, so the frame it stopped on keeps being drawn | Unchanged | `false` | `false` |
 
-### Speed and the frame rate
+- **`play` is not resume.** It always starts from the start, so using it to release a pause sends the playhead back to the start.
+- **A pause is a "hold", not a "stop".** `ss_runtime_is_playing` is `true` while paused. `ss_runtime_is_pausing` is what tells the two apart.
+- **`stop` does not rewind.** To show a different position, seek.
 
-`ss_runtime_set_speed_scale` is a multiple of the effective frame rate.
+### 4-2. State transitions
 
-| Value | Effect |
-| :--- | :--- |
-| `1.0` | As authored |
-| `0.5` / `2.0` | Half / double |
-| **`0.0`** | **The playhead stops.** Time still passes and `is_playing` stays true; nothing advances |
-| **negative** | **Also stops.** Reverse playback is `ss_runtime_set_playback_direction`'s business, not the speed's |
-
-> [!NOTE]
-> `0.0` and negative values used to normalize to `1.0`, so a host that dragged a
-> speed slider to its minimum got full-speed playback — the opposite of what the
-> value said — and a host that passed a negative rate hoping for reverse got
-> forward at full speed with no indication the request was unsupported.
-
-`ss_runtime_get_speed_scale` reads the rate back, so a Player does not have
-to keep a copy of what it last set — the copy is what drifts. It returns the
-value that was **stored**, which is not always the one that was passed: the two
-clamped rows above read back as `0.0`, so a host can tell that its negative
-became a stop instead of assuming it became reverse playback.
-
-### Playback states
-
-The two flags describe **three** states, and only three — `is_pausing` implies
-`is_playing`, so "stopped, and also paused" is not reachable. That is what lets a
-Player read `is_pausing` on its own without also testing `is_playing`.
+The two flags represent **only three** states. If `is_pausing` is true, `is_playing` is also true, so `is_pausing` alone tells you whether playback is paused.
 
 | State | `is_playing` | `is_pausing` | Advances on `update` |
 | :--- | :--- | :--- | :--- |
-| **Stopped** (also the initial state) | `false` | `false` | no |
-| **Playing** | `true` | `false` | yes |
-| **Held** (paused) | `true` | `true` | no |
+| **Stopped** (initial state) | `false` | `false` | No |
+| **Playing** | `true` | `false` | Yes |
+| **Held** (paused) | `true` | `true` | No |
 
 ```mermaid
 stateDiagram-v2
@@ -134,54 +114,95 @@ stateDiagram-v2
     Held --> Stopped : stop
 ```
 
-Every call not drawn above is a **no-op**, deliberately, so a host can call the
-verb that matches its intent without first checking the state:
+Combinations not in the diagram do nothing. The host can call the operation it intends without checking the current state.
 
-| From | `play` | `pause` | `resume` | `stop` |
+| Current state | `play` | `pause` | `resume` | `stop` |
 | :--- | :--- | :--- | :--- | :--- |
-| **Stopped** | → Playing, from the section start | *no-op* | *no-op* | *no-op* |
-| **Playing** | → Playing, rewound to the section start | → Held | *no-op* | → Stopped, playhead kept |
-| **Held** | → Playing, rewound and no longer held | *no-op* | → Playing, playhead kept | → Stopped, playhead kept |
+| **Stopped** | → Playing (from the start of the section) | Does nothing | Does nothing | Does nothing |
+| **Playing** | → Playing (rewinds to the start of the section) | → Held | Does nothing | → Stopped (playhead unchanged) |
+| **Held** | → Playing (rewinds, and also releases the hold) | Does nothing | → Playing (playhead unchanged) | → Stopped (playhead unchanged) |
 
-`setup_animation` returns the controller to **Stopped**, dropping any hold left by
-the animation before it.
+### 4-3. Seeking
 
-Two consequences worth stating outright, because they are what Players get wrong:
+`ss_runtime_set_frame_no(ctx, frame)` moves the playhead. A value outside the playback section becomes the edge of the section. Seeking does not change the playback state.
 
-- **Nothing advances until `play`.** `update` gates on `is_playing`, so a
-  controller that has only been set up can be ticked every frame and will not
-  move.
-- **`stop` does not rewind.** The playhead stays where it was, so the host keeps
-  drawing the frame it stopped on. Seek if you want it elsewhere.
+The first `update` after a seek reports the events of the destination frame. It does not report the events between the origin and the destination ([Events §3](./30_events.md#3-which-frames-are-reported)).
 
-> [!IMPORTANT]
-> **`play` is not a resume.** It always heads out, so using it to lift a pause silently sends the playhead back to the start. Resume with `ss_runtime_resume`.
->
-> **A pause is a hold, not a stop.** `ss_runtime_is_playing` stays `true` while paused; `ss_runtime_is_pausing` is what distinguishes the two. A Player publishing an `is_paused` can pass `is_pausing` straight through — it is `false` on an animation that has never played, and `false` again after `stop`.
+`ss_runtime_next_frame` / `ss_runtime_prev_frame` seek one frame forward / back, regardless of the playback direction. They do not move at the edge of the section.
 
-## 2. Per-frame updates and detecting the end
+## 5. Speed, frame rate and playback direction
 
-Every frame the Player passes the game engine's delta time to the library to update the state.
+### 5-1. Speed
 
-### The implementation pattern
+`ss_runtime_set_speed_scale` is a multiplier on the effective frame rate.
 
-**Implement `looped` / `finished` notifications in the following form.** The two flags have different lifetimes, so they must be handled differently.
+| Value | Effect |
+| :--- | :--- |
+| `1.0` | As in the animation |
+| `0.5` / `2.0` | Half / double |
+| **`0.0`** | **The playhead stops.** `is_playing` stays `true`, and nothing advances as time passes |
+| **Negative** | **Stops, the same as `0.0`.** Specify reverse playback with the playback direction (§5-3) |
+
+`ss_runtime_get_speed_scale` returns the value the Brain holds. If you passed a negative value, it returns `0.0`, so the host can confirm that playback stopped rather than reversed. The Player does not need to keep its own copy of the value it set.
+
+### 5-2. Frame rate
+
+`ss_runtime_set_frame_rate` overrides the animation's frame rate with an **absolute** value. Speed is a multiplier, so it works the same way on every animation. The frame-rate override, by contrast, is for making the frame rates of animations uniform (60 on a 30fps animation doubles the speed; on a 60fps animation it plays at normal speed). Passing `0` clears the override. Speed and the frame-rate override multiply together.
+
+### 5-3. Playback direction
+
+Set it with `ss_runtime_set_playback_direction(ctx, direction, style)`.
+
+| Argument | `0` | `1` |
+| :--- | :--- | :--- |
+| `direction` | `Forward` (forward) | `Backward` (backward) |
+| `style` | `Normal` (one way) | `PingPong` (round trip) |
+
+`ss_runtime_is_playing_forward` reads the direction playback is actually moving in now (reflecting the return leg of a round trip and the backward setting).
+
+### 5-4. Playback section
+
+`ss_runtime_set_animation_section(ctx, start_frame, end_frame)` limits the range to play, by frame number. If you pass an out-of-range value (such as `-1`), that side becomes the edge of the animation. Setting a section moves the playhead to the start of the section (the end when backward).
+
+## 6. Sub-frames
+
+The Brain handles frame numbers as `float`, and can compute interpolated states between integer frames. This keeps motion smooth at high refresh rates and in slow playback.
+
+The Player decides whether to use sub-frames. If it does, pass the frame number returned by `ss_runtime_update` to `ss_runtime_get_frame_data` as is; if it does not, pass the value rounded down (§1). Pass the same setting as the parent to the children of instance parts too ([Instance Parts §4](../40_parts/50_instance.md#4-what-to-pass-to-the-child)).
+
+### 6-1. Accepted frame numbers
+
+`ss_runtime_get_frame_data` accepts frame numbers in the half-open interval **`[first frame, last frame + 1)`**. Think of frame N as occupying `[N, N+1)` in time.
+
+- At the end and at loop boundaries, the playhead briefly takes a fractional value in `(last frame, last frame + 1)`. This range is **valid**, and returns the same pose as the last frame. Nothing is extrapolated past the end. **You do not need to clamp `frame_no` to the last frame.**
+- Out of range (less than the first frame, last frame + 1 or more, or `NaN`), the call fails without returning FrameData (`ss_runtime_get_last_error` is `InvalidParameter`). Nothing can be drawn for that frame, so every part disappears for a moment.
+
+This range is that of **the whole animation**. Even with a playback section set (§5-4), the Brain does not clamp to the section edges, and evaluates the keyframes at positions beyond the section. When you combine a playback section with sub-frames, clamp the `frame_no` used for drawing to the section edges in the Player.
+
+### 6-2. Do not discard the fraction
+
+The frame numbers returned by `ss_runtime_update` and by a slot's `step` include a fraction. **Do not round the frame number you hold as state to an integer, or clamp it to the section edges, and write it back.** If you write back a rounded value, the next update starts from the rounded position. Where one update advances less than one frame, the progress is thrown away every time and the animation stops. Round only the value you pass to drawing.
+
+## 7. Detecting loops and the end
+
+### 7-1. The implementation pattern
+
+Implement the `looped` and `finished` notifications in the following form. The two flags have different lifetimes, so they are handled differently.
 
 ```cpp
 class MyPlayer {
-    bool prev_finished = false;   // for rising-edge detection of finished
+    bool prev_finished = false;   // to detect the rising edge of finished
 
-    void update(float delta_seconds) {
-        // 1. Run the update (pass the delta time in milliseconds)
-        ss_runtime_update(context, delta_seconds * 1000.0f);
+    void tick(float delta_seconds) {
+        ss_runtime_update(ctx, delta_seconds * 1000.0f);
 
-        // 2. looped is a "pulse". Read it as-is immediately after update
-        if (ss_runtime_just_looped(context)) {
+        // looped is a pulse. Read it as is, right after update
+        if (ss_runtime_just_looped(ctx)) {
             emit_looped();
         }
 
-        // 3. finished is a "state". Notify exactly once on the rising edge
-        bool finished = ss_runtime_is_finished(context);
+        // finished is a state. Notify only once, on the rising edge
+        bool finished = ss_runtime_is_finished(ctx);
         if (finished && !prev_finished) {
             emit_finished();
         }
@@ -189,205 +210,45 @@ class MyPlayer {
     }
 
     void play() {
-        prev_finished = false;   // reset the latch in preparation for replaying
-        ss_runtime_play(context);
+        prev_finished = false;   // reset in preparation for replaying
+        ss_runtime_play(ctx);
     }
 };
 ```
 
-### The difference between the two flags
-
-| API | Meaning | Lifetime | How to handle it |
+| Function | Meaning | Lifetime | How to handle it |
 | :--- | :--- | :--- | :--- |
-| `ss_runtime_just_looped` | The playhead **returned to the start** (completed one cycle) | A **pulse**. Cleared at the top of every `update` | Notify as-is |
-| `ss_runtime_is_finished` | **All** the specified loops have completed | A **state**. Stays `true` until the next `play` / `setup_animation` | Notify **on the edge** |
+| `ss_runtime_just_looped` | In the latest `update`, the playhead returned to the start (completed one cycle) | **Pulse**. Cleared on every `update` | Notify as is |
+| `ss_runtime_is_finished` | All the set loops have been played | **State**. Stays `true` until the next `play` or setup | Notify **on the rising edge** |
 
-- `just_looped` collapses into a single occurrence even when several cycles complete within one `update` (a large `delta` with frame skipping enabled).
-- `is_finished` is not raised by `stop()`. It is raised only when the specified loop count completes.
-- `is_finished` is never raised for an infinite loop (the default). To detect the end of an infinite loop, count `just_looped` or decide it on the Player side by calling `stop()`.
+- Even when one `update` completes several cycles (a large elapsed time with frame skip), `just_looped` is raised once.
+- `stop` does not raise `is_finished`. It is raised only when the set loop count has been played to the end.
+- With an infinite loop (the default), `is_finished` is never raised. For the end of an infinite loop, count `just_looped`, or decide it by having the Player call `stop`.
 
-### Common mistakes
+### 7-2. Common mistakes
 
-These are real defects that occurred in several Players. None of them happen if you use `is_finished` in the pattern above.
+Each of these is a defect that actually occurred in an existing Player. None of them happen if you implement the form in §7-1.
 
 | Wrong implementation | Symptom |
 | :--- | :--- |
-| Notifying `is_finished` directly without taking the edge | **Fires every frame** after completion |
-| Not resetting `prev_finished` in `play` | The next completion can be **missed** when replaying after a completion |
-| Substituting `!is_playing` for `finished` | **False firing** - indistinguishable from `stop()` or from before playback starts |
-| Deciding completion from "did we reach the final frame?" | **Fires every cycle** with a finite loop; **never fires** with an infinite loop; and if you stop the playback loop there, **playback is cut off during the first cycle** |
+| Notifying `is_finished` without taking the rising edge | After the end, it **keeps notifying every frame** |
+| Not resetting `prev_finished` in `play` | When you replay after the end, the next end can be **missed** |
+| Treating `!is_playing` as the end | It cannot be told apart from `stop` or from before playback, so it **notifies wrongly** |
+| Deciding the end by "did it reach the last frame?" | With a finite loop it **notifies every cycle**. With an infinite loop it **never notifies**. If you stop playback there, playback is **cut off in the first cycle** |
 
-> [!NOTE]
-> The internal state "the final frame is being displayed" (`end_frame_reached`) used to be exposed in the C-API / WASM, but **every Player that used it for completion detection hit a bug**, so it was removed from the Player-facing API. Use only `is_finished` for completion detection.
+If your `tick` returns at the top while `is_playing` is false, that check doubles as the rising-edge detection, so it works without `prev_finished`. But that dependency is invisible, and it breaks if the check is moved later. Hold `prev_finished` explicitly.
 
-> [!NOTE]
-> If your `update` early-returns while `is_playing` is false, that guard also serves as edge detection, so `prev_finished` is unnecessary in theory. But the dependency becomes implicit and moving the guard later breaks it. **We recommend holding the latch explicitly, exactly as in the pattern above.**
+### 7-3. Notification order
 
-### Example event sequence
-
-Playing a 0-4 frame animation with `set_loop_count(3)`:
+Playing an animation of frames 0–4 with `set_loop_count(3)`:
 
 | Cycle | Notification |
 | :--- | :--- |
 | End of cycle 1 → back to the start | `looped` |
 | End of cycle 2 → back to the start | `looped` |
-| End of cycle 3 | `finished` (it does not return to the start; it stops on the final frame and `is_playing` becomes false) |
+| End of cycle 3 | `finished` (it does not return to the start; it stops on the last frame and `is_playing` becomes false) |
 
-With an infinite loop (`-1` / `0`), only `looped` fires repeatedly and `finished` never fires.
-
-## 3. Retrieving events (polling)
-
-`libssruntime` collects the events passed during an update (user data, signals, sounds). The Player retrieves them in bulk (polls) immediately after `update`.
-
-```cpp
-// Get the number of events passed
-int count = ss_runtime_get_passed_event_count(context);
-
-for (int i = 0; i < count; i++) {
-    // Get the index of the event data
-    int event_idx = ss_runtime_get_passed_event_index(context, i);
-
-    // Reference the concrete data from the SSAB (FlatBuffers)
-    auto events = ssab_binary->events()->Get(event_idx);
-
-    // Handling UserData
-    if (events->users()) {
-        for (auto user : *events->users()) {
-            emit_signal("user_data", user->part_index(), user->value());
-        }
-    }
-    // Handling Signal
-    if (events->signals()) {
-        for (auto sig : *events->signals()) {
-            if (!sig || !sig->value() || !sig->value()->active()) continue;
-
-            auto val = sig->value();
-            const char* command = val->command_id() ? val->command_id()->c_str() : "";
-
-            // Expanding the parameters (example: storing them in a generic C++ map)
-            std::map<std::string, MyVariant> params_map;
-            if (auto params = val->params()) {
-                for (uint32_t k = 0; k < params->size(); k++) {
-                    auto param = params->Get(k);
-                    if (!param || !param->param_id()) continue;
-                    std::string p_id = param->param_id()->c_str();
-
-                    // Take the value out of the FlatBuffers union type and store it
-                    switch (param->value_type()) {
-                        case ss::format::SignalCommandParamValue_Bool:
-                            if (auto b = param->value_as_Bool()) params_map[p_id] = b->value();
-                            break;
-                        case ss::format::SignalCommandParamValue_Index:
-                            if (auto i = param->value_as_Index()) params_map[p_id] = i->value();
-                            break;
-                        case ss::format::SignalCommandParamValue_Integer:
-                            if (auto i = param->value_as_Integer()) params_map[p_id] = i->value();
-                            break;
-                        case ss::format::SignalCommandParamValue_Floating:
-                            if (auto f = param->value_as_Floating()) params_map[p_id] = f->value();
-                            break;
-                        case ss::format::SignalCommandParamValue_Text:
-                            if (auto t = param->value_as_Text()) {
-                                if (t->value()) params_map[p_id] = t->value()->c_str();
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-            emit_signal("signal", command, params_map);
-        }
-    }
-
-    // Handling Audio
-    if (events->audios()) {
-        for (auto audio : *events->audios()) {
-            if (!audio || !audio->value()) continue;
-
-            auto val = audio->value();
-            const char* sound_name = val->sound_name() ? val->sound_name()->c_str() : "";
-            int loop_num = val->loop_num();
-
-            emit_signal("audio", audio->part_index(), sound_name, loop_num);
-        }
-    }
-}
-```
-
-## 4. Recommended Player API (design guidelines)
-
-To make animations easy for your users to work with, we recommend providing the following API interface.
-
-| Category | Recommended API | Contents |
-| :--- | :--- | :--- |
-| **Basic operations** | `set_animation(name)`, `play(loop)`, `stop()`, `pause()` | Setting, playing, stopping, and pausing an animation |
-| **Parameters** | `set_speed(f32)`, `set_frame(f32)` | Speed and the current frame position |
-| **Callbacks** | `finished`, `looped`, `user_data`, `signal` | Notification when each event occurs (see §2 of this chapter) |
-
-### Separating `set_animation` from `play` (recommended)
-
-We recommend exposing **setup** (`set_animation`) and **starting playback** (`play`) as separate methods (adopted by the Godot and Unity ports). Internally, map the C-API's `ss_runtime_setup_animation` → `ss_runtime_play` (see §1 of this chapter) onto those two public APIs directly.
-
-> **Why separate them (memory allocation)**: `set_animation` (`ss_runtime_setup_animation`) involves heap allocation inside ssruntime when setting the animation up. Doing that inside `play` every time means an allocation on every playback. The aim is to **finish the allocating setup before playback and keep `play()` a light, allocation-free operation**.
-
-| API | Contents |
-| :--- | :--- |
-| `set_animation(name)` | Loads and sets the animation data and waits on the first frame (**does not start playback**). The internal allocation happens here |
-| `play()` / `play(startFrame)` | Starts playing the already set-up animation from where it is (or from a specified frame) |
-
-Benefits:
-
-- Heavy preparation (`setup_animation`, and loading the assets that animation needs) can be finished before `play()`, so playback can start immediately.
-- You can display the first frame posed without playing (an idle pose).
-- You can swap the animation even while not playing (it does not start until the next `play()`).
-
-With this design, also providing a `started` callback as the notification for playback beginning makes it easier for users to distinguish `set_animation` (swapping) from `play` (starting).
-
-> [!NOTE]
-> `setup_animation` resets the loop count and the section, so set those inside `setAnimation` (or before `play`). Speed, the frame-rate override, frame skip and the playback direction / style all survive it — see [What `setup_animation` resets](#what-setup_animation-resets) — so a Player does **not** need to re-apply them, and one that does is simply writing the same value back.
-
-#### Selecting the animation already selected must do nothing
-
-`set_animation(name)` is **not** a 1:1 wrapper over `ss_runtime_setup_animation`. When `name` is already the animation set up, the Player returns without calling the C-API at all.
-
-It is a *switch*, so with nothing to switch to there is nothing to do — and the C-API call is very much not nothing. It returns the controller to **Stopped**, rewinds the playhead, drops the playback section, and clears every override that is not `Permanent`. A state machine asserting its current clip every frame —
-
-```cpp
-// Perfectly reasonable host code. Without the guard, this animation never plays.
-player.set_animation(state.clip);
-```
-
-— would rewind the animation on every frame it did that.
-
-There is a second reason, and it bites even a Player that calls `setup_animation` sparingly. Most Players re-apply their own loop count after a setup (the row above says why), and `ss_runtime_set_loop_count` **re-arms the remaining-loop counter on every write**. So a Player that re-set-up the current animation each frame also reset the loop budget each frame, and a finite loop count never ran out. The guard has to sit **ahead of that re-application**, not inside the native setup.
-
-**Judge "already selected" against what the runtime has**, and invalidate it whenever a resource is bound:
-
-- Comparing against the name the *host* last asked for is wrong twice over. A component whose animation name is serialized already holds it before the first setup, so the first `set_animation` would be skipped and nothing would ever be set up.
-- `ss_runtime_bind_resource` (and any load that calls it) leaves nothing set up. Track the selection so a bind clears it, or a second pack that happens to name an animation the same way as the first is taken for one already selected — leaving that pack bound and unplayable, silently, and only for the packs whose names collide. For a family of characters exported from one project that is the normal case, not the exotic one.
-
-To *restart* an animation, call `play` — that is what heads out. To drop the overrides, call the clear-overrides API. To drop a section, set one covering the whole animation. Each of those was reachable through a re-setup only as a side effect of a switch that was not a switch.
-
-> [!NOTE]
-> All seven official Players behave this way. The internal layer that wraps the C-API keeps the C-API's name and semantics (`SpriteStudioInternalPlayer.SetupAnimation`, `SsInternalPlayer.setupAnimation`, …); the guard belongs to the Player-facing layer above it.
-
-### Sub-frame playback
-`libssruntime` manages the frame number as an `f32`, which allows "interpolation" between integer frames. To achieve smooth motion on high-refresh-rate displays, we recommend that the Player support `f32` frame management too.
-
-#### The accepted frame range and how the end is handled
-The `frame_no` accepted by `ss_runtime_get_frame_data(frame_no)` is the half-open interval **`[start_frame, end_frame + 1)`**. This corresponds to the idea that "frame N occupies the time interval `[N, N+1)` on a continuous playback timeline".
-
-- During sub-frame playback, the playhead momentarily takes a fractional value in `(end_frame, end_frame + 1)` at the end and at loop boundaries. That interval is **valid** and returns a pose holding the final keyframe's values (identical to exactly `end_frame`). No extrapolation beyond the end is performed.
-- Out-of-range values (`frame_no < start_frame` / `frame_no >= end_frame + 1` / `NaN`) return `InvalidParameter`. Note that in that case **no FrameData is obtained and that frame's drawing disappears** (every part vanishes momentarily).
-
-> [!NOTE]
-> During sub-frame playback there is **no need** to clamp `frame_no` to `end_frame` in order to avoid the disappearance at the end. The runtime handles the final interval `(end_frame, end_frame + 1)` correctly.
->
-> Note however that this range is that of **the whole animation data (the clip)**. When you have limited the playback range with `set_animation_section`, the runtime does not clamp to the section boundaries and evaluates the real keyframes within the clip even beyond the section. When combining section playback with sub-frame playback, **clamp `frame_no` to the section boundary on the Player side** for display purposes.
-
-### Blending several animations (state machine / locomotion blend)
-To implement crossfades or to stack animations, see [Animation Mixing](../40_components/60_animation_mixing.md). It covers tracks and their `alpha`, additive overlays, and blending several animations on one track by weight.
+With an infinite loop (`-1` / `0`), only `looped` repeats, and `finished` never comes.
 
 ---
-[Back to Table of Contents](../README.md)
+[Back to contents](../README.md)

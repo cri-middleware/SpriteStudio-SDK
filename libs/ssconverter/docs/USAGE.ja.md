@@ -111,7 +111,7 @@ ss_converter_abort(ctx);
 
 これらの詳細な実装パターンや、Godot / Unity 向けの具体的なコード例については、Player 移植ガイドの以下を参照してください。
 
-👉 **[16. エディタインテグレーションとコンバート](../../ssruntime/docs/60_tooling/10_editor_integration.ja.md)**
+👉 **[エディタ統合](../../ssruntime/docs/50_features/60_editor_integration.ja.md)**
 
 ## 5. 注意事項
 

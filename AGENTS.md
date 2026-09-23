@@ -45,7 +45,7 @@ integrate. The runtime is `no_std`-first; `std` is opt-in for developer ergonomi
 | How the site is built and a release is cut | [RELEASING.md](./RELEASING.md), maintainers only |
 | What to build next, and what is deliberately out of scope | [ROADMAP.md](./ROADMAP.md) |
 | The constraints every contribution must hold to | [CONTRIBUTING.md](./CONTRIBUTING.md) |
-| Runtime semantics a Player must honour | [Player Porting Guide](./libs/ssruntime/docs/README.ja.md) — start at [Limitations](./libs/ssruntime/docs/10_introduction/20_limitations.md) and the [Batched Rendering Contract](./libs/ssruntime/docs/30_core/30_render_loop.md) |
+| Runtime semantics a Player must honour | [Player Porting Guide](./libs/ssruntime/docs/README.ja.md) — start at [Limitations](./libs/ssruntime/docs/10_introduction/20_limitations.md) and the [Batched Rendering Contract](./libs/ssruntime/docs/30_core/40_render_loop.md) |
 | What the official Players owe their users | [MAINTAINING_PLAYERS.md](./MAINTAINING_PLAYERS.md) |
 | Binary layouts | [ssab SCHEMA](./libs/ssab/SCHEMA.md), [FrameData SCHEMA](./libs/ssruntime/SCHEMA.md) |
 | What a crate feature does | that crate's `Cargo.toml`, commented per feature |

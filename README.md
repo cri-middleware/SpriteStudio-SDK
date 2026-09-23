@@ -13,7 +13,7 @@ SpriteStudio-SDK `7.x.x` supports projects authored in **SpriteStudio 7.5 or lat
 ## 🔄 The Workflow (How it works)
 
 1. **Convert:** Use the provided CLI tool (`ssconverter-cli`) to convert your SpriteStudio project (`.sspj`) into a highly optimized binary format (`.ssab`).
-2. **Play Anywhere:** Pass the `.ssab` file to this SDK runtime. **The SDK is designed to play any `.ssab` file**, supporting the SpriteStudio feature set out of the box. Text drawing and audio playback are the Player's side of the split — see [Supported scope of drawing and playback features](./libs/ssruntime/docs/10_introduction/20_limitations.md#supported-scope-of-drawing-and-playback-features).
+2. **Play Anywhere:** Pass the `.ssab` file to this SDK runtime. **The SDK is designed to play any `.ssab` file**, supporting the SpriteStudio feature set out of the box. Text drawing and audio playback are the Player's side of the split — see [Limitations §1](./libs/ssruntime/docs/10_introduction/20_limitations.md#1-the-player-implements-text-and-sound).
 
 The following diagram shows the workflow of converting assets and playing animations using this SDK:
 

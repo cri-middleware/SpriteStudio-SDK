@@ -1,192 +1,112 @@
 > **日本語** | [English](./10_initialization.md)
 
-# データのロードと初期化 (Initialization)
+# ロードと初期化
 
-Player の基本機能の実装において、初期化時に行うべき処理と、メモリ管理の戦略について記載します。
+ssab を Brain に渡して再生できる状態にするまでと、破棄の手順です。ssab のメモリを誰が持つか（borrow / copy）は、先に [Player の設計方針 §2](../20_design/20_architecture.ja.md#2-ssab-のメモリの持ち方) で決めておいてください。
 
-## 1. libssruntime の初期化 (Resource と Context の分離)
-最新のアーキテクチャでは、バイナリデータの所有権(`SsabData`)と、パース済みの読み取り専用メタデータ(`AnimationResource`)、および再生状態・計算バッファ(`Context`)が安全に分離されています。同一アニメーションを複数キャラクターで再生する場合、リソースは 1 つだけ作成し、キャラクターごとにコンテキストを作成してリソースをバインド(`bind_resource`)することでパフォーマンスが向上します。
+## 1. リソースと Context
 
-### 1.5. libssruntime の no_std 対応とメモリ管理
-`libssruntime` はフットプリント削減とポータビリティ向上のため、Rust の標準ライブラリ (`std`) に依存しない `no_std` 環境を完全にサポートしています。
-`libssruntime` のデフォルト機能セットは no_std 向け（`ffi`）で、`std` はデスクトップでの開発利便性のためのオプトインです（リリース成果物では使用しません）。iOS/Android 向けのリリースビルドや組み込み環境はもちろん、すべてのプラットフォーム向けリリースは `no_std` 構成でビルドされます。
+Brain は 2 つのオブジェクトを使います。
 
-C-API (`cdylib` / `staticlib`) を `no_std` でビルドする際は、内部の動的メモリ確保 (ヒープアロケーション) を行うためにグローバルアロケータが必要です。SDK では `libc` の `malloc` / `free` を利用する `libc_alloc` 機能を用意しています。
+| オブジェクト | 中身 | 共有 |
+| :--- | :--- | :--- |
+| **リソース** | ssab のバイト列と、そこから読んだ読み取り専用のメタデータ | 同じ ssab を再生するすべての Context で共有できる |
+| **Context** | 1 体分の再生状態と計算バッファ | 共有しない。再生する 1 体ごとに作る |
 
-#### デバッグログ出力の移譲
-`no_std` 環境では標準出力 (`println!`, `eprintln!`) が利用できません。libssruntime 内部からのエラーや警告ログを受け取るには、初期化時にログコールバックを登録する必要があります。
-
-```cpp
-#include "ssruntime.h"
-
-// ログを受け取るコールバック関数
-void my_log_callback(int level, const char* message) {
-    // 例: printf("libssruntime [%d]: %s\n", level, message);
-    // ゲームエンジンのログ出力関数 (UE_LOG, Debug.Log, print_line など) に渡す
-}
-
-// 初期化の最初にコールバックを登録する
-ss_runtime_set_log_callback(my_log_callback);
-```
-
-### 1.6. データバリデーション (Player 側の責任)
-パフォーマンスとバイナリサイズの最適化のため、`libssruntime` は入力された `.ssab` データの構造的なバリデーション（FlatBuffers の境界チェック等）を行いません。不正なデータや破損したデータを `ss_resource_create_*` や `ss_runtime_load_ssab_*` に渡すと、未定義動作（Out-of-bounds Read によるクラッシュ等）を引き起こす可能性があります。
-Player の実装者は、入力データが信頼できるソースからのものであることを保証するか、必要に応じて事前にデータ検証（チェックサムや FlatBuffers バリデータ等）を行う責任があります。
-
-#### 簡易な事前検証
-ライブラリに渡す前に以下の確認を行うと、取り違えや破損データの大半は弾けます。
-
-- **ファイル識別子のチェック**: `ssab` バイナリの **オフセット 4-7 バイト** に `file_identifier` として `"SSAB"` (ASCII 4 文字) が入っています。ライブラリに渡す前にこの 4 バイトを比較すれば、別フォーマットのファイルや空ファイルを誤って渡したケースを検出できます。言語に依存しない単純なバイト比較で実装できます。
-- **FlatBuffers レベルの境界チェック**: `ssruntime` の C-API は内部でパフォーマンス優先のチェックなしパースを行うため、不正データは未定義動作になります。境界の妥当性まで検証したい場合は、Player 側の言語に対応した FlatBuffers バインディング (C++ の `flatbuffers::Verifier`, C# の `SsAnimeBinaryVerify`, Kotlin/TS の同等 API など) を使い、ssab スキーマで生成した Verifier を通してから C-API に渡してください。
-
-> [!NOTE]
-> ssconverter が出力する `.ssab` は size-prefix なしの形式です。Player 側で FlatBuffers バインディングを使う場合、`size-prefixed` 系のヘルパー (例: C++ の `GetSizePrefixedSsAnimeBinary`) は適合しないので、通常版 (`GetSsAnimeBinary` 相当) を使ってください。
-
-### C-API (C/C++) を使用する場合
-C-API では `SsabData` と `AnimationResource` は内部的に `FfiResource` として隠蔽されているため、以下の2ステップで初期化します。
+同じアニメーションを複数のキャラクターで再生する場合は、リソースを 1 つだけ作り、キャラクターごとに Context を作ってバインドしてください。
 
 ```cpp
 #include "ssruntime.h"
 
-// 1. リソース（データの所有権とパース済みメタデータ）の作成
-// ss_resource_create_borrow または ss_resource_create_copy を使用
+// 1. リソースを作る。borrow は Player のメモリを参照し、copy は Brain の中に複製する
 void* resource = ss_resource_create_borrow(ssab_data_ptr, ssab_data_len);
+if (resource == nullptr) { /* ssab が空か、版が合わない */ }
 
-// 2. コンテキスト（再生状態）の作成
+// 2. Context を作る
 void* context = ss_runtime_create();
 
-// 3. リソースをコンテキストにバインド
+// 3. リソースを Context にバインドする
 ss_runtime_bind_resource(context, resource);
 ```
 
-### Rust を直接使用する場合
-Rust のエコシステム（Bevy や Amethyst など）から直接利用する場合は、ライフタイムを安全に管理するため明示的な 3 ステップになります。
+Context を 1 つしか使わない場合は、リソースの作成とバインドを 1 回で行う `ss_runtime_load_ssab_borrow` / `ss_runtime_load_ssab_copy` も使えます。
+
+Rust から直接使う場合は、バイト列・メタデータ・Context の寿命を型で表す 3 段階になります。
 
 ```rust
-// 1. データの参照 (SsabData) の確立
-// ssab_data_ptr: *const u8, ssab_data_len: usize
-let ssab_data = unsafe { 
-    ssruntime::SsabData::load_borrow(ssab_data_ptr, ssab_data_len).unwrap() 
-};
+// 1. バイト列を参照する（ssab_data_ptr: *const u8, ssab_data_len: usize）
+let ssab_data = unsafe { ssruntime::SsabData::load_borrow(ssab_data_ptr, ssab_data_len).unwrap() };
 
-// 2. メタデータ (AnimationResource) の作成
+// 2. メタデータを読む
 let resource = ssruntime::AnimationResource::new(ssab_data.as_slice()).unwrap();
 
-// 3. コンテキストの作成とバインド
+// 3. Context を作ってバインドする
 let mut context = ssruntime::Context::new();
 context.bind_resource(&resource);
 ```
 
-### 💡 メモリ管理とライフタイム (Reference Counting)
-最新の `libssruntime` では、Resource の内部管理に参照カウント (`Arc`) が導入されており、Player 側でのメモリ管理の負担を軽減しています。
+### 1-1. 寿命と破棄の順
 
-#### 所有権と破棄のルール
-| オブジェクト | 所有権の持ち方 | 破棄の影響 |
+リソースは参照カウントで管理されています。Context はバインドしているリソースへの参照を持つので、`ss_resource_destroy` を先に呼んでも、そのリソースをバインドしている Context がある間は解放されません。**破棄の順は自由です。**
+
+ただし、borrow で作ったリソースは Player のバイト列を直接読みます。**リソース自身と、それを参照するすべての Context・エフェクトスロットを破棄するまで、元のバイト列を解放しないでください。**
+
+| オブジェクト | 所有者 | 破棄 |
 | :--- | :--- | :--- |
-| **SsabData (バイナリ)** | **Player 側** (Borrow 時) または **Library 側** (Copy 時) | Borrow の場合、Resource 破棄まで維持が必要。 |
-| **Resource (メタデータ)** | **Library 側** (参照カウント管理) | `ss_resource_destroy` でカウント減。Context があれば存続。 |
-| **Context (再生状態)** | **Player 側** (明示的に破棄が必要) | `ss_runtime_destroy` で Context 本身と参照先リソースを解放。 |
-
-#### オブジェクトの相関図
-
-> **図の凡例**
-> - **図形**: `[ ]` データ/リソース, `{ }` コンテキスト/状態
-> - **矢印**: `-->` 参照, `-.->` 複製, `==>` 紐付け (Bind)
-
-```mermaid
-graph TD
-    subgraph Owner ["アプリ側 (オーナー)"]
-        Raw[" バイナリデータ "]
-    end
-
-    subgraph Lib ["libssruntime"]
-        Res[" AnimationResource "]
-        CtxA{" Context A "}
-        CtxB{" Context B "}
-    end
-
-    Raw -->|A: Borrow / ポインタ参照| Res
-    Raw -.->|B: Copy / 内部で複製| Res
-
-    Res ==>|Bind| CtxA
-    Res ==>|Bind| CtxB
-```
-
-1. **バインド後の安全性**: `ss_runtime_bind_resource` を実行した後は、`ss_resource_destroy` を呼び出しても、そのリソースを参照している Context が存在し続ける限りメモリは解放されません。
-2. **安全な破棄の順序**: 
-    - 基本的には **Context → Resource** の順で破棄することを推奨しますが、ライブラリ内部で参照カウントを管理しているため、逆の順序（Resource → Context）で破棄しても Use-after-free は発生しません。
-    - ただし、`ss_resource_create_borrow` を使用した場合は、**Resource が完全に解放される（全ての Context が破棄される）まで、元のバイナリデータ（`ssab_data_ptr`）のメモリを解放しないでください**。
-
-## 2. ssab ファイルのロードと libssruntime への渡し方
-ネイティブライブラリである libssruntime へ ssab データを渡す方法は、利用するプログラミング言語のポインタ操作能力とアーキテクチャ（[アーキテクチャと実装方針](../20_design/20_architecture.ja.md) の「メモリ管理戦略」参照）に合わせて選択します。
-
-### パターン A：Borrow (参照) 方式（推奨）
-- **対象言語:** C++, C# (unsafe) など、ポインタを直接渡してメモリを管理できる環境。
-- **運用:** ssab データのオーナー（メモリ管理責任者）は Player 側になります。ゲームエンジン側のアセット管理（Godot の Resource や Unity の ScriptableObject 等）でバイナリを保持し続ける場合に最適です。
-- **実装:** `ss_resource_create_borrow` を使用します。
-- **メリット:** メモリコピーが発生せず、最も効率的です。
+| ssab のバイト列 | borrow では Player、copy では Brain | borrow では、リソースと、それを参照するすべての Context・エフェクトスロットを破棄した後に Player が解放する |
+| リソース | Brain（参照カウント） | `ss_resource_destroy`。バインドしている Context がある間は残る |
+| Context | Player | `ss_runtime_destroy` |
 
 ```cpp
-// Godot (C++) での実装例
-// Resource として保持している PackedByteArray からポインタを取得して渡す
-void* resource = ss_resource_create_borrow(
-    ssab_resource->get_data_ptr(), 
-    ssab_resource->get_data_size()
-);
+ss_runtime_destroy(context);
+ss_resource_destroy(resource);
 ```
 
-### パターン B：Copy (コピー) 方式と即時 GC
-- **対象言語:** WebAssembly (JS/TS), Kotlin など、ポインタの直接共有が難しい環境や、JS/WASM間のようにヒープ空間が分断されている環境。
-- **運用:** ssab データのオーナーを libssruntime 側に移譲し、ライブラリ内部にデータの完全な複製を作らせます。
-- **実装:** 
-    1. `ss_resource_create_copy` (または言語バインディングの `SSRuntimeResource.new`) を実行してデータをライブラリ側にコピーします。
-    2. コピー完了直後に、Player 側でダウンロードした元の生データの参照を切り、解放（GC等）して、メモリの二重持ちを防ぎます。
-    3. ※ もし JS 側で直接パースしたい場合は、[アーキテクチャと実装方針](../20_design/20_architecture.ja.md) に記載の「WASM メモリの逆参照」を活用してください。
+## 2. ssab を渡す前の検証
 
-*(※ 従来の後方互換用APIとして `ss_runtime_load_ssab_borrow` や `ss_runtime_load_ssab_copy` も引き続き利用可能ですが、新規実装では Resource と Context を明示的に分けることを推奨します。)*
+Brain は ssab の構造を検証しません（[制限事項 §5](../10_introduction/20_limitations.ja.md#5-brain-は-ssab-を検証しない)）。ネットワークや利用者の入力から ssab を受け取る場合は、Brain に渡す前に次の確認をしてください。
 
-### パターン C: 両方で保持せざるを得ない方式（非推奨だが回避不能なケース）
-基本的には「陥りやすいアンチパターン」として避けるべきですが、以下のような特定のアーキテクチャ上の制約がある場合は、あえて Player 側（JS等）と libssruntime 側（WASM等）の両方でコピーを保持する（二重持ちする）選択を取らざるを得ません。
+- **ファイル識別子**: ssab の **4〜7 バイト目**には、ファイル識別子として ASCII の `"SSAB"` が入っています。この 4 バイトを比べれば、別の形式のファイルや空のファイルを取り違えて渡すことを防げます。
+- **FlatBuffers の境界チェック**: 構造の妥当性まで確かめるには、Player の言語の FlatBuffers バインディングで生成した Verifier（C++ の `flatbuffers::Verifier`、C# の `SsAnimeBinaryVerify` など）に通してから渡します。
 
-- **ケース1: WASMメモリのデタッチ（無効化）リスクを許容できない場合**
-  WASM のメモリ空間 (`wasmMemory.buffer`) は、内部でメモリの動的確保（ヒープ拡張）が発生した瞬間にリサイズされ、JS側に張っていた古い `Uint8Array` などのビューがすべて「デタッチ（参照切れ）」になりアクセスエラーを引き起こす仕様があります。JS側のフレームワークが安定した絶対的なバッファ参照を要求し、毎フレームビューを張り直すようなフック処理が不可能な場合は、「WASMの逆参照」テクニックが使えないため、JS側に安全なコピーを残す必要があります。
-- **ケース2: エンジンのキャッシュ機構が極めて厳格な場合**一部のゲームエンジンやフレームワークでは、アセットローダーが取得した `ArrayBuffer` をエンジンのコアシステム（シーン管理や依存関係グラフ）が強固に握っており、開発者が勝手にキャッシュから削除したり、WASMのビューにすり替えたりするとシステム全体がクラッシュ・誤動作する場合があります。
-- **ケース3: 複数の Web Worker への分配**メインスレッドの WASM とは別に、物理演算や別処理を行う Web Worker にも同じ `ssab` データを `postMessage` で渡す必要がある場合など。
+版が Brain と合わない ssab は、リソースの作成が失敗します（`ss_resource_create_*` は `nullptr` を返し、`ss_runtime_load_ssab_*` は `false` を返します）。
 
-**対策方針:**
-これらのケースでは無理に即時GCや逆参照を行わず、パターンC（二重持ち）を受け入れます。その代わり、不要になったシーン遷移時などにエンジン側のアセットアンロードAPIと、WASM側の `ss_resource_destroy` を確実に両方呼んで、速やかに両方のメモリを解放するようにライフサイクル管理を徹底してください。
+> [!NOTE]
+> ssconverter が出力する ssab には、先頭にサイズが付いていません。FlatBuffers の `size-prefixed` 系の関数（C++ の `GetSizePrefixedSsAnimeBinary` など）ではなく、通常の関数（`GetSsAnimeBinary` など）を使ってください。
 
-## 3. アセット（テクスチャ）のロードと紐付け
-ssab 内には「どのセルマップ（画像）を使用するか」という情報が含まれています。Player は設計方針で選択した `ssab` のタイプに合わせて、テクスチャを準備する必要があります。
+## 3. テクスチャの読み込み
 
-> [!IMPORTANT]
-> **ロード対象は `cellmaps()` と `external_textures()` の 2 つです。** 描画時にバインドするテクスチャは `DrawBatch.texture_hash` で決まりますが、この値はセルマップ名のハッシュ（通常）と、テクスチャファイル名のハッシュ（作画でテクスチャ変更 `TCHG` が指定されたパーツ）のどちらにもなります。`external_textures()` をロードしていないと、後者のバッチでテクスチャが見つからず、そのパーツが描画されません。詳細は [外部リソースとテクスチャの管理](../40_components/70_external_resources.ja.md) を参照してください。
+描画のときにバインドするテクスチャは、`DrawBatch.texture_hash` で決まります（[描画ループ §2](./40_render_loop.ja.md#2-drawbatch-による描画)）。この値は、次の 2 種類のハッシュのどちらかです。
 
-### 3.0. ssab に格納されるファイル参照文字列の仕様
-ssab に格納されるファイル参照文字列 (テクスチャ・サウンド・フォントなど) は、ssconverter が以下のルールで生成します。Player はエンジン側のアセット参照と対応付ける際に、この仕様を前提にしてください。
+| `texture_hash` の値 | 対応する ssab のエントリ | 使われるとき |
+| :--- | :--- | :--- |
+| セルマップ名のハッシュ | `cellmaps()[].name_hash` | 通常 |
+| テクスチャのファイル名のハッシュ | `external_textures()[].name_hash` | そのパーツに作画でテクスチャ変更（`TCHG`）が指定されているとき |
 
-- `sspj` / `ss*e` (`ssae` / `ssce` / `ssee` / `ssse`) / `fnt` に記載されているファイルパス・ファイル名は、**そのままの文字列** が ssab に格納されます。大文字小文字や区切り文字の正規化、絶対パス変換などは行われません。
-- charmap (`.fnt`) のテクスチャファイル名は、変換時に **sspj 上の charmap ファイルパスのディレクトリ部分が前置** された状態で ssab に格納されます。
-    - 例: sspj に `font/font.fnt` と記述され、`font.fnt` 内のテクスチャ名が `glyphs.png` の場合、ssab の `name_texture` は **`font/glyphs.png`** になります。
+**`cellmaps()` と `external_textures()` の両方を読み込み、それぞれの `name_hash` をキーに 1 つのマップへ入れてください。** `external_textures()` を読み込まないと、テクスチャ変更が指定されたパーツが描画されません。テクスチャ変更の仕組みは [外部リソースとテクスチャ §2](../50_features/30_external_resources.ja.md#2-作画で指定されたテクスチャ変更) にあります。
 
-### Reference (参照方式) の場合
-- **ロード元**: 外部ファイル（PNG 等）。
-- **手順**: `cellmap->image_path()` から取得できるファイルパスを基に、エンジンの標準的なアセットロード機構を用いてテクスチャを読み込みます。続けて `external_textures()` も走査し、`name()`（テクスチャのファイル名）を同じ規則でパス解決してロードします。
-- **注意点**: `image_path` や `external_textures()` の `name` は通常 `.sspj` や `.ssab` からの相対パスです。Player 側でベースディレクトリと結合して絶対パス（またはエンジン内のリソースパス）を生成する必要があります。
+### 3-1. ssab に入っているファイル参照の文字列
+
+ssab に入っているファイル参照（テクスチャ・サウンド・フォントなど）の文字列は、ssconverter が次の規則で作ります。エンジンのアセットと対応付けるときは、この規則を前提にしてください。
+
+- `sspj` / `ss*e`（`ssae` / `ssce` / `ssee` / `ssse`）/ `fnt` に書かれたファイルパスとファイル名は、**そのままの文字列**で入ります。大文字小文字や区切り文字の正規化、絶対パスへの変換は行いません。
+- charmap（`.fnt`）のテクスチャのファイル名には、**sspj に書かれた charmap のパスのディレクトリ部分**が前に付きます。
+    - 例: sspj に `font/font.fnt` と書かれ、`font.fnt` の中のテクスチャ名が `glyphs.png` なら、ssab の `name_texture` は **`font/glyphs.png`** になります。
+
+### 3-2. 参照モードの ssab
+
+- `cellmaps()[].image_path()` と `external_textures()[].name()` のパスを使い、エンジンの通常のアセット読み込みでテクスチャを読み込みます。
+- パスは ssab からの相対パスです。Player で ssab のあるディレクトリと結合してください。ssab を読み込むときにそのディレクトリも受け取れるようにしておくと、解決が簡単になります。
 
 ```cpp
-// Godot (C++) での実装例
-void loadTextures(const ss::format::SsAnimeBinary* binary, String base_dir) {
+// Godot（C++）の例
+void load_textures(const ss::format::SsAnimeBinary* binary, String base_dir) {
     for (int i = 0; i < binary->cellmaps()->size(); i++) {
         auto cellmap = binary->cellmaps()->Get(i);
-        // パスの解決
         String image_path = base_dir.path_join(String::utf8(cellmap->image_path()->c_str()));
-        // エンジンの機能でロード
-        Ref<Texture2D> texture = ResourceLoader::get_singleton()->load(image_path);
-        // セルマップ名のハッシュで管理
-        _textures[cellmap->name_hash()] = texture;
+        _textures[cellmap->name_hash()] = ResourceLoader::get_singleton()->load(image_path);
     }
-    // テクスチャ変更 (TCHG) がバインドする先。同じマップに、テクスチャ名のハッシュで入れる
+    // テクスチャ変更（TCHG）がバインドする先。同じマップに、テクスチャ名のハッシュで入れる
     if (binary->external_textures() != nullptr) {
         for (int i = 0; i < binary->external_textures()->size(); i++) {
             auto etexture = binary->external_textures()->Get(i);
@@ -197,41 +117,55 @@ void loadTextures(const ss::format::SsAnimeBinary* binary, String base_dir) {
 }
 ```
 
-### Embedded (埋め込み方式) の場合
-- **ロード元**: ssab バイナリ内部。
-- **手順**: `ssab->embedded_assets()` を走査し、各セルマップに対応するバイナリデータを直接取得します。このメモリ上のデータを、エンジンの「画像データからのテクスチャ作成」機能に渡して読み込みます。
-- **注意点**: `embedded_assets()` の `name_hash` は **ファイル名の** ハッシュです（セルマップの場合は `image_path`、外部テクスチャの場合は `name`）。セルマップ名のハッシュとは異なるので、`cellmaps()` / `external_textures()` 側のエントリを経由して対応付けてください。外部テクスチャも埋め込み対象に含まれます。
+### 3-3. 埋め込みモードの ssab
 
-### 共通の処理：セル情報のインデックス化
-描画パフォーマンスを向上させるため、初期化時に以下の情報をキャッシュしておくことを強く推奨します。
+- `embedded_assets()` を走査し、画像のバイト列をエンジンの「画像データからテクスチャを作る」機能に渡します。外部テクスチャも埋め込まれています。
+- `embedded_assets()` の `name_hash` は**ファイル名の**ハッシュです（セルマップでは `image_path`、外部テクスチャでは `name`）。セルマップ名のハッシュとは違うので、`cellmaps()` / `external_textures()` のエントリを経由して対応付けてください。
 
-- **テクスチャのインデックス化**: `ssab->cellmaps()` の `name_hash()` と `ssab->external_textures()` の `name_hash()` の **両方** をキーとして、ロードしたテクスチャオブジェクトを 1 つのマップに紐付けます。描画時は `DrawBatch.texture_hash` をそのままキーとして引けます。
-- **セルの高速検索**: 各 CellMap 内の `cells()` を走査し、`name_hash()` をキーとして、そのセルの切り出し矩形（UV）や原点（Pivot）情報を即座に引けるようにしておきます。
+### 3-4. セルの索引
 
-## 4. 再生するアニメーション情報の管理
-ssab データには複数のアニメーションが格納されています。
+描画のたびに探さずに済むよう、初期化のときに次の索引を作っておくことを推奨します。
+
+- セルマップごとに、`cells()` の `name_hash` から、そのセルの切り出し領域と原点を引ける表。
+
+## 4. ログとエラー
+
+### 4-1. ログのコールバック
+
+配布している Brain は標準出力を使えません（[no_std 環境への統合](../20_design/40_no_std_integration.ja.md)）。Brain のエラーを受け取るために、初期化の最初にログのコールバックを登録してください。
 
 ```cpp
-// ssab 内のアニメーション名一覧を取得する例
-auto ss_anime_binary = ss::format::GetSsAnimeBinary(binary_ptr);
-if (ss_anime_binary->animations()) {
-    for (auto anime : *ss_anime_binary->animations()) {
+void my_log_callback(int level, const char* message) {
+    // エンジンのログ関数（UE_LOG・Debug.Log・print_line など）に渡す
+}
+
+ss_runtime_set_log_callback(my_log_callback);
+```
+
+`level` は `SS_RUNTIME_LOG_ERROR`（1）/ `SS_RUNTIME_LOG_WARN`（2）/ `SS_RUNTIME_LOG_INFO`（3）のどれかです。いま発行されるのは `ERROR` だけですが、後から使われても `switch` の分岐が古くならないよう、残りの 2 つを予約しています。
+
+失敗した C-API の呼び出しは、どの関数で失敗したかを前に付けた `ERROR` を 1 行出します（`ss_runtime_setup_animation: Animation not found`）。コールバックを登録していなければ文字列を組み立てないので、負荷はかかりません。
+
+### 4-2. 失敗の理由
+
+失敗する C-API の呼び出しは、戻り値（`false`・`-1`・`NaN` など）で失敗を伝えます。理由は、その直後に `ss_runtime_get_last_error(context)` で数値のコードとして取り、`ss_runtime_error_message(code)` で文言にします。コード `0` は成功です。ログは戻り値を確かめない呼び出し側のためのもので、`ss_runtime_get_last_error` と同じ失敗を報告します。
+
+Player の公開 API で失敗をどう伝えるかは、[Player API 規約 §7](../20_design/30_api_conventions.ja.md#7-失敗の伝え方) に従ってください。
+
+## 5. アニメーション名の一覧
+
+ssab には複数のアニメーションが入っています。名前の一覧は ssab から読みます。
+
+```cpp
+auto binary = ss::format::GetSsAnimeBinary(ssab_data_ptr);
+if (binary->animations()) {
+    for (auto anime : *binary->animations()) {
         std::string name = anime->name()->str();
-        // この名前を Player の外部 API（Play("name") など）で利用できるようにする
+        // Player の公開 API（animationNames）で返す
     }
 }
 ```
 
-## 5. 後処理（インスタンス破棄時）
-Player の破棄時には、使用していた Context と Resource を破棄してメモリを解放します。前述の通り内部で参照カウントを利用しているため、破棄の順序（Context が先か、Resource が先か）によるクラッシュの危険性はありませんが、明示的なリソース管理のために両方を適切に破棄してください。
-
-```cpp
-// コンテキスト（再生状態）を破棄する
-ss_runtime_destroy(context);
-
-// リソース（メタデータ）を破棄する
-ss_resource_destroy(resource);
-```
 
 ---
 [目次に戻る](../README.ja.md)

@@ -92,13 +92,13 @@ FrameData (FFI を介したメモリバッファ)
 
 ## 描画プラン: 順序・バッチ・マスクスライス
 
-`FrameData` はパーツ単位の状態だけでなく、**エンジン非依存の描画プラン** も保持します。事前にソートされたパーツ並びと、それを連続スライスに切り出したバッチリストを Player が 1 フレームに 1 度だけ走査します。これが「DrawBatch コントラクト」です。消費側の正典は [Batched Rendering Contract](./docs/30_core/30_render_loop.ja.md) です。
+`FrameData` はパーツ単位の状態だけでなく、**エンジン非依存の描画プラン** も保持します。事前にソートされたパーツ並びと、それを連続スライスに切り出したバッチリストを Player が 1 フレームに 1 度だけ走査します。これが「DrawBatch コントラクト」です。消費側の正典は [Batched Rendering Contract](./docs/30_core/40_render_loop.ja.md) です。
 
 | FrameData フィールド | 型 | 説明 |
 |:---|:---|:---|
 | `draw_order` | `[ushort]` (required) | 描画順に並んだパーツ。値は **`FrameData.parts` のインデックス** （`part_index` ではない）。非表示・マスクで除外されたパーツなど、描画対象外のパーツは含まれません。 |
 | `draw_batches` | `[DrawBatch]` (required) | マージ済みの描画コマンド列。各バッチは `draw_order` の連続スライスを覆い、スライス内で描画種別・ブレンドモード・テクスチャが共通になります。Player は バッチごとに 1 ドローコールを発行します。 |
-| `mask_indices` | `[ushort]` (required) | そのフレームの **pure マスク**（`PartTypeMask` および `draw_as_mask`）の **`FrameData.parts` インデックス** を、`draw_order` と同じ順に並べたもの。**writer リストではありません**: クリッピング (`mask_write`) を含まず、`Hide == true` のマスクも落とさないため `draw_order` と一致しません。writer の確定は `draw_order` を走査して行ってください — [Mask の実装 §3-3](./docs/40_components/40_mask.ja.md#3-3-共通の注意点) 参照。 |
+| `mask_indices` | `[ushort]` (required) | そのフレームの **pure マスク**（`PartTypeMask` および `draw_as_mask`）の **`FrameData.parts` インデックス** を、`draw_order` と同じ順に並べたもの。**writer リストではありません**: クリッピング (`mask_write`) を含まず、`Hide == true` のマスクも落とさないため `draw_order` と一致しません。writer の確定は `draw_order` を走査して行ってください — [マスク §3](./docs/40_parts/40_mask.ja.md#3-framedata-から読むもの) 参照。 |
 
 ### `DrawBatch`
 
@@ -111,9 +111,9 @@ FrameData (FFI を介したメモリバッファ)
 | `texture_hash` | uint32 | バッチがバインドするテクスチャの fnv1a ハッシュ。通常は `cellmap_name_hash`（`.ssce` を除いたセルマップ名）だが、スライス内のパーツがテクスチャ変更（`TCHG`）で上書きされている場合はそのテクスチャ *名* のハッシュ。TCHG の上書き値はバッチキーに含まれるため、同一セルマップを参照していてもバインド先テクスチャが異なるパーツは別バッチに分割される。Player は両方のハッシュ空間（セルマップ名と `external_textures` エントリ）を解決する必要がある（TCHG が指すテクスチャ名は必ず `external_textures` に含まれる）。テクスチャ不要な種別（`Shape` 等）では `0`。 |
 | `vertex_count` | ushort | スライス内の全パーツが寄与する頂点数の合計。 |
 | `index_count` | ushort | スライス内の全パーツが寄与するインデックス数の合計。 |
-| `blend_type` | BlendType | スライス共通のブレンドモード。各パーツの `part_color.blend_type` と一致。 |
+| `blend_type` | BlendType | スライス共通の描画先との合成モード。ssab の `PartData.blend_type`。パーツカラーの `blend_type`（テクスチャとの合成）とは別。 |
 | `kind` | DrawBatchKind | 描画カテゴリ（下表）。Player がスライス内パーツについてどのジオメトリ／データを取り出すかを決定。 |
-| `flags` | ubyte | バッチごとのフラグビット。現状定義済み: ビット `0x01` = `MASK_INFLUENCE` (このスライス内のパーツがアクティブなマスクスライスでマスクされる)。残りビットは予約済み — 未知ビットは無視すること。完全な契約は [Batched Rendering Contract](./docs/30_core/30_render_loop.ja.md) を参照。 |
+| `flags` | ubyte | バッチごとのフラグビット。現状定義済み: ビット `0x01` = `MASK_INFLUENCE` (このスライス内のパーツがアクティブなマスクスライスでマスクされる)。残りビットは予約済み — 未知ビットは無視すること。完全な契約は [Batched Rendering Contract](./docs/30_core/40_render_loop.ja.md) を参照。 |
 
 ### `DrawBatchKind`
 
@@ -125,7 +125,7 @@ FrameData (FFI を介したメモリバッファ)
 | `Effect` | 該当 `EffectSlot` のパーティクル矩形（`effect_draw_plan.fbs` 参照）。 |
 | `Mesh` | `PartMeshBinding` によるボーンスキニング済みインデックス付きメッシュ。 |
 | `Text` | テキストパーツの描画順における位置。1 パーツ 1 バッチで、ジオメトリ（`vertex_count` / `index_count` は `0`）もテクスチャ（`texture_hash`）も持たない。字詰め・ラスタライズ・フォント解決は Player の担当（[制限事項](./docs/10_introduction/20_limitations.ja.md) を参照）。マスク指定されたテキストパーツはプランから除外される。 |
-| `Nines` | `PartTypeNines` から生成した 9 パッチのグリッド。頂点・UV・インデックスは Nines 専用 SoA バッファにパーツ単位で入る（[特殊なパーツタイプ](./docs/40_components/95_special_parts.ja.md) を参照）。 |
+| `Nines` | `PartTypeNines` から生成した 9 パッチのグリッド。頂点・UV・インデックスは Nines 専用 SoA バッファにパーツ単位で入る（[9 スライス・シェイプ・テキスト](./docs/40_parts/30_special_parts.ja.md) を参照）。 |
 | `Mask` | ステンシル書き込み専用バッチ。色出力は行わず、対象パーツは `mask_indices` にも列挙される。 |
 
 > **プランの走査:** `draw_batches` の各 `batch` について、`draw_order[batch.start_rank .. batch.start_rank + batch.count]` をイテレートし、`PartState` を取り出して `batch.kind` のジオメトリを発行する。GPU ステート（テクスチャ・ブレンド）の切替はパーツごとではなくバッチごとに 1 回だけ行う。

@@ -113,7 +113,7 @@ Embedding `libssconverter` as an editor extension for a game engine (Godot, Unit
 
 For the implementation patterns, and for concrete Godot and Unity code, see the Player Porting Guide:
 
-👉 **[16. Editor integration and conversion](../../ssruntime/docs/60_tooling/10_editor_integration.md)**
+👉 **[Editor Integration](../../ssruntime/docs/50_features/60_editor_integration.md)**
 
 ## 5. Notes
 
