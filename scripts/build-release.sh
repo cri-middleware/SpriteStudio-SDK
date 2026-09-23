@@ -435,9 +435,12 @@ place_docs "$WORK/dynamic"
 echo "   dynamic/  (libssruntime.framework untarred)"
 
 place_map "$WEB_MAP" "$WORK/web"
-cp "$LICENSE_DIR/THIRD-PARTY-LICENSES.ssruntime.md"  "$WORK/web/runtime-web/THIRD-PARTY-LICENSES.md"
-cp "$LICENSE_DIR/THIRD-PARTY-LICENSES.ssruntime.md"  "$WORK/web/runtime-web-nosimd/THIRD-PARTY-LICENSES.md"
-cp "$LICENSE_DIR/THIRD-PARTY-LICENSES.ssconverter.md" "$WORK/web/converter-web/THIRD-PARTY-LICENSES.md"
+# Named per crate, as in the static and dynamic archives -- the names the
+# Players' notices point to and their build-runtime scripts write, so a web
+# package that download-sdk installs carries the file its notice names.
+cp "$LICENSE_DIR/THIRD-PARTY-LICENSES.ssruntime.md"   "$WORK/web/runtime-web/"
+cp "$LICENSE_DIR/THIRD-PARTY-LICENSES.ssruntime.md"   "$WORK/web/runtime-web-nosimd/"
+cp "$LICENSE_DIR/THIRD-PARTY-LICENSES.ssconverter.md" "$WORK/web/converter-web/"
 echo "   web/"
 
 # --- archive --------------------------------------------------------------
