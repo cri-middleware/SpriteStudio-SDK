@@ -24,11 +24,8 @@ if (step.visible) {
 
 > [!IMPORTANT]
 > 上の `p_idx` は **`draw_order` から取ってはいけません。** `Hide` 中のエフェクトは Brain が
-> `draw_order` / `DrawBatch` から除外するため（[Mask の実装](./40_mask.ja.md) の補足参照）、
-> 「`draw_order` を走査して、その中のエフェクトだけ `step`」にすると、**非表示中の独立再生エフェクトは
-> `step` されず宙で静止**します。エフェクトスロットは **パックの全エフェクトパーツをメタデータから列挙し、
-> パーツごとに永続スロットを持たせて毎フレーム `step`** し、`step.visible` は「描画するか」の判断にのみ
-> 使ってください（[独立再生](#独立再生-independent-playback) /
+> `draw_order` / `DrawBatch` から除外するため（[Mask の実装](./40_mask.ja.md) の補足参照）、「`draw_order` を走査して、その中のエフェクトだけ `step`」にすると、**非表示中の独立再生エフェクトは
+> `step` されず宙で静止**します。エフェクトスロットは **パックの全エフェクトパーツをメタデータから列挙し、パーツごとに永続スロットを持たせて毎フレーム `step`** し、`step.visible` は「描画するか」の判断にのみ使ってください（[独立再生](#独立再生-independent-playback) /
 > [インスタンスパーツ §独立再生](./10_instance.ja.md#独立再生-independent-playback-の対応) 参照）。
 
 ## 参考:`ss_effect_slot_step` の引数：`y_flip` / `vert_stride`

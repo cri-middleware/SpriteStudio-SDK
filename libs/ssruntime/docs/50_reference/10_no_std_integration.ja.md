@@ -62,8 +62,7 @@ cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-defa
 
 ## 3. デバッグログ出力の移譲 (Log Callback)
 
-`no_std` 環境では、Rust の標準出力 (`println!`, `eprintln!`) が利用できません。
-そのため、`ssruntime` 内部からのエラーや警告ログを受け取るには、初期化時にログコールバックを登録する必要があります。
+`no_std` 環境では、Rust の標準出力 (`println!`, `eprintln!`) が利用できません。そのため、`ssruntime` 内部からのエラーや警告ログを受け取るには、初期化時にログコールバックを登録する必要があります。
 
 ```cpp
 #include "ssruntime.h"
@@ -79,14 +78,10 @@ ss_runtime_set_log_callback(my_log_callback);
 ```
 
 `level` は `SS_RUNTIME_LOG_ERROR` (1) / `SS_RUNTIME_LOG_WARN` (2) /
-`SS_RUNTIME_LOG_INFO` (3) のいずれかです。現在発行されるのは `ERROR` だけですが、
-今書いた `switch` が後から陳腐化しないよう残り 2 つを予約しています。
+`SS_RUNTIME_LOG_INFO` (3) のいずれかです。現在発行されるのは `ERROR` だけですが、今書いた `switch` が後から陳腐化しないよう残り 2 つを予約しています。
 
-失敗を記録する C-API 呼び出しは、どの入口で失敗したかを前置きした `ERROR` を 1 行
-発行します (`ss_runtime_setup_animation: Animation not found`)。これは
-`ss_runtime_get_last_error` が返すのと同じ失敗です — ログは戻り値を確認しない
-呼び出し側のためのものであって、第 2 の真実ではありません。コールバックが未登録
-なら文字列の組み立て自体を行わないので、コストはゼロです。
+失敗を記録する C-API 呼び出しは、どの入口で失敗したかを前置きした `ERROR` を 1 行発行します (`ss_runtime_setup_animation: Animation not found`)。これは
+`ss_runtime_get_last_error` が返すのと同じ失敗です — ログは戻り値を確認しない呼び出し側のためのものであって、第 2 の真実ではありません。コールバックが未登録なら文字列の組み立て自体を行わないので、コストはゼロです。
 
 ---
 

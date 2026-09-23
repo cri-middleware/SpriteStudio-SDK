@@ -90,18 +90,14 @@ for (auto batch : *batches) {
 > [!IMPORTANT]
 > **この `draw_order` ループは描画（ジオメトリ発行）専用です。** Instance / Effect パーツの
 > **`step`（子アニメ・パーティクルの時計の前進）を、この `draw_order` ループから駆動しないでください。**
-> `Hide` 中のパーツは Brain が `draw_order` / `DrawBatch` から除外するため
-> （[Mask の実装](../40_components/40_mask.ja.md) の補足参照）、「`draw_order` に載ったものだけ `step`」
-> にすると、独立再生の子／エフェクトが非表示中に `step` されず時計が凍ります。**`step` は全 Instance /
-> Effect パーツをパックのメタデータから列挙して毎フレーム漏れなく回し**、その結果を描画するときにだけ
-> この `draw_order`（と `step` の戻り値 `visible`）を使ってください。詳細は
+> `Hide` 中のパーツは Brain が `draw_order` / `DrawBatch` から除外するため（[Mask の実装](../40_components/40_mask.ja.md) の補足参照）、「`draw_order` に載ったものだけ `step`」にすると、独立再生の子／エフェクトが非表示中に `step` されず時計が凍ります。**`step` は全 Instance /
+> Effect パーツをパックのメタデータから列挙して毎フレーム漏れなく回し**、その結果を描画するときにだけこの `draw_order`（と `step` の戻り値 `visible`）を使ってください。詳細は
 > [インスタンスパーツ](../40_components/10_instance.ja.md) /
 > [エフェクトパーツ](../40_components/20_effect.ja.md) を参照。
 
 ### RenderMode についての注意点
 
-`libssruntime` には、エンジンの描画思想に合わせた `RenderMode`（レンダリングモード）の概念があります。
-初期化時に `ss_runtime_set_render_mode` で指定するモードによって、取得できる `FrameData` (FlatBuffers) の内容が変化します。
+`libssruntime` には、エンジンの描画思想に合わせた `RenderMode`（レンダリングモード）の概念があります。初期化時に `ss_runtime_set_render_mode` で指定するモードによって、取得できる `FrameData` (FlatBuffers) の内容が変化します。
 
 - **`RenderMode::Direct` (推奨)**: Godot の `RenderingServer` のように、C-API (SoAバッファ) 経由でデータを一括取得して直接描画するアプローチに最適化されたモードです。このモードでは FlatBuffers への冗長なデータ（`vertices`, `cells`, `deforms`）のシリアライズがスキップされ、CPU負荷とアロケーションが大幅に削減されます。上記のサンプルコードはこちらのモードを前提としています。
 - **`RenderMode::SceneGraph`**: 各パーツごとにゲームエンジンのノード（Node2D や GameObject など）を生成し、階層構造（シーングラフ）を組んで描画をエンジン任せにするアプローチ用です。このモードでは FlatBuffers 内の `vertices` などの詳細データが全て出力されるため、それらを読み出してノードのプロパティを更新する用途に使います。
@@ -153,8 +149,7 @@ SoA getter (§1) でカバーされない属性 — 例えば **`parts`（パー
     > [!WARNING]
     > **マルチスレッドレンダラでのライフサイクルの罠 (Use-After-Free 回避)**
     > Unity の Job System (Burst) や Godot のマルチスレッド RenderingServer、Unreal Engine の RenderThread など、現代のエンジンでは「メインスレッドでのアニメーション更新」と「ワーカースレッドでの描画・ジオメトリ構築」が非同期に実行されることが一般的です。
-    > SoA バッファ（C-API から取得した生ポインタ）をゼロコピーで描画スレッドに渡す設計にした場合、**「描画スレッドがポインタを読み取っている最中に、メインスレッドでプレイヤーの破棄処理が走り `ss_runtime_destroy` が呼ばれる」** という状態が発生すると、解放済みメモリへのアクセス（Segfault / アクセス違反）でアプリが確定クラッシュします。
-    > これを回避するため、プレイヤー（コンポーネント）の破棄やデストラクタ (`Destroy` / `Dispose`) のタイミングでは、**「必ず実行中の描画ジョブやスレッド処理の完了を待機（Unity の `JobHandle.Complete()` 等での同期）してから、`ss_runtime_destroy` でネイティブメモリを解放する」** という厳格なライフサイクル管理を実装してください。
+    > SoA バッファ（C-API から取得した生ポインタ）をゼロコピーで描画スレッドに渡す設計にした場合、**「描画スレッドがポインタを読み取っている最中に、メインスレッドでプレイヤーの破棄処理が走り `ss_runtime_destroy` が呼ばれる」** という状態が発生すると、解放済みメモリへのアクセス（Segfault / アクセス違反）でアプリが確定クラッシュします。これを回避するため、プレイヤー（コンポーネント）の破棄やデストラクタ (`Destroy` / `Dispose`) のタイミングでは、**「必ず実行中の描画ジョブやスレッド処理の完了を待機（Unity の `JobHandle.Complete()` 等での同期）してから、`ss_runtime_destroy` でネイティブメモリを解放する」** という厳格なライフサイクル管理を実装してください。
 
 2. **描画リソースのプーリング**:
     バッチごとに必要となる低レイヤーの描画リソース（頂点バッファ、インデックスバッファ、描画コマンド用の中間オブジェクトなど）は毎フレーム生成・破棄せず、配列等にプールして再利用（使い回し）してください。
