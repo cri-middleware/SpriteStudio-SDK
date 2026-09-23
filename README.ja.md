@@ -137,8 +137,10 @@ cargo build --release
 #### ユニットテスト
 
 ```bash
-cargo test
+cargo test --workspace --all-features
 ```
+
+`--all-features` は省略できません。テストモジュールは `feature = "std"` 配下にあり、素の `cargo test` はそれらを実行しないまま成功します。
 
 #### sspj から ssab への変換テスト
 

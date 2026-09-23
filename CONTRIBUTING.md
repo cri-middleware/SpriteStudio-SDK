@@ -39,7 +39,7 @@ If you have an idea, please open an issue to discuss it before starting work.
 1. Fork the repository and create your branch from `develop`.
 2. Ensure your code follows the existing style and conventions.
 3. Add tests for any new features or bug fixes.
-4. Ensure all tests pass (`cargo test`).
+4. Ensure all tests pass (`cargo test --workspace --all-features`).
 5. Update documentation if necessary (READMEs, Doc comments).
 6. Submit a Pull Request against `develop` with a clear description of the changes.
 
@@ -55,8 +55,9 @@ If you have an idea, please open an issue to discuss it before starting work.
 # Build the entire workspace
 cargo build --release
 
-# Run all tests
-cargo test
+# Run all tests. --all-features is load-bearing: the test modules sit behind
+# feature "std", and a plain `cargo test` passes without running them.
+cargo test --workspace --all-features
 
 # Run the converter CLI for verification
 cargo run -p ssconverter-cli -- <path_to_sspj>
@@ -130,7 +131,7 @@ SDK を改善するアイデアがある場合は、開発を始める前に Iss
 1. リポジトリをフォークし、`develop` ブランチから作業用ブランチを作成してください。
 2. 既存のスタイルや規約に従ってコードを記述してください。
 3. 新しい機能やバグ修正には、対応するテストを追加してください。
-4. すべてのテストがパスすることを確認してください (`cargo test`)。
+4. すべてのテストがパスすることを確認してください (`cargo test --workspace --all-features`)。
 5. 必要に応じてドキュメント (README やコメント) を更新してください。
 6. `develop` ブランチに向けて、変更内容を明確に記載したプルリクエストを送信してください。
 
@@ -146,8 +147,9 @@ SDK を改善するアイデアがある場合は、開発を始める前に Iss
 # ワークスペース全体のビルド
 cargo build --release
 
-# すべてのテストを実行
-cargo test
+# すべてのテストを実行。--all-features は必須です。テストモジュールは feature "std" 配下にあり、
+# 素の `cargo test` はそれらを実行しないまま成功します
+cargo test --workspace --all-features
 
 # コンバーター CLI を実行して動作確認
 cargo run -p ssconverter-cli -- <path_to_sspj>

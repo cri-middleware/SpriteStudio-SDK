@@ -138,8 +138,11 @@ cargo build --release
 #### Unit tests
 
 ```bash
-cargo test
+cargo test --workspace --all-features
 ```
+
+`--all-features` is not optional: the test modules sit behind `feature = "std"`, and a plain `cargo test`
+passes without running them.
 
 #### tests for converting from sspj files to ssab files
 
