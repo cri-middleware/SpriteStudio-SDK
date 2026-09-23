@@ -141,7 +141,7 @@ C-API は `ss_runtime_set_part_color_override(context, part, blend_op, rgba, pri
 | トラック自身のアルファをフェードする | `fadeTrack` |
 | 進行中のフェードの進み具合 | `trackFadeProgress` |
 | 進行中のフェードを止める | `cancelTrackFade` |
-| トラックに別のアニメーションを足す | `trackAddSource` |
+| トラックに別のアニメーションを足す | `addTrackSource` |
 | トラックの中でのソースの重み | `sourceWeight` |
 | ソースの再生ヘッド | `sourceFrame` |
 | ソースがイベントを発火する重みの下限 | `sourceEventThreshold` |
