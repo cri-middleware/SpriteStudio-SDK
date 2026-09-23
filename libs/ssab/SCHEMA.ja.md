@@ -71,9 +71,9 @@
 | `parent_index` | short | `parent_index` | 親パーツのインデックス |
 | `bounds_type` | BoundsType | `bounds_type` | バウンディング計算方式 |
 | `blend_type` | BlendType | `alpha_blend_type` | フィールド名変更 |
-| `visible_inside_mask` | bool | `visible_inside_mask` | 被マスク側の描画パーツの極性。`1` = マスクの内側に描画 / `0` = 外側に描画 → [Mask の実装 §2-4](../ssruntime/docs/40_components/40_mask.ja.md#2-4-極性マスクの内側か外側のどちらに描画するか) |
-| `mask_write` | bool | `write_mask` | フィールド名変更。描画パーツを **クリッピング** の writer にするフラグ。クリッピングには `DrawBatchKind::Mask` が出ないため、writer の確定はこのフラグから行う → [Mask の実装 §1-2](../ssruntime/docs/40_components/40_mask.ja.md#1-2-パーツの役割と-mask_influence) |
-| `mask_influence` | bool | `mask_influence` | **役割で意味が変わる二重定義**。マスク writer では OP（`0` = 増分 / `1` = 反転）、被マスク側の描画パーツでは対象フラグ（`1` = 適用される / `0` = オプトアウト）。クリッピングは writer 兼描画パーツなので、同じ値が両方の意味で同時に使われる。片方の意味を捨てないこと → [Mask の実装 §1-2](../ssruntime/docs/40_components/40_mask.ja.md#1-2-パーツの役割と-mask_influence) |
+| `visible_inside_mask` | bool | `visible_inside_mask` | 被マスク側の描画パーツの極性。`1` = マスクの内側に描画 / `0` = 外側に描画 → [マスク §2-4](../ssruntime/docs/40_parts/40_mask.ja.md#2-4-極性マスクの内側と外側のどちらに描くか) |
+| `mask_write` | bool | `write_mask` | フィールド名変更。描画パーツを **クリッピング** の writer にするフラグ。クリッピングには `DrawBatchKind::Mask` が出ないため、writer の確定はこのフラグから行う → [マスク §1-3](../ssruntime/docs/40_parts/40_mask.ja.md#1-3-パーツの役割と-mask_influence) |
+| `mask_influence` | bool | `mask_influence` | **役割で意味が変わる二重定義**。マスク writer では OP（`0` = 増分 / `1` = 反転）、被マスク側の描画パーツでは対象フラグ（`1` = 適用される / `0` = オプトアウト）。クリッピングは writer 兼描画パーツなので、同じ値が両方の意味で同時に使われる。片方の意味を捨てないこと → [マスク §1-3](../ssruntime/docs/40_parts/40_mask.ja.md#1-3-パーツの役割と-mask_influence) |
 | `draw_as_mask` | bool | `shape_mask` / `text_mask` / `nines_mask` | 描画パーツ (Shape/Text/Nines) の pure マスク化フラグを統合。ssae では型ごとに排他の別タグ。`PartTypeMask` は常に pure マスクなので本フラグに依らない |
 | `output_influence` | bool (既定 `true`) | `output_influence` | 作画データからそのまま引き継がれる。`libssruntime` は読まない |
 | `mesh_binding` | PartMeshBinding | (変換時生成) | `PartTypeMesh` 用の頂点ごとのボーン影響値。下記 [メッシュバインディング](#メッシュバインディング) 参照。メッシュ以外のパーツでは省略。 |

@@ -12,7 +12,7 @@ SpriteStudio-SDK `7.x.x` は **SpriteStudio 7.5 以上**で作成されたプロ
 ## 🔄 ワークフロー (The Workflow)
 
 1. **変換 (Convert):** 同梱の CLI ツール (`ssconverter-cli`) を使用して、SpriteStudio のプロジェクト (`.sspj`) を極限まで最適化されたバイナリフォーマット (`.ssab`) に変換します。
-2. **どこでも再生 (Play Anywhere):** 生成された `.ssab` ファイルを本 SDK のランタイムに渡します。**SDK はすべての `.ssab` ファイルを再生できるよう設計されており**、SpriteStudio の機能を標準でサポートします。テキスト描画とサウンド再生は責務分担として Player 側の担当です（[描画・再生機能のサポート範囲](./libs/ssruntime/docs/10_introduction/20_limitations.ja.md#描画再生機能のサポート範囲) を参照）。
+2. **どこでも再生 (Play Anywhere):** 生成された `.ssab` ファイルを本 SDK のランタイムに渡します。**SDK はすべての `.ssab` ファイルを再生できるよう設計されており**、SpriteStudio の機能を標準でサポートします。テキスト描画とサウンド再生は責務分担として Player 側の担当です（[制限事項 §1](./libs/ssruntime/docs/10_introduction/20_limitations.ja.md#1-テキストとサウンドは-player-が実装する) を参照）。
 
 この SDK を使用してアセットを変換し、アニメーションを再生する際の流れを以下の図に示します：
 

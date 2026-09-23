@@ -25,7 +25,7 @@
 //! record the reason on the context. [`ss_runtime_get_last_error`] reads back the stable
 //! code (compare against [`crate::error::SSRuntimeError::as_code`]), and
 //! [`ss_runtime_error_message`] turns that code into the text to put in front of a user —
-//! which is what a Player owes its caller (SDK: `20_design/40_api_conventions.md`, §7).
+//! which is what a Player owes its caller.
 //! **The message takes the code, not the context**, so it is a pure lookup with nothing
 //! to own and nothing to outlive. Getters that return a float use `NaN` for "no such
 //! thing", which is distinguishable from a legitimate `0.0`.
@@ -1308,7 +1308,7 @@ pub const SS_RUNTIME_TRACK_BLEND_ADDITIVE: u32 = 1;
 // ascending order: `alpha` is a track's strength, `weight` only decides
 // proportions among several sources sharing one track. Track 0 carries the
 // structure (discrete attributes and events) and is what `setup_animation`
-// establishes. See `libs/ssruntime/docs` for the model.
+// establishes.
 
 /// # Safety
 /// `name` must be a valid null-terminated UTF-8 (or lossy-decodable) string.
@@ -2184,7 +2184,7 @@ mod tests {
     #[test]
     fn the_guide_only_names_entry_points_that_exist() {
         // Names the guide is allowed to mention without exporting them.
-        const ALLOWED: &[(&str, &str)] = &[("ss_runtime_get_parts_color", "the page names it in order to say there is no such API")];
+        const ALLOWED: &[(&str, &str)] = &[];
 
         // Both C ABIs the guide covers: the runtime's, and the converter's —
         // the editor-integration page documents `ss_converter_*`, and a check

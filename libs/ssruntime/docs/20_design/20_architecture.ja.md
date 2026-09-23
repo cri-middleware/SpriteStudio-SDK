@@ -1,98 +1,49 @@
 > **日本語** | [English](./20_architecture.md)
 
-# Player と libssruntime の役割分担
+# Player の設計方針
 
-SpriteStudio-SDK の再生環境は、計算ロジックを担う **libssruntime** と、実際の描画やプラットフォーム依存処理を担う **Player** の 2 つに分かれています。
+実装に入る前に決めておくことの一覧です。どれも後から変えると広く書き直すことになります。Player の公開 API の名前と形は [Player API 規約](./30_api_conventions.ja.md) で決まっているので、ここでは内部の構成を扱います。
 
-この分担により、一度 Player を実装すれば、ロジックの変更（アニメーション仕様の追加など）を libssruntime の更新だけで吸収でき、高い移植性とメンテナンス性を実現しています。
+## 1. ライブラリの組み込み方
 
-## 1. 役割分担の概要
+| 形式 | 使う場面 |
+| :--- | :--- |
+| 静的ライブラリ（`.lib` / `.a`） | C / C++ のエンジンにリンクする |
+| 動的ライブラリ（`.dll` / `.so` / `.dylib`） | C# やスクリプト言語から FFI で呼ぶ |
+| WebAssembly（`.wasm`） | ブラウザで動かす |
 
-| 機能カテゴリ | libssruntime の役割（計算・管理） | Player の役割（描画・実行） |
-| :--- | :--- | :--- |
-| **データ管理** | アニメーション計算に必要な範囲のパース、変化点データの展開 | **ssab メタデータのパース**（パーツ構成、アセット情報の取得） |
-| **時間管理** | 経過時間からフレーム番号の算出、ループ制御 | デルタタイム（経過時間）の入力 |
-| **値の計算** | キーフレーム間の補間計算、アトリビュートのマージ | - |
-| **座標・行列** | 計算済みの**ローカルアトリビュート（位置・回転等）**の出力 | **ワールド座標への変換**、エンジン座標系への合わせ込み |
-| **レンダリング** | - | テクスチャのロード、実際の描画処理、最適化 |
-| **イベント** | イベントデータの抽出 | ユーザーデータ等の取得とコールバックの実行 |
-| **サウンド** | - | 音声ファイルのロード、再生の実行 |
+OS の標準ライブラリが無い環境や、エンジン独自のアロケータを使いたい環境では、`no_std` 構成でビルドします（[no_std 環境への統合](./40_no_std_integration.ja.md)）。
 
-## 2. libssruntime の主な責務（Brain）
-libssruntime は「アニメーションの計算機」として動作します。
+## 2. ssab のメモリの持ち方
 
-- **アニメーションの展開**: ssab データ内の変化点情報を解析し、指定されたフレームの全パーツの状態（アトリビュート）を算出します。
-- **サブフレーム（浮動小数フレーム）への対応**: libssruntime は内部的にフレーム番号を浮動小数 (`f32`) で管理しています。これにより、キーフレーム間に位置する「小数点以下のフレーム」の状態を補間計算によって正しく算出でき、高リフレッシュレート環境でも滑らかなアニメーションを実現します。
-- **補間計算**: Hermite、Bezier などの複雑な曲線補間を含め、フレーム間の値を正しく計算します。
-- **再生ステートの管理**: 現在再生中か、ループのどの位置か、再生速度はいくらか、といった状態を保持します。
+ssab のバイト列を Brain にどう渡すかを決めます。目標は、同じバイト列を Player と Brain の両方に持たないことです。
 
-## 3. Player の主な責務（Body / Renderer）
-Player は「ゲームエンジンとの橋渡し」および「データの統合」を担当します。
+| 方式 | 所有者 | 使う場面 | C-API |
+| :--- | :--- | :--- | :--- |
+| **borrow**（推奨） | Player | ポインタをそのまま渡せる言語（C++・C# など）。エンジンのアセットとして ssab を保持し続ける場合 | `ss_resource_create_borrow` |
+| **copy** | Brain | ポインタを共有できない環境。特に WebAssembly では、JavaScript のヒープと WebAssembly のメモリが分かれているため、渡すと必ずコピーになる | `ss_resource_create_copy` |
 
-- **ssab メタデータの参照と検証 (バリデーション)**: **libssruntime は描画に必要なメタデータ（パーツ名、親子関係、テクスチャパス等）を返さず、さらにパフォーマンス最適化のためデータの検証も行いません。** Player 側で FlatBuffers を用いて ssab をパースし情報を取得するとともに、外部から取得したファイルを使用する場合は必要に応じて Player 側でデータ破損・不正チェックを行ってください。
-- **リソースの保持**: テクスチャ、サウンド、および libssruntime コンテキストをインスタンスとして保持します。
-- **座標・行列の変換（重要）**: libssruntime は親子階層の状態を考慮した**ローカルのアトリビュート（位置、回転、スケール等）**を FlatBuffers 形式のバイナリチャンクとして返します。
-    - **パターン 1 (ダイレクト描画 / バッチレンダリング方式)**: Player 側で `ssab` の親子関係（parent_index）を参照しつつ、自前で行列スタック等を用いてワールド座標を算出します。近年のデータドリブンなアーキテクチャにおいて効率的な方式です。
-    - **パターン 2 (シーングラフ / 階層ノード方式)**: エンジン側のオブジェクトに親子階層を構築し、取得した値をそのまま Transform に流し込みます。行列計算はエンジンに任せます。実装は容易ですが、パーツ数が多い場合にオーバーヘッドが発生します。
-- **描画実行**: エンジンの描画機能を用いて、最終的な絵を出力します。
+borrow では、リソース自身と、それを参照するすべての Context・エフェクトスロットを破棄するまで、Player がバイト列を保持してください（[制限事項 §6](../10_introduction/20_limitations.ja.md#6-borrow-した-ssab-のバイト列は-player-が保持し続ける)）。
 
-## 4. なぜこの分担なのか
-- **移植性の向上**: 描画（DirectX, Metal, OpenGL, etc.）を Player に任せることで、libssruntime を Rust で一度書けば、あらゆるプラットフォームに持ち込めるようになります。
-- **品質の均一化**: 複雑なアニメーション計算（補間やパーツカラーの計算など）を共通化することで、どのゲームエンジンでも同じアニメーション結果が得られるようになります。
+### 2-1. WebAssembly での持ち方
 
----
+copy した後の元のバイト列をどう扱うかで、次の 3 つのどれかを選びます。
 
-# Player 実装方針の検討
+1. **すぐ手放す（基本）**: `new SSRuntimeResource(data)` でコピーした後、JavaScript 側の参照を切ってガベージコレクションに回収させます。ssab は WebAssembly のメモリに 1 つだけ残ります。
+2. **WebAssembly のメモリを直接読む**: JavaScript 側でも FlatBuffers で ssab を読みたい場合は、Context の `get_ssab_buf()` / `get_ssab_len()` で Brain が持つバイト列の位置を取り、`new Uint8Array(memory.buffer, ptr, len)` として読みます。コピーは増えません。ただし WebAssembly のメモリが拡張されると、それまでに作ったビューはすべて無効になります。ビューはそれを使う直前に作り直してください。
+3. **両方に持つ**: ビューを作り直せない場合（フレームワークが同じバッファを持ち続けることを要求する、Web Worker にも同じ ssab を渡す、エンジンのアセットキャッシュが元のバッファを握っている、など）は、二重に持つことを受け入れます。そのかわり、不要になった時点でエンジン側のアセットと Brain 側のリソース（`free()` / `ss_resource_destroy`）の両方を解放してください。
 
-Player の実装を開始する前に、対象のゲームエンジンやプラットフォームの特性に合わせて、以下の技術仕様を検討・決定してください。
+## 3. クラス構成
 
-## 1. libssruntime の統合方法
-利用する環境において、ネイティブライブラリをどのように組み込むかを決定します。
+Player のクラスは、次の 3 つの責務に分けて考えます。既存の Player は、この 3 つをどうまとめるかは違っても、どれもこの分け方に沿っています。
 
-### ライブラリタイプ
-- **静的ライブラリ (.lib / .a)**: C/C++ プロジェクトでリンクする場合。
-- **動的ライブラリ (.dll / .so / .dylib)**: C# やスクリプト言語から FFI 経由で呼び出す場合。
-- **WebAssembly (.wasm)**: ブラウザ環境で動作させる場合。
+- **(1) 内部エンジン** — Context とリソースを持ち、FrameData と SoA バッファを読み、頂点と DrawBatch を組み立て、テクスチャを解決する。エンジンの表示ノードに依存しないので、ヘッドレスのテストや複数の表示先から使える。
+- **(2) 再生制御** — 再生・停止・シーク・速度・ループ・イベント・経過時間の入力。
+- **(3) 表示ノード（任意）** — エンジンの表示ノード（`MonoBehaviour` / `Node2D` / `Displayable` / Widget など）の中に (1)(2) を持つ層。ドローコールの発行は、(1) で行う Player と (3) で行う Player があります。
 
-### no_std 環境（組み込み・コンソール機）のサポートについて
-ファイルシステムや OS 標準機能を持たない `no_std` 環境、またはコンソールゲーム機向けに独自のメモリアロケータを組み込みたい環境に SDK を統合させることが可能です。C/C++ プロジェクト等で `no_std` 環境向けにビルドするための具体的なアプローチ（`libc_alloc` の利用やカスタムアロケータの注入）については、[no_std 組み込み環境への統合](../50_reference/10_no_std_integration.ja.md) を参照してください。
+インスタンスパーツとエフェクトパーツの子の状態（スロット）は、子の Context を持つ層に置きます（[インスタンスパーツ](../40_parts/50_instance.ja.md)）。
 
-### メモリ管理戦略とデータ二重持ちの回避 (Zero-Duplication)
-ネットワークやディスクから読み込んだ `ssab` データを `libssruntime` にどう渡すかを決定します。特に WebAssembly (WASM) などの環境では、「Player側（JSヒープ）」と「ライブラリ側（WASMヒープ）」の両方に同じバイナリが存在してしまう**メモリの二重持ち**を防ぐ設計が重要になります。
-
-- **参照 (Borrow) 方式 (推奨)**:
-  Player 側がメインメモリのオーナーシップを完全に管理し、ライブラリ側は対象データのポインタのみを参照する方式です。不要なコピーが一切発生しないため、最もメモリ効率が高くパフォーマンスに優れます。
-  - **C++ / C# 等の場合**: ファイルマッピング（mmap）や標準のアセットバンドルから読み込んだメモリのポインタを `libssruntime` に渡すだけでこの方式が完結します。
-
-- **コピー (Copy) 方式と即時 GC の活用 (WASM 等の特殊環境向け)**:
-  ライブラリ側にメモリを一度コピーさせ、ライブラリにオーナーシップを持たせる方式です。WASM (JS) のように「JSヒープ」と「WASMヒープ」が物理的に分断されている環境では、生データを渡す際に必ず WASM ヒープへのコピーが発生するため、この方式が標準となります。二重持ちを防ぐため、WASM 環境では以下のパターンのいずれかを採用します。
-  
-  **パターンA: 即時破棄 (基本)**
-  ```typescript
-  const data = await response.arrayBuffer();
-  // 1. Rust(WASM) 側にデータをコピーしてリソースを生成 (WASM側がオーナーになる)
-  const resource = SSRuntimeResource.new(new Uint8Array(data));
-  
-  // 2. JS側の生データはもう不要なので参照を切り、ガベージコレクション(GC)に直ちに回収させる
-  // これにより、メモリ上に残る ssab バイナリは WASM 内の1つだけになる
-  ```
-  以降、Player 側からアニメーション名などのメタデータが必要な場合は、生バイナリを自前でパースするのではなく、`resource.get_animation_names()` のようにライブラリ側のAPIを経由して取得します。
-
-  **パターンB: WASM メモリの逆参照 (JS 側で直接パースしたい場合)**
-  もし JS 側で `flatbuffers` ライブラリを用いて生バイナリを直接パースしたい要件がある場合は、JS 側でデータを保持し続けるのではなく、Rust 側からデータのポインタ (`ptr`) を受け取り、`new Uint8Array(wasmMemory.buffer, ptr, len)` として **WASM 側のメモリを逆参照 (Borrow) する** ことで、メモリの二重確保を完全に防ぎます。
-
-## 2. 内部構造と描画戦略
-Player がアニメーションをどう管理し、レンダリングするかを決定します。
-
-### クラス設計のベストプラクティス（責務分離と推奨レイヤー構成）
-
-Player のクラス構成は **3 つの責務**へ分けます（**FFI 生存管理・再生状態・ホスト統合**という直交関心事から導かれ、既存 Player はいずれもこの形に収束）。各責務の下には言語ごとの生成 **FFI バインディング**（csbindgen / ffigen / wasm-bindgen / ctypes 等）が常在します。
-
-- **(1) 内部エンジン（描画コア）** — `libssruntime` コンテキスト保持・FrameData/SoA 取得・ワールド変換・頂点構築・テクスチャ解決・描画発行。**ホスト非依存**でヘッドレステストや複数表示から再利用可。
-- **(2) 再生制御（Player / Controller）** — `play`/`stop`/`seek`・速度・ループ・イベント・再生状態・デルタ入力。**＋インスタンス／エフェクトの子スロット管理**（子は *再帰サブプレイヤー*。生成・破棄・独立再生・サブフレーム伝播を担う。step と頂点合成は (1)。詳細 → [インスタンスパーツ (Instance)](../40_components/10_instance.ja.md)）。
-- **(3) 表示ノード（View / Adapter）＝任意** — エンジンの標準表示ノード（`MonoBehaviour` / `Node2D` / `Displayable` / Widget 等）にコアを**合成で保持**し描画へ渡す薄い層。
-
-**コア（Layer 1–3）が成果物、表示ノード（Layer 4）は糊**: バインディング＋内部エンジン＋再生制御の **L1–3 がホスト非依存の「コア Player」** で、これ単体で再生に十分です。自前で描画ループを回すホスト（カスタム C++ / SDL / 生 OpenGL / 多くのグラフィックスライブラリ）は `update(dt)` → DrawBatch 取得 or `paint` でコアを直接駆動でき、L4 は不要。**L4 は任意**で、保持型シーングラフ／ウィジェットを持つエンジン（Unity / Godot / Flutter）への idiomatic 統合時のみ足します。
+(1)(2) と、それらが使う言語ごとの FFI バインディングだけで、再生は完結します。描画ループを自分で回すホスト（C++ / SDL / OpenGL など）は、経過時間を渡して DrawBatch を描けばよく、(3) は要りません。(3) は、シーングラフやウィジェットを持つエンジン（Unity・Godot・Flutter など）にその作法で組み込むときに足します。
 
 ```mermaid
 graph TD
@@ -100,145 +51,103 @@ graph TD
     classDef ffi fill:#e6e6e6,stroke:#333,stroke-width:2px,color:#000,stroke-dasharray: 5 5;
     classDef brain fill:#dea584,stroke:#333,stroke-width:2px,color:#000;
 
-    subgraph L4 [Layer 4 / 責務3: 表示ノード View / Adapter（任意）]
-        V1["表示ノード A<br/>例: MeshRenderer / Node2D / Canvas / Displayable"]:::core
-        V2["表示ノード B<br/>UI / 別バックエンド"]:::core
+    subgraph L3 [表示ノード（任意）]
+        V1["表示ノード A<br/>例: MeshRenderer / Node2D / Displayable"]:::core
+        V2["表示ノード B<br/>UI / 別の描画先"]:::core
     end
-    subgraph L3 [Layer 3 / 責務2: 再生制御 Player / Controller]
-        P["play・stop・seek・loop・events / 再生状態 / 時間駆動<br/>インスタンス・エフェクト子スロット管理（再帰サブプレイヤー）"]:::core
+    subgraph L2 [再生制御]
+        P["再生・停止・シーク・ループ・イベント<br/>インスタンス / エフェクトのスロット"]:::core
     end
-    subgraph L2 [Layer 2 / 責務1: 内部エンジン 描画コア]
-        E["Internal Player<br/>Context・FrameData/SoA・ワールド変換・頂点構築・テクスチャ"]:::core
+    subgraph L1 [内部エンジン]
+        E["Context・FrameData・SoA<br/>頂点の組み立て・テクスチャ"]:::core
     end
-    subgraph L1 [Layer 1: FFI バインディング 生成物]
+    subgraph FFI [FFI バインディング]
         B["csbindgen / ffigen / wasm-bindgen / ctypes"]:::ffi
     end
     subgraph Native [Brain: libssruntime]
-        R["補間・DrawBatch 計算"]:::brain
+        R["補間・描画計画"]:::brain
     end
 
-    V1 -->|"合成で保持・tick"| P
-    V2 -->|"合成で保持・tick"| P
-    P -->|"内包・update(dt)"| E
-    E -->|"C-API"| B
+    V1 -->|"保持・tick"| P
+    V2 -->|"保持・tick"| P
+    P -->|"保持・update(dt)"| E
+    E --> B
     B <-->|"C-API"| R
-    E -.->|"頂点・バッチ"| V1
-    E -.->|"頂点・バッチ"| V2
-    style L4 stroke-dasharray: 6 4
+    E -.->|"頂点・DrawBatch"| V1
+    E -.->|"頂点・DrawBatch"| V2
+    style L3 stroke-dasharray: 6 4
 ```
 
-**鉄則**: コアと表示ノードは**継承でなく合成**で分離します（表示ノードがコアを継承する実装は皆無）。図の合成チェーンが骨子で、これにより 1 つの再生状態を**複数の表示方式**へ出せます（Unity=ワールド/uGUI、Web=PixiJS/RMMZ、Ren'Py=transform/mesh）。
+表示ノードは (1)(2) を**継承せず、メンバとして持ってください**。こうすると 1 つの再生状態を複数の表示方式へ出せます（Unity のワールドと uGUI、Web の PixiJS と RPG Maker MZ、Ren'Py の transform と mesh）。
 
-#### 束ね方はホスト次第（実装の実構成）
+### 3-1. 既存の Player での分け方
 
-| Player | 言語 | (1) 内部エンジン | (2) 再生制御 | (3) 表示ノード | 束ね方 |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| Unity | C# | `SpriteStudioNativeContext` ＋ `SpriteStudioInternalPlayer` ＋ `GeometryBuilder` | `SpriteStudioPlaybackCore` | `SpriteStudioPlayer`(Mesh) / `SpriteStudioGraphic`(uGUI) | (1) 独立／(2) を各 View が保持 |
-| Web | TS | `SSRuntimeManager` | `InternalPlayerBase` / `DirectInternalPlayer` | `SSPlayer`(PixiJS) | (1)+(2) 密結合／(3) 分離 |
-| Godot | C++ | `SsInternalPlayer` | （同左に内包） | `SpriteStudioPlayer2D`(Node2D) | (1)+(2) 融合／(3) 分離 |
-| Ren'Py | Python | `SSRuntime` ＋ framedata ＋ rigs | `SSInternalPlayer` | `SSPlayer`(Displayable) | (1)/(2)/(3) 分離（バインディングは (1) に内包） |
-| Flutter（設計） | Dart | `SpriteStudioInternalPlayer` | `SpriteStudioPlayer` | `SpriteStudioView` ほか | バインディング(`ffigen`)＋(1)(2)(3) をすべて独立＝**4 層** |
+| Player | 言語 | バインディング | (1) 内部エンジン | (2) 再生制御 | (3) 表示ノード | まとめ方 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Unity | C# | csbindgen | `SpriteStudioNativeContext`（Context とリソースの寿命）＋ `SpriteStudioInternalPlayer` ＋ `SpriteStudioGeometryBuilder` | `SpriteStudioInternalPlayer`（表示ノードが共有する薄い `SpriteStudioPlaybackCore` を通す） | `SpriteStudioPlayer`（Mesh）/ `SpriteStudioGraphic`（uGUI） | 寿命管理だけ分け、(1)(2) はまとめる |
+| Web | TypeScript | wasm-bindgen | `SSRuntimeManager` ＋ `FrameDataRaw` ＋ `GeometryBuilder` | `InternalPlayerBase` / `DirectInternalPlayer` | `SSPlayer`（PixiJS / WebGL / RPG Maker MZ ごと） | (1)(2) は密に結び、描画の発行は (3) |
+| Godot | C++ | `ssruntime.h` を直接 | `SsInternalPlayer` | （同左） | `SpriteStudioPlayer2D`（Node2D） | (1)(2) をまとめ、(3) を分ける |
+| Ren'Py | Python | ctypes | `SSInternalPlayer`（描画計画まで） | （同左） | `SSPlayer`（Displayable） | (1)(2) をまとめ、描画の発行は (3) |
+| Flutter | Dart | ffigen | `SpriteStudioInternalPlayer` ＋ `GeometryBuilder` | `SpriteStudioPlayer` | `SpriteStudioView` / `SpriteStudioAnimation` / Flame の `SpriteStudioComponent` | 3 つとも分ける |
+| React Native | TypeScript ＋ C++ | Nitro Modules | `HybridSsContext`（C++）/ `SsInternalPlayer` | `SpriteStudioPlayer` | `SpriteStudioView` / `SpriteStudioSprite` / `SpriteStudioScene` | 3 つとも分け、(1) の重い処理は C++ |
+| Wgpu | Rust | `ssruntime` クレートを直接 | `SSPlayer` ＋ `SSScene` ＋ `SSRenderer` | `SSPlayer` | Bevy の `SsPlayer`、Web の `SsPlayerWeb`、C-API の `SsPlayer` | (1)(2) をまとめ、GPU の描画は別のクラス |
 
-- **(1)+(2) は融合可**（Web / Godot）— 再生制御が C-API の薄ラッパで足りる場合。
-- **(2) は (3) から必ず分離**— 表示ノードが再生成される（Flutter の Widget）か、複数表示で再生状態を共有する場合。Unity のようにベース制約（`MonoBehaviour` と `Graphic`）があれば (2) を `PlaybackCore` に括り出し各 View が保持。
-- **迷ったら完全分離**（Ren'Py / Flutter）。**名前でなく責務で設計**する（「InternalPlayer」が指す層は実装ごとに異なる）。
+- **(1) と (2) はまとめてよい** — 再生制御が C-API の薄い包みで足りる場合。
+- **(2) は (3) から分ける** — 表示ノードが作り直される場合（Flutter の Widget）や、複数の表示ノードで 1 つの再生状態を共有する場合。
+- **迷ったら 3 つとも分ける。** クラス名ではなく責務で分けてください。「InternalPlayer」という名前が指す層は Player ごとに違います。
 
-#### 参考実装
-難所（マスク・パーツカラー・Instance/Effect・寿命管理）は既存 Player のソースが最良の手本です。
+マスク・パーツカラー・インスタンス・エフェクト・ネイティブの寿命管理は、既存の Player のソースが手本になります。
 
-- **SSPlayerForUnity**（C#）— Job System 頂点構築、ワールド／uGUI の 2 アダプタ、`IDisposable` ＋ Burst Job 同期。
-- **SSPlayerForWeb**（TS / PixiJS）— wasm-bindgen、ゼロコピー view、`FinalizationRegistry`、`IResourceManager`。
-- **SSPlayerForGodot**（C++）— `RenderingServer` 直接描画、Node2D 合成、デストラクタ破棄順。
-- **SSPlayerForRenPy**（Python）— カバレッジ方式マスク、`Displayable` 統合、コアのヘッドレステスト。
+### 3-2. ネイティブの寿命
 
-#### 補足（生存管理・ECS）
-- **ネイティブ寿命**: 生存管理を 1 箇所に集約し**破棄順を厳守**（Context → Resource、非同期処理は完了後に解放）。明示破棄＋GC ファイナライザを併設。
-- **ECS（Unity DOTS / Bevy 等）**: オブジェクト階層でなく**コンポーネント＋システム**で実装。クラス構成は変わるが「コア / 制御 / 統合」の責務分離は保つ。
+- Context とリソースの生成と破棄を 1 か所にまとめてください。明示的な破棄に加えて、GC のあるホストではファイナライザでも解放します。
+- 別スレッドの描画処理が SoA バッファを読んでいる間は、Context を破棄しないでください（[描画ループ §4-1](../30_core/40_render_loop.ja.md#4-1-マルチスレッドの描画と破棄)）。
 
-### 描画方式の選択
-- **ダイレクト描画 / バッチレンダリング方式**:
-    - 1 つの描画コンポーネント内で全パーツをループして描画する。
-    - メリット：描画パフォーマンスが高い。データドリブンな設計やオフスクリーンレンダリングに適している。
-    - デメリット：特定のパーツにエンジンのオブジェクトを連動させるのが少し工夫が必要。
-- **シーングラフ / 階層ノード方式**:
-    - エンジンのオブジェクト（ノード等）をパーツ数分生成して階層化する。
-    - メリット：エンジンの機能をパーツ単位で利用しやすい（当たり判定、エフェクトの付与など）。
-    - デメリット：パーツ数が多い場合にエンジン側のオーバーヘッドが大きくなる。近年のゲームエンジンでは、描画コストの観点からダイレクト描画が主流になりつつあります。
+### 3-3. ECS のエンジン
 
-### 座標系の合わせ込み（重要）
-SpriteStudio と対象エンジンの座標系の違いをどう吸収するかを検討します。
-SpriteStudio および **`libssruntime` の標準的な座標系は「Y-Up（上がプラス）」「中心原点」「ピクセル単位」** です。
+Unity DOTS や Bevy のような ECS では、オブジェクトの階層ではなくコンポーネントとシステムで組みます。クラスの形は変わりますが、3 つの責務の分け方は同じです。
 
-#### なぜ座標系の設定が必要か
-SpriteStudio エディタ上の「キャンバス」と、ゲームエンジン上の「ワールド空間」では、座標の扱いが異なることが一般的です。
-- **Y 軸の向き**: エディタ上では「下がプラス（Y-Down）」ですが、3D エンジンや多くの 2D エンジンでは「上がプラス（Y-Up）」が標準です。
-- **原点位置**: エディタ上では「左上」が原点 (0,0) ですが、ゲームエンジンではキャラクターの中心を (0,0) として扱いたいケースが多いです。
+## 4. 描画方式
 
-これらを Player 側で手動で計算し直すと、親子構造の回転方向やオフセット計算でミスが発生しやすくなります。`libssruntime` の **`Context` 設定 API** を利用することで、ライブラリ内部でこれらを一貫して吸収し、エンジンにそのまま流し込める値として取得できます。
+| 方式 | 内容 | 向いている場面 |
+| :--- | :--- | :--- |
+| **ダイレクト描画**（推奨） | 1 つの描画コンポーネントで、全パーツを DrawBatch 単位で描く | ほとんどの場合。描画が速く、エンジンのノードを大量に作らない |
+| **シーングラフ** | パーツごとにエンジンのノードを作り、階層を組む | パーツごとにエンジンの機能（当たり判定など）を付けたい場合。パーツが多いとエンジン側の負荷が大きい |
 
-- **Y 軸の向き (`ss_runtime_set_coordinate_system`)**: 上向き（Y-Up）か、下向き（Y-Down）か。
-    - `Y-Down` (1) を指定すると、ライブラリ内部で Y 座標と回転方向が自動的に反転されます。エンジンの 2D 座標系が Y-Down の場合はこちらを選択してください。
-- **原点の位置 (`ss_runtime_set_origin`)**: 中心（Center）か、左上（Top-Left）か。
-    - `Top-Left` (1) を指定すると、キャンバスサイズに基づいたオフセットが自動的に適用されます。UI システムのように左上基準で配置したい場合に有効です。
-- **単位 (`ss_runtime_set_unit`)**: ピクセル単位（Pixel）か、正規化座標（Normalized）か。
-    - `Normalized` (1) を指定すると、すべての座標値がキャンバスサイズで除算され、0.0 〜 1.0 の範囲に正規化されます。解像度独立な描画を行いたい場合に適しています。
+どちらを選ぶかで、Brain に設定する `RenderMode` が変わります（[描画ループ §3](../30_core/40_render_loop.ja.md#3-rendermode)）。
 
-## 3. アセット管理戦略
-ssab 内のアセット（テクスチャ等）をどのようにロード・保持するかを決定します。
+## 5. 座標系
 
-### 対応する ssab タイプの決定
-実装する Player のターゲットに合わせて、サポートする `ssab` のタイプを選択してください。片方のみの実装でも、両方の実装でも問題ありません。
+Brain の既定の座標系は、SpriteStudio と同じ **Y-Up・中心原点・ピクセル単位** です。エンジンの座標系が違う場合は、Player で座標を計算し直さず、Context に設定して Brain に合わせさせてください。親子の回転の向きやオフセットを Player で直すと、誤りが入りやすくなります。
 
-- **Reference (参照方式)**:
-    - **特徴**: アセットを外部ファイルとして参照します。
-    - **ターゲット**: Unity や Godot などのゲームエンジン向け。エンジンの標準的なアセット管理・ロード機構（AssetBundle や Resource ロードなど）をそのまま利用したい場合に最適です。
-- **Embedded (埋め込み方式)**:
-    - **特徴**: アセットを ssab 自体にデータとして埋め込みます。
-    - **ターゲット**: Web 広告やシンプルなアプリ、またはリソースファイルを一つにまとめたい場合。アセットファイルを個別に配布・管理する手間を省きたい場合に最適です。
+| 設定 | 関数 | 値 |
+| :--- | :--- | :--- |
+| Y 軸の向き | `ss_runtime_set_coordinate_system` | `0` = Y-Up（既定） / `1` = Y-Down。Y-Down では Y 座標と回転の向きを Brain が反転する |
+| 原点 | `ss_runtime_set_origin` | `0` = 中心（既定） / `1` = 左上。左上ではキャンバスの大きさに応じたオフセットを Brain が足す |
+| 単位 | `ss_runtime_set_unit` | `0` = ピクセル（既定） / `1` = 正規化。正規化では座標をキャンバスの大きさで割り、0.0〜1.0 にする |
 
-## 4. 機能スコープの決定
-一度にすべての機能を実装するのは困難なため、段階的なサポート計画を立てることを推奨します。
+Y-Down を設定した場合、ローカル頂点は反転済みです。ワールド行列の側でさらに Y 軸を反転すると二重に反転するので、しないでください。エフェクトの頂点は `ss_effect_slot_step` の `y_flip` 引数で別に指定します（[エフェクトパーツ §2](../40_parts/60_effect.ja.md#2-ss_effect_slot_step-の引数)）。
 
-- **必須（基本）**: 基本アトリビュート、親子関係の継承、合成モード。
-- **推奨**: インスタンス再生、ユーザーデータ。
-- **発展**: メッシュ、ボーン、エフェクト、シェーダー。
-- **オプション**: オーディオ、テキスト、9スライス。
+## 6. ssab の種類
 
-## 5. ユーザビリティとツールチェーン
-利用者の利便性を向上させるための周辺実装を検討します。
+ssab には 2 種類あります。片方だけに対応しても、両方に対応してもかまいません。
 
-- **自動コンバート**: `sspj` から `ssab` への変換をエンジンのエディタ（Unity Editor 等）上で自動実行する拡張機能。
+| 種類 | アセットの置き場所 | 向いている場面 |
+| :--- | :--- | :--- |
+| **参照** | ssab の外のファイル | エンジンのアセット管理（AssetBundle やリソースの読み込み）をそのまま使うゲームエンジン |
+| **埋め込み** | ssab の中 | Web 広告や小さなアプリなど、1 ファイルで配りたい場合 |
 
-## 6. 必要な Player API
+テクスチャの読み込み方は種類ごとに違います（[ロードと初期化 §3](../30_core/10_initialization.ja.md#3-テクスチャの読み込み)）。
 
-Player 実装において、利用者がアニメーションを制御するために最低限必要な API インターフェースの設計指針です。
+## 7. 対応する機能の範囲
 
-### 再生制御（プレイバック）
-- **set_animation(name)**: 再生するアニメーションをセットアップします。`ss_runtime_setup_animation` がこのタイミングで内部アロケーションを伴うため、**再生の前**に実施します。
-- **play(loop, startFrame)**: セットアップ済みのアニメを指定した再生回数・開始フレームで再生開始します（アロケーションを伴わない軽い操作）。
-- **stop()**: アニメーションの再生を完全に停止します。
-- **pause()**: 再生中のアニメーションを一時停止します。
-- **resume()**: 一時停止中のアニメーションを再開します。`play` の 2 回目ではなく `ss_runtime_resume` に対応付けてください（`play` は先頭出しのため再生ヘッドを失います）。
-- **isPlaying()**: 現在アニメーションが再生中かどうかを返します。一時停止中も `true` のままなので、`ss_runtime_is_pausing` から `isPaused` も併せて公開してください。
+すべてを一度に実装するのは大変なので、段階を分けることを推奨します。進め方は [目次の「実装の進め方」](../README.ja.md#1-実装の進め方) にあります。
 
-これら 5 つの正確なセマンティクスと再生ヘッドへの影響は [再生制御とイベント](../30_core/20_playback_control.ja.md#トランスポートの契約) にまとめてあります。
-
-### タイム・フレーム制御
-- **setFrame(frame) / getFrame()**: 現在の再生フレームを直接指定（シーク）または取得します。
-- **setSpeed(speed) / getSpeed()**: 再生速度（タイムスケール）を設定または取得します。
-- **getTotalFrames()**: 現在のアニメーションの総フレーム数を取得します。
-
-### パーツ操作
-- **setPartVisible(partName, visible)**: パーツ名を指定して表示・非表示を切り替える。
-
-### イベント通知
-Player は内部的に `libssruntime` からイベントをポーリングし、ゲーム側のスクリプトやシステムが受け取れるように以下のコールバックやイベント機構（C# の delegate や Godot の signal など）を提供することを推奨します。
-- **setAnimationFinishedCallback(callback)**: ループも含めてアニメーション再生が完了した際の通知を受け取る。
-- **setAnimationLoopedCallback(callback)**: アニメーションが1周して先頭に戻った際の通知を受け取る。
-- **setUserDataCallback(callback)**: タイムライン上のユーザーデータを検出した際の通知を受け取る。
-- **setSignalCallback(callback)**: シグナルコマンドを検出した際の通知を受け取る。
-
-`finished` / `looped` の正確な意味とポーリング方法は [再生制御とイベント処理](../30_core/20_playback_control.ja.md) を参照してください。
+| 段階 | 機能 |
+| :--- | :--- |
+| 基本 | アトリビュート、親子の継承、合成モード、イベント |
+| 次に | [パーツカラー](../40_parts/10_parts_color.ja.md)、[メッシュ](../40_parts/20_mesh.ja.md)、[マスク](../40_parts/40_mask.ja.md)、[インスタンスパーツ](../40_parts/50_instance.ja.md)、[エフェクトパーツ](../40_parts/60_effect.ja.md) |
+| 必要に応じて | [9 スライス・シェイプ・テキスト](../40_parts/30_special_parts.ja.md)、[オーディオ](../50_features/50_audio.ja.md)、[アニメーションミキシング](../50_features/10_animation_mixing.ja.md)、[パーツオーバーライド](../50_features/20_part_overrides.ja.md)、[エディタ統合](../50_features/60_editor_integration.ja.md) |
 
 ---
 [目次に戻る](../README.ja.md)
