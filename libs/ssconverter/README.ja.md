@@ -24,8 +24,7 @@ ssconverter = "7.0.0-beta.1"
 
 # FFI (C/C++)
 
-このライブラリは、コンバータの作成や進捗監視を行うための C API を公開しています。
-詳細な組み込み方法については、[libssconverter 組み込みガイド](./docs/USAGE.ja.md) を参照してください。
+このライブラリは、コンバータの作成や進捗監視を行うための C API を公開しています。詳細な組み込み方法については、[libssconverter 組み込みガイド](./docs/USAGE.ja.md) を参照してください。
 
 ヘッダファイルは `cbindgen` によって `target/ssconverter.h` に生成されます。
 
