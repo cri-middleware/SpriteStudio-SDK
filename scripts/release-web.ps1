@@ -32,7 +32,7 @@ pushd $rootDirectory
 try {
     # This script stays build-only: it must not depend on cargo-about. wasm-pack
     # bundles each crate's committed LICENSE.md automatically; the third-party
-    # THIRD-PARTY-LICENSES.md is added downstream by the release pipeline (the
+    # THIRD-PARTY-LICENSES.<crate>.md is added downstream by the release pipeline (the
     # package job runs scripts/generate-licenses.ps1 and copies it into each
     # package). Run that script manually first if you want the notice locally.
 
