@@ -23,7 +23,7 @@ Decide how to hand the ssab bytes to the Brain. The goal is not to hold the same
 | **borrow** (recommended) | Player | Languages that can pass a pointer as-is (C++, C#, and so on), when the engine keeps holding the ssab as an asset | `ss_resource_create_borrow` |
 | **copy** | Brain | Environments that cannot share a pointer. In WebAssembly in particular, the JavaScript heap and WebAssembly memory are separate, so passing the bytes always makes a copy | `ss_resource_create_copy` |
 
-With borrow, keep the bytes in the Player until every Context that uses that resource has been destroyed ([Limitations §6](../10_introduction/20_limitations.md#6-the-player-keeps-the-bytes-of-a-borrowed-ssab-alive)).
+With borrow, keep the bytes in the Player until the resource itself, and every Context and effect slot that refers to it, has been destroyed ([Limitations §6](../10_introduction/20_limitations.md#6-the-player-keeps-the-bytes-of-a-borrowed-ssab-alive)).
 
 ### 2-1. Holding it in WebAssembly
 
