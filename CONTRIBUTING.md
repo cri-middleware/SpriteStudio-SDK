@@ -195,4 +195,4 @@ cargo run -p ssconverter-cli -- <path_to_sspj>
 - **失敗は文字列ではなくコードで渡します。** 呼び出しは戻り値で失敗を伝え、呼び出し側は `ss_runtime_get_last_error` で理由を取り、`ss_runtime_error_message` で文言にします。`libs/ssruntime/src/error.rs` のコードは、それ自体が互換性を保つべき面です。
 
 ---
-本プロジェクトへの貢献は、プロジェクトの [LICENSE.md](./LICENSE.md) に同意したものとみなされます。
+本プロジェクトに貢献することで、あなたの貢献がプロジェクトの [LICENSE.md](./LICENSE.md) の下でライセンスされることに同意したものとみなされます。
