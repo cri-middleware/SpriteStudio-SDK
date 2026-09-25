@@ -274,10 +274,15 @@ pub struct SSRuntimeResource {
 
 #[wasm_bindgen]
 impl SSRuntimeResource {
+    /// Copies and parses a `.ssab`. The runtime does not verify the bytes — a malformed or
+    /// crafted pack causes out-of-bounds reads within this module's memory — so pass only
+    /// packs you trust. A schema-version mismatch is reported as an error.
     #[wasm_bindgen(constructor)]
     pub fn new(data: &[u8]) -> Result<SSRuntimeResource, JsValue> {
         let ssab_data = SsabData::load_copy(data).map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let inner = SsabResource::new(ssab_data);
+        // SAFETY: the JS caller guarantees a valid `.ssab`, as the C ABI's caller does; nothing
+        // here can check it (crate docs, "Limitations to design around").
+        let inner = unsafe { SsabResource::new(ssab_data) };
         if inner.resource().is_none() {
             // The reason, not just the fact: a version mismatch names both
             // versions, which is the whole of what the user needs to act.
@@ -325,7 +330,8 @@ impl SSRuntimeContext {
 
     pub fn load_ssab_copy(&mut self, data: &[u8]) -> bool {
         if let Ok(ssab_data) = SsabData::load_copy(data) {
-            let res = SSRuntimeResource { inner: SsabResource::new(ssab_data) };
+            // SAFETY: the JS caller guarantees a valid `.ssab`, as for `SSRuntimeResource::new`.
+            let res = SSRuntimeResource { inner: unsafe { SsabResource::new(ssab_data) } };
             if res.inner.resource().is_some() {
                 return self.bind_resource(&res);
             }

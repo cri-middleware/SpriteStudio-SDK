@@ -50,6 +50,7 @@ When integrating this library into a Player (game engine), please pay close atte
    - To maximize performance and minimize binary size (especially for embedded/WebAssembly targets), `libssruntime` **does not perform structural validation** on the input `.ssab` data.
    - Loading maliciously crafted or corrupted `.ssab` files can cause undefined behavior or crashes (e.g., out-of-bounds memory access).
    - **Mitigation:** In environments that accept dynamic input from networks or users, the Player MUST validate the data integrity beforehand or ensure that only trusted, safe assets are loaded.
+   - From Rust, `AnimationResource::new` and `SsabResource::new` are `unsafe fn`: they read through FlatBuffers accessors that do not bounds-check in release builds, so a valid `.ssab` is the caller's precondition.
 
 2. **Resource Sharing and Lifetimes (FFI)**
    - To optimize memory usage, a single animation resource (`AnimationResource`) can be shared across multiple playback instances (`Context`).

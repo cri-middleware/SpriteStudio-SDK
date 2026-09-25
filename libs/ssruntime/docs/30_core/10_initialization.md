@@ -37,8 +37,8 @@ When you use the Brain directly from Rust, it takes three steps, with the lifeti
 // 1. Reference the bytes (ssab_data_ptr: *const u8, ssab_data_len: usize)
 let ssab_data = unsafe { ssruntime::SsabData::load_borrow(ssab_data_ptr, ssab_data_len).unwrap() };
 
-// 2. Read the metadata
-let resource = ssruntime::AnimationResource::new(ssab_data.as_slice()).unwrap();
+// 2. Read the metadata. `unsafe`: anything but a valid ssab is undefined behaviour (§2 below)
+let resource = unsafe { ssruntime::AnimationResource::new(ssab_data.as_slice()) }.unwrap();
 
 // 3. Create the Context and bind it
 let mut context = ssruntime::Context::new();

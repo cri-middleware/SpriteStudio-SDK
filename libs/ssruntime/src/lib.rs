@@ -31,7 +31,8 @@
 //! # fn main() -> Result<(), ssruntime::error::SSRuntimeError> {
 //! # let ssab_bytes: &[u8] = &[];
 //! // 1. Parse the .ssab once. A resource is read-only and can back many contexts.
-//! let resource = AnimationResource::new(ssab_bytes)?;
+//! // SAFETY: a pack the converter wrote, so a valid .ssab (see Limitations below).
+//! let resource = unsafe { AnimationResource::new(ssab_bytes) }?;
 //!
 //! // 2. A context holds the playback state of one animation instance.
 //! let mut ctx = Context::new();
@@ -121,7 +122,10 @@
 //! - **Input is not validated.** To keep the binary small and playback allocation-free,
 //!   `.ssab` is read zero-copy with no structural checks. Malformed or hostile input can
 //!   cause out-of-bounds reads. Verifying asset integrity is the *Player's* job — do it
-//!   before loading anything that came from a network or an end user.
+//!   before loading anything that came from a network or an end user. The FlatBuffers
+//!   accessors do not bounds-check in release builds, so reading anything but a valid
+//!   `.ssab` is undefined behaviour; that precondition is why [`AnimationResource::new`]
+//!   and [`SsabResource::new`] are `unsafe fn`.
 //! - **Borrowed buffers are not owned.** One [`AnimationResource`] may back several
 //!   [`Context`]s, and across the C ABI resources are reference-counted — destroying a
 //!   resource handle that contexts are still bound to is safe. What is *not* managed for
@@ -459,7 +463,16 @@ pub struct SsabResource {
 }
 
 impl SsabResource {
-    pub fn new(data: SsabData) -> alloc::sync::Arc<Self> {
+    /// Parses `data` into a shareable resource. On failure the resource holds no
+    /// animation and [`Self::parse_error`] says why.
+    ///
+    /// # Safety
+    ///
+    /// The bytes must be a valid `.ssab`. They are read through FlatBuffers accessors that do not
+    /// bounds-check in release builds, so any other bytes are undefined behaviour (out-of-bounds
+    /// reads). A pack the converter wrote is valid; for any other, run the FlatBuffers verifier
+    /// first (the `ssab` crate's checked `root_as_ss_anime_binary`).
+    pub unsafe fn new(data: SsabData) -> alloc::sync::Arc<Self> {
         let res = Self { resource: None, data, parse_error: None };
         let mut arc = alloc::sync::Arc::new(res);
         if let Some(mut_res) = alloc::sync::Arc::get_mut(&mut arc) {
@@ -469,7 +482,9 @@ impl SsabResource {
             // a self-borrow directly. The `resource()` accessor downgrades the lie
             // back to a self-bound lifetime before exposing it.
             let data_slice: &'static [u8] = unsafe { &*(mut_res.data.as_slice() as *const [u8]) };
-            match AnimationResource::new(data_slice) {
+            // SAFETY: these are `data`'s bytes, which this function's caller guarantees are a
+            // valid `.ssab` (`# Safety`).
+            match unsafe { AnimationResource::new(data_slice) } {
                 Ok(resource) => mut_res.resource = Some(resource),
                 Err(e) => mut_res.parse_error = Some(e),
             }
@@ -522,8 +537,17 @@ impl SsabResource {
 }
 
 impl<'a> AnimationResource<'a> {
-    pub fn new(data: &'a [u8]) -> Result<Self, error::SSRuntimeError> {
-        // Use unchecked for performance, but we still check the version.
+    /// Parses the animations' metadata out of `data`. Fails on a schema-version mismatch.
+    ///
+    /// # Safety
+    ///
+    /// The bytes must be a valid `.ssab`. They are read through FlatBuffers accessors that do not
+    /// bounds-check in release builds, so any other bytes are undefined behaviour (out-of-bounds
+    /// reads). A pack the converter wrote is valid; for any other, run the FlatBuffers verifier
+    /// first (the `ssab` crate's checked `root_as_ss_anime_binary`).
+    pub unsafe fn new(data: &'a [u8]) -> Result<Self, error::SSRuntimeError> {
+        // SAFETY: the caller guarantees `data` is a valid `.ssab` (`# Safety`); only the version
+        // is checked here.
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(data) };
         if ssab.version() != ssab::SSAB_SCHEMA_VERSION {
             return Err(error::SSRuntimeError::InvalidVersion { expected: ssab::SSAB_SCHEMA_VERSION, got: ssab.version() });
@@ -3841,7 +3865,7 @@ mod tests {
         let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
 
         let mut context = Context::new();
         assert!(context.get_frame_data_ptr().is_null(), "nothing has been built yet");
@@ -3881,7 +3905,7 @@ mod tests {
 
                 let input_buf = std::fs::read(&f).unwrap();
                 let ssab_data = SsabData::load_copy(&input_buf).unwrap();
-                let resource = AnimationResource::new(ssab_data.as_slice()).unwrap();
+                let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.unwrap();
                 let mut context = Context::new();
                 context.bind_resource(&resource);
 
@@ -3905,7 +3929,7 @@ mod tests {
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("Failed to setup animation");
@@ -3979,7 +4003,7 @@ mod tests {
     #[test]
     fn override_find_part_index() {
         let ssab_data = load_basic_ssab();
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
 
@@ -3997,7 +4021,7 @@ mod tests {
     #[test]
     fn override_visibility_force_hide_and_clear() {
         let ssab_data = load_basic_ssab();
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("setup");
@@ -4026,7 +4050,7 @@ mod tests {
     #[test]
     fn override_visibility_cascade() {
         let ssab_data = load_basic_ssab();
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("setup");
@@ -4057,7 +4081,7 @@ mod tests {
     #[test]
     fn override_cleared_on_setup_animation() {
         let ssab_data = load_basic_ssab();
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("setup");
@@ -4087,7 +4111,7 @@ mod tests {
     #[test]
     fn override_color_applies_and_premultiplies() {
         let ssab_data = load_basic_ssab();
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("setup");
@@ -4113,7 +4137,7 @@ mod tests {
     #[test]
     fn override_color_normal_only() {
         let ssab_data = load_basic_ssab();
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("setup");
@@ -4130,7 +4154,7 @@ mod tests {
         let ssab_path = get_test_base_path().join("tests/overall/overall/PartsColor.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("read PartsColor.ssab");
         let ssab_data = SsabData::load_copy(&input_buf).expect("load");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         let anim = resource.get_animation_names().first().expect("an animation").clone();
@@ -4179,7 +4203,7 @@ mod tests {
     #[test]
     fn override_color_no_accumulation_across_frames() {
         let ssab_data = load_basic_ssab();
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("setup");
@@ -4196,7 +4220,7 @@ mod tests {
     #[test]
     fn override_color_permanent_survives_setup() {
         let ssab_data = load_basic_ssab();
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("setup");
@@ -4233,7 +4257,7 @@ mod tests {
     #[test]
     fn override_cell_applies_all_channels() {
         let ssab_data = load_basic_ssab();
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("setup");
@@ -4261,7 +4285,7 @@ mod tests {
     #[test]
     fn override_cell_normal_and_mask_only() {
         let ssab_data = load_basic_ssab();
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("setup");
@@ -4276,7 +4300,7 @@ mod tests {
     #[test]
     fn override_cell_priority_non_vs_now() {
         let ssab_data = load_basic_ssab();
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("setup");
@@ -4343,7 +4367,7 @@ mod tests {
     #[test]
     fn override_cell_changes_uvs() {
         let ssab_data = load_basic_ssab();
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("setup");
@@ -4383,7 +4407,7 @@ mod tests {
     #[test]
     fn override_cell_permanent_survival_and_sentinel_clear() {
         let ssab_data = load_basic_ssab();
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("setup");
@@ -4424,7 +4448,7 @@ mod tests {
         let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
 
         let names = resource.get_animation_names();
         assert!(names.len() >= 2, "fixture sanity: Ringo.ssab holds many animations");
@@ -4485,7 +4509,7 @@ mod tests {
         let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("Failed to setup animation");
@@ -4522,7 +4546,7 @@ mod tests {
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("Failed to setup animation");
@@ -4562,7 +4586,7 @@ mod tests {
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("Failed to setup animation");
@@ -4591,7 +4615,7 @@ mod tests {
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("Failed to setup animation");
@@ -4643,7 +4667,7 @@ mod tests {
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("Failed to setup animation");
@@ -4678,7 +4702,7 @@ mod tests {
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read deform.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
         let mut context = Context::new();
         context.set_render_mode(crate::core::RenderMode::SceneGraph);
         context.bind_resource(&resource);
@@ -4745,7 +4769,7 @@ mod tests {
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read shape.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("Failed to setup animation");
@@ -4775,7 +4799,7 @@ mod tests {
         assert_eq!(ssab_data.as_slice().len(), input_buf.len());
 
         // 2. Test AnimationResource creation from SsabData
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to create AnimationResource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to create AnimationResource");
 
         // 3. Validate context binding
         let mut context = Context::new();
@@ -4801,7 +4825,7 @@ mod tests {
         let data = std::fs::read(path).expect("Failed to read test ssab file");
 
         let ssab_data = SsabData::load_copy(&data).unwrap();
-        let resource = AnimationResource::new(ssab_data.as_slice()).unwrap();
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.unwrap();
 
         let mut ctx = Context::new();
         ctx.bind_resource(&resource);
@@ -4831,7 +4855,7 @@ mod tests {
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let res = SsabResource::new(ssab_data);
+        let res = unsafe { SsabResource::new(ssab_data) };
 
         // resource() returns Some for a valid SSAB.
         assert!(res.resource().is_some());
@@ -4864,7 +4888,7 @@ mod tests {
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let res = SsabResource::new(ssab_data);
+        let res = unsafe { SsabResource::new(ssab_data) };
 
         // Take a raw pointer, then drop the original Arc handle while a clone keeps
         // the allocation alive. The pointer must remain valid through the clone.
@@ -5424,7 +5448,7 @@ mod tests {
     #[test]
     fn two_sources_on_one_track_blend_by_weight() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let walk = evaluate_ringo(&resource, "walk");
         let run = evaluate_ringo(&resource, "run");
 
@@ -5449,7 +5473,7 @@ mod tests {
     #[test]
     fn zero_weight_source_contributes_nothing() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let walk_only = evaluate_ringo(&resource, "walk");
 
         let (mut ctx, walk_start) = ringo_ctx(&resource, "walk");
@@ -5463,7 +5487,7 @@ mod tests {
     #[test]
     fn second_track_alpha_controls_how_much_of_it_lands() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let walk_only = evaluate_ringo(&resource, "walk");
 
         let (mut ctx, walk_start) = ringo_ctx(&resource, "walk");
@@ -5485,7 +5509,7 @@ mod tests {
     #[test]
     fn track_zero_at_alpha_zero_resolves_to_the_setup_pose() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, start) = ringo_ctx(&resource, "walk");
 
         ctx.set_track_alpha(0, 0.0).unwrap();
@@ -5502,7 +5526,7 @@ mod tests {
     #[test]
     fn crossfade_hands_the_track_over_and_releases_the_old_source() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
         let walk = ctx.instance.tracks[0].main;
 
@@ -5532,7 +5556,7 @@ mod tests {
     #[test]
     fn update_returns_a_frame_get_frame_data_accepts_across_a_crossfade() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "wait1");
         ctx.set_loop_count(-1);
         ctx.play();
@@ -5557,7 +5581,7 @@ mod tests {
     #[test]
     fn crossfade_restart_settles_the_previous_fade() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
         let walk = ctx.instance.tracks[0].main;
 
@@ -5581,7 +5605,7 @@ mod tests {
     #[test]
     fn crossfade_on_an_empty_track_just_starts_playing() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
 
         ctx.crossfade(1, "run", 500.0).unwrap();
@@ -5593,7 +5617,7 @@ mod tests {
     #[test]
     fn fade_track_drives_alpha_to_its_target() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
 
         ctx.fade_track(0, 0.0, 400.0).unwrap();
@@ -5609,7 +5633,7 @@ mod tests {
     #[test]
     fn cancel_track_fade_leaves_the_weights_alone() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
         let walk = ctx.instance.tracks[0].main;
 
@@ -5626,7 +5650,7 @@ mod tests {
     #[test]
     fn set_track_animation_replaces_what_the_track_was_playing() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
 
         let extra = ctx.add_track_source(0, "run", 1.0).unwrap();
@@ -5639,7 +5663,7 @@ mod tests {
     #[test]
     fn clear_track_silences_a_track_but_never_track_zero() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let walk_only = evaluate_ringo(&resource, "walk");
         let (mut ctx, start) = ringo_ctx(&resource, "walk");
 
@@ -5654,7 +5678,7 @@ mod tests {
     #[test]
     fn setup_animation_collapses_the_stack() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
 
         ctx.set_track_animation(2, "run").unwrap();
@@ -5670,7 +5694,7 @@ mod tests {
     #[test]
     fn track_api_validates_state() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
 
         // Layering onto an instance with no structure yet is refused.
         let mut ctx = Context::new();
@@ -5695,7 +5719,7 @@ mod tests {
     #[test]
     fn crossfade_validates_arguments() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
 
         assert!(matches!(ctx.crossfade(0, "run", 0.0), Err(error::SSRuntimeError::InvalidParameter)));
@@ -5709,7 +5733,7 @@ mod tests {
     #[test]
     fn bind_resource_clears_track_state() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
         ctx.set_track_animation(1, "run").unwrap();
 
@@ -5723,7 +5747,7 @@ mod tests {
     #[test]
     fn source_event_threshold_round_trips() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
 
         let handle = ctx.add_track_source(0, "run", 1.0).unwrap();
@@ -5744,7 +5768,7 @@ mod tests {
     fn passed_event_source_handles_reach_the_c_abi() {
         use crate::ffi::*;
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (ctx, _) = ringo_ctx(&resource, "walk");
 
         let boxed = Box::into_raw(Box::new(ctx)) as *mut ::core::ffi::c_void;
@@ -5759,7 +5783,7 @@ mod tests {
     #[test]
     fn set_track_speed_and_frame_target_the_tracks_animation() {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
         ctx.set_track_animation(1, "run").unwrap();
 
@@ -5797,7 +5821,7 @@ mod tests {
     /// loop: `play()` on the transition edge, then `step` once per frame.
     fn count_independent_child_loops(ev: crate::types::ss_event_instance_info, ticks: usize) -> usize {
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let mut child_ctx = Context::new();
         child_ctx.bind_resource(&resource);
         child_ctx.setup_animation("walk").unwrap();
@@ -5825,7 +5849,7 @@ mod tests {
         // "frame went backwards" inference reports a loop every tick instead of
         // once per wrap.
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let mut ctx = Context::new();
         ctx.bind_resource(&resource);
         ctx.setup_animation("walk").unwrap();
@@ -5843,7 +5867,7 @@ mod tests {
         // A ping-pong child's frame decreases for the whole return leg, so the
         // same inference reports a loop on every tick of that leg.
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let mut ctx = Context::new();
         ctx.bind_resource(&resource);
         ctx.setup_animation("walk").unwrap();
@@ -5863,7 +5887,7 @@ mod tests {
         // must resolve `_end` against the animation, not against the section
         // the previous transition left behind.
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let mut child_ctx = Context::new();
         child_ctx.bind_resource(&resource);
         child_ctx.setup_animation("walk").unwrap();
@@ -5887,7 +5911,7 @@ mod tests {
         // dedicated field on `ss_instance_step_result` is needed for it. Synced
         // children are seeked via `set_frame_relative` and have no equivalent.
         let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let mut child_ctx = Context::new();
         child_ctx.bind_resource(&resource);
         child_ctx.setup_animation("walk").unwrap();
@@ -5949,7 +5973,7 @@ mod tests {
         let ssab_path = get_test_base_path().join("tests/allPartsV7/allPartsV7/text.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read text.ssab");
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
 
         let mut context = Context::new();
         context.bind_resource(&resource);
@@ -5990,7 +6014,7 @@ mod tests {
             let path = get_test_base_path().join(f);
             let Ok(buf) = std::fs::read(&path) else { continue };
             let ssab_data = SsabData::load_copy(&buf).unwrap();
-            let resource = AnimationResource::new(ssab_data.as_slice()).unwrap();
+            let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.unwrap();
             for anime in resource.get_animation_names() {
                 let mut context = Context::new();
                 context.bind_resource(&resource);
@@ -6015,7 +6039,7 @@ mod tests {
         let ssab_path = get_test_base_path().join("tests/allPartsV7/allPartsV7/nineslice.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read nineslice.ssab");
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
         let (mut context, part_index) = setup_nines_context(&resource, "anime_1");
 
         let frame_buf = context.get_frame_data(1.0).expect("Failed to get frame data").to_vec();
@@ -6071,7 +6095,7 @@ mod tests {
         let ssab_path = get_test_base_path().join("tests/overall/overall/NineSlice.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read NineSlice.ssab");
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
         let (mut context, part_index) = setup_nines_context(&resource, "anime_1");
 
         // The fixture's part is authored with fill mode 1 (tile) and 24 px margins.
@@ -6132,7 +6156,7 @@ mod tests {
         let ssab_path = get_test_base_path().join("tests/overall/overall/TextureChange.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("read TextureChange.ssab");
         let ssab_data = SsabData::load_copy(&input_buf).expect("load");
-        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("setup");

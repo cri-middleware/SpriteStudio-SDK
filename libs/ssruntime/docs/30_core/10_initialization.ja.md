@@ -37,8 +37,8 @@ Rust から直接使う場合は、バイト列・メタデータ・Context の�
 // 1. バイト列を参照する（ssab_data_ptr: *const u8, ssab_data_len: usize）
 let ssab_data = unsafe { ssruntime::SsabData::load_borrow(ssab_data_ptr, ssab_data_len).unwrap() };
 
-// 2. メタデータを読む
-let resource = ssruntime::AnimationResource::new(ssab_data.as_slice()).unwrap();
+// 2. メタデータを読む。正しい ssab 以外は未定義動作になるため `unsafe`（下の §2）
+let resource = unsafe { ssruntime::AnimationResource::new(ssab_data.as_slice()) }.unwrap();
 
 // 3. Context を作ってバインドする
 let mut context = ssruntime::Context::new();

@@ -42,13 +42,14 @@ be routed here.
 
 ## Scope Notes
 
-**The runtime does not validate `.ssab` input.** `SsabResource::new`, the C ABI's `ss_resource_create_*`
-and `ss_runtime_load_ssab_*`, and the wasm `SSRuntimeResource` parse the buffer without FlatBuffers
-verification; apart from the schema version, nothing is checked. A malformed or deliberately crafted
-`.ssab` can therefore cause out-of-bounds reads rather than a clean error. The crate documentation and the
-porting guide make verifying a pack the player's job: check the `"SSAB"` identifier and run the
-FlatBuffers verifier for its language before handing the bytes over. Rust hosts can use the checked
-`root_as_ss_anime_binary` in the `ssab` crate.
+**The runtime does not validate `.ssab` input.** `SsabResource::new` and `AnimationResource::new`,
+the C ABI's `ss_resource_create_*` and `ss_runtime_load_ssab_*`, and the wasm `SSRuntimeResource` parse
+the buffer without FlatBuffers verification; apart from the schema version, nothing is checked. A
+malformed or deliberately crafted `.ssab` can therefore cause out-of-bounds reads rather than a clean
+error; that is also why the two Rust constructors are `unsafe fn`, with a valid pack as their
+precondition. The crate documentation and the porting guide make verifying a pack the player's job:
+check the `"SSAB"` identifier and run the FlatBuffers verifier for its language before handing the
+bytes over. Rust hosts can use the checked `root_as_ss_anime_binary` in the `ssab` crate.
 
 **The converter is built for projects you author.** It reads the files a `.sspj` references, and writes
 the converted packs and copies of the assets under the output directory. Image, texture and sound paths
@@ -92,7 +93,7 @@ SpriteStudio-SDK はリリース前です。まだ何も公開されておらず
 
 ## 既知の注意点
 
-**ランタイムは `.ssab` の入力を検証しません。** `SsabResource::new`、C ABI の `ss_resource_create_*` と `ss_runtime_load_ssab_*`、wasm の `SSRuntimeResource` は、FlatBuffers の検証を行わずにバッファを解析します。確認するのはスキーマのバージョンだけです。そのため、破損した、あるいは意図的に細工された `.ssab` は、エラーとして弾かれずに境界外読み取りを引き起こす可能性があります。クレートのドキュメントと移植ガイドは、パックの検証を Player の責務としています。バイト列を渡す前に `"SSAB"` 識別子を確認し、その言語の FlatBuffers verifier を実行してください。Rust のホストは `ssab` クレートの検証付き `root_as_ss_anime_binary` を利用できます。
+**ランタイムは `.ssab` の入力を検証しません。** `SsabResource::new` と `AnimationResource::new`、C ABI の `ss_resource_create_*` と `ss_runtime_load_ssab_*`、wasm の `SSRuntimeResource` は、FlatBuffers の検証を行わずにバッファを解析します。確認するのはスキーマのバージョンだけです。そのため、破損した、あるいは意図的に細工された `.ssab` は、エラーとして弾かれずに境界外読み取りを引き起こす可能性があります。Rust の 2 つのコンストラクタが `unsafe fn` なのも、正しいパックであることが呼び出しの前提になるためです。クレートのドキュメントと移植ガイドは、パックの検証を Player の責務としています。バイト列を渡す前に `"SSAB"` 識別子を確認し、その言語の FlatBuffers verifier を実行してください。Rust のホストは `ssab` クレートの検証付き `root_as_ss_anime_binary` を利用できます。
 
 **コンバーターは、ご自身で作成したプロジェクトを前提としています。** `.sspj` が参照するファイルを読み込み、変換したパックとアセットのコピーを出力ディレクトリの下に書き出します。プロジェクトディレクトリの外を指す画像・テクスチャ・サウンドのパスは拒否します。wasm 版のコンバーターは、ホストが渡したファイルだけを参照します。他者から受け取った `.sspj` を変換するツールでは、それを信頼できない入力として扱ってください。
 

@@ -149,8 +149,14 @@ fn get_context<'a>(ptr: *mut c_void) -> Option<&'a mut FfiContext> {
 /// back as a null handle from the two `ss_resource_create_*` entry points, which
 /// have no context to record on. The entry points that DO have one record the
 /// difference, readable through [`ss_runtime_get_last_error`].
-fn create_ffi_resource(data: crate::SsabData) -> Result<*mut c_void, crate::error::SSRuntimeError> {
-    let arc = SsabResource::new(data);
+///
+/// # Safety
+///
+/// Same as [`SsabResource::new`]: `data` must hold a valid `.ssab`. Every entry point below
+/// passes that precondition on to its C caller in its "Security and Validation" section.
+unsafe fn create_ffi_resource(data: crate::SsabData) -> Result<*mut c_void, crate::error::SSRuntimeError> {
+    // SAFETY: forwarded from this function's own contract.
+    let arc = unsafe { SsabResource::new(data) };
     if arc.resource().is_none() {
         return Err(arc.parse_error().cloned().unwrap_or(crate::error::SSRuntimeError::Unknown));
     }
@@ -176,7 +182,8 @@ pub unsafe extern "C" fn ss_resource_create_copy(ptr: *const c_uchar, len: usize
     }
     let data = unsafe { ::core::slice::from_raw_parts(ptr, len) };
     match crate::SsabData::load_copy(data) {
-        Ok(ssab_data) => create_ffi_resource(ssab_data).unwrap_or(core::ptr::null_mut()),
+        // SAFETY: the C caller guarantees a valid `.ssab` (see "Security and Validation").
+        Ok(ssab_data) => unsafe { create_ffi_resource(ssab_data) }.unwrap_or(core::ptr::null_mut()),
         Err(_) => core::ptr::null_mut(),
     }
 }
@@ -200,7 +207,8 @@ pub unsafe extern "C" fn ss_resource_create_borrow(ptr: *const c_uchar, len: usi
         return core::ptr::null_mut();
     }
     match unsafe { crate::SsabData::load_borrow(ptr, len) } {
-        Ok(ssab_data) => create_ffi_resource(ssab_data).unwrap_or(core::ptr::null_mut()),
+        // SAFETY: the C caller guarantees a valid `.ssab` (see "Security and Validation").
+        Ok(ssab_data) => unsafe { create_ffi_resource(ssab_data) }.unwrap_or(core::ptr::null_mut()),
         Err(_) => core::ptr::null_mut(),
     }
 }
@@ -342,6 +350,11 @@ pub extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut 
 
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// # Security and Validation
+/// To maximize performance and minimize binary size, `libssruntime` **does not validate** the input `.ssab` data.
+/// Passing corrupted or maliciously crafted data will cause undefined behavior (e.g., out-of-bounds reads).
+/// The caller MUST ensure the data is trusted or validated before passing it to this function.
+///
 /// # Safety
 ///
 /// This function is unsafe because it dereferences a raw pointer.
@@ -362,7 +375,8 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *c
             // The real reason, not `MemoryError`: this fails on a version
             // mismatch far more often than on an allocation, and the two want
             // opposite things from the user.
-            let res_ptr = match create_ffi_resource(ssab_data) {
+            // SAFETY: the C caller guarantees a valid `.ssab` (see "Security and Validation").
+            let res_ptr = match unsafe { create_ffi_resource(ssab_data) } {
                 Ok(p) => p,
                 Err(e) => {
                     ffi_context.fail("ss_runtime_load_ssab_copy", e);
@@ -382,6 +396,11 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *c
 
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// # Security and Validation
+/// To maximize performance and minimize binary size, `libssruntime` **does not validate** the input `.ssab` data.
+/// Passing corrupted or maliciously crafted data will cause undefined behavior (e.g., out-of-bounds reads).
+/// The caller MUST ensure the data is trusted or validated before passing it to this function.
+///
 /// # Safety
 ///
 /// This function is unsafe because it dereferences a raw pointer.
@@ -401,7 +420,8 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: 
             // The real reason, not `MemoryError`: this fails on a version
             // mismatch far more often than on an allocation, and the two want
             // opposite things from the user.
-            let res_ptr = match create_ffi_resource(ssab_data) {
+            // SAFETY: the C caller guarantees a valid `.ssab` (see "Security and Validation").
+            let res_ptr = match unsafe { create_ffi_resource(ssab_data) } {
                 Ok(p) => p,
                 Err(e) => {
                     ffi_context.fail("ss_runtime_load_ssab_borrow", e);
