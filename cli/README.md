@@ -91,7 +91,7 @@ For each `.sspj` converted, a directory is produced next to the source file (unl
 
 # Next Steps
 
-Once `.ssab` files are generated, load them into your engine via [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssruntime). For integration guidance, see the [Player Implementation Guide](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/libs/ssruntime/docs/README.md).
+Once `.ssab` files are generated, load them into your engine via [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssruntime). For integration guidance, see the [Player Porting Guide](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/libs/ssruntime/docs/README.md).
 
 # For Developers
 ## Build
