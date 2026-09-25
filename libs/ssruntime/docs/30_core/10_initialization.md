@@ -49,11 +49,11 @@ context.bind_resource(&resource);
 
 Resources are reference counted. A Context holds a reference to the resource bound to it, so even if you call `ss_resource_destroy` first, the resource is not freed while any Context has it bound. **You may destroy them in any order.**
 
-However, a resource created with borrow reads the Player's bytes directly. **Do not free the original bytes until every Context that bound that resource has been destroyed.**
+However, a resource created with borrow reads the Player's bytes directly. **Do not free the original bytes until the resource itself, and every Context and effect slot that refers to it, has been destroyed.**
 
 | Object | Owner | Destruction |
 | :--- | :--- | :--- |
-| ssab bytes | The Player with borrow, the Brain with copy | With borrow, the Player frees them after every Context that uses the resource has been destroyed |
+| ssab bytes | The Player with borrow, the Brain with copy | With borrow, the Player frees them after the resource, and every Context and effect slot that refers to it, has been destroyed |
 | Resource | The Brain (reference counted) | `ss_resource_destroy`. It remains while a Context has it bound |
 | Context | The Player | `ss_runtime_destroy` |
 
