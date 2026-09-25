@@ -43,7 +43,7 @@ SDK の使い方に関するご質問、実装の相談、または他の開発�
 
 👉 [**SpriteStudio コミュニティ**](https://spritestudio.jp/community/)
 
-### 🔒 非公開でのお問い合わせ・データの送付
+### 🔒 個別のお問い合わせ・データの送付
 非公開でのご相談、再現データ（`.sspj` プロジェクトなど）を送付いただく必要がある場合、または契約に基づくサポートが必要な場合は、公式の**ヘルプセンター**をご利用ください。
 
 👉 [**ヘルプセンター（お問い合わせフォーム）**](https://www.webtech.co.jp/help/ja/spritestudio7/inquiries/ssplayer_tool/)
