@@ -10,7 +10,7 @@ scripts/build-docs.sh              # generate the locale trees, build en then ja
 scripts/build-pages.sh serve=yes   # the published tree: that build + rustdoc at /api/, on :8000
 ```
 
-`pages.yml` runs `build-pages.sh` with every option spelled out, and nothing builds the docs on a pull request, so a local run is the only gate. `zensical serve` validates nothing, `--strict` or not.
+`pages.yml` runs this same `build-pages.sh`, and nothing builds the docs on a pull request, so a local run is the only gate. `zensical serve` validates nothing, `--strict` or not.
 
 ## Cutting a release
 
@@ -48,7 +48,7 @@ scripts/build-docs.sh              # ロケール別ツリーを生成し、en �
 scripts/build-pages.sh serve=yes   # 公開ツリー: 上記 + /api/ の rustdoc を :8000 で配信
 ```
 
-`pages.yml` は `build-pages.sh` をすべてのオプションを明示して実行します。プルリクエストでは docs はビルドされないため、手元のビルドが唯一のゲートです。`zensical serve` は `--strict` を付けても何も検証しません。
+`pages.yml` も同じ `build-pages.sh` を実行します。プルリクエストでは docs はビルドされないため、手元のビルドが唯一のゲートです。`zensical serve` は `--strict` を付けても何も検証しません。
 
 ## リリースの手順
 

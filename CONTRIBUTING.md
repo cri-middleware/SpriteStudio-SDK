@@ -179,7 +179,7 @@ cargo run -p ssconverter-cli -- <path_to_sspj>
 - [慣用的な Rust](https://github.com/mre/idiomatic-rust) (Idiomatic Rust) のプラクティスに従ってください。
 
 ### FFI と C-API
-この SDK は C 互換インターフェースを提供しているため、以下の点に注意してください：
+この SDK は C 互換インターフェース（`ssruntime`、`ssconverter`）を提供しているため、以下の点に注意してください：
 - **バイナリ互換性**: 避けられない場合を除き、C-API の破壊的変更は避けてください。
 - **ヘッダー生成**: FFI 関数を変更した場合は、C++ ヘッダーが正しく更新・検証されていることを確認してください。
 - **メモリ管理**: FFI 境界を越えてデータをやり取りする場合、メモリの所有権を明確にドキュメント化してください。
@@ -195,4 +195,4 @@ cargo run -p ssconverter-cli -- <path_to_sspj>
 - **失敗は文字列ではなくコードで渡します。** 呼び出しは戻り値で失敗を伝え、呼び出し側は `ss_runtime_get_last_error` で理由を取り、`ss_runtime_error_message` で文言にします。`libs/ssruntime/src/error.rs` のコードは、それ自体が互換性を保つべき面です。
 
 ---
-本プロジェクトへの貢献は、プロジェクトの [LICENSE.md](./LICENSE.md) に同意したものとみなされます。
+本プロジェクトに貢献することで、あなたの貢献がプロジェクトの [LICENSE.md](./LICENSE.md) の下でライセンスされることに同意したものとみなされます。

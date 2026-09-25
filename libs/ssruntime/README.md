@@ -150,7 +150,7 @@ Please refer to it for API signatures and struct definitions.
 
 If you are planning to implement a SpriteStudio player for a new game engine or platform, please refer to the following documentation:
 
-- [**Player Implementation Guide**](./docs/README.md)
+- [**Player Porting Guide**](./docs/README.md)
 - [**FrameData Schema Documentation**](./SCHEMA.md)
 
 This guide covers everything from basic architecture to advanced features like mesh deformation, instance animations, and `no_std` integration.
