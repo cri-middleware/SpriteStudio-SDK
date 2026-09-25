@@ -128,6 +128,8 @@ extra:
   # Under MkDocs the i18n plugin generated this list; there was deliberately no hand-written
   # one, because a static list could only point at the two site roots. The override solves
   # that properly, so the list comes back -- as data for the override, not as hrefs.
+  #
+  # overrides/main.html builds the page head's hreflang links from the same `link`s.
   alternate:
     - name: English
       link: ""
