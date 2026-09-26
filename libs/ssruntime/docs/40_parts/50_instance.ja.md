@@ -34,8 +34,7 @@ for (InstanceChild& c : instance_children) {
         c.child->on_started();   // 子の再生開始に伴うホストの処理（通知など）
     }
     c.visible = r.visible;
-    // 遷移したフレームの child_frame_no は、上の play() より前の値
-    c.frame_no = r.transitioned ? ss_runtime_get_frame_no(c.child_ctx) : r.child_frame_no;
+    c.frame_no = r.child_frame_no;   // 遷移したフレームも含めて
     c.looped = r.child_looped;
 }
 ```
@@ -48,7 +47,7 @@ for (InstanceChild& c : instance_children) {
 | :--- | :--- |
 | `visible` | このフレームで子を描くか |
 | `transitioned` | スロットが新しいキーに出会い、子をそれに合わせて設定した。**スロットは子を始めないので、子に `ss_runtime_play` を呼ぶ**。呼ばないと独立再生の子が進まない |
-| `child_frame_no` | 子の描画するフレーム番号。**小数を含む。丸めずに使う**（[再生制御 §6-2](../30_core/20_playback_control.ja.md#6-2-小数を捨てない)）。`transitioned` のフレームでは `ss_runtime_play` より前の値なので、代わりに `ss_runtime_get_frame_no` を読む |
+| `child_frame_no` | 子の描画するフレーム番号。**小数を含む。丸めずに使う**（[再生制御 §6-2](../30_core/20_playback_control.ja.md#6-2-小数を捨てない)）。**`transitioned` のフレームでもこの値を使う。** スロットは子をすでに向きに応じた区間の先頭に置いており、`ss_runtime_play` が飛ばす先も同じフレームです。同期再生の子の値は親に追従しています。`play` の後に子のフレームを読み直すと、同期再生の子がそのフレームだけ区間の先頭に戻ります |
 | `child_looped` | 独立再生の子が 1 周した（§4） |
 | `independent` | 子が独立再生か |
 

@@ -1726,8 +1726,9 @@ pub extern "C" fn ss_instance_slot_reset(slot: *mut c_void) {
 /// Returns `transitioned == true` on EventInstance edges, having configured the
 /// child for the new key without starting it: the caller then calls
 /// `ss_runtime_play` on the child (an independent child never advances
-/// otherwise) and reads its frame with `ss_runtime_get_frame_no`, since
-/// `child_frame_no` predates that `play`.
+/// otherwise). Draw the child at `child_frame_no` on that tick too: the slot
+/// already put it where `play` snaps it, and a synced child's value follows the
+/// parent, which reading the frame back after `play` would lose.
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_instance_slot_step(slot: *mut c_void, ev: ss_event_instance_info, child_ctx: *mut c_void, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> ss_instance_step_result {
     if slot.is_null() {
