@@ -9,7 +9,7 @@
 アニメーションを読み込んだら、ssab のパーツからインスタンスパーツ（`PartTypeInstance`）をすべて探し、それぞれに次のものを用意します。
 
 1. **参照先の ssab を探す。** `PartTypeInstance` の `ref_anime_pack`（`ref_anime_pack_hash`）が参照先の ssab、`ref_anime_name`（`ref_anime_name_hash`）がそのアニメーションです。参照先は、自分自身の ssab か、別の ssab です（[外部リソースとテクスチャ §4](../50_features/30_external_resources.ja.md#4-外部-ssab-の参照)）。
-2. **子の Context を作る。** 参照先の ssab のリソースをバインドし、`ss_runtime_setup_animation_by_hash(child_ctx, ref_anime_name_hash)` で子アニメーションをセットアップします。子の再生はスロットが始めるので、ここでは再生しません。
+2. **子の Context を作る。** 参照先の ssab のリソースをバインドし、`ss_runtime_setup_animation_by_hash(child_ctx, ref_anime_name_hash)` で子アニメーションをセットアップします。ここではまだ再生しません。子はスロットが最初のキーに出会ったときに始めます（[§2](#2-スロットで子を進める)）。
 3. **スロットを作る。** `ss_instance_slot_create()` で作ります。スロットはリソースを持たず、毎フレーム子の Context を受け取って動きます。
 
 子もまた Player なので、子のアニメーションにインスタンスパーツやエフェクトパーツがあれば、子の中で同じ用意をします。
@@ -28,11 +28,14 @@ for (InstanceChild& c : instance_children) {
         parent_looped);         // 親の ss_runtime_just_looped
 
     if (r.transitioned) {
-        // スロットが子の再生を始めた。子の再生開始に伴うホストの処理（通知など）を行う
-        c.child->on_started();
+        // スロットは新しいキーに合わせて子を設定した（区間・向き・ループ回数）。
+        // 始めるのはホストの役目。play() で子をその区間の先頭へ飛ばす
+        ss_runtime_play(c.child_ctx);
+        c.child->on_started();   // 子の再生開始に伴うホストの処理（通知など）
     }
     c.visible = r.visible;
-    c.frame_no = r.child_frame_no;
+    // 遷移したフレームの child_frame_no は、上の play() より前の値
+    c.frame_no = r.transitioned ? ss_runtime_get_frame_no(c.child_ctx) : r.child_frame_no;
     c.looped = r.child_looped;
 }
 ```
@@ -44,8 +47,8 @@ for (InstanceChild& c : instance_children) {
 | 戻り値 | 意味 |
 | :--- | :--- |
 | `visible` | このフレームで子を描くか |
-| `transitioned` | 子の再生が（新しいキーで）始まった |
-| `child_frame_no` | 子の描画するフレーム番号。**小数を含む。丸めずに使う**（[再生制御 §6-2](../30_core/20_playback_control.ja.md#6-2-小数を捨てない)） |
+| `transitioned` | スロットが新しいキーに出会い、子をそれに合わせて設定した。**スロットは子を始めないので、子に `ss_runtime_play` を呼ぶ**。呼ばないと独立再生の子が進まない |
+| `child_frame_no` | 子の描画するフレーム番号。**小数を含む。丸めずに使う**（[再生制御 §6-2](../30_core/20_playback_control.ja.md#6-2-小数を捨てない)）。`transitioned` のフレームでは `ss_runtime_play` より前の値なので、代わりに `ss_runtime_get_frame_no` を読む |
 | `child_looped` | 独立再生の子が 1 周した（§4） |
 | `independent` | 子が独立再生か |
 

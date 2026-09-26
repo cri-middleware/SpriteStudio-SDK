@@ -1723,9 +1723,11 @@ pub extern "C" fn ss_instance_slot_reset(slot: *mut c_void) {
 /// EventInstance (via `ss_runtime_get_active_event_instance` against the
 /// *parent* runtime context) and passes the *child* runtime context here so
 /// that label resolution and frame stepping happen against the right Context.
-/// Returns `transitioned == true` on EventInstance edges; the caller is
-/// responsible for any side effects tied to `play()` (event-sink notifications)
-/// since those are host-side concerns.
+/// Returns `transitioned == true` on EventInstance edges, having configured the
+/// child for the new key without starting it: the caller then calls
+/// `ss_runtime_play` on the child (an independent child never advances
+/// otherwise) and reads its frame with `ss_runtime_get_frame_no`, since
+/// `child_frame_no` predates that `play`.
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_instance_slot_step(slot: *mut c_void, ev: ss_event_instance_info, child_ctx: *mut c_void, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> ss_instance_step_result {
     if slot.is_null() {
