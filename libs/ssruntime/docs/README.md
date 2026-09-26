@@ -77,6 +77,7 @@ The SDK's `tests/overall/overall.sspj` contains an animation for each feature. I
 | [Sequence](./50_features/40_sequence.md) | Playing several animations in order |
 | [Audio](./50_features/50_audio.md) | When to play a sound, and how long a sound lives |
 | [Editor Integration](./50_features/60_editor_integration.md) | Converting sspj in the engine's editor |
+| [Placement: Fit and Align](./50_features/70_placement.md) | Fitting the animation into a box the host laid out |
 
 ### 60. Troubleshooting
 

@@ -223,6 +223,8 @@ If the default for the same feature differs between Players, behavior changes si
 
 The defaults of `subFrameEnabled` and `frameSkipEnabled` may follow the host engine's conventions.
 
+Placement (`fit` / `align`) has defaults of its own, listed with the rest of its contract in [Placement: Fit and Align](../50_features/70_placement.md). They are not the Player's to choose either.
+
 ### 6-1. Part-following options
 
 If your Player has part following (an attachment / tracker / anchor), offer the same options with the same defaults.
