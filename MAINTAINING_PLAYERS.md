@@ -1,10 +1,10 @@
-# Maintaining the official Players — getting started
+# Maintaining the official Players
 
 **Who this is for: whoever maintains the official Players.** It is a working agreement about our own repositories — what their READMEs answer, and what their bundled samples have to do — not a requirement on anyone porting SpriteStudio to a new engine. The porting guide states what a Player has to be; this states how we keep the seven we ship consistent with each other. If you are writing your own Player, the document you want is the [Player API conventions](./libs/ssruntime/docs/20_design/30_api_conventions.md), which is about the artifact rather than about our repositories.
 
 The API conventions stop the same feature from growing a different name in every Player. But an aligned API loses most of its value **if the first five minutes are a different experience in every Player.** The shared vocabulary pays off for the reader moving to their second Player; the reader touching their first one meets the README.
 
-This document fixes what the first screen answers, and who it answers to. **What is shared is four questions, their order, and the two doors past them. How they are answered belongs to the host.**
+This document fixes what the first screen answers, and who it answers to. **What is shared is four questions, their order, and the two doors past them. How they are answered belongs to the host.** §5 then names the Player the others are read against when their behaviour parts.
 
 ---
 
@@ -110,6 +110,18 @@ for them, which is what the two doors are for.
 A Player whose documentation genuinely has a third shelf — SSPlayerForWeb's `customize/` — names it
 from the first door's line rather than growing a row for it.
 
-## 5. Departing from this document
+## 5. The reference Player
+
+**SSPlayerForWgpu is the Player the other six are read against.** When two Players disagree about how a `.ssab` draws or how playback behaves, it is the one you check. A feature the whole family will carry is settled there first and ported from there — the track stack behind motion blending is the precedent: wgpu surfaced it, and the other six port it against its `tests/tracks.rs`.
+
+**The order of authority is the porting guide, then wgpu, then the rest.** The guide is the specification and wgpu its executable reading. Where the two disagree, one of them has a defect: fix whichever is wrong, and never let the code quietly overrule the page. Where the guide is silent, wgpu's behaviour decides, and the rule it followed goes into the guide in the same change, so the next Player ports a sentence rather than a diff.
+
+It is this one because runtime changes reach it first — it links `ssruntime` and `ssab` as Rust crates through a submodule, so a change is exercised here before any C-API build picks it up — and because it holds no engine: adapters are separate crates, so what `ssplayer-wgpu` does is what the runtime and the guide say rather than what a host needed.
+
+**It does not exercise the runtime's C ABI or WASM face.** Alone among the seven it calls `ssruntime` as a crate, so a defect in the C-API or WASM layer — an export that records no reason, a failure reported under the wrong code — never reaches it. The other six call through those layers and keep carrying their conformance. Reading it against the C-API is mechanical: its calls on a `Context` are the C functions without the `ss_runtime_` prefix (`setup_animation` is `ss_runtime_setup_animation`), apart from a handful shaped differently, such as a slice where C hands out one element at a time.
+
+This is an arrangement among maintainers. User-facing documentation lists the Players as equals and does not call this one the reference.
+
+## 6. Departing from this document
 
 The same as [Player API conventions §9](./libs/ssruntime/docs/20_design/30_api_conventions.md#9-departing-from-this-document). Depart when the host's conventions genuinely collide with this one. **Write the reason where the departure is.**
