@@ -82,5 +82,6 @@ nav:
       - シーケンス: 50_features/40_sequence.md
       - オーディオ: 50_features/50_audio.md
       - エディタ統合: 50_features/60_editor_integration.md
+      - 配置（fit と align）: 50_features/70_placement.md
   - 🛠️ トラブルシューティング: 60_troubleshooting/10_troubleshooting.md
   - 📦 Rust API (rustdoc): ../api/ssruntime/index.html
