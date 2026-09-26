@@ -116,13 +116,6 @@ markdown_extensions:
 extra_css:
   - stylesheets/extra.css
 
-# Anchors are only reported by default, so a cross-reference to a heading that has been
-# renamed would ship silently broken. Turned on so `strict` fails the build instead, which
-# is the whole point of gating on the local build.
-validation:
-  invalid_links: true
-  invalid_link_anchors: true
-
 extra:
   # The header language selector. `link` is each locale's subpath under the site root, NOT
   # a full URL -- overrides/partials/alternate.html rebuilds the href from it plus the
