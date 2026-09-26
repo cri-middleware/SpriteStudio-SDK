@@ -3735,7 +3735,8 @@ impl InstanceSlot {
     /// the host can re-fire the instance child on an explicit head-out (`play`
     /// / replay) instead of debouncing the first key as the same one it last
     /// started. The child context is owned by the host and reset
-    /// separately; the next `step` re-configures and replays it on transition.
+    /// separately; the next `step` re-configures it on transition, and the host
+    /// plays it.
     pub fn reset(&mut self) {
         *self = Self::new();
     }

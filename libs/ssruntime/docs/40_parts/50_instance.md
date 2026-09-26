@@ -9,7 +9,7 @@ An instance part plays another animation (a child animation) as a component. The
 After loading an animation, find every instance part (`PartTypeInstance`) among the ssab's parts, and prepare the following for each.
 
 1. **Find the referenced ssab.** `PartTypeInstance`'s `ref_anime_pack` (`ref_anime_pack_hash`) is the referenced ssab, and `ref_anime_name` (`ref_anime_name_hash`) is the animation in it. The reference is either the part's own ssab or another ssab ([External Resources and Textures §4](../50_features/30_external_resources.md#4-referencing-external-ssabs)).
-2. **Create the child Context.** Bind the referenced ssab's resource, and set up the child animation with `ss_runtime_setup_animation_by_hash(child_ctx, ref_anime_name_hash)`. The slot starts the child's playback, so do not play it here.
+2. **Create the child Context.** Bind the referenced ssab's resource, and set up the child animation with `ss_runtime_setup_animation_by_hash(child_ctx, ref_anime_name_hash)`. Do not play it yet: it starts when the slot meets its first key ([§2](#2-advancing-the-child-with-the-slot)).
 3. **Create the slot** with `ss_instance_slot_create()`. The slot holds no resource; it works on the child Context it receives every frame.
 
 The child is also a Player, so if the child animation has instance parts or effect parts, prepare them the same way inside the child.
@@ -28,11 +28,14 @@ for (InstanceChild& c : instance_children) {
         parent_looped);         // the parent's ss_runtime_just_looped
 
     if (r.transitioned) {
-        // The slot started the child's playback. Do the host work that comes with the child starting (notifications and so on)
-        c.child->on_started();
+        // The slot configured the child for the new key (section, direction, loop count);
+        // starting it is the host's. play() snaps it to the start of that section.
+        ss_runtime_play(c.child_ctx);
+        c.child->on_started();   // the host work that comes with the child starting (notifications and so on)
     }
     c.visible = r.visible;
-    c.frame_no = r.child_frame_no;
+    // On the transition tick, child_frame_no predates the play() above.
+    c.frame_no = r.transitioned ? ss_runtime_get_frame_no(c.child_ctx) : r.child_frame_no;
     c.looped = r.child_looped;
 }
 ```
@@ -44,8 +47,8 @@ for (InstanceChild& c : instance_children) {
 | Return value | Meaning |
 | :--- | :--- |
 | `visible` | Whether to draw the child in this frame |
-| `transitioned` | The child's playback started (with a new key) |
-| `child_frame_no` | The frame number to draw the child at. **It includes a fraction. Use it without rounding** ([Playback Control §6-2](../30_core/20_playback_control.md#6-2-do-not-discard-the-fraction)) |
+| `transitioned` | The slot met a new key and configured the child for it. **The slot does not start the child: call `ss_runtime_play` on it**, or an independently played child never advances |
+| `child_frame_no` | The frame number to draw the child at. **It includes a fraction. Use it without rounding** ([Playback Control §6-2](../30_core/20_playback_control.md#6-2-do-not-discard-the-fraction)). On a `transitioned` tick it is the frame from before that `ss_runtime_play`, so read `ss_runtime_get_frame_no` instead |
 | `child_looped` | An independently played child completed one cycle (§4) |
 | `independent` | Whether the child plays independently |
 
