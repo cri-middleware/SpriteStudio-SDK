@@ -1,0 +1,50 @@
+/*
+ * `> [!IMPORTANT]` and `> [!CAUTION]` callouts.
+ *
+ * The guide uses four GitHub callout types. NOTE and WARNING map onto built-in admonition
+ * types and are styled by the theme. IMPORTANT and CAUTION are not built-in types, so they
+ * would render with the generic fallback styling.
+ *
+ * `mkdocs-callouts`, which used to convert these blockquotes before Zensical learned to
+ * parse them natively, mapped IMPORTANT onto `tip` and CAUTION onto `warning`. These rules
+ * reproduce that appearance, and mirror the theme's own three rules for each of `.tip` and
+ * `.warning`. The IMPORTANT rules are the ones the player repositories carry in their
+ * docs/*/stylesheets/extra.css.
+ *
+ * One copy serves both locales: scripts/build-docs-tree.py copies this directory into
+ * build/docs/en and build/docs/ja, where `extra_css` resolves.
+ */
+
+.md-typeset .admonition.important,
+.md-typeset details.important {
+  background-color: #00bfa51a;
+}
+
+.md-typeset .important > .admonition-title::before,
+.md-typeset .important > summary::before {
+  background-color: #00bfa5;
+  -webkit-mask-image: var(--md-admonition-icon--tip);
+          mask-image: var(--md-admonition-icon--tip);
+}
+
+.md-typeset .important > .admonition-title::after,
+.md-typeset .important > summary::after {
+  color: #00bfa5;
+}
+
+.md-typeset .admonition.caution,
+.md-typeset details.caution {
+  background-color: #ff91001a;
+}
+
+.md-typeset .caution > .admonition-title::before,
+.md-typeset .caution > summary::before {
+  background-color: #ff9100;
+  -webkit-mask-image: var(--md-admonition-icon--warning);
+          mask-image: var(--md-admonition-icon--warning);
+}
+
+.md-typeset .caution > .admonition-title::after,
+.md-typeset .caution > summary::after {
+  color: #ff9100;
+}

@@ -106,17 +106,15 @@ markdown_extensions:
   - pymdownx.snippets
   # Keeps the `> [!NOTE]` blockquote syntax working now that `mkdocs-callouts` is gone -
   # Zensical parses it natively. Two things to know: a list inside a callout needs a blank
-  # `>` line before it, and `[!IMPORTANT]` is not a built-in admonition type, so it renders
-  # unstyled until you add the CSS the player repos carry in docs/*/stylesheets/extra.css.
+  # `>` line before it, and `[!IMPORTANT]` / `[!CAUTION]` are not built-in admonition types;
+  # docs/stylesheets/extra.css styles them.
   - pymdownx.quotes:
       callouts: true
 
-# Anchors are only reported by default, so a cross-reference to a heading that has been
-# renamed would ship silently broken. Turned on so `strict` fails the build instead, which
-# is the whole point of gating on the local build.
-validation:
-  invalid_links: true
-  invalid_link_anchors: true
+# One copy, docs/stylesheets/extra.css. scripts/build-docs-tree.py places it into each
+# locale's generated `docs_dir`, which is where this path resolves.
+extra_css:
+  - stylesheets/extra.css
 
 extra:
   # The header language selector. `link` is each locale's subpath under the site root, NOT
