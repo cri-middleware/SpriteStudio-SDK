@@ -3798,8 +3798,9 @@ impl InstanceSlot {
         // from the parent's frame each tick — same `parent_frame` always yields
         // the same `child_frame`. Independent children own their own controller
         // time: forward `delta_seconds` to `update`, except on the transition
-        // tick itself where `play()` will snap to start_frame (any further step
-        // here would visibly skip the first frame).
+        // tick itself — the section change above has already put the child on
+        // its first frame for the direction, where the host's `play()` leaves it,
+        // and a further step here would visibly skip that frame.
         let child_frame_no = if independent {
             if delta_seconds > 0.0 && !transitioned {
                 let d_ms = delta_seconds * 1000.0 * speed;

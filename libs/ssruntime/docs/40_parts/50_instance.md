@@ -34,8 +34,7 @@ for (InstanceChild& c : instance_children) {
         c.child->on_started();   // the host work that comes with the child starting (notifications and so on)
     }
     c.visible = r.visible;
-    // On the transition tick, child_frame_no predates the play() above.
-    c.frame_no = r.transitioned ? ss_runtime_get_frame_no(c.child_ctx) : r.child_frame_no;
+    c.frame_no = r.child_frame_no;   // the transition tick included
     c.looped = r.child_looped;
 }
 ```
@@ -48,7 +47,7 @@ for (InstanceChild& c : instance_children) {
 | :--- | :--- |
 | `visible` | Whether to draw the child in this frame |
 | `transitioned` | The slot met a new key and configured the child for it. **The slot does not start the child: call `ss_runtime_play` on it**, or an independently played child never advances |
-| `child_frame_no` | The frame number to draw the child at. **It includes a fraction. Use it without rounding** ([Playback Control §6-2](../30_core/20_playback_control.md#6-2-do-not-discard-the-fraction)). On a `transitioned` tick it is the frame from before that `ss_runtime_play`, so read `ss_runtime_get_frame_no` instead |
+| `child_frame_no` | The frame number to draw the child at. **It includes a fraction. Use it without rounding** ([Playback Control §6-2](../30_core/20_playback_control.md#6-2-do-not-discard-the-fraction)). **Use it on a `transitioned` tick too.** The slot has already put the child at its section's first frame for the direction, which is where `ss_runtime_play` snaps it, and a synced child's value follows the parent. Reading the child's frame after the `play` instead would put a synced child back at its section start for that tick |
 | `child_looped` | An independently played child completed one cycle (§4) |
 | `independent` | Whether the child plays independently |
 
