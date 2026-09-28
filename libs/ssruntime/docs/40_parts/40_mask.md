@@ -102,7 +102,7 @@ Masks and clipping are different features, but both can be handled uniformly wit
 It is decided by draw priority.
 
 - **Mask** → affects drawn parts with **lower draw priority** than itself. It does not affect parts whose draw priority has become higher than its own
-- **Clipping** → affects drawn parts with **higher draw priority** than itself. It lasts until the end of that animation's drawing
+- **Clipping** → affects drawn parts with **higher draw priority** than itself. It lasts until the end of the drawing; one written inside an instance keeps going past the instance, to the end of the whole drawing (§2-7)
 
 Draw priority is, as a rule, decided by FrameData's `Priority`. On a tie, the part with the larger ID (the index in storage order) is on top (has the higher draw priority).
 
@@ -120,7 +120,9 @@ A writer works only when **both** of the following hold.
 
 A drawn part is affected by masks **only when `mask_influence == 1`**. A drawn part with `mask_influence == 0` receives neither masks nor clipping.
 
-**`mask_write` plays no part in this decision.** Even for clipping (a drawn part with `mask_write`), **whether its own color is clipped by other masks is decided by its own `mask_influence` alone**. Do not clip a part's own color with the mask it writes (draw first, then write). `mask_write` matters in a different decision, "does a mask reach an instance's child animation" (§2-6), which uses `effective_mask_influence || mask_write`.
+**`mask_write` plays no part in this decision.** Even for clipping (a drawn part with `mask_write`), **whether its own color is clipped by other masks is decided by its own `mask_influence` alone**. Do not clip a part's own color with the mask it writes (draw first, then write). `mask_write` only decides which parts write (§1-3).
+
+A writer that is switched off (`mask == 0` or `Hide == true`) is the same as no writer at all.
 
 ### 2-3. Stencil write op (OP)
 
@@ -153,31 +155,34 @@ When the target is an **instance part**, the mask reaches **its whole child anim
 
 | Setting | Composition | Meaning |
 |---|---|---|
-| `visible_inside_mask` | **OR** (accumulates down the hierarchy) | Once any level asks for "inside", everything below it draws inside |
-| `mask_influence` | **AND** (chains down the hierarchy) | If the caller does not receive masks, nothing below it receives masks |
+| `visible_inside_mask` | **OR** | If the instance part asks for "inside", every part of its child animation draws inside |
+| `mask_influence` | **AND** | If the instance part does not receive masks, no part of its child animation receives masks |
 
 The effective values are:
 
 ```
-effective_influence      = caller.effective_influence      && self.mask_influence
-effective_visible_inside = caller.effective_visible_inside || self.visible_inside_mask
+effective_influence      = instance_part.mask_influence      && self.mask_influence
+effective_visible_inside = instance_part.visible_inside_mask || self.visible_inside_mask
 ```
 
-- **The initial values are `influence = 1` / `visible_inside = 0`.** A top-level animation that no instance calls starts from these values, so each of its parts is decided by its own settings.
-- `mask_influence` is an AND, so once it becomes `0` it never returns to `1`. "Does not receive masks" is settled for everything below.
-- **Scope** (§2-1) is decided by **the instance part's own rank**. What the composition affects is **whether a part receives masks (§2-2) and polarity (§2-4)**.
-- **`mask_write` is not composed.** It is a local fact that the part itself writes, not something descendants inherit. However, **the decision of whether a mask reaches the instance's child animation also uses `mask_write`** (`effective_mask_influence || mask_write`). This is **a separate decision** from whether the part's own color is clipped (§2-2, `mask_influence` only).
+- **The composition reaches one level only.** It takes the instance part's own flags, not what the instance part itself received from further up. The parts of an instance nested inside the child animation are composed with *their* instance part, and nothing above it. For example, when the instance part of a top-level animation has `mask_influence == 0`, the child animation's own parts receive no masks, but the parts of an instance inside it whose instance part has `mask_influence == 1` are still clipped by masks.
+- **The composition does not depend on whether anything above masks.** Compose even when the calling animation has no mask of its own.
+- **A top-level animation** that no instance calls is composed with `mask_influence = 1` / `visible_inside_mask = 0`, so each of its parts is decided by its own settings.
+- **Scope** (§2-1) is decided on the order of the whole drawing, in which a child animation is drawn at its instance part's position: a mask of the calling animation reaches the child's parts where it would reach the instance part, and a mask inside the child animation applies to the child's own parts by the child's own ranks (§2-7). What the composition affects is **whether a part receives masks (§2-2) and polarity (§2-4)**.
+- **`mask_write` is not composed.** It is a local fact that the part itself writes.
 
-In a Player that builds each child independently, the simple approach is to **pass the composed values to the child just before building it**. The child can then decide its parts' roles from those values, so the parent does not have to rewrite the child's result afterwards. Each level passes its composed values down, so nesting follows the same rule. Handling such as "the child wins if it has its own setting, and inherits the parent's otherwise" is a third behavior that is neither OR nor AND, and disagrees with SpriteStudio.
+This was checked against SpriteStudio 7.5 with instances three levels deep, with the child animation's mask part enabled, hidden, set to `mask == 0` and removed.
+
+In a Player that builds each child independently, the simple approach is to **pass the instance part's flags to the child just before building it**, not the values the parent itself received. Composing down the whole hierarchy (AND / OR through every level), or composing only when the calling animation masks, both disagree with SpriteStudio 7.5. So does handling such as "the child wins if it has its own setting, and inherits the parent's otherwise", which is neither OR nor AND.
 
 ### 2-7. Carry-over of clipping written inside an instance
 
-§2-6 was the **downward** composition, where a mask reaches into an instance from outside. There is also an **upward** carry-over in the opposite direction: **a mask written inside a child animation reaches outside it (to the parts of the parent animation drawn after that instance)**.
+§2-6 was the **downward** composition, where a mask reaches into an instance from outside. A mask written inside a child animation — a pure mask or clipping — first applies to **that child animation's own parts**, by the rules of §2-1 as in any animation, together with the masks that reach in from outside. There is also an **upward** carry-over in the opposite direction: **a mask written inside a child animation reaches outside it (to the parts of the parent animation drawn after that instance)**.
 
 - **Only clipping (drawn parts with `mask_write`) carries over.** A pure mask is canceled at its own rank and closes inside the child animation (§2-1 / §4-2), so it does not cross the boundary. Clipping "affects the parts after it, until the end of the animation's drawing" (§2-1); think of **that "end" as extending past the instance boundary to the end of the parent animation's drawing**.
 - **Defer the close (the cancel / restore) until the parent animation has finished all its drawing.** If instances are nested, pass it further up to the next parent.
 - **Scope**: a carried-over clipping affects the parent's parts after **the instance part's rank in the parent's `draw_order`** (`rank > instance_rank`) (the clipping scope of §2-1, decided at the instance part's position).
-- **Write op**: the write op of a carried-over writer (increment / invert, §2-3) is decided by its **effective `mask_influence` (its own `mask_influence` && the inherited influence)** (the same value as the AND of §2-6). If the parent's instance has `mask_influence == 0`, the effective value is 0, and the writer goes to **the increment (counter) side = the union** (not the invert side). So even when its `mask_influence` differs from another mask outside, the two **form a union instead of canceling each other** (consistent with the separation into two planes in §4-4).
+- **Write op**: the write op of a writer inside a child animation (increment / invert, §2-3) is decided by its **effective `mask_influence` (its own `mask_influence` && its instance part's)**, the same one level of composition as §2-6. If the instance part has `mask_influence == 0`, the effective value is 0, and the writer goes to **the increment (counter) side = the union** (not the invert side). So even when its `mask_influence` differs from another mask outside, the two **form a union instead of canceling each other** (consistent with the separation into two planes in §4-4). That the write op, too, takes only one level has not been checked against SpriteStudio; it shows only where writers with different `mask_influence` overlap.
 - **The target side (the parent's later parts)**: even if the parent has no writer of its own, when a visible instance leaves a clipping open, you must treat **the parent's parts after the instance as mask targets**.
 
 Only clipping carries over, and pure masks do not, because their scopes (§2-1) differ. A pure mask is complete "before itself" and closes at its own rank. Clipping covers "after itself, until the end of the animation", and that end extends past the instance boundary to the end of the parent.
@@ -284,12 +289,14 @@ SSPlayerForUnity splits the `0x0F` of §4-3 into **parity `0x08` / counter `0x07
 
 ## 5. Implementing on engines without a stencil (coverage bitmap)
 
-For example, Godot 4.6's 2D canvas does not let you use a stencil buffer. On such engines, you can reproduce the stencil as follows.
+For example, Godot's 2D canvas does not let you use a stencil buffer (as of 4.7, only 3D materials have one). On such engines, you can reproduce the stencil as follows.
 
 1. **Build a coverage bitmap**: every frame, draw all current writers into an offscreen coverage bitmap. Assign one bit to each writer, and set that bit on the pixels its shape covers.
-2. **Replay at draw time**: the target's shader reads the coverage bitmap, replays the active writers in `draw_order` order to build the stencil state, and clips inside or outside with `discard`.
+2. **Replay at draw time**: the target's shader reads the coverage bitmap, replays the writers that are active at that target to build the stencil state, and clips inside or outside with `discard`.
 
-The key point is **"hold no state that depends on when things are drawn; split the work into coverage (the writers' shapes) and replay (building the state on the target side)"**. Using 8 bits × 3 = 24 bits in the three RGB channels of an RGBA8 lets one coverage handle up to **24 writers**. That is the practical range.
+The key point is **"hold no state that depends on when things are drawn; split the work into coverage (the writers' shapes) and replay (building the state on the target side)"**. Using 8 bits × 3 = 24 bits in the three RGB channels of an RGBA8 lets one coverage handle up to **24 writers**.
+
+Instances multiply writers: an instance's writers count again each time the instance is placed, and one coverage serves the whole instance tree (§5-2), so 24 runs out quickly. Rather than growing the texture, **split the same texture into tiles** — two side by side, then 2x2 — each tile mapping the same bounding box and holding its own 24 bits. The replay reads the same texel of each tile it needs. This trades resolution for writers without using more memory. SSPlayerForGodot stops at 4 tiles (96 writers) and ignores the rest with a warning.
 
 For **the size of the coverage bitmap**, it is practical to fit it to the bounding box of all writers and **cap the long edge (at 1024 px, for example)**. That keeps pixel-level precision on a roughly Full HD screen while staying within 4 MiB (RGBA8) per bitmap. When many animations are shown at once, you can reduce it further by matching it to the screen resolution or sharing a small pool.
 
@@ -297,19 +304,22 @@ Treat target parts **outside the bounding box** as if there were no writer (not 
 
 ### 5-1. Pseudo-code
 
-The whole flow in engine-independent pseudo-code.
+The whole flow in engine-independent pseudo-code, for one animation with no instances. §5-2 extends it to instances.
+
+Each writer holds its bit over an **open interval of the drawing order** (§2-1): a pure mask from the start of the animation up to itself, clipping from itself to the end. A target is affected by the writers whose interval contains its own position.
 
 **Data structures (up to 24 writers; 8 bits × 3 in the RGB of an RGBA8)**
 
 ```
-const int MAX_WRITERS = 24;
+const int   MAX_WRITERS = 24;
+const float SEQ_END     = 16777216.0;  // past every position; still exact as a float
 
 struct MaskWriter {
-    int  part_index;     // part index
-    int  bit;            // 0..23, the bit position in the coverage
-    int  draw_rank;      // rank in draw_order
-    bool op_invert;      // write op: false = increment, true = invert
-    bool is_clipping;    // clipping (also draws color)
+    int   part_index;    // part index
+    int   bit;           // 0..23, the bit position in the coverage
+    float open;          // the writer holds its bit for positions open < p < close
+    float close;
+    bool  op_invert;     // write op: false = increment, true = invert
 };
 ```
 
@@ -328,12 +338,14 @@ function build_mask_writers(frame) -> [MaskWriter]:
         if part.frame.hide:             continue       // §2-2 / §3
         if len(writers) >= MAX_WRITERS: break
 
+        is_clipping = part.data.mask_write && !pure_mask
         writers.append(MaskWriter {
             part_index  = part_index,
             bit         = len(writers),                 // 0, 1, 2, ...
-            draw_rank   = rank,
+            // §2-1 scope: clipping = after itself / mask = before itself
+            open        = is_clipping ? rank    : -1,
+            close       = is_clipping ? SEQ_END : rank,
             op_invert   = part.data.mask_influence,     // §2-3 (shared by pure masks and clipping)
-            is_clipping = part.data.mask_write && !pure_mask,
         })
     return writers
 ```
@@ -378,12 +390,13 @@ void fragment() {
 ```glsl
 uniform sampler2D coverage;
 uniform int   mask_count;
-uniform vec4  mask_meta[MAX_WRITERS]; // (draw_rank, bit, op_invert, is_clipping). Matches MaskWriter
-uniform float this_rank;
+uniform vec4  mask_meta[MAX_WRITERS]; // (open, close, bit, op_invert). Matches MaskWriter
+uniform float this_rank;              // the target's position in the drawing order
 uniform float visible_inside;         // §2-4 polarity (1 = inside / 0 = outside)
 
 bool mask_passes(vec2 cov_uv) {
-    if (mask_count == 0) return true;
+    // no writer at all: nothing is masked, so polarity alone decides
+    if (mask_count == 0) return visible_inside <= 0.5;
     // outside the bounding box is the same as no writer (avoids false masking from edge CLAMP)
     if (cov_uv.x < 0.0 || cov_uv.x > 1.0 || cov_uv.y < 0.0 || cov_uv.y > 1.0)
         return visible_inside <= 0.5;
@@ -395,16 +408,15 @@ bool mask_passes(vec2 cov_uv) {
     int count  = 0;   // increment (mask_influence == 0): written where at least one overlaps
     for (int i = 0; i < mask_count; i++) {
         vec4 m = mask_meta[i];
-        bool is_clipping = m.w > 0.5;
-        // §2-1 scope (clipping = after itself / mask = before itself)
-        bool active = is_clipping ? (this_rank > m.x) : (this_rank < m.x);
+        // §2-1 scope: the writer holds its bit over the open interval (open, close)
+        bool active = this_rank > m.x && this_rank < m.y;
         if (!active) continue;
         // extract this writer's bit from the coverage
-        int bit  = int(m.y + 0.5);
+        int bit  = int(m.z + 0.5);
         int byte = int(cov[bit / 8] * 255.0 + 0.5);
         if (((byte >> (bit % 8)) & 1) == 0) continue;
         // §2-3 write op (§4-4: do not mix these two into one variable)
-        if (m.z > 0.5) parity ^= 1;                     // invert
+        if (m.w > 0.5) parity ^= 1;                     // invert
         else           count  += 1;                     // increment
     }
     bool masked = (parity != 0) || (count != 0);        // union of the two planes
@@ -419,8 +431,8 @@ void fragment() {
 ```
 
 - **Use nearest for the coverage sampler.** With linear, neighboring bits blend and cannot be read correctly.
-- **Outside the bounding box, decide by `visible_inside` alone** (the same as having no writer).
-- Compare `mask_meta[i].x` (the writer's `draw_rank`) with the target's `this_rank` (§2-1).
+- **Outside the bounding box, and with no writer at all, decide by `visible_inside` alone** (nothing is masked there).
+- Compare the target's `this_rank` with each writer's interval `mask_meta[i].xy` (§2-1).
 - **Do not mix invert and increment into the same variable** (§4-4). If you apply both to one variable, the result **depends on the order of the writers** where writers with different `mask_influence` overlap (`increment → invert` is written, `invert → increment` is not).
 - However, **the replay side has no bit budget.** These are shader variables, not a real stencil, so there is no limit like the "3 counter bits = 7 masks" of §4-3; overlap is possible up to the number of writers (24).
 
@@ -428,22 +440,20 @@ void fragment() {
 
 **Coverage UV**: compute the replay shader's `coverage_uv` in the vertex shader with `M`, **an affine transform that maps the target's Player-local coordinates to the coverage UV `[0, 1]`** (a 2x2 basis and offset that normalize by the bounding box). The coverage bitmap spans the bounding box of the animation that owns the writers, so `M` is based on that animation's Player-local coordinates.
 
-**Passing to instances**: when the target is an **instance part**, the mask reaches **its whole child animation**. The parent animation owns the coverage and `mask_meta`, so pass them to the child and replay as follows.
+**Instances**: a mask of the calling animation reaches into an instance's child animation, a mask written inside the child animation applies to the child's own parts, and its clipping carries out to the calling animation (§2-6 / §2-7), at any depth. With the coverage bitmap, all of this comes down to **numbering the drawing order of the whole instance tree**, with **one coverage bitmap owned by the top-level animation**.
 
-1. The parent passes its **coverage texture, `mask_meta` and writer count** to the instance's child Player.
-2. Compose the UV transform: `M_child = M_parent · slot_xf` (`slot_xf` = the instance placement matrix from child-local to parent-local coordinates). Each of the child's vertices then maps correctly to **the parent's coverage UV**.
-3. Also pass the **composed mask settings** (§2-6). Each part of the child animation decides whether it receives masks, and its polarity, from **the effective values passed by the parent composed with its own settings**. **For the scope decision (the replay's `this_rank`), use the instance part's own rank** (because the child animation sits at the instance part's position in the parent's `draw_order`).
+1. **Number the tree.** Walk the top-level animation's `draw_order` and give each part the next number. When the part is a visible instance part, give it its number, then number its child animation's `draw_order` the same way (recursively) before moving on. The child animation is drawn at its instance part's position, so this order is the order of the whole drawing. Call the number `seq`.
+2. **Bake every writer of the tree into the one coverage.** Map a child animation's writer shapes into the top-level animation's local coordinates with the chain of instance placement matrices (`slot_xf`, child-local → parent-local), and include them in the bounding box. Each writer holds its bit over an open interval of `seq` (§2-1):
+    - **Pure mask**: from **the start of its own animation** (its instance part's `seq`, or `-1` at the top level) **to itself**. It never reaches outside its animation.
+    - **Clipping**: from **itself to the end of the whole tree** (`SEQ_END`). A clipping inside an instance keeps clipping the calling animation's parts drawn after it (§2-7), at any depth.
+    - Write op: the writer's effective `mask_influence` (§2-7).
+3. **Replay with `seq`.** `mask_meta` is `(open, close, bit, op_invert)` as in §5-1, and a target passes its own `seq` as `this_rank`. The shader of §5-1 works unchanged.
+4. **Child parts' UV and settings.** Compose the UV transform down the tree: `M_child = M_parent · slot_xf`, so each child vertex maps to the top-level coverage. Each child part decides whether it receives masks, and its polarity, from the composition of §2-6 (its instance part's flags only).
 
-- **Compose the settings** (§2-6): `visible_inside_mask` with OR, `mask_influence` with AND. Do not decide the child animation from the parent's values alone as "one block with no settings" (the child parts' own settings take part in the decision too).
-- **The composition chains through the hierarchy.** If each level passes its composed values down, nesting is handled by the same procedure.
-- **Only the parent owns** the coverage and `mask_meta` (which writer is which bit). The child only refers to the parent's coverage and builds no coverage of its own (if the child has masks of its own, handle them separately).
-- The parent's masks reach the child only when the instance part **receives masks (its effective `mask_influence` is 1, or it has `mask_write`; §2-6)**. Otherwise, by the AND, nothing below receives masks.
-
-**Carry-over with the coverage bitmap** (§2-7): the above is the downward handover from parent to child, but the carry-over from child to parent can also be implemented with the coverage bitmap.
-
-- When the parent draws its own coverage, it maps the shapes of **the clipping writers of visible instances' children** with `slot_xf` (child-local → parent-local coordinates), and **draws them into the parent's coverage under newly assigned bits.** Such a writer's `draw_rank` is **the instance part's rank** (it clips the parent's parts drawn after it), and its write op (which variable of §4-4 it goes into) is decided by its **effective `mask_influence`** (§2-7). **Only clipping carries over** (pure masks close inside the child animation).
-- **Even if the parent has no writer of its own**, draw the coverage when a visible instance's child has clipping (§2-7).
-- **Difference from the stencil**: with the stencil, the close (the inverse operation) is deferred to the parent's end and **canceled** (§4-2), but the coverage bitmap **has no restore step** (because the replay builds the state on the target side). Carry-over is just "**add the child's writers to the parent's coverage**", and no canceling draw is needed. In exchange, note that **the child's writers use up the bit budget (24)** too, and that **the bounding box (the range the coverage UV normalizes over) must include the child's writers**.
+- **No separate carry-over step is needed.** The intervals already say how far each writer reaches: a pure mask closes inside its animation, clipping reaches the end of the tree. With the stencil, the close is deferred and canceled (§4-2); the coverage bitmap has no restore step, because the replay builds the state on the target side.
+- **Do this even when the top-level animation has no writer of its own**, as long as some animation in the tree has one.
+- **The writers of the whole tree share the bit budget**, and an instance's writers count again each time the instance is placed. Use tiles (§5) when 24 is not enough.
+- A child animation's parts are decided before the top-level animation has numbered the tree, so a child cannot yet tell which writers reach which of its parts. Test all of its parts that receive masks; the top-level animation, which knows every interval, can skip the parts no writer covers (unless they draw inside).
 
 ### 5-3. Coverage bitmap size classes and the one-frame delay
 
@@ -472,6 +482,10 @@ If the bounding box size wobbles around a class boundary, the class flips every 
 There is no single right width for the slack. SSPlayerForGodot uses `0.15` (it keeps the current class until the size is 15% below the boundary). Raise it to reduce switches further; lower it if the VRAM of small masks lingering in large targets bothers you.
 
 Fix 1 covers "no dropout even when switching", and fix 2 covers "fewer needless switches"; they complement each other.
+
+**A held frame**
+
+If the size class for the next frame is decided from this frame's bounding box, an animation that is not advancing — paused, stopped, or shown in an editor — never draws that next frame, and keeps the coverage drawn with the starting size class. With a small starting class, and more so when tiles (§5) split it further, masks come out blocky. When the class picked differs from the one just drawn with, draw the held frame once more.
 
 ---
 [Back to contents](../README.md)
