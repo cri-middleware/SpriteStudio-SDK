@@ -23,7 +23,7 @@ This page is what a Player that offers placement ports: the names, the defaults 
 
 ## 2. Where the box comes from
 
-**When the caller supplies no `frame`, the box is the animation's authored canvas**: its canvas size, placed against the origin by its pivot. It costs nothing, it does not change when the animation changes, and it is the frame the artist composed in.
+**When the caller supplies no `frame`, the box is the animation's authored canvas**: its canvas size, placed against the origin by its pivot. It costs nothing, it holds still while the animation plays, and it is the frame the artist composed in. It is the playing animation's own canvas, and one pack's animations may differ: in `Ringo`, `dead` is 1300×600 and the others 800×600. A host that wants one scale across a pack reads the canvas once, after its first `setAnimation`, and passes it as `frame` from then on.
 
 Both come from the animation in the ssab: `canvas_size` and `pivot` on `AnimationData`. The Brain does not apply the pivot, and it is not in the runtime's animation metadata, so read both from the ssab. The pivot is normalized from the canvas centre, in editor space (Y-up). In a Y-down player-local space the box is:
 
@@ -34,7 +34,7 @@ y =  pivot.y * height - height / 2
 
 `pivot (0, -0.5)` — the canvas's bottom edge, which is how a character standing on the ground is authored — gives a box entirely above the origin.
 
-A Player may also measure the box from the geometry it draws and offer that as `frameScope`: `animation` (the box of the one playing) or `pack` (the union of every animation in the file), selected explicitly. Measuring means evaluating every frame at load. `pack` also draws the character smaller: on `Ringo`, `attack1` spans 383×527 player-local units while the pack's union spans about 1030×878, because `dead` slides the character most of a screen to the right. What `pack` buys, a scale that does not change with the animation, the authored canvas already has, and a caller that wants a tighter box can supply `frame`. **A Player that does not measure leaves `frameScope` out** rather than half-honouring it.
+A Player may also measure the box from the geometry it draws and offer that as `frameScope`: `animation` (the box of the one playing) or `pack` (the union of every animation in the file), selected explicitly. Measuring means evaluating every frame at load. `pack` also draws the character smaller: on `Ringo`, `attack1` spans 383×527 player-local units while the pack's union spans about 1030×878, because `dead` slides the character most of a screen to the right. What `pack` buys, a scale that does not change with the animation, a host gets without measuring by passing one animation's canvas as `frame`, and a caller that wants a tighter box can supply `frame` too. **A Player that does not measure leaves `frameScope` out** rather than half-honouring it.
 
 ## 3. The arithmetic
 
