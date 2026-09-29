@@ -137,6 +137,8 @@ Polarity is decided **not by the feature but by the target part's `visible_insid
 - `visible_inside_mask == 0` → draw **outside** the mask
 - Decision: `masked == visible_inside` (draw if true, `discard` if false)
 
+A target that draws inside (it receives masks, and its effective `visible_inside_mask` is `1`) is therefore **not drawn wherever no mask covers it — even when the animation has no mask at all**, or every writer is switched off. Do not skip the test for such a target because there is nothing to mask with; the test is what hides it.
+
 The "mask is outside, clipping is inside" of §1-2 is **a default commonly used in authoring**; polarity itself is a setting of the target. **Even when a target is in the scope of both a mask and clipping, decide with one stencil and the target's one `visible_inside_mask`** (do not split polarity per feature).
 
 ### 2-5. Cutout threshold
@@ -182,7 +184,7 @@ In a Player that builds each child independently, the simple approach is to **pa
 - **Only clipping (drawn parts with `mask_write`) carries over.** A pure mask is canceled at its own rank and closes inside the child animation (§2-1 / §4-2), so it does not cross the boundary. Clipping "affects the parts after it, until the end of the animation's drawing" (§2-1); think of **that "end" as extending past the instance boundary to the end of the parent animation's drawing**.
 - **Defer the close (the cancel / restore) until the parent animation has finished all its drawing.** If instances are nested, pass it further up to the next parent.
 - **Scope**: a carried-over clipping affects the parent's parts after **the instance part's rank in the parent's `draw_order`** (`rank > instance_rank`) (the clipping scope of §2-1, decided at the instance part's position).
-- **Write op**: the write op of a writer inside a child animation (increment / invert, §2-3) is decided by its **effective `mask_influence` (its own `mask_influence` && its instance part's)**, the same one level of composition as §2-6. If the instance part has `mask_influence == 0`, the effective value is 0, and the writer goes to **the increment (counter) side = the union** (not the invert side). So even when its `mask_influence` differs from another mask outside, the two **form a union instead of canceling each other** (consistent with the separation into two planes in §4-4). That the write op, too, takes only one level has not been checked against SpriteStudio; it shows only where writers with different `mask_influence` overlap.
+- **Write op**: the write op of a writer inside a child animation (increment / invert, §2-3) is decided by its **effective `mask_influence` (its own `mask_influence` && its instance part's)**, the same one level of composition as §2-6. If the instance part has `mask_influence == 0`, the effective value is 0, and the writer goes to **the increment (counter) side = the union** (not the invert side). So even when its `mask_influence` differs from another mask outside, the two **form a union instead of canceling each other** (consistent with the separation into two planes in §4-4). That the write op, too, takes only one level was checked against SpriteStudio 7.5 with two overlapping invert clippings three levels deep, under a `mask_influence == 0` instance at the top.
 - **The target side (the parent's later parts)**: even if the parent has no writer of its own, when a visible instance leaves a clipping open, you must treat **the parent's parts after the instance as mask targets**.
 
 Only clipping carries over, and pure masks do not, because their scopes (§2-1) differ. A pure mask is complete "before itself" and closes at its own rank. Clipping covers "after itself, until the end of the animation", and that end extends past the instance boundary to the end of the parent.
@@ -431,7 +433,7 @@ void fragment() {
 ```
 
 - **Use nearest for the coverage sampler.** With linear, neighboring bits blend and cannot be read correctly.
-- **Outside the bounding box, and with no writer at all, decide by `visible_inside` alone** (nothing is masked there).
+- **Outside the bounding box, and with no writer at all, decide by `visible_inside` alone** (nothing is masked there). A target that draws inside must still run the test in an animation with no mask, or it draws where SpriteStudio hides it (§2-4).
 - Compare the target's `this_rank` with each writer's interval `mask_meta[i].xy` (§2-1).
 - **Do not mix invert and increment into the same variable** (§4-4). If you apply both to one variable, the result **depends on the order of the writers** where writers with different `mask_influence` overlap (`increment → invert` is written, `invert → increment` is not).
 - However, **the replay side has no bit budget.** These are shader variables, not a real stencil, so there is no limit like the "3 counter bits = 7 masks" of §4-3; overlap is possible up to the number of writers (24).
