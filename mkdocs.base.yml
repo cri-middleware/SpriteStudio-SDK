@@ -83,6 +83,10 @@ plugins:
 
 markdown_extensions:
   - toc:
+      # The "¶" beside each heading, so a reader can copy a link to a section. Listing
+      # `markdown_extensions` replaces Zensical's defaults wholesale, and the default `toc`
+      # is the one that carries this.
+      permalink: true
       # The guide's cross-references were written against GitHub's anchor slugs, which keep
       # Japanese headings intact. Python-Markdown's default slugify strips non-ASCII, which
       # would turn every Japanese heading into `_1`, `_2`, ... and break those links.
