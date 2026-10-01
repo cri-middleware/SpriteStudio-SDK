@@ -66,6 +66,8 @@ theme:
     - search.suggest
     - search.highlight
     - content.code.copy
+    # "Copy as Markdown" on every page. It fetches the Markdown the `llmstxt` plugin writes.
+    - content.action.copy
 
 plugins:
   # Search language follows `theme.language`, which each locale config sets, so there is no
@@ -80,6 +82,16 @@ plugins:
   # generates, not the `libs/ssruntime/docs` layout -- and the two locales mirror each
   # other, so a single entry covers en and ja.
   - redirects
+
+  # Writes `llms.txt` and `llms-full.txt` at each locale's root, and a Markdown copy of every
+  # page beside its HTML, for readers who hand the docs to an AI assistant. Needs `site_url`,
+  # which both locale configs set. `sections` takes globs relative to `docs_dir`, so one entry
+  # covers every page in both locales and a new page is picked up without editing it.
+  - llmstxt:
+      full_output: llms-full.txt
+      sections:
+        Docs:
+          - "*.md"
 
 markdown_extensions:
   - toc:
