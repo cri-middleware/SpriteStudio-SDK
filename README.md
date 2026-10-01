@@ -6,6 +6,8 @@ This SDK allows you to easily implement and play **raster-based 2D animations** 
 
 📚 How this SDK, the official players, and the conversion tools fit together is documented in [**SpriteStudio Docs**](https://cri-middleware.github.io/SpriteStudio-Docs/), the portal for the whole ecosystem — 🚧 live after the first release.
 
+🤖 For AI assistants, the Player Porting Guide is also served as Markdown: [`llms.txt`](https://cri-middleware.github.io/SpriteStudio-SDK/llms.txt) indexes the pages and `llms-full.txt` holds all of them in one file — 🚧 live after the first release.
+
 ## 🎯 Compatibility
 
 SpriteStudio-SDK `7.x.x` supports projects authored in **SpriteStudio 7.5 or later**.
