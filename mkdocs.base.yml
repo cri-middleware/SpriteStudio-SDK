@@ -87,8 +87,19 @@ plugins:
   # page beside its HTML, for readers who hand the docs to an AI assistant. Needs `site_url`,
   # which both locale configs set. `sections` takes globs relative to `docs_dir`, so one entry
   # covers every page in both locales and a new page is picked up without editing it.
+  # `markdown_description` opens both files. It is English for both locales: a per-locale text
+  # would move `llmstxt` into the locale files and split `plugins` across three files, which
+  # the sequence rule at the top forbids.
   - llmstxt:
       full_output: llms-full.txt
+      markdown_description: |
+        Player Porting Guide: how to implement a SpriteStudio player for any engine on top of
+        `libssruntime`. Read `10_introduction/20_limitations` and `20_design/30_api_conventions`
+        first, since both shape a player's design. Pages are numbered in reading order -
+        introduction, design, core playback (`30_core`), parts (`40_parts`), features
+        (`50_features`) and troubleshooting (`60_troubleshooting`), which is organised by
+        symptom. The Rust API of `ssruntime` is rustdoc HTML at `api/ssruntime/` under the site
+        root; it is not part of this file.
       sections:
         Docs:
           - "*.md"
