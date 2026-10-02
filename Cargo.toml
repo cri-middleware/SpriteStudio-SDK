@@ -42,7 +42,7 @@ rayon = "1.12.0"
 # `libc/std`, which would pull std into the pure-no_std `libc_alloc` deliverables.
 libc = { version = "0.2.189", default-features = false }
 serde = { version = "1.0.229", features = ["derive"] }
-quick-xml = { version = "0.41.0", features = ["serialize"] }
+quick-xml = { version = "0.42.0", features = ["serialize"] }
 clap = { version = "4.6.6", features = ["derive"] }
 ordered-float = "5.3.0"
 walkdir = "2.5.0"
