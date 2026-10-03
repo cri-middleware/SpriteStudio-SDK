@@ -13,18 +13,18 @@ runs:
   using: composite
   steps:
     - name: Setup Rust toolchain
-      uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
       with:
         # Pinned by SHA, so the channel must be named explicitly here.
         toolchain: stable
         components: clippy, rustfmt
 
     - name: Setup Rust cache
-      uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+      uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
 
     - name: Setup Android dependencies
       if: inputs.platform == 'android'
-      uses: nttld/setup-ndk@ed92fe6cadad69be94a966a7ee3271275e62f779 # v1
+      uses: nttld/setup-ndk@ed92fe6cadad69be94a966a7ee3271275e62f779 # v1.6.0
       with:
         ndk-version: r23c
         link-to-sdk: true
