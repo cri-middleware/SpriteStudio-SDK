@@ -628,8 +628,6 @@ GEMINI.md
 .gemini/
 CLAUDE.md
 .claude/
-
-# Antigravity CLI
 .antigravitycli/
 
 # Documentation toolchain virtualenv, created by scripts/prepare-docs.sh; the
