@@ -128,6 +128,10 @@ So that you do not have to search on every draw, we recommend building the follo
 
 - For each cellmap, a table that looks up a cell's cut-out rectangle and origin from the `name_hash` in `cells()`.
 
+### 3-5. Texture filtering
+
+Texture filtering (nearest or linear) is outside the scope of this guide. It is set in the engine, the same way as for any other texture the game loads: in Unity's texture importer, and through the engine's resource management elsewhere. `cellmaps()[].filter_mode` carries the setting made in SpriteStudio, and a Player does not apply it: if it did, each Player would handle a texture registered under two filter modes in its own way.
+
 ## 4. Logs and errors
 
 ### 4-1. Log callback
