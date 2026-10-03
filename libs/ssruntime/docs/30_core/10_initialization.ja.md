@@ -128,6 +128,10 @@ void load_textures(const ss::format::SsAnimeBinary* binary, String base_dir) {
 
 - セルマップごとに、`cells()` の `name_hash` から、そのセルの切り出し領域と原点を引ける表。
 
+### 3-5. テクスチャのフィルターとラップ
+
+テクスチャのフィルター（nearest / linear）とラップ（clamp / repeat / mirror）は、この移植ガイドの対象外です。どちらも、ゲームが読み込むほかのテクスチャと同じく、エンジンの側で設定します（Unity ではテクスチャインポーター、ほかのエンジンではリソース管理の側）。`cellmaps()[].filter_mode` と `wrap_mode` には SpriteStudio 上の設定が入っていますが、Player はこれらを適用しません。適用すると、同じテクスチャを別の設定で登録したときの扱いが Player ごとに分かれるためです。
+
 ## 4. ログとエラー
 
 ### 4-1. ログのコールバック
