@@ -55,7 +55,7 @@
 //! `scripts/generate.sh` (or `.ps1`), which needs `flatc` on `PATH`. Never hand-edit
 //! `src/runtime/` or `src/converter/`.
 //!
-//! See the [schema documentation](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/libs/ssab/SCHEMA.md)
+//! See the [schema documentation](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssab/SCHEMA.md)
 //! for the field-by-field design spec.
 
 #![cfg_attr(not(feature = "std"), no_std)]

@@ -135,11 +135,11 @@
 //!
 //! # Further reading
 //!
-//! - [Player Porting Guide](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssruntime/docs)
+//! - [Player Porting Guide](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime/docs)
 //!   — how to build a Player on this crate, start to finish.
-//! - [FrameData schema](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/libs/ssruntime/SCHEMA.md)
+//! - [FrameData schema](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/SCHEMA.md)
 //!   — the layout of what [`Context::get_frame_data`] returns.
-//! - [Limitations](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/libs/ssruntime/docs/10_introduction/20_limitations.md)
+//! - [Limitations](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/docs/10_introduction/20_limitations.md)
 //!   — supported scope and spec constraints. Read before making Player design decisions.
 
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]

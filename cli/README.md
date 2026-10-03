@@ -2,9 +2,9 @@
 
 # ssconverter-cli
 
-The build-time tool of the [SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/README.md) workflow: parses SpriteStudio project files (`.sspj` and the referenced `.ssae` / `.ssee` / `.ssqe` / `.ssce`) and emits the runtime binaries the SDK plays back — `.ssab` (animation) and `.ssqb` (sequence pack).
+The build-time tool of the [SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/README.md) workflow: parses SpriteStudio project files (`.sspj` and the referenced `.ssae` / `.ssee` / `.ssqe` / `.ssce`) and emits the runtime binaries the SDK plays back — `.ssab` (animation) and `.ssqb` (sequence pack).
 
-This CLI wraps [libssconverter](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssconverter) and exposes the same conversion pipeline that the SDK's release artifacts are built with. The runtime side lives in [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssruntime).
+This CLI wraps [libssconverter](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssconverter) and exposes the same conversion pipeline that the SDK's release artifacts are built with. The runtime side lives in [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime).
 
 # Usage
 
@@ -91,7 +91,7 @@ For each `.sspj` converted, a directory is produced next to the source file (unl
 
 # Next Steps
 
-Once `.ssab` files are generated, load them into your engine via [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssruntime). For integration guidance, see the [Player Porting Guide](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/libs/ssruntime/docs/README.md).
+Once `.ssab` files are generated, load them into your engine via [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime). For integration guidance, see the [Player Porting Guide](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/docs/README.md).
 
 # For Developers
 ## Build

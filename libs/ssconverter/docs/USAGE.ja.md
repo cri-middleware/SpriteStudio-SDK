@@ -8,8 +8,8 @@
 
 `libssconverter` は Rust で実装されており、C-API を通じて利用します。プラットフォームに応じた静的ライブラリまたは動的ライブラリをプロジェクトにリンクしてください。
 
-- **Windows**: `ssconverter.lib` (および `ssconverter.dll` if shared)
-- **macOS/Linux**: `libssconverter.a` (および `libssconverter.dylib`/`.so` if shared)
+- **Windows**: `ssconverter.lib`（共有ライブラリとして使う場合は `ssconverter.dll` も）
+- **macOS/Linux**: `libssconverter.a`（共有ライブラリとして使う場合は `libssconverter.dylib` / `.so` も）
 
 また、各プラットフォームで必要なシステムライブラリ（pthread, dl 等）を適宜追加してください。
 

@@ -3,7 +3,7 @@
 //! `ssconverter` is the offline half of the SDK: it takes a `.sspj` project — parsed
 //! into typed structs by [`sspj`] — and emits the compact FlatBuffers binaries
 //! (`.ssab` for animations, `.ssqb` for sequences) that
-//! [`ssruntime`](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssruntime)
+//! [`ssruntime`](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime)
 //! plays back. Everything expensive happens here so that playback stays allocation-free.
 //!
 //! ```text
@@ -66,8 +66,8 @@
 //!
 //! # Further reading
 //!
-//! - [Converter usage guide](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/libs/ssconverter/docs/USAGE.md)
-//! - [SSAB / SSQB schema](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/libs/ssab/SCHEMA.md)
+//! - [Converter usage guide](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssconverter/docs/USAGE.md)
+//! - [SSAB / SSQB schema](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssab/SCHEMA.md)
 
 mod cache;
 mod converter;

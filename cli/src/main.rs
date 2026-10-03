@@ -1,5 +1,5 @@
 //! `ssconverter-cli` — command-line front end for
-//! [`ssconverter`](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssconverter).
+//! [`ssconverter`](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssconverter).
 //!
 //! Converts SpriteStudio projects (`.sspj`) into the runtime binaries (`.ssab`,
 //! `.ssqb`) in either single or batch mode, the latter walking directories for projects
@@ -8,7 +8,7 @@
 //! the bytes produced, are identical to what the GUI and the in-engine converters emit.
 //!
 //! Run `ssconverter-cli --help` for the full option list, or see the
-//! [usage guide](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/cli/README.md).
+//! [usage guide](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/cli/README.md).
 
 use clap::{CommandFactory, Parser};
 use std::ffi::OsString;

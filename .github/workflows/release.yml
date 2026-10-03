@@ -68,7 +68,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: recursive
 
@@ -248,7 +248,7 @@ jobs:
 
       - name: Install wasm-pack
         if: matrix.platform == 'web'
-        uses: taiki-e/install-action@9983c65e42da123ff25d1f78505eb6de315aa172 # v2
+        uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.22
         with:
           tool: wasm-pack
 
@@ -271,7 +271,7 @@ jobs:
 
       - name: Upload artifact ssconverter-cli
         if: matrix.platform == 'windows' || matrix.platform == 'linux' || matrix.platform == 'macos'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ssconverter-cli-${{ matrix.platform }}${{ (matrix.platform == 'linux' && matrix.arch == 'aarch64') && '-aarch64' || '' }}
           path: bin
@@ -293,7 +293,7 @@ jobs:
 
       - name: Upload artifact ssconverter-cli (Windows arm64)
         if: matrix.platform == 'windows'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ssconverter-cli-windows-arm64
           path: bin-arm64
@@ -301,7 +301,7 @@ jobs:
           retention-days: 7 # see the first upload step
 
       - name: Upload artifact libraries
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: spritestudio-sdk-libraries-${{ matrix.platform }}${{ (matrix.platform == 'linux' && matrix.arch == 'aarch64') && '-aarch64' || '' }}
           path: lib
@@ -315,10 +315,10 @@ jobs:
       contents: write # softprops/action-gh-release creates the GitHub Release
 
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download all artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           path: artifacts
 
@@ -327,7 +327,7 @@ jobs:
       # prepare-docs.sh separate. Generating the notices is not a toolchain
       # concern and lives in the script below.
       - name: Install cargo-about
-        uses: taiki-e/install-action@9983c65e42da123ff25d1f78505eb6de315aa172 # v2
+        uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.22
         with:
           tool: cargo-about
 
@@ -361,7 +361,7 @@ jobs:
       # Release, so a dispatch with upload_release=false is still useful — and so
       # the zips a human reviews are the same bytes the Release would carry.
       - name: Upload final release package
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: spritestudio-sdk-release-dist
           path: release-dist
@@ -370,7 +370,7 @@ jobs:
 
       - name: Create GitHub Release
         if: inputs.upload_release
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: |
             release-dist/*.zip

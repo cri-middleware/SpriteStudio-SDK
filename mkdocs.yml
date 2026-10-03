@@ -1,14 +1,3 @@
-# English site -- the default locale, so it builds to the site root and keeps the plain
-# `mkdocs.yml` name that the tooling looks for when no `-f` is given.
-#
-# `docs_dir` points at a **generated** tree, not at the guide as authored. The pages live in
-# `libs/ssruntime/docs` with each one next to its `.ja.md` translation, which is what makes
-# them readable on GitHub and lets SpriteStudio-Docs deep-link them; Zensical needs one
-# directory per locale. `scripts/build-docs-tree.py` bridges the two and must run first.
-#
-# Everything not listed here comes from mkdocs.base.yml. Before adding anything, read the
-# note there about sequences: `nav` and `extra.social` are defined in this file and in
-# mkdocs.ja.yml, and must never also appear in the base.
 INHERIT: ./mkdocs.base.yml
 
 docs_dir: build/docs/en
@@ -17,19 +6,11 @@ site_url: "https://cri-middleware.github.io/SpriteStudio-SDK/"
 site_description: "Player Porting Guide for the SpriteStudio SDK - implement a SpriteStudio player on any engine"
 
 theme:
-  # Drives the UI string translations and the `html lang` attribute.
   language: en
 
 extra:
-  # English builds to the site root, so the root of the whole multi-locale site is right
-  # here. The language selector prepends this to its target; see
-  # overrides/partials/alternate.html.
   site_root_prefix: ""
-  # Footer icons. Keep to destinations that outlive any single release. Mirrored, with
-  # translated labels, in mkdocs.ja.yml - add or reorder an icon in both files.
   social:
-    # The family entry point. Every sibling site carries this as its first footer icon, so a
-    # reader who arrives here from a search can reach the portal and the other players.
     - icon: material/motion-play
       link: https://cri-middleware.github.io/SpriteStudio-Docs/
       name: SpriteStudio Docs
@@ -39,15 +20,10 @@ extra:
     - icon: material/web
       link: https://www.webtech.co.jp/spritestudio/
       name: SpriteStudio
-    # Keep the handle here in sync with `twitter:site` in overrides/main.html.
     - icon: fontawesome/brands/x-twitter
       link: https://x.com/spritestudio
       name: SpriteStudio on X
 
-# Mirrors the table of contents in README.md; the numeric directory prefixes are the reading
-# order, so keep the two in step when a page is added. Paths are locale-relative and
-# identical to the ones in mkdocs.ja.yml; only the labels differ. The one exception is the
-# last entry, which leaves `docs_dir` for the rustdoc build-pages.sh grafts onto site/api/.
 nav:
   - 🏠 Home: README.md
   - 🚀 Introduction:

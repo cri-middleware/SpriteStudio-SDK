@@ -3,7 +3,7 @@
 //! A SpriteStudio project is a tree of XML documents: a `.sspj` that references anime
 //! packs, cell maps, effects, sequences and sound lists. This crate deserializes all of
 //! them into strongly-typed Rust structs with `quick-xml` and `serde`, and does nothing
-//! else — [`ssconverter`](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssconverter)
+//! else — [`ssconverter`](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssconverter)
 //! is what turns the result into a runtime binary.
 //!
 //! | Extension | Module | Contents |
