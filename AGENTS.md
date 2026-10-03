@@ -13,9 +13,8 @@
 *   **Never break a line between two Japanese characters**: Chrome draws that break as a visible space.
 *   **Finish by running this repository's checks**: the commands in [CONTRIBUTING.md](./CONTRIBUTING.md) —
     `cargo fmt`, `clippy`, `cargo test --workspace --all-features`; for anything under
-    `libs/ssruntime/docs`, also the both-locale build in [RELEASING.md](./RELEASING.md). Read what a run
-    says it verified rather than its exit code — several checks here pass, or skip themselves, when a
-    prerequisite is missing.
+    `libs/ssruntime/docs`, also the both-locale build it gives. Read what a run says it verified rather
+    than its exit code — several checks here pass, or skip themselves, when a prerequisite is missing.
 *   **Do not restate here what another file owns.** The table below says which file that is; a fact that
     belongs to none of them goes where it will be seen to go stale.
 *   For `clippy --fix`, `git add` your own edits first and pass `--allow-staged`, never `--allow-dirty`, so
@@ -41,8 +40,8 @@ integrate. The runtime is `no_std`-first; `std` is opt-in for developer ergonomi
 
 | Question | File |
 |---|---|
-| What the SDK is, how to build and test it | [README.md](./README.md), [CONTRIBUTING.md](./CONTRIBUTING.md) |
-| How the site is built and a release is cut | [RELEASING.md](./RELEASING.md), maintainers only |
+| What the SDK is, how to build and test it, the docs site included | [README.md](./README.md), [CONTRIBUTING.md](./CONTRIBUTING.md) |
+| How a release is cut | [RELEASING.md](./RELEASING.md), maintainers only |
 | What to build next, and what is deliberately out of scope | [ROADMAP.md](./ROADMAP.md) |
 | The constraints every contribution must hold to | [CONTRIBUTING.md](./CONTRIBUTING.md) |
 | Runtime semantics a Player must honour | [Player Porting Guide](./libs/ssruntime/docs/README.ja.md) — start at [Limitations](./libs/ssruntime/docs/10_introduction/20_limitations.md) and the [Batched Rendering Contract](./libs/ssruntime/docs/30_core/40_render_loop.md) |
