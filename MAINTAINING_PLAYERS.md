@@ -34,7 +34,7 @@ Players come in two shapes.
 
 ## 3. A sample must run with nothing of the reader's own
 
-**Opening the bundled sample must produce a first frame without the reader supplying a `.sspj`.** A Player that does not manage this is asking them to author before they can try.
+**The bundled sample must reach a first frame without the reader supplying a `.sspj` of their own.** A Player that does not manage this is asking them to author before they can try.
 
 ### 3.1 One character, and the same one wherever a Player can manage it
 
@@ -58,15 +58,14 @@ This is not held in place by discipline. It follows from whether the projects ar
 
 A separated project's file stays clean on its own.
 
-### 3.3 If the converted assets are not committed, opening the project must convert
+### 3.3 Converted assets are not committed
 
-Whether to commit the converted assets — the `.ssab` and its textures — is the host's call, and leaving them out keeps the repository light. But **if they are not committed, opening the project has to read that file and run the conversion.** Without it the reader ends up hunting down a `.sspj` and converting it themselves, which fails the rule above.
+**No Player commits its samples' converted assets** — the `.ssab` and the textures copied beside it. They are build outputs of the SDK's `tests/`, and a committed copy goes stale the moment those projects or the schema change. The reader still brings nothing of their own: the source is the `.sspj` in the SDK submodule, and what stands between a clone and the first frame is converting it.
 
-Godot's add-on reads the cfg and converts on open, so it commits no example binaries at all. A host without that machinery should commit one sample's worth and no more.
+- **The host's own import, where it has one** — Godot's SS Import dock, Unity's Importer window — converts with the `libssconverter` the Player already carries, so it needs nothing the Player did not.
+- **A `deploy-examples` script, in every Player,** converts every sample without the editor: for a test suite, for CI, for a reader without the host's editor at hand.
 
-### 3.4 Committed assets need a way to regenerate them
-
-A committed `.ssab` is a build output, and it goes stale when the SDK's `tests/` change. **Provide a `deploy-examples` script and run it at release time.** `ssconverter-cli` performs the conversion, so the Player's editor is not needed for it.
+The README's sample steps name the route and what it needs. Where the sample's scenes hold references an import cannot restore — Unity's, by the GUID in a committed `.meta` — they also say when it has to run.
 
 ## 4. Two doors, and what may not be behind the first one
 
