@@ -4,7 +4,7 @@
 
 The API conventions stop the same feature from growing a different name in every Player. But an aligned API loses most of its value **if the first five minutes are a different experience in every Player.** The shared vocabulary pays off for the reader moving to their second Player; the reader touching their first one meets the README.
 
-This document fixes what the first screen answers, and who it answers to. **What is shared is four questions, their order, and the two doors past them. How they are answered belongs to the host.** §5 then names the Player the others are read against when their behaviour parts.
+This document fixes what the first screen answers, and who it answers to. **What is shared is four questions, their order, and the two doors past them. How they are answered belongs to the host.** §5 then names the Player the others are read against when their behaviour parts, and §6 fixes the shape of their roadmaps.
 
 ---
 
@@ -122,6 +122,16 @@ It is this one because runtime changes reach it first — it links `ssruntime` a
 
 This is an arrangement among maintainers. User-facing documentation lists the Players as equals and does not call this one the reference.
 
-## 6. Departing from this document
+## 6. The roadmaps
+
+**Every official Player's `ROADMAP.md` has the same shape, so a reader moving between them finds each section where they expect it.** The title is `# SpriteStudio Player for <Engine> — Roadmap`, and the file holds unfinished work only. The SDK's own `ROADMAP.md` shares the title and the item syntax; its sections are its own.
+
+The sections, in this order, each omitted when empty: `Playback & rendering`, `UI integration`, a section the host genuinely needs, `Distribution & verification`, `Needs SDK`, `Backlog`, `Deliberate non-goals`. **Status is the section, never a symbol.** `Needs SDK` is for work that waits on an SDK item and names it (`Waits for: …`); work blocked on anything else stays in its own section and ends `Blocked on: …`.
+
+An item is `- [ ] **Title** — one or two sentences: what is missing and, if it is not obvious, why it is not done.` Non-goals are plain bullets. **A finished item is deleted, not ticked**: the page that documents the behaviour owns the description from then on. No dates, no history, no source line numbers, no measurement logs.
+
+Link the SDK's roadmap as `https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/ROADMAP.md` — `HEAD` follows the default branch. A heading that other files link to keeps its anchor; search for it before renaming.
+
+## 7. Departing from this document
 
 The same as [Player API conventions §9](./libs/ssruntime/docs/20_design/30_api_conventions.md#9-departing-from-this-document). Depart when the host's conventions genuinely collide with this one. **Write the reason where the departure is.**
