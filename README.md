@@ -1,5 +1,5 @@
 [**English**](./README.md) | [**日本語**](./README.ja.md)
-# SpriteStudio-SDK
+# SpriteStudio SDK
 
 A high-performance, engine-agnostic animation player SDK for **SpriteStudio**.
 This SDK allows you to easily implement and play **raster-based 2D animations** on any game engine or rendering framework.
