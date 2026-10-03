@@ -40,7 +40,7 @@ dlmalloc = "0.2.14"
 rayon = "1.12.0"
 # `default-features = false` is load-bearing: libc's default feature set enables
 # `libc/std`, which would pull std into the pure-no_std `libc_alloc` deliverables.
-libc = { version = "0.2.189", default-features = false }
+libc = { version = "0.2.190", default-features = false }
 serde = { version = "1.0.229", features = ["derive"] }
 quick-xml = { version = "0.42.0", features = ["serialize"] }
 clap = { version = "4.6.7", features = ["derive"] }
