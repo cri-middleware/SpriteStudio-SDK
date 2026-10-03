@@ -1,4 +1,4 @@
-# SpriteStudio-SDK — Roadmap
+# SpriteStudio SDK — Roadmap
 
 Each item below states a **primary deliverable**. A few entries also list **Co-decided** sub-bullets — those are design points settled as part of the parent work so adjacent API contracts stay consistent. They are not separate tasks and should not be split into independent issues. This file lists unfinished work and deliberate non-goals only; concrete API and design belong with the code and the Player Porting Guide.
 
