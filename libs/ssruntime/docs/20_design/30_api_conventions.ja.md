@@ -89,6 +89,7 @@ C-API は `ss_runtime_set_part_color_override(context, part, blend_op, rgba, pri
 | ループ回数（`-1` = 無限） | `loopCount` |
 | 再生のフレームレート | `frameRate` |
 | 再生区間の設定 | `setAnimationSection` |
+| ラベルによる再生区間の設定 | `setAnimationSectionByLabel` |
 | 再生方向 / 往復のスタイル | `playbackDirection` / `playbackStyle` |
 | パーツ名からインデックスを引く | `findPartIndex` |
 | アニメーション名の一覧 | `animationNames` |
@@ -311,6 +312,8 @@ C-API の再生制御の意味は [再生制御](../30_core/20_playback_control.
 **`resume` を `play` にまとめないでください。** `play` は常に先頭から始めるので、一時停止の解除に使うと再生ヘッドが先頭に戻ります。**`isPlaying` と並べて `isPausing` を公開してください。** 一時停止中も `isPlaying` は真のままです。
 
 ループ回数と再生区間は `ss_runtime_setup_animation` が既定値に戻すので、`setAnimation` の中か、`play` の前に設定してください。速度・フレームレートの上書き・フレームスキップ・再生方向はセットアップをまたいで保持されるので、設定し直す必要はありません（[再生制御 §3](../30_core/20_playback_control.ja.md#3-セットアップが戻す設定)）。
+
+**ラベルで指定した区間も同じ状態です。** `setAnimationSectionByLabel(startLabel, endLabel, startOffset = 0, endOffset = 0)` は、アニメーションのラベル表から各ラベルのフレームを求め、`setAnimationSection` と同じく区間を設定します。再生はしません。区間は、開始ラベルのフレームに `startOffset` を足した位置から、終了ラベルのフレームに `endOffset` を足した位置までで、インスタンスパーツの開始・終了ラベルと同じ規則です。ほかの区間と同じく、`setAnimation` の中か、`play` の前に設定してください。
 
 ### 8-2. 選択済みのアニメーションを指定されたら何もしない
 
