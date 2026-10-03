@@ -1,21 +1,17 @@
 version: 2
-
 updates:
-  # Security-only mode: open-pull-requests-limit: 0 disables routine version-bump
-  # PRs while still allowing Dependabot to open PRs for security advisories.
-  # See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#open-pull-requests-limit
   - package-ecosystem: cargo
     directory: /
     schedule:
       interval: weekly
     open-pull-requests-limit: 0
-    labels:
-      - dependencies
-      - security
 
-  # Weekly and grouped, as in the sibling repositories. `/` alone covers
-  # `.github/workflows/` and a root `action.yml`, not the composite actions
-  # under `.github/actions/`, which pin actions of their own.
+  - package-ecosystem: pip
+    directory: /docs
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+
   - package-ecosystem: github-actions
     directories:
       - /
