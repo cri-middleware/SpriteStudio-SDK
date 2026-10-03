@@ -2,10 +2,10 @@
 
 # libssruntime
 
-The playback **Brain** of the [SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/README.md) workflow. Loads `.ssab` binaries produced by [ssconverter-cli](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/cli/README.md) and emits everything a renderer needs per frame — part states (transforms, mesh deformations, color), cross-engine `DrawBatch` plans, and event signals.
+The playback **Brain** of the [SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/README.md) workflow. Loads `.ssab` binaries produced by [ssconverter-cli](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/cli/README.md) and emits everything a renderer needs per frame — part states (transforms, mesh deformations, color), cross-engine `DrawBatch` plans, and event signals.
 
 > **Engine-agnostic by design**
-> `libssruntime` performs no rendering itself. Each "Player" (engine/platform integration) consumes the emitted state and draws using its native API. This separation is what makes playback consistent across engines — see [Why choose this SDK?](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/README.md#-why-choose-this-sdk) in the top-level README for the rationale.
+> `libssruntime` performs no rendering itself. Each "Player" (engine/platform integration) consumes the emitted state and draws using its native API. This separation is what makes playback consistent across engines — see [Why choose this SDK?](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/README.md#-why-choose-this-sdk) in the top-level README for the rationale.
 
 # Key Features
 
