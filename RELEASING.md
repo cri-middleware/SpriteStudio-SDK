@@ -2,16 +2,6 @@
 
 Maintainers only. Contributors do not run any of this — see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## Building the documentation site
-The Player Porting Guide under `libs/ssruntime/docs` is published as a site. Set the toolchain up once with `scripts/prepare-docs.sh`, then:
-
-```bash
-scripts/build-docs.sh              # generate the locale trees, build en then ja, both --strict
-scripts/build-pages.sh serve=yes   # the published tree: that build + rustdoc at /api/, on :8000
-```
-
-`pages.yml` runs this same `build-pages.sh`, and nothing builds the docs on a pull request, so a local run is the only gate. `zensical serve` validates nothing, `--strict` or not.
-
 ## Cutting a release
 
 Anyone with the Write role on this repository can cut a release: every step is a branch, a pull request, a tag, a workflow run or a Release, and the signing credentials are organization secrets, so nothing depends on whose machine runs it. You need `git`, `gh` (run `gh auth login` once) and a Rust toolchain. The commands are bash; on Windows, run them in Git Bash.
@@ -123,16 +113,6 @@ scripts/build-release.sh
 # SpriteStudio-SDK のリリース手順
 
 維持者向けです。コントリビューターがこの手順を実行することはありません（[CONTRIBUTING.md](./CONTRIBUTING.md) を参照してください）。
-
-## ドキュメントサイトのビルド
-`libs/ssruntime/docs` の Player 移植ガイドはサイトとして公開されます。`scripts/prepare-docs.sh` で一度ツールチェーンを用意してから、以下を実行してください。
-
-```bash
-scripts/build-docs.sh              # ロケール別ツリーを生成し、en → ja の順に --strict でビルド
-scripts/build-pages.sh serve=yes   # 公開ツリー: 上記 + /api/ の rustdoc を :8000 で配信
-```
-
-`pages.yml` も同じ `build-pages.sh` を実行します。プルリクエストでは docs はビルドされないため、手元のビルドが唯一のゲートです。`zensical serve` は `--strict` を付けても何も検証しません。
 
 ## リリースの手順
 
