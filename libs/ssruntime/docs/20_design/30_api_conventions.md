@@ -89,6 +89,7 @@ Use the same stem for the same concept. Casing and word separation follow each l
 | Loop count (`-1` = infinite) | `loopCount` |
 | Playback frame rate | `frameRate` |
 | Set the playback section | `setAnimationSection` |
+| Set the playback section by labels | `setAnimationSectionByLabel` |
 | Playback direction / round-trip style | `playbackDirection` / `playbackStyle` |
 | Look up an index from a part name | `findPartIndex` |
 | List of animation names | `animationNames` |
@@ -311,6 +312,8 @@ There are three reasons to separate them.
 **Do not fold `resume` into `play`.** `play` always starts from the beginning, so using it to lift a pause sends the playhead back to the start. **Publish `isPausing` alongside `isPlaying`.** `isPlaying` stays true while paused.
 
 `ss_runtime_setup_animation` resets the loop count and the playback section to their defaults, so set them inside `setAnimation` or before `play`. Speed, the frame-rate override, frame skip and playback direction are kept across setups, so there is no need to set them again ([Playback control §3](../30_core/20_playback_control.md#3-what-setup-resets)).
+
+**A section named by labels is the same state.** `setAnimationSectionByLabel(startLabel, endLabel, startOffset = 0, endOffset = 0)` resolves each label to its frame in the animation's label table and sets the section the way `setAnimationSection` does; it does not play. The section runs from the start label's frame plus `startOffset` to the end label's frame plus `endOffset`, the rule an Instance part's start and end labels follow. Set it where any section is set: inside `setAnimation` or before `play`.
 
 ### 8-2. Do nothing when the selected animation is specified again
 
