@@ -1395,8 +1395,9 @@ struct InstanceState<'a> {
     unit: crate::core::SsUnit,
     render_mode: crate::core::RenderMode,
     /// Per-part runtime Override Layer table (Phase 2). Dense by `part_index`,
-    /// `None` = no override; sized to `num_parts` on `setup_animation`. Empty
-    /// until an animation is set up.
+    /// `None` = no override. Created at the part count by the first override
+    /// set on the instance, and dropped again when a new animation leaves no
+    /// override in it, so an instance that overrides nothing never allocates it.
     part_overrides: Vec<Option<crate::core::override_layer::PartOverride>>,
     /// Per-part resolved cell meta recorded by the seam when a cell override is
     /// applied, so `compute_local_uvs` samples the overridden cell (not just the
@@ -1449,6 +1450,9 @@ impl<'a> InstanceState<'a> {
     /// new count are dropped by the resize — the PERMANENT re-validation).
     fn retain_permanent_overrides_on_setup(&mut self, num_parts: usize) {
         use crate::core::override_layer::PriorityMode;
+        if self.part_overrides.is_empty() {
+            return;
+        }
         for entry in self.part_overrides.iter_mut() {
             let Some(p) = entry.as_mut() else { continue };
             p.visibility = None;
@@ -1462,7 +1466,11 @@ impl<'a> InstanceState<'a> {
                 *entry = None;
             }
         }
-        self.part_overrides.resize(num_parts, None);
+        if self.part_overrides.iter().all(Option::is_none) {
+            self.part_overrides = Vec::new();
+        } else {
+            self.part_overrides.resize(num_parts, None);
+        }
     }
 
     fn primary_idx(&self) -> usize {
@@ -1601,24 +1609,52 @@ impl<'a> Context<'a> {
         crate::core::math::floorf(self.instance.primary_source().controller.get_frame_no()) as i32
     }
 
+    /// The primary animation's part count — the range an override's part index
+    /// must fall in — or 0 before an animation is set up.
+    fn override_part_count(&self) -> usize {
+        let anim_idx = self.instance.primary_source().animation_idx;
+        match self.eval.resource {
+            Some(resource) if anim_idx >= 0 => resource.animations[anim_idx as usize].cached_parts().len(),
+            _ => 0,
+        }
+    }
+
+    /// The override slot of `part`, creating the table the first time an
+    /// override is set.
+    fn override_slot(&mut self, part: u32) -> Result<&mut Option<crate::core::override_layer::PartOverride>, error::SSRuntimeError> {
+        let (idx, num_parts) = (part as usize, self.override_part_count());
+        if idx >= num_parts {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        if self.instance.part_overrides.is_empty() {
+            self.instance.part_overrides.resize(num_parts, None);
+        }
+        Ok(&mut self.instance.part_overrides[idx])
+    }
+
+    /// Clear one kind of override on `part`. Nothing to do when the table was
+    /// never created.
+    fn clear_override(&mut self, part: u32, clear: impl FnOnce(&mut crate::core::override_layer::PartOverride)) -> Result<(), error::SSRuntimeError> {
+        let idx = part as usize;
+        if idx >= self.override_part_count() {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        if let Some(entry) = self.instance.part_overrides.get_mut(idx).and_then(|e| e.as_mut()) {
+            clear(entry);
+        }
+        self.instance.compact_override(idx);
+        Ok(())
+    }
+
     /// Set or clear a per-part visibility override.
     /// `force`: `0` = clear/revert to animation, `1` = force-hide,
     /// `2` = force-visible (reserved, not implemented — rejected).
     /// `cascade` propagates a force-hide to descendants.
     pub fn set_part_visibility_override(&mut self, part: u32, force: u8, cascade: bool) -> Result<(), error::SSRuntimeError> {
-        let idx = part as usize;
-        if idx >= self.instance.part_overrides.len() {
-            return Err(error::SSRuntimeError::InvalidParameter);
-        }
         match force {
-            0 => {
-                if let Some(entry) = self.instance.part_overrides[idx].as_mut() {
-                    entry.visibility = None;
-                }
-                self.instance.compact_override(idx);
-            }
+            0 => self.clear_override(part, |entry| entry.visibility = None)?,
             1 => {
-                let entry = self.instance.part_overrides[idx].get_or_insert_with(Default::default);
+                let entry = self.override_slot(part)?.get_or_insert_with(Default::default);
                 entry.visibility = Some(crate::core::override_layer::VisibilityOverride { cascade });
             }
             // 2 = force-visible is reserved (handover D-5) but not implemented.
@@ -1649,29 +1685,17 @@ impl<'a> Context<'a> {
         let Some(priority) = crate::core::override_layer::PriorityMode::from_u8(priority) else {
             return Err(error::SSRuntimeError::InvalidParameter);
         };
-        let idx = part as usize;
-        if idx >= self.instance.part_overrides.len() {
-            return Err(error::SSRuntimeError::InvalidParameter);
-        }
         // Anchor the NON one-shot to "from the moment of override": remember the
         // set frame (its own keyframe is skipped on the first evaluation).
         let set_frame = self.override_set_frame();
-        let entry = self.instance.part_overrides[idx].get_or_insert_with(Default::default);
+        let entry = self.override_slot(part)?.get_or_insert_with(Default::default);
         entry.color = Some(crate::core::override_layer::ColorOverride { blend_op, corners_rgba, rate: 1.0, priority, set_frame, pending_first_eval: true });
         Ok(())
     }
 
     /// Clear the color override on a part.
     pub fn clear_part_color_override(&mut self, part: u32) -> Result<(), error::SSRuntimeError> {
-        let idx = part as usize;
-        if idx >= self.instance.part_overrides.len() {
-            return Err(error::SSRuntimeError::InvalidParameter);
-        }
-        if let Some(entry) = self.instance.part_overrides[idx].as_mut() {
-            entry.color = None;
-        }
-        self.instance.compact_override(idx);
-        Ok(())
+        self.clear_override(part, |entry| entry.color = None)
     }
 
     /// Set a per-part cell override, identified by `(cellmap_name_hash,
@@ -1687,8 +1711,7 @@ impl<'a> Context<'a> {
         let Some(priority) = crate::core::override_layer::PriorityMode::from_u8(priority) else {
             return Err(error::SSRuntimeError::InvalidParameter);
         };
-        let idx = part as usize;
-        if idx >= self.instance.part_overrides.len() {
+        if part as usize >= self.override_part_count() {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
         let Some(resource) = self.eval.resource else {
@@ -1699,22 +1722,14 @@ impl<'a> Context<'a> {
             return Err(error::SSRuntimeError::InvalidParameter);
         };
         let set_frame = self.override_set_frame();
-        let entry = self.instance.part_overrides[idx].get_or_insert_with(Default::default);
+        let entry = self.override_slot(part)?.get_or_insert_with(Default::default);
         entry.cell = Some(crate::core::override_layer::CellOverride { cellmap_name_hash, cell_name_hash, resolved, priority, set_frame, pending_first_eval: true });
         Ok(())
     }
 
     /// Clear the cell override on a part.
     pub fn clear_part_cell_override(&mut self, part: u32) -> Result<(), error::SSRuntimeError> {
-        let idx = part as usize;
-        if idx >= self.instance.part_overrides.len() {
-            return Err(error::SSRuntimeError::InvalidParameter);
-        }
-        if let Some(entry) = self.instance.part_overrides[idx].as_mut() {
-            entry.cell = None;
-        }
-        self.instance.compact_override(idx);
-        Ok(())
+        self.clear_override(part, |entry| entry.cell = None)
     }
 
     /// Clear every per-part override.
@@ -4076,6 +4091,41 @@ mod tests {
         assert_eq!(context.find_part_index("SCL_XY"), 7);
         assert_eq!(context.find_part_index("root"), 0);
         assert_eq!(context.find_part_index("does_not_exist"), -1);
+    }
+
+    #[test]
+    fn override_table_is_created_by_the_first_override() {
+        let ssab_data = load_basic_ssab();
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        // No animation yet: every part index is out of range.
+        assert!(matches!(context.set_part_visibility_override(0, 1, false), Err(error::SSRuntimeError::InvalidParameter)));
+
+        context.setup_animation("anime_1").expect("setup");
+        let num_parts = context.override_part_count();
+        assert!(num_parts > 1);
+        assert!(context.instance.part_overrides.is_empty(), "setup allocates no table");
+
+        // Clearing what was never set is a no-op, and still range-checked; a
+        // rejected set allocates nothing.
+        context.clear_part_color_override(0).expect("clear without a table");
+        assert!(matches!(context.clear_part_color_override(num_parts as u32), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(matches!(context.set_part_visibility_override(num_parts as u32, 1, false), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(context.instance.part_overrides.is_empty());
+
+        context.set_part_visibility_override(1, 1, false).expect("set");
+        assert_eq!(context.instance.part_overrides.len(), num_parts);
+
+        // A new animation drops the visibility override, and the empty table with it.
+        context.setup_animation("anime_1").expect("re-setup");
+        assert!(context.instance.part_overrides.is_empty());
+
+        // A PERMANENT color override survives it, and keeps the table.
+        context.set_part_color_override(1, 0, 0xff0000ff, 2).expect("permanent color");
+        context.setup_animation("anime_1").expect("re-setup");
+        assert_eq!(context.instance.part_overrides.len(), num_parts);
+        assert!(context.instance.part_overrides[1].as_ref().is_some_and(|o| o.color.is_some()));
     }
 
     #[test]
