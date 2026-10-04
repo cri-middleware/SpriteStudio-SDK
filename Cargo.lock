@@ -743,6 +743,7 @@ dependencies = [
  "flatbuffers",
  "libc",
  "libm",
+ "once_cell",
  "ssab",
  "ssconverter",
  "wasm-bindgen",

@@ -15,6 +15,7 @@ categories = ["game-development", "graphics", "no-std", "multimedia"]
 flatbuffers = { workspace = true }
 ssab = { workspace = true }
 libm = { workspace = true }
+once_cell = { workspace = true }
 wasm-bindgen = { workspace = true, optional = true }
 dlmalloc = { workspace = true, optional = true, features = ["global"] }
 libc = { workspace = true, optional = true }
