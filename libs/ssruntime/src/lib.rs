@@ -555,12 +555,12 @@ impl<'a> AnimationResource<'a> {
         }
 
         let keys = crate::core::keyframes::KeyColumns::new(ssab.keyframes());
-        let mut animations = Vec::new();
         let fb_animations = ssab.animations();
+        let mut animations = Vec::with_capacity(fb_animations.len());
 
         for anim in fb_animations {
-            let mut cached_parts = Vec::new();
             let parts = anim.parts_animation_data();
+            let mut cached_parts = Vec::with_capacity(parts.len());
 
             let fb_parts = ssab.parts();
             for (i, p) in parts.iter().enumerate() {
