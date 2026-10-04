@@ -33,7 +33,7 @@ table U8Color {
   b: ubyte;
 }
 
-table SsCurve {
+struct KeyCurve {
   start_time: float;
   start_value: float;
   end_time: float;
@@ -675,75 +675,6 @@ table Label {
   time: int;
 }
 
-table PartAnimationDataCellValue {
-  index: ushort (key);
-
-  value: PartAttributeCell (required);
-}
-
-table PartAnimationDataFloatValue {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: float;
-
-  curve: SsCurve;
-  easing_rate: float = 0;
-}
-
-table PartAnimationDataIntValue {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: int;
-
-  curve: SsCurve;
-  easing_rate: float = 0;
-}
-
-table PartAnimationDataUIntValue {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: uint32;
-}
-
-table PartAnimationDataBoolValue {
-  index: ushort (key);
-
-  value: bool;
-}
-
-table PartAnimationDataPartColor {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: PartAttributePartColor (required);
-
-  curve: SsCurve;
-  easing_rate: float = 0;
-}
-
-table PartAnimationDataShader {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: PartAttributeShader (required);
-
-  curve: SsCurve;
-  easing_rate: float = 0;
-}
-
-table PartAnimationDataVertex {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: PartAttributeVertex (required);
-
-  curve: SsCurve;
-  easing_rate: float = 0;
-}
-
 table PartAnimationDataInstance {
   index: ushort (key);
 
@@ -756,65 +687,78 @@ table PartAnimationDataEffect {
   value: PartAttributeEffect (required);
 }
 
-table PartAnimationDataVec2 {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: Vec2 (required);
-
-  curve: SsCurve;
-  easing_rate: float = 0;
-}
-
-table PartAnimationDataDeform {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: PartAttributeDeform (required);
-
-  curve: SsCurve;
-  easing_rate: float = 0;
-}
-
+// One part's keyframes in one animation, an attribute at a time: the run in
+// `SsAnimeBinary.keyframes` that holds them, or the default, 0xFFFFFFFF, when
+// the animation has no keys for that attribute on this part.
 table PartAnimationData {
-  cell_array: [PartAnimationDataCellValue];
-  position_x_array: [PartAnimationDataFloatValue];
-  position_y_array: [PartAnimationDataFloatValue];
-  position_z_array: [PartAnimationDataFloatValue];
-  rotation_x_array: [PartAnimationDataFloatValue];
-  rotation_y_array: [PartAnimationDataFloatValue];
-  rotation_z_array: [PartAnimationDataFloatValue];
-  scale_x_array: [PartAnimationDataFloatValue];
-  scale_y_array: [PartAnimationDataFloatValue];
-  local_scale_x_array: [PartAnimationDataFloatValue];
-  local_scale_y_array: [PartAnimationDataFloatValue];
-  alpha_array: [PartAnimationDataFloatValue];
-  local_alpha_array: [PartAnimationDataFloatValue];
-  priority_array: [PartAnimationDataIntValue];
-  flip_h_array: [PartAnimationDataBoolValue];
-  flip_v_array: [PartAnimationDataBoolValue];
-  hide_array: [PartAnimationDataBoolValue];
-  part_color_array: [PartAnimationDataPartColor];
-  shader_array: [PartAnimationDataShader];
-  vertex_array: [PartAnimationDataVertex];
-  pivot_x_array: [PartAnimationDataFloatValue];
-  pivot_y_array: [PartAnimationDataFloatValue];
-  anchor_x_array: [PartAnimationDataFloatValue];
-  anchor_y_array: [PartAnimationDataFloatValue];
-  size_x_array: [PartAnimationDataFloatValue];
-  size_y_array: [PartAnimationDataFloatValue];
-  img_flip_h_array: [PartAnimationDataBoolValue];
-  img_flip_v_array: [PartAnimationDataBoolValue];
-  uv_translation_x_array: [PartAnimationDataFloatValue];
-  uv_translation_y_array: [PartAnimationDataFloatValue];
-  uv_rotation_z_array: [PartAnimationDataFloatValue];
-  uv_scale_x_array: [PartAnimationDataFloatValue];
-  uv_scale_y_array: [PartAnimationDataFloatValue];
-  bounding_radius_array: [PartAnimationDataFloatValue];
-  mask_array: [PartAnimationDataFloatValue];
-  skew_array: [PartAnimationDataVec2];
-  deform_array: [PartAnimationDataDeform];
-  texture_array: [PartAnimationDataUIntValue];
+  cell_keys: uint = 4294967295;
+  position_x_keys: uint = 4294967295;
+  position_y_keys: uint = 4294967295;
+  position_z_keys: uint = 4294967295;
+  rotation_x_keys: uint = 4294967295;
+  rotation_y_keys: uint = 4294967295;
+  rotation_z_keys: uint = 4294967295;
+  scale_x_keys: uint = 4294967295;
+  scale_y_keys: uint = 4294967295;
+  local_scale_x_keys: uint = 4294967295;
+  local_scale_y_keys: uint = 4294967295;
+  alpha_keys: uint = 4294967295;
+  local_alpha_keys: uint = 4294967295;
+  priority_keys: uint = 4294967295;
+  flip_h_keys: uint = 4294967295;
+  flip_v_keys: uint = 4294967295;
+  hide_keys: uint = 4294967295;
+  part_color_keys: uint = 4294967295;
+  shader_keys: uint = 4294967295;
+  vertex_keys: uint = 4294967295;
+  pivot_x_keys: uint = 4294967295;
+  pivot_y_keys: uint = 4294967295;
+  anchor_x_keys: uint = 4294967295;
+  anchor_y_keys: uint = 4294967295;
+  size_x_keys: uint = 4294967295;
+  size_y_keys: uint = 4294967295;
+  img_flip_h_keys: uint = 4294967295;
+  img_flip_v_keys: uint = 4294967295;
+  uv_translation_x_keys: uint = 4294967295;
+  uv_translation_y_keys: uint = 4294967295;
+  uv_rotation_z_keys: uint = 4294967295;
+  uv_scale_x_keys: uint = 4294967295;
+  uv_scale_y_keys: uint = 4294967295;
+  bounding_radius_keys: uint = 4294967295;
+  mask_keys: uint = 4294967295;
+  skew_keys: uint = 4294967295;
+  deform_keys: uint = 4294967295;
+  texture_keys: uint = 4294967295;
+}
+
+// Every keyframe of every animation in the pack, one column per field: key `k`
+// is `frame[k]`, `interpolation[k]`, `curve[k]` and `value[k]`. The keys of one
+// attribute of one part in one animation are a run, in frame order, and runs
+// with the same keys are stored once.
+table Keyframes {
+  // Where each run starts, plus where the last one ends: run `r` is keys
+  // `runs[r]` up to, but not including, `runs[r + 1]`.
+  runs: [uint] (required);
+  frame: [ushort] (required);
+  interpolation: [InterpolationType] (required);
+  // An index into `curves` for Hermite and Bezier, into `easing_rates` for the
+  // six ease types that take a rate, 0xFFFF for every other key.
+  curve: [ushort] (required);
+  // The value's bits, read by the attribute the run belongs to: a float's for
+  // the float attributes, an int's for priority, 0 or 1 for the bool ones, the
+  // texture hash for texture, and an index into the matching table below for
+  // cell, part_color, shader, vertex, skew and deform.
+  value: [uint] (required);
+
+  // Each distinct value once.
+  curves: [KeyCurve] (required);
+  easing_rates: [float] (required);
+  cells: [PartAttributeCell] (required);
+  part_colors: [PartAttributePartColor] (required);
+  shaders: [PartAttributeShader] (required);
+  vertices: [PartAttributeVertex] (required);
+  skews: [Vec2] (required);
+  deforms: [PartAttributeDeform] (required);
 }
 
 table AnimationData {
@@ -875,6 +819,8 @@ table SsAnimeBinary {
   external_instances: [ExternalInstance];
 
   embedded_assets: [EmbeddedAsset];
+
+  keyframes: Keyframes (required);
 }
 
 file_identifier "SSAB";

@@ -2105,7 +2105,8 @@ mod tests {
         let name = b.create_string("wrong_version");
         let parts = b.create_vector::<flatbuffers::ForwardsUOffset<fmt::PartData>>(&[]);
         let animations = b.create_vector::<flatbuffers::ForwardsUOffset<fmt::AnimationData>>(&[]);
-        let root = fmt::SsAnimeBinary::create(&mut b, &fmt::SsAnimeBinaryArgs { version: ssab::SSAB_SCHEMA_VERSION + 1, name: Some(name), parts: Some(parts), animations: Some(animations), ..Default::default() });
+        let keyframes = crate::core::keyframes::create_empty_keyframes(&mut b);
+        let root = fmt::SsAnimeBinary::create(&mut b, &fmt::SsAnimeBinaryArgs { version: ssab::SSAB_SCHEMA_VERSION + 1, name: Some(name), parts: Some(parts), animations: Some(animations), keyframes: Some(keyframes), ..Default::default() });
         fmt::finish_ss_anime_binary_buffer(&mut b, root);
         b.finished_data().to_vec()
     }

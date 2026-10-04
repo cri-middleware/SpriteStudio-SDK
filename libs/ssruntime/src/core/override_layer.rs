@@ -12,6 +12,7 @@
 use alloc::vec::Vec;
 
 use crate::core::framedata::{CachedPartData, ResolvedCellMeta, premultiply_part_color_corner};
+use crate::core::keyframes::KeyColumns;
 use crate::runtime::framedata::ss::runtime::{BlendType, PartAttributeCell, PartAttributePartColor, PartState, SsAttributePartColorKeyValueColor, U8Color, UpdateAttributeFlags};
 
 /// Keyframe-vs-override precedence for the attributes that conflict with the
@@ -135,17 +136,15 @@ pub fn passed_reaches_key(passed_frames: &[i32], set_frame: i32, first_eval: boo
     passed_frames.iter().any(|&f| !(first_eval && f == set_frame) && is_key(f))
 }
 
-/// True when `key_array` (surviving keyframes, sorted ascending by `index()`)
-/// has a keyframe exactly at frame `f`. Binary search, `O(log n)`.
-fn array_has_key_at<'a, T>(key_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<T>>>, f: i32, get_index: impl Fn(&T::Inner) -> i32) -> bool
-where
-    T: 'a + flatbuffers::Follow<'a>,
-{
-    let Some(a) = key_array else { return false };
-    let (mut lo, mut hi) = (0usize, a.len());
+/// True when `run` (surviving keyframes, sorted ascending by frame) has a
+/// keyframe exactly at frame `f`. Binary search, `O(log n)`.
+fn run_has_key_at(keys: &KeyColumns, run: Option<crate::core::keyframes::KeyRun>, f: i32) -> bool {
+    let Some(run) = run else { return false };
+    let first = run.first() as usize;
+    let (mut lo, mut hi) = (0usize, run.count() as usize);
     while lo < hi {
         let mid = lo + (hi - lo) / 2;
-        match get_index(&a.get(mid)).cmp(&f) {
+        match (keys.key(first + mid).index() as i32).cmp(&f) {
             core::cmp::Ordering::Equal => return true,
             core::cmp::Ordering::Less => lo = mid + 1,
             core::cmp::Ordering::Greater => hi = mid,
@@ -168,6 +167,7 @@ where
 pub fn apply_part_overrides(
     part_overrides: &mut [Option<PartOverride>],
     cached_parts: &[CachedPartData],
+    keys: &KeyColumns,
     parts_vec: &mut [PartState],
     parts_color_vec: &mut Vec<PartAttributePartColor>,
     cell_vec: &mut Vec<PartAttributeCell>,
@@ -235,7 +235,7 @@ pub fn apply_part_overrides(
         // the first evaluation). Dropping the slot makes it permanent: it
         // survives loops and only a re-set / new animation brings it back.
         if color.priority == PriorityMode::OverwriteOnNextKeyframe {
-            let handed_over = passed_reaches_key(passed_frames, color.set_frame, color.pending_first_eval, |f| array_has_key_at(cached_parts[i].part_color_array, f, |k| k.index() as i32));
+            let handed_over = passed_reaches_key(passed_frames, color.set_frame, color.pending_first_eval, |f| run_has_key_at(keys, cached_parts[i].part_color_keys, f));
             if let Some(o) = part_overrides.get_mut(i).and_then(|o| o.as_mut()) {
                 if handed_over {
                     o.color = None;
@@ -284,7 +284,7 @@ pub fn apply_part_overrides(
 
         // NON one-shot handover (see the color pass for the rationale).
         if cell.priority == PriorityMode::OverwriteOnNextKeyframe {
-            let handed_over = passed_reaches_key(passed_frames, cell.set_frame, cell.pending_first_eval, |f| array_has_key_at(cp.cell_array, f, |k| k.index() as i32));
+            let handed_over = passed_reaches_key(passed_frames, cell.set_frame, cell.pending_first_eval, |f| run_has_key_at(keys, cp.cell_keys, f));
             if let Some(o) = part_overrides.get_mut(i).and_then(|o| o.as_mut()) {
                 if handed_over {
                     o.cell = None;
@@ -372,7 +372,9 @@ mod tests {
         let mut tex_hashes = vec![0u32; n];
         let mut uv_meta = vec![None; n];
         let mut ws = Vec::new();
-        apply_part_overrides(ovr, cached, parts, &mut color_vec, &mut cell_vec, &mut cell_meta, &mut tex_hashes, &mut uv_meta, &mut ws, passed_frames);
+        let keyframes = crate::core::keyframes::empty_keyframes();
+        let keys = KeyColumns::new(flatbuffers::root::<ssab::ssab::ss::format::Keyframes>(&keyframes).unwrap());
+        apply_part_overrides(ovr, cached, &keys, parts, &mut color_vec, &mut cell_vec, &mut cell_meta, &mut tex_hashes, &mut uv_meta, &mut ws, passed_frames);
         (color_vec, cell_vec, cell_meta, tex_hashes, uv_meta)
     }
 
@@ -473,7 +475,7 @@ mod tests {
 
     #[test]
     fn color_non_without_keys_is_permanent() {
-        let cached = [cached_part_stub(0, -1, PartType::PartTypeNormal, false)]; // no part_color_array
+        let cached = [cached_part_stub(0, -1, PartType::PartTypeNormal, false)]; // no part_color_keys
         let mut parts = [state(1.0, UpdateAttributeFlags::empty())];
         let mut ovr = [Some(color(0, [1, 2, 3, 255], PriorityMode::OverwriteOnNextKeyframe))];
         // Even with frames "passed", a keyless part never hands over.

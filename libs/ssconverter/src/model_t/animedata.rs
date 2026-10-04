@@ -277,13 +277,14 @@ fn convert_animedatat(
     parts_map: &HashMap<String, &sspj::ssae::SsPart>,
     sound_list_id_to_name_hash: &HashMap<i32, u32>,
     cellmaps: &CellmapResolver,
-) -> ssab::ssab::ss::format::AnimationDataT {
+    keyframes: &mut super::keyframes::KeyframesBuilder,
+) -> Result<ssab::ssab::ss::format::AnimationDataT, crate::ConverterError> {
     let mut anime_data_t = ssab::ssab::ss::format::AnimationDataT::default();
 
     anime_data_t.name = anime_data.name.to_string();
     anime_data_t.name_hash = crate::utils::fnv1a_hash_str(&anime_data.name);
     anime_data_t.parts_initial_attributes = convert_parts_initial_attributes(setup_animation, parts_map, cellmaps);
-    anime_data_t.parts_animation_data = convert_parts_animation_data(anime_data, setup_animation, parts_map, cellmaps);
+    anime_data_t.parts_animation_data = convert_parts_animation_data(anime_data, setup_animation, parts_map, cellmaps).iter().map(|part_keys| keyframes.part(part_keys)).collect::<Result<_, _>>()?;
     anime_data_t.initial_events = convert_parts_initial_events(setup_animation, parts_map, sound_list_id_to_name_hash);
     anime_data_t.events = convert_events_per_frames(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash);
     anime_data_t.labels = if anime_data.labels.is_empty() { None } else { Some(convert_animedata_labels(&anime_data.labels)) };
@@ -300,7 +301,7 @@ fn convert_animedatat(
     pivot.v2 = anime_data.settings.pivot.y;
     anime_data_t.pivot = Box::new(pivot);
 
-    anime_data_t
+    Ok(anime_data_t)
 }
 
 fn convert_interpolation_type(interpolation: &sspj::sstypes::SsInterpolationType) -> ssab::ssab::ss::format::InterpolationType {
@@ -908,12 +909,12 @@ macro_rules! process_interpolatable_attribute {
 
             match &key.ip_type {
                 sspj::sstypes::SsInterpolationType::Hermite | sspj::sstypes::SsInterpolationType::Bezier => {
-                    let mut curve_t = ssab::ssab::ss::format::SsCurveT::default();
+                    let mut curve_t = ssab::ssab::ss::format::KeyCurveT::default();
                     curve_t.start_time = key.curve.start_time;
                     curve_t.start_value = key.curve.start_value;
                     curve_t.end_time = key.curve.end_time;
                     curve_t.end_value = key.curve.end_value;
-                    args.curve = Some(Box::new(curve_t));
+                    args.curve = Some(curve_t);
                 }
                 sspj::sstypes::SsInterpolationType::EaseIn
                 | sspj::sstypes::SsInterpolationType::EaseOut
@@ -984,10 +985,10 @@ macro_rules! process_simple_attribute {
     }};
 }
 
-fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimationDataT, part_anime: &sspj::ssae::SsPartAnime, cellmaps: &CellmapResolver, is_setup: bool, part_type: &sspj::sstypes::SsPartType) {
+fn convert_part_animation_data(p_arg: &mut super::keyframes::PartKeys, part_anime: &sspj::ssae::SsPartAnime, cellmaps: &CellmapResolver, is_setup: bool, part_type: &sspj::sstypes::SsPartType) {
     part_anime.attributes.iter().for_each(|attribute| match attribute {
         sspj::ssattribute::SsAttributeKind::Cell(v) => {
-            process_simple_attribute!(&v.keys, p_arg.cell_array, ssab::ssab::ss::format::PartAnimationDataCellValueT, |k: &sspj::ssattribute::SsAttributeCellKey| {
+            process_simple_attribute!(&v.keys, p_arg.cell_array, super::keyframes::CellKey, |k: &sspj::ssattribute::SsAttributeCellKey| {
                 let mut c_args = ssab::ssab::ss::format::PartAttributeCellT::default();
                 c_args.cellmap_name_hash = cellmaps.name_hash(k.value.map_id);
                 c_args.name_hash = crate::utils::fnv1a_hash_str(&k.value.name);
@@ -995,49 +996,49 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
             });
         }
         sspj::ssattribute::SsAttributeKind::PosX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.position_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.position_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::PosY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.position_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.position_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::PosZ(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.position_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.position_z_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::RotX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.rotation_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.rotation_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::RotY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.rotation_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.rotation_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::RotZ(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.rotation_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.rotation_z_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::SclX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.scale_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::SclY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.scale_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::LosclX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.local_scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.local_scale_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::LosclY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.local_scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.local_scale_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::Alpha(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.alpha_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.alpha_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::LoAlpha(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.local_alpha_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.local_alpha_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::Prio(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.priority_array, ssab::ssab::ss::format::PartAnimationDataIntValueT, |k: &sspj::ssattribute::SsAttributeIntKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.priority_array, super::keyframes::IntKey, |k: &sspj::ssattribute::SsAttributeIntKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::FlipH(v) => {
-            process_simple_attribute!(&v.keys, p_arg.flip_h_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+            process_simple_attribute!(&v.keys, p_arg.flip_h_array, super::keyframes::BoolKey, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::FlipV(v) => {
-            process_simple_attribute!(&v.keys, p_arg.flip_v_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+            process_simple_attribute!(&v.keys, p_arg.flip_v_array, super::keyframes::BoolKey, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::Hide(v) => {
             // Hide is special-cased: when no frame-0 key is supplied by the setup
@@ -1048,9 +1049,9 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
             process_simple_attribute!(
                 &v.keys,
                 p_arg.hide_array,
-                ssab::ssab::ss::format::PartAnimationDataBoolValueT,
+                super::keyframes::BoolKey,
                 |k: &sspj::ssattribute::SsAttributeBoolKey| k.value,
-                frame0_override = |frame0: &mut ssab::ssab::ss::format::PartAnimationDataBoolValueT| {
+                frame0_override = |frame0: &mut super::keyframes::BoolKey| {
                     if !is_setup {
                         frame0.value = true;
                     }
@@ -1058,55 +1059,55 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
             );
         }
         sspj::ssattribute::SsAttributeKind::PivotX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.pivot_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.pivot_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::PivotY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.pivot_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.pivot_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::AnchorX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.anchor_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.anchor_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::AnchorY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.anchor_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.anchor_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::SizeX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.size_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.size_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::SizeY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.size_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.size_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::ImgFlipH(v) => {
-            process_simple_attribute!(&v.keys, p_arg.img_flip_h_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+            process_simple_attribute!(&v.keys, p_arg.img_flip_h_array, super::keyframes::BoolKey, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::ImgFlipV(v) => {
-            process_simple_attribute!(&v.keys, p_arg.img_flip_v_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+            process_simple_attribute!(&v.keys, p_arg.img_flip_v_array, super::keyframes::BoolKey, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::UvtX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::UvtY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::UvrZ(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.uv_rotation_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_rotation_z_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::UvsX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::UvsY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::Boundr(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.bounding_radius_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.bounding_radius_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::Mask(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.mask_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.mask_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.part_color_array, ssab::ssab::ss::format::PartAnimationDataPartColorT, |k: &sspj::ssattribute::SsAttributePartsColorKey| { Box::new(build_part_attribute_part_color_t(&k.value, part_type)) });
+            process_interpolatable_attribute!(&v.keys, p_arg.part_color_array, super::keyframes::PartColorKey, |k: &sspj::ssattribute::SsAttributePartsColorKey| { Box::new(build_part_attribute_part_color_t(&k.value, part_type)) });
         }
         sspj::ssattribute::SsAttributeKind::Shader(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.shader_array, ssab::ssab::ss::format::PartAnimationDataShaderT, |k: &sspj::ssattribute::SsAttributeShaderKey| {
+            process_interpolatable_attribute!(&v.keys, p_arg.shader_array, super::keyframes::ShaderKey, |k: &sspj::ssattribute::SsAttributeShaderKey| {
                 let mut value = ssab::ssab::ss::format::PartAttributeShaderT::default();
                 value.id = k.value.id.clone();
                 value.id_hash = crate::utils::fnv1a_hash_str(&k.value.id);
@@ -1136,7 +1137,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                 }
             }
             if !skew_keys.is_empty() {
-                process_interpolatable_attribute!(&skew_keys, p_arg.skew_array, ssab::ssab::ss::format::PartAnimationDataVec2T, |k: &sspj::ssattribute::SsAttributeVertexKey| {
+                process_interpolatable_attribute!(&skew_keys, p_arg.skew_array, super::keyframes::SkewKey, |k: &sspj::ssattribute::SsAttributeVertexKey| {
                     let mut val = ssab::ssab::ss::format::Vec2T::default();
                     if let Some(v) = k.value.skew.as_ref() {
                         val.v1 = v.x;
@@ -1146,7 +1147,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                 });
             }
             if !vertex_keys.is_empty() {
-                process_interpolatable_attribute!(&vertex_keys, p_arg.vertex_array, ssab::ssab::ss::format::PartAnimationDataVertexT, |k: &sspj::ssattribute::SsAttributeVertexKey| {
+                process_interpolatable_attribute!(&vertex_keys, p_arg.vertex_array, super::keyframes::VertexKey, |k: &sspj::ssattribute::SsAttributeVertexKey| {
                     let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
                     let mut c = ssab::ssab::ss::format::Vec2T::default();
                     if let Some(p) = k.value.lt.as_ref() {
@@ -1177,7 +1178,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
             }
         }
         sspj::ssattribute::SsAttributeKind::Deform(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.deform_array, ssab::ssab::ss::format::PartAnimationDataDeformT, |k: &sspj::ssattribute::SsAttributeDeformKey| {
+            process_interpolatable_attribute!(&v.keys, p_arg.deform_array, super::keyframes::DeformKey, |k: &sspj::ssattribute::SsAttributeDeformKey| {
                 let mut value = ssab::ssab::ss::format::PartAttributeDeformT::default();
                 value.coord_x = Some(k.value.vchg.iter().map(|p| p.x).collect());
                 value.coord_y = Some(k.value.vchg.iter().map(|p| p.y).collect());
@@ -1186,7 +1187,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
             });
         }
         sspj::ssattribute::SsAttributeKind::Texchange(v) => {
-            process_simple_attribute!(&v.keys, p_arg.texture_array, ssab::ssab::ss::format::PartAnimationDataUIntValueT, |k: &sspj::ssattribute::SsAttributeTexchangeKey| { crate::utils::fnv1a_hash_texture_name(&k.value.texture_name) });
+            process_simple_attribute!(&v.keys, p_arg.texture_array, super::keyframes::TextureKey, |k: &sspj::ssattribute::SsAttributeTexchangeKey| { crate::utils::fnv1a_hash_texture_name(&k.value.texture_name) });
         }
         _ => {}
     });
@@ -1326,18 +1327,18 @@ macro_rules! impl_optimize_simple_attribute {
     };
 }
 
-impl_optimize_interpolatable_attribute!(optimize_part_animation_data_float, ssab::ssab::ss::format::PartAnimationDataFloatValueT);
-impl_optimize_interpolatable_attribute!(optimize_part_animation_data_int, ssab::ssab::ss::format::PartAnimationDataIntValueT);
-impl_optimize_simple_attribute!(optimize_part_animation_data_bool, ssab::ssab::ss::format::PartAnimationDataBoolValueT);
-impl_optimize_simple_attribute!(optimize_part_animation_data_cell, ssab::ssab::ss::format::PartAnimationDataCellValueT);
-impl_optimize_interpolatable_attribute!(optimize_part_animation_data_partcolor, ssab::ssab::ss::format::PartAnimationDataPartColorT);
-impl_optimize_interpolatable_attribute!(optimize_part_animation_data_shader, ssab::ssab::ss::format::PartAnimationDataShaderT);
-impl_optimize_interpolatable_attribute!(optimize_part_animation_data_vertex, ssab::ssab::ss::format::PartAnimationDataVertexT);
-impl_optimize_interpolatable_attribute!(optimize_part_animation_data_skew, ssab::ssab::ss::format::PartAnimationDataVec2T);
-impl_optimize_interpolatable_attribute!(optimize_part_animation_data_deform, ssab::ssab::ss::format::PartAnimationDataDeformT);
-impl_optimize_simple_attribute!(optimize_part_animation_data_texture, ssab::ssab::ss::format::PartAnimationDataUIntValueT);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_float, super::keyframes::FloatKey);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_int, super::keyframes::IntKey);
+impl_optimize_simple_attribute!(optimize_part_animation_data_bool, super::keyframes::BoolKey);
+impl_optimize_simple_attribute!(optimize_part_animation_data_cell, super::keyframes::CellKey);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_partcolor, super::keyframes::PartColorKey);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_shader, super::keyframes::ShaderKey);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_vertex, super::keyframes::VertexKey);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_skew, super::keyframes::SkewKey);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_deform, super::keyframes::DeformKey);
+impl_optimize_simple_attribute!(optimize_part_animation_data_texture, super::keyframes::TextureKey);
 
-fn modify_part_animation_data(p_args: &mut ssab::ssab::ss::format::PartAnimationDataT, _part_type: &sspj::sstypes::SsPartType, _anime_data: &sspj::ssae::SsPartAnime) {
+fn modify_part_animation_data(p_args: &mut super::keyframes::PartKeys, _part_type: &sspj::sstypes::SsPartType, _anime_data: &sspj::ssae::SsPartAnime) {
     // Key-data optimization per attribute
     p_args.cell_array = p_args.cell_array.as_ref().and_then(|v| optimize_part_animation_data_cell(v));
     p_args.position_x_array = p_args.position_x_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
@@ -1379,9 +1380,9 @@ fn modify_part_animation_data(p_args: &mut ssab::ssab::ss::format::PartAnimation
     p_args.texture_array = p_args.texture_array.as_ref().and_then(|v| optimize_part_animation_data_texture(v));
 }
 
-fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, cellmaps: &CellmapResolver) -> Vec<ssab::ssab::ss::format::PartAnimationDataT> {
-    let mut parts_animation_data_t = Vec::<ssab::ssab::ss::format::PartAnimationDataT>::new();
-    parts_animation_data_t.resize(parts_map.len(), ssab::ssab::ss::format::PartAnimationDataT::default());
+fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, cellmaps: &CellmapResolver) -> Vec<super::keyframes::PartKeys> {
+    let mut parts_animation_data_t = Vec::<super::keyframes::PartKeys>::new();
+    parts_animation_data_t.resize(parts_map.len(), super::keyframes::PartKeys::default());
 
     for part_anime in &setup_animation.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
@@ -1427,7 +1428,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
 /// children, so a parent's effective hide is always resolved first, which makes
 /// the inheritance transitive (a grandparent reaches a grandchild only when
 /// every link in the chain has the flag set).
-fn bake_hide_inheritance(parts_animation_data_t: &mut [ssab::ssab::ss::format::PartAnimationDataT], parts_map: &HashMap<String, &sspj::ssae::SsPart>) {
+fn bake_hide_inheritance(parts_animation_data_t: &mut [super::keyframes::PartKeys], parts_map: &HashMap<String, &sspj::ssae::SsPart>) {
     let num_parts = parts_animation_data_t.len();
 
     // Index parts by `array_index` for parent lookups.
@@ -1463,7 +1464,7 @@ fn bake_hide_inheritance(parts_animation_data_t: &mut [ssab::ssab::ss::format::P
             parts_animation_data_t[i].hide_array = Some(
                 eff.iter()
                     .map(|&(index, value)| {
-                        let mut k = ssab::ssab::ss::format::PartAnimationDataBoolValueT::default();
+                        let mut k = super::keyframes::BoolKey::default();
                         k.index = index;
                         k.value = value;
                         k
@@ -1478,7 +1479,7 @@ fn bake_hide_inheritance(parts_animation_data_t: &mut [ssab::ssab::ss::format::P
 /// Extracts a part's own hide attribute as minimal `(frame, hidden)` step
 /// keyframes. A missing `hide_array` means "never hidden"; the result always
 /// begins at frame 0 so it can be sampled at any frame >= 0.
-fn hide_steps(hide_array: Option<&[ssab::ssab::ss::format::PartAnimationDataBoolValueT]>) -> Vec<(u16, bool)> {
+fn hide_steps(hide_array: Option<&[super::keyframes::BoolKey]>) -> Vec<(u16, bool)> {
     match hide_array {
         Some(keys) if !keys.is_empty() => keys.iter().map(|k| (k.index, k.value)).collect(),
         _ => vec![(0, false)],
@@ -1517,7 +1518,7 @@ fn or_hide_steps(a: &[(u16, bool)], b: &[(u16, bool)]) -> Vec<(u16, bool)> {
     result
 }
 
-fn apply_part_type_defaults(p_args: &mut ssab::ssab::ss::format::PartAnimationDataT, part: &sspj::ssae::SsPart) {
+fn apply_part_type_defaults(p_args: &mut super::keyframes::PartKeys, part: &sspj::ssae::SsPart) {
     match &part.part_type {
         sspj::sstypes::SsPartType::Shape => {
             const SHAPE_DEFAULT_SIZE: f32 = 64.0;
@@ -1547,8 +1548,8 @@ fn apply_part_type_defaults(p_args: &mut ssab::ssab::ss::format::PartAnimationDa
     }
 }
 
-fn float_value_constant_key(value: f32) -> ssab::ssab::ss::format::PartAnimationDataFloatValueT {
-    let mut k = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+fn float_value_constant_key(value: f32) -> super::keyframes::FloatKey {
+    let mut k = super::keyframes::FloatKey::default();
     k.index = 0;
     k.interpolation = ssab::ssab::ss::format::InterpolationType::None;
     k.value = value;
@@ -1823,22 +1824,21 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
         .collect::<Vec<_>>()
 }
 
-pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>, cellmaps: &CellmapResolver) -> Vec<ssab::ssab::ss::format::AnimationDataT> {
+pub fn convert_animation_data_list(
+    anime_pack: &sspj::ssae::SsAnimePack,
+    parts_map: &HashMap<String, &sspj::ssae::SsPart>,
+    sound_list_id_to_name_hash: &HashMap<i32, u32>,
+    cellmaps: &CellmapResolver,
+) -> Result<(Vec<ssab::ssab::ss::format::AnimationDataT>, ssab::ssab::ss::format::KeyframesT), crate::ConverterError> {
+    let mut keyframes = super::keyframes::KeyframesBuilder::new(&anime_pack.name);
     let Some(setup_animation) = anime_pack.anime_list.iter().find(|anime_data| anime_data.is_setup) else {
         // not found setup animation
-        return vec![];
+        return Ok((vec![], keyframes.finish()));
     };
 
-    anime_pack
-        .anime_list
-        .iter()
-        .filter_map(|anime_data| {
-            if anime_data == setup_animation {
-                return None;
-            }
-            Some(convert_animedatat(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash, cellmaps))
-        })
-        .collect::<Vec<ssab::ssab::ss::format::AnimationDataT>>()
+    let animations =
+        anime_pack.anime_list.iter().filter(|anime_data| *anime_data != setup_animation).map(|anime_data| convert_animedatat(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash, cellmaps, &mut keyframes)).collect::<Result<Vec<_>, _>>()?;
+    Ok((animations, keyframes.finish()))
 }
 
 /// Resolves a cellmap `map_id` to its name hash.
@@ -1934,33 +1934,34 @@ mod cellmap_resolver_tests {
 
 #[cfg(test)]
 mod tests {
+    use super::super::keyframes::FloatKey;
     use super::*;
-    use ssab::ssab::ss::format::{InterpolationType, PartAnimationDataFloatValueT};
+    use ssab::ssab::ss::format::InterpolationType;
 
     #[test]
     fn test_optimize_part_animation_data_float_deduplication() {
         // Test data: [index(time)=0, val=1.0], [index=1, val=1.0], [index=2, val=1.0], [index=3, val=2.0]
         let mut data = Vec::new();
 
-        let mut item = PartAnimationDataFloatValueT::default();
+        let mut item = FloatKey::default();
         item.index = 0;
         item.value = 1.0;
         item.interpolation = InterpolationType::Linear;
         data.push(item);
 
-        let mut item = PartAnimationDataFloatValueT::default();
+        let mut item = FloatKey::default();
         item.index = 1;
         item.value = 1.0;
         item.interpolation = InterpolationType::Linear;
         data.push(item);
 
-        let mut item = PartAnimationDataFloatValueT::default();
+        let mut item = FloatKey::default();
         item.index = 2;
         item.value = 1.0;
         item.interpolation = InterpolationType::Linear;
         data.push(item);
 
-        let mut item = PartAnimationDataFloatValueT::default();
+        let mut item = FloatKey::default();
         item.index = 3;
         item.value = 2.0;
         item.interpolation = InterpolationType::None;

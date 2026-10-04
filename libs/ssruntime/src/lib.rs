@@ -385,7 +385,7 @@ pub struct AnimationMetadata<'a> {
     pub fps: i32,
     pub canvas_width: f32,
     pub canvas_height: f32,
-    pub cached_parts: Vec<crate::core::framedata::CachedPartData<'a>>,
+    pub cached_parts: Vec<crate::core::framedata::CachedPartData>,
     /// The SSAE's setup pose, as stored. It is identical for every animation of
     /// an AnimationPack — the converter writes the same `isSetup` animation into
     /// each — and becomes the floor of the track stack once transformed into the
@@ -436,6 +436,7 @@ impl SsabData {
 pub struct AnimationResource<'a> {
     data: &'a [u8],
     animations: Vec<AnimationMetadata<'a>>,
+    keys: crate::core::keyframes::KeyColumns<'a>,
 }
 
 /// A thread-safe, shared resource containing SSAB data and its parsed metadata.
@@ -553,6 +554,7 @@ impl<'a> AnimationResource<'a> {
             return Err(error::SSRuntimeError::InvalidVersion { expected: ssab::SSAB_SCHEMA_VERSION, got: ssab.version() });
         }
 
+        let keys = crate::core::keyframes::KeyColumns::new(ssab.keyframes());
         let mut animations = Vec::new();
         let fb_animations = ssab.animations();
 
@@ -569,7 +571,7 @@ impl<'a> AnimationResource<'a> {
                 let mask_influence = part_meta.mask_influence();
                 // PartTypeMask is always a pure mask; drawing parts use the unified draw_as_mask flag.
                 let is_mask_contributor = part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMask || part_meta.draw_as_mask();
-                let resolved_cells = crate::core::framedata::resolve_cell_array_meta(&ssab, p.cell_array());
+                let resolved_cells = crate::core::framedata::resolve_cell_keys_meta(&ssab, &keys, keys.run(p.cell_keys()));
                 let shape_kind = part_meta.part_type_as_part_type_shape().and_then(|s| match s.shape_type() {
                     ssab::ssab::ss::format::ShapeType::Rectangle => Some(crate::core::geometry::ShapeType::Rectangle),
                     ssab::ssab::ss::format::ShapeType::Triangle => Some(crate::core::geometry::ShapeType::Triangle),
@@ -579,9 +581,9 @@ impl<'a> AnimationResource<'a> {
                 });
                 let nines = crate::core::framedata::build_nines_part_data(&part_meta);
                 let mesh_binding = crate::core::framedata::build_mesh_binding_cache(part_meta.mesh_binding());
-                let mesh_cell = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMesh { crate::core::framedata::build_mesh_cell_data(&ssab, p.cell_array()) } else { None };
+                let mesh_cell = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMesh { crate::core::framedata::build_mesh_cell_data(&ssab, &keys, keys.run(p.cell_keys())) } else { None };
                 let name_hash = fnv1a_hash_str(part_meta.name());
-                cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, name_hash, resolved_cells, shape_kind, nines, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor));
+                cached_parts.push(crate::core::framedata::CachedPartData::new(p, &keys, i as i16, parent_index, name_hash, resolved_cells, shape_kind, nines, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor));
             }
 
             let name_hash = anim.name_hash();
@@ -602,7 +604,7 @@ impl<'a> AnimationResource<'a> {
             });
         }
 
-        Ok(Self { data, animations })
+        Ok(Self { data, animations, keys })
     }
 
     pub fn get_ssab_data(&self) -> &'a [u8] {
@@ -926,19 +928,19 @@ fn count_attribute_capacities(metadata: &AnimationMetadata<'_>) -> (usize, usize
     let mut vertex_c = 0;
     let mut deform_c = 0;
     for p in &metadata.cached_parts {
-        if p.cell_array.is_some() {
+        if p.cell_keys.is_some() {
             cell_c += 1;
         }
-        if p.part_color_array.is_some() {
+        if p.part_color_keys.is_some() {
             color_c += 1;
         }
-        if p.shader_array.is_some() {
+        if p.shader_keys.is_some() {
             shader_c += 1;
         }
-        if p.vertex_array.is_some() {
+        if p.vertex_keys.is_some() {
             vertex_c += 1;
         }
-        if p.deform_array.is_some() {
+        if p.deform_keys.is_some() {
             deform_c += 1;
         }
     }
@@ -2130,6 +2132,7 @@ impl<'a> Context<'a> {
             core::framedata::extract_pose(
                 &mut self.eval.fb,
                 &metadata.cached_parts,
+                &resource.keys,
                 frame_for_source,
                 &mut layer.parts_vec,
                 &mut layer.cell_vec,
@@ -2194,6 +2197,7 @@ impl<'a> Context<'a> {
             crate::core::override_layer::apply_part_overrides(
                 &mut self.instance.part_overrides,
                 &primary_metadata.cached_parts,
+                &resource.keys,
                 &mut self.instance.resolved_layer.parts_vec,
                 &mut self.instance.resolved_layer.parts_color_vec,
                 &mut self.instance.resolved_layer.cell_vec,
@@ -4718,7 +4722,7 @@ mod tests {
         if let Some(animation) = ssab.animations().iter().find(|a| a.name() == "anime_1") {
             let parts_anime = animation.parts_animation_data();
             for (idx, p_anime) in parts_anime.iter().enumerate() {
-                if p_anime.deform_array().is_some() {
+                if p_anime.deform_keys() != ssab::NO_KEYS {
                     deform_part_idx = idx as i32;
                     break;
                 }
