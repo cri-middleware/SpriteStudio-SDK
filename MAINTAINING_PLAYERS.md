@@ -32,13 +32,16 @@ Players come in two shapes.
 
 **Say on the first screen which shape this Player is.** A Hello World snippet in an editor-first Player is unnatural for that host. And "you start without writing a script" is a selling point, not something to leave implicit in a numbered list — it is the first thing a reader arriving from that engine wants to know.
 
-## 3. A sample must run with nothing of the reader's own
+## 3. A first frame with nothing of the reader's own
 
-**The bundled sample must reach a first frame without the reader supplying a `.sspj` of their own.** A Player that does not manage this is asking them to author before they can try.
+**A reader must reach a first frame without supplying a `.sspj` of their own.** A Player that does not manage this is asking them to author before they can try. How it gets there follows the shape (§2):
+
+- **Editor-first** — the host's own import converts any `.sspj`, so the README's own steps, run on SpriteStudio's [official sample data](https://www.webtech.co.jp/help/ja/spritestudio7/download/sample/), are the first frame. The README names that data beside the steps and sends no one to a sample project, which would put a clone behind the first door (§4.1). The repository's `examples/` serve whoever works on the Player, and CONTRIBUTING.md is where they are introduced.
+- **Code-first** — the bundled example is the first frame, since the smallest thing that runs is code.
 
 ### 3.1 One character, and the same one wherever a Player can manage it
 
-The SDK's `tests/` holds six projects, and they are not the same kind of thing. **`Ringo` is the first frame; `overall` is what you verify against.** The same picture appearing in every Player is how someone working across several of them confirms they have arrived, so a Player that ships a getting-started sample separate from its verification project points that sample at `Ringo` — Godot's `examples/Ringo` and Unity's `examples/SampleProject` are it.
+The SDK's `tests/` holds six projects, and they are not the same kind of thing. **`Ringo` is the first frame; `overall` is what you verify against.** The same picture appearing in every Player is how someone working across several of them confirms they have arrived, so a Player that keeps a first-frame project separate from its verification project points it at `Ringo` — Godot's `examples/Ringo` and Unity's `examples/SampleProject` are it.
 
 **A Player that ships one example project rather than two has it doing both jobs, and `overall` is the right content for that** — a feature tour with a single character is not a feature tour. What it owes the reader instead is that **opening it puts one character on screen straight away**, not a menu, a file picker or a blank canvas. That is the property `Ringo` was standing in for; where the project count makes the picture impossible, the property still holds.
 
@@ -65,7 +68,7 @@ A separated project's file stays clean on its own.
 - **The host's own import, where it has one** — Godot's SS Import dock, Unity's Importer window — converts with the `libssconverter` the Player already carries, so it needs nothing the Player did not.
 - **A `deploy-examples` script, in every Player,** converts every sample without the editor: for a test suite, for CI, for a reader without the host's editor at hand.
 
-The README's sample steps name the route and what it needs. Where the sample's scenes hold references an import cannot restore — Unity's, by the GUID in a committed `.meta` — they also say when it has to run.
+The steps that open a sample — a code-first README's, an editor-first CONTRIBUTING.md's — name the route and what it needs. Where the sample's scenes hold references an import cannot restore — Unity's, by the GUID in a committed `.meta` — they also say when it has to run.
 
 ## 4. Two doors, and what may not be behind the first one
 
@@ -99,12 +102,11 @@ private — that is not a violation, but it has to **look** like the exception i
 it its own heading, and keep it out of the numbered install steps. An unmarked checkout inside the
 install path and a marked one beside it read completely differently, and only one of them is true.
 
-### 4.2 The other two axes sit underneath this one
+### 4.2 The host axis sits underneath this one
 
-**Goal** — try the bundled sample / install into your project — belongs *inside* the Quick Start, as
-Godot and Unity have it. **Host** — Rust / C++ / browser — belongs inside the install step of a
-Player serving several, as wgpu has it. Both are useful; neither tells a reader whether the page is
-for them, which is what the two doors are for.
+**Host** — Rust / C++ / browser — belongs inside the install step of a Player serving several, as
+wgpu has it. It is useful, but it does not tell a reader whether the page is for them, which is what
+the two doors are for.
 
 A Player whose documentation genuinely has a third shelf — SSPlayerForWeb's `customize/` — names it
 from the first door's line rather than growing a row for it.
