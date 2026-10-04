@@ -1,5 +1,7 @@
 [package]
 name = "ssconverter-cli"
+# Ships as binaries on the GitHub Release, not through crates.io.
+publish = false
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
