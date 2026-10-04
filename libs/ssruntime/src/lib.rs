@@ -399,6 +399,8 @@ pub struct AnimationMetadata<'a> {
     /// Which of the pack's mesh layouts this animation draws with
     /// (`PartCacheSource::mesh_buffers`).
     mesh_layout: usize,
+    /// Every part's base (`build_part_bases`), one slot per coordinate setup.
+    part_bases: [once_cell::race::OnceBox<crate::core::framedata::PartBases>; 8],
 }
 
 impl AnimationMetadata<'_> {
@@ -413,6 +415,14 @@ impl AnimationMetadata<'_> {
     /// The static mesh buffers this animation draws with, built the first time
     /// any animation with the same mesh cells asks for them and shared by all of
     /// them.
+    /// Every part's base for this animation under one coordinate setup, built
+    /// the first time an instance with that setup plays it and shared by all of
+    /// them. Built only from attributes that never change during the animation.
+    pub(crate) fn part_bases(&self, coordinate_system: crate::core::SsCoordinateSystem, origin: crate::core::SsOrigin, unit: crate::core::SsUnit) -> &crate::core::framedata::PartBases {
+        let slot = usize::from(coordinate_system == crate::core::SsCoordinateSystem::YDown) | usize::from(origin == crate::core::SsOrigin::TopLeft) << 1 | usize::from(unit == crate::core::SsUnit::Normalized) << 2;
+        self.part_bases[slot].get_or_init(|| alloc::boxed::Box::new(crate::core::framedata::PartBases::build(self.cached_parts(), &self.source.keys, self.start_frame as f32, coordinate_system, origin, unit, self.canvas_width, self.canvas_height)))
+    }
+
     fn static_mesh(&self) -> &StaticMeshBuffers {
         self.source.mesh_buffers[self.mesh_layout].get_or_init(|| alloc::boxed::Box::new(StaticMeshBuffers::build(self.cached_parts())))
     }
@@ -542,7 +552,8 @@ impl<'a> PartCacheSource<'a> {
                 None
             };
             let name_hash = fnv1a_hash_str(part_meta.name());
-            let mut part = crate::core::framedata::CachedPartData::new(p, keys, i as i16, parent_index, name_hash, resolved_cells, shape_kind, nines, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor);
+            let mut part =
+                crate::core::framedata::CachedPartData::new(p, keys, i as i16, parent_index, name_hash, resolved_cells, shape_kind, nines, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor, anim.start_frame() as i32);
             part.cursor_base = crate::core::framedata::cursor_count(&cached_parts) as u32;
             cached_parts.push(part);
         }
@@ -733,6 +744,7 @@ impl<'a> AnimationResource<'a> {
                 source: source.clone(),
                 cached_parts: once_cell::race::OnceBox::new(),
                 mesh_layout: source.mesh_layouts[index],
+                part_bases: Default::default(),
             });
         }
 
@@ -2163,6 +2175,8 @@ impl<'a> Context<'a> {
         let metadata = &resource.animations[anim_idx as usize];
         let (coordinate_system, origin, unit) = (self.instance.coordinate_system, self.instance.origin, self.instance.unit);
         self.instance.setup_pose.reserve_exact(metadata.initial_attributes.len());
+        // Build the part bases for this setup now, not on the first frame.
+        metadata.part_bases(coordinate_system, origin, unit);
         for (i, a) in metadata.initial_attributes.iter().enumerate() {
             let parent_index = metadata.cached_parts().get(i).map_or(-1, |p| p.parent_index);
             self.instance.setup_pose.push(crate::core::framedata::setup_pose_part(&a, parent_index, coordinate_system, origin, unit, metadata.canvas_width, metadata.canvas_height));
@@ -2201,6 +2215,7 @@ impl<'a> Context<'a> {
         let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
         let cursor_c = crate::core::framedata::cursor_count(metadata.cached_parts());
 
+        metadata.part_bases(self.instance.coordinate_system, self.instance.origin, self.instance.unit);
         let mut source = SourceState::new();
         source.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
         source.animation_idx = animation_idx as i32;
@@ -2325,6 +2340,7 @@ impl<'a> Context<'a> {
                 &mut layer.deform_vec,
                 &mut layer.raw_vertex_deform,
                 &mut layer.cursors,
+                Some(metadata.part_bases(coordinate_system, origin, unit)),
                 &mut layer.cell_meta_per_part,
                 &mut layer.cell_texture_hashes,
                 &mut layer.mesh_deform,
@@ -4002,6 +4018,68 @@ mod tests {
     /// reports nothing when there is not one. Without the guard the accessors
     /// would read an unfinished `FlatBufferBuilder`, which asserts — and under
     /// `panic = "abort"` that assert ends the host process.
+    #[test]
+    fn a_part_base_plus_its_changing_attributes_is_the_full_evaluation() {
+        use crate::core::framedata::{IDX_ATTRIBUTEDEFORM, evaluate_part};
+        use crate::core::{SsCoordinateSystem, SsOrigin, SsUnit};
+        prepare();
+        for pack in ["tests/Ringo/Ringo/Ringo.ssab", "tests/overall/overall/Basic.ssab"] {
+            let input_buf = std::fs::read(get_test_base_path().join(pack)).expect("read pack");
+            let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+            let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
+            let mut constant = 0;
+            for meta in resource.animations() {
+                let parts = meta.cached_parts();
+                for p in parts {
+                    assert_eq!(p.constant_mask & !p.key_mask, 0, "only keyed attributes are constant");
+                    assert_eq!(p.constant_mask >> IDX_ATTRIBUTEDEFORM & 1, 0, "deform is never constant");
+                    constant += p.constant_mask.count_ones();
+                }
+                let setups = [SsCoordinateSystem::YUp, SsCoordinateSystem::YDown].into_iter().flat_map(|cs| [SsOrigin::Center, SsOrigin::TopLeft].into_iter().flat_map(move |o| [SsUnit::Pixel, SsUnit::Normalized].into_iter().map(move |u| (cs, o, u))));
+                for (cs, origin, unit) in setups {
+                    let bases = meta.part_bases(cs, origin, unit);
+                    let (mut a, mut b, mut c, mut d, mut e) = (Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
+                    for f in [meta.start_frame as f32, (meta.start_frame + meta.end_frame) as f32 / 2.0 + 0.25, meta.end_frame as f32] {
+                        for (i, p) in parts.iter().enumerate() {
+                            let n = p.key_mask.count_ones() as usize;
+                            let (mut full_cursors, mut base_cursors) = (alloc::vec![0; n], alloc::vec![0; n]);
+                            let full = evaluate_part(p, &resource.keys, f, &mut full_cursors, None, p.key_mask, cs, origin, unit, meta.canvas_width, meta.canvas_height, &mut a, &mut b, &mut c, &mut d, &mut e);
+                            let from_base = evaluate_part(p, &resource.keys, f, &mut base_cursors, bases.get(i), p.key_mask & !p.constant_mask, cs, origin, unit, meta.canvas_width, meta.canvas_height, &mut a, &mut b, &mut c, &mut d, &mut e);
+                            assert_eq!(full.state.0, from_base.state.0, "{pack} part {i} frame {f}");
+                            assert_eq!(full.cell.map(|v| v.0), from_base.cell.map(|v| v.0));
+                            assert_eq!(full.part_color.map(|v| v.0), from_base.part_color.map(|v| v.0));
+                            assert_eq!(full.shader.map(|v| v.0), from_base.shader.map(|v| v.0));
+                            assert_eq!(full.vertex.map(|v| v.0), from_base.vertex.map(|v| v.0));
+                            assert_eq!(full.cell_meta.map(|m| (m.rect_left, m.rect_top, m.size_w, m.size_h, m.texture_hash)), from_base.cell_meta.map(|m| (m.rect_left, m.rect_top, m.size_w, m.size_h, m.texture_hash)));
+                            assert_eq!(full.deform_present, from_base.deform_present);
+                        }
+                    }
+                }
+            }
+            assert!(constant > 0, "fixture sanity: {pack} holds attributes that never change");
+        }
+    }
+
+    #[test]
+    fn a_constant_cell_ignores_the_cursor_buffer() {
+        // A constant cell is never searched, so whatever the buffer holds (it may
+        // be another animation's cursors) must not pick the cell for the UVs.
+        prepare();
+        let input_buf = std::fs::read(get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab")).expect("read pack");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
+        let mut checked = 0;
+        for meta in resource.animations() {
+            let parts = meta.cached_parts();
+            let stale = alloc::vec![7u32; crate::core::framedata::cursor_count(parts)];
+            for p in parts.iter().filter(|p| p.constant_mask >> crate::core::framedata::IDX_ATTRIBUTECELL & 1 == 1) {
+                assert_eq!(p.cell_cursor(&stale), Some(0));
+                checked += 1;
+            }
+        }
+        assert!(checked > 0, "fixture sanity: Ringo has parts with a constant cell");
+    }
+
     #[test]
     fn an_instance_keeps_a_cursor_per_keyed_attribute_only() {
         prepare();

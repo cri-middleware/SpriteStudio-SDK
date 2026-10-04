@@ -354,6 +354,11 @@ pub struct CachedPartData {
     /// Where this part's key cursors start in an instance's cursor buffer:
     /// the number of cursors every earlier part of the animation keeps.
     pub cursor_base: u32,
+    /// The keyed attributes that read the same on every frame of the
+    /// animation — a run of one key, which the animation reaches at its start
+    /// — as [`key_mask`](Self::key_mask) bits. They are evaluated once, into
+    /// the animation's part bases, rather than on every frame.
+    pub constant_mask: u64,
     pub resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
     pub shape_kind: Option<crate::core::geometry::ShapeType>,
     pub nines: Option<NinesPartData>,
@@ -466,6 +471,7 @@ impl CachedPartData {
         part_type_disc: ssab::ssab::ss::format::PartType,
         mask_influence: bool,
         is_mask_contributor: bool,
+        start_frame: i32,
     ) -> Self {
         let mut cached = Self {
             part_index,
@@ -473,6 +479,7 @@ impl CachedPartData {
             name_hash,
             key_mask: 0,
             cursor_base: 0,
+            constant_mask: 0,
             coverage: mixed_attribute_coverage(&part),
             resolved_cells,
             shape_kind,
@@ -523,12 +530,40 @@ impl CachedPartData {
             texture_keys: keys.run(part.texture_keys()),
         };
         cached.key_mask = cached.keyed_attributes();
+        cached.constant_mask = cached.constant_attributes(keys, start_frame);
         cached
     }
 
     /// The attributes this part has a key run for, as [`key_mask`](Self::key_mask) bits.
     fn keyed_attributes(&self) -> u64 {
-        let runs = [
+        self.runs().iter().filter(|(run, _)| run.is_some()).fold(0, |mask, (_, idx)| mask | 1 << idx)
+    }
+
+    /// The attributes whose value is the same on every frame of an animation
+    /// starting at `start_frame`, as [`constant_mask`](Self::constant_mask) bits:
+    /// a run of one key. A float-like run reads its key on every frame. A
+    /// bool, cell or texture run reads nothing before its key, so it counts
+    /// only when the key sits at or before the start. Deform is left out: its
+    /// result lives in per-frame workspaces, not in the part state.
+    fn constant_attributes(&self, keys: &KeyColumns, start_frame: i32) -> u64 {
+        const READS_NOTHING_BEFORE_ITS_KEY: [usize; 7] = [IDX_ATTRIBUTECELL, IDX_ATTRIBUTEFLIPH, IDX_ATTRIBUTEFLIPV, IDX_ATTRIBUTEHIDE, IDX_ATTRIBUTEIMGFLIPH, IDX_ATTRIBUTEIMGFLIPV, IDX_ATTRIBUTETEXTURE];
+        let mut mask = 0;
+        for (run, idx) in self.runs() {
+            let Some(run) = run else { continue };
+            if run.count() != 1 || idx == IDX_ATTRIBUTEDEFORM {
+                continue;
+            }
+            if READS_NOTHING_BEFORE_ITS_KEY.contains(&idx) && keys.key(run.first() as usize).index() as i32 > start_frame {
+                continue;
+            }
+            mask |= 1 << idx;
+        }
+        mask
+    }
+
+    /// Every attribute's run, with its `IDX_ATTRIBUTE*` position.
+    fn runs(&self) -> [(Option<KeyRun>, usize); NUM_PART_ATTRIBUTES] {
+        [
             (self.alpha_keys, IDX_ATTRIBUTEALPHA),
             (self.anchor_x_keys, IDX_ATTRIBUTEANCHORX),
             (self.anchor_y_keys, IDX_ATTRIBUTEANCHORY),
@@ -567,8 +602,7 @@ impl CachedPartData {
             (self.uv_translation_x_keys, IDX_ATTRIBUTEUVTX),
             (self.uv_translation_y_keys, IDX_ATTRIBUTEUVTY),
             (self.vertex_keys, IDX_ATTRIBUTEVERTEX),
-        ];
-        runs.iter().filter(|(run, _)| run.is_some()).fold(0, |mask, (_, idx)| mask | 1 << idx)
+        ]
     }
 
     /// This part's key cursors within an instance's cursor buffer.
@@ -584,6 +618,10 @@ impl CachedPartData {
     pub fn cell_cursor(&self, all: &[u32]) -> Option<usize> {
         if self.key_mask & 1 << IDX_ATTRIBUTECELL == 0 {
             return None;
+        }
+        // A constant cell is never searched, so its cursor is not kept up to date.
+        if self.constant_mask & 1 << IDX_ATTRIBUTECELL != 0 {
+            return Some(0);
         }
         all.get(self.cursor_base as usize + cursor_slot(self.key_mask, IDX_ATTRIBUTECELL)).map(|c| *c as usize)
     }
@@ -613,6 +651,7 @@ pub(crate) fn cached_part_stub(part_index: i16, parent_index: i16, part_type_dis
         name_hash: 0,
         key_mask: 0,
         cursor_base: 0,
+        constant_mask: 0,
         // The stub has no keyframe tracks at all, but callers use it to exercise
         // per-part logic rather than the mix; claiming full coverage keeps it from
         // silently disabling attributes if one of them ever runs a blend.
@@ -745,23 +784,9 @@ pub(crate) fn setup_pose_part(
     s
 }
 
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn evaluate_part(
-    cached_part: &CachedPartData,
-    keys: &KeyColumns,
-    frame_no: f32,
-    part_cursors: &mut [u32],
-    coordinate_system: SsCoordinateSystem,
-    origin: SsOrigin,
-    unit: SsUnit,
-    canvas_width: f32,
-    canvas_height: f32,
-    start_workspace: &mut Vec<f32>,
-    end_workspace: &mut Vec<f32>,
-    out_workspace: &mut Vec<f32>,
-    deform_coord_workspace: &mut Vec<runtime::framedata::ss::runtime::Vec2>,
-    deform_index_workspace: &mut Vec<i16>,
-) -> PartEvaluationResult {
+/// A part's state before any key is applied: the defaults `evaluate_part`
+/// starts from when it builds a part base.
+fn default_part_evaluation(cached_part: &CachedPartData) -> (runtime::framedata::ss::runtime::PartState, PartEvaluationResult) {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
 
     // default values
@@ -786,25 +811,66 @@ pub(crate) fn evaluate_part(
     // model: a part has to opt in to being shown with a Hide=false key.
     part_state.set_hide(true);
 
-    let mut update_flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
-
-    let mut result = PartEvaluationResult { state: runtime::framedata::ss::runtime::PartState::default(), cell: None, cell_meta: None, part_color: None, shader: None, vertex: None, deform_present: false };
+    let result = PartEvaluationResult { state: runtime::framedata::ss::runtime::PartState::default(), cell: None, cell_meta: None, part_color: None, shader: None, vertex: None, deform_present: false };
 
     part_state.set_part_index(cached_part.part_index);
+    (part_state, result)
+}
 
-    if let Some(value) = cached_part.cell_keys.and_then(|run| evaluate_cell(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTECELL)])) {
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn evaluate_part(
+    cached_part: &CachedPartData,
+    keys: &KeyColumns,
+    frame_no: f32,
+    part_cursors: &mut [u32],
+    base: Option<PartBaseRef>,
+    evaluate: u64,
+    coordinate_system: SsCoordinateSystem,
+    origin: SsOrigin,
+    unit: SsUnit,
+    canvas_width: f32,
+    canvas_height: f32,
+    start_workspace: &mut Vec<f32>,
+    end_workspace: &mut Vec<f32>,
+    out_workspace: &mut Vec<f32>,
+    deform_coord_workspace: &mut Vec<runtime::framedata::ss::runtime::Vec2>,
+    deform_index_workspace: &mut Vec<i16>,
+) -> PartEvaluationResult {
+    // `evaluate` picks the attributes to evaluate here: every keyed one when
+    // building a part base, the ones that change during the animation when
+    // starting from one.
+    let on = |idx: usize| evaluate & (1u64 << idx) != 0;
+    let from_base = base.is_some();
+    let (mut part_state, mut update_flag, mut result) = match base {
+        Some(PartBaseRef { base, extras }) => {
+            // A constant cell is its run's only key, resolved at index 0.
+            let cell_meta = if cached_part.constant_mask & 1 << IDX_ATTRIBUTECELL != 0 { cached_part.resolved_cells.first().copied() } else { None };
+            let result = PartEvaluationResult { state: base.state, cell: base.cell, cell_meta, part_color: extras.and_then(|e| e.part_color), shader: extras.and_then(|e| e.shader), vertex: extras.and_then(|e| e.vertex), deform_present: false };
+            // Most parts change nothing during an animation: the base is the answer.
+            if evaluate == 0 {
+                return result;
+            }
+            (base.state, base.state.update_flag(), result)
+        }
+        None => {
+            let (state, result) = default_part_evaluation(cached_part);
+            (state, runtime::framedata::ss::runtime::UpdateAttributeFlags::empty(), result)
+        }
+    };
+
+    if let Some(value) = cached_part.cell_keys.filter(|_| on(IDX_ATTRIBUTECELL)).and_then(|run| evaluate_cell(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTECELL)])) {
         result.cell = Some(runtime::framedata::ss::runtime::PartAttributeCell::new(value.cellmap_name_hash(), value.name_hash()));
         result.cell_meta = cached_part.resolved_cells.get(part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTECELL)] as usize).copied();
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell;
     }
 
     let mut pos_x = 0.0;
-    if let Some((val, mask)) = cached_part.position_x_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEPOSX)])) {
+    if let Some((val, mask)) = cached_part.position_x_keys.filter(|_| on(IDX_ATTRIBUTEPOSX)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEPOSX)])) {
         pos_x = val;
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX & mask;
     }
     let mut pos_y = 0.0;
-    if let Some((mut val, mask)) = cached_part.position_y_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEPOSY)])) {
+    if let Some((mut val, mask)) = cached_part.position_y_keys.filter(|_| on(IDX_ATTRIBUTEPOSY)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEPOSY)])) {
         if coordinate_system == SsCoordinateSystem::YDown {
             val = -val;
         }
@@ -828,81 +894,86 @@ pub(crate) fn evaluate_part(
         pos_y /= canvas_height;
     }
 
-    part_state.set_position_x(pos_x);
-    part_state.set_position_y(pos_y);
+    // From a part base, an axis that does not change keeps the base's value.
+    if !from_base || on(IDX_ATTRIBUTEPOSX) {
+        part_state.set_position_x(pos_x);
+    }
+    if !from_base || on(IDX_ATTRIBUTEPOSY) {
+        part_state.set_position_y(pos_y);
+    }
 
-    if let Some((val, mask)) = cached_part.position_z_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEPOSZ)])) {
+    if let Some((val, mask)) = cached_part.position_z_keys.filter(|_| on(IDX_ATTRIBUTEPOSZ)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEPOSZ)])) {
         part_state.set_position_z(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosZ & mask;
     }
-    if let Some((mut val, mask)) = cached_part.rotation_x_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEROTX)])) {
+    if let Some((mut val, mask)) = cached_part.rotation_x_keys.filter(|_| on(IDX_ATTRIBUTEROTX)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEROTX)])) {
         if coordinate_system == SsCoordinateSystem::YDown {
             val = -val;
         }
         part_state.set_rotation_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeRotX & mask;
     }
-    if let Some((val, mask)) = cached_part.rotation_y_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEROTY)])) {
+    if let Some((val, mask)) = cached_part.rotation_y_keys.filter(|_| on(IDX_ATTRIBUTEROTY)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEROTY)])) {
         part_state.set_rotation_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeRotY & mask;
     }
-    if let Some((mut val, mask)) = cached_part.rotation_z_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEROTZ)])) {
+    if let Some((mut val, mask)) = cached_part.rotation_z_keys.filter(|_| on(IDX_ATTRIBUTEROTZ)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEROTZ)])) {
         if coordinate_system == SsCoordinateSystem::YDown {
             val = -val;
         }
         part_state.set_rotation_z(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeRotZ & mask;
     }
-    if let Some((val, mask)) = cached_part.scale_x_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTESCLX)])) {
+    if let Some((val, mask)) = cached_part.scale_x_keys.filter(|_| on(IDX_ATTRIBUTESCLX)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTESCLX)])) {
         part_state.set_scale_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSclX & mask;
     }
-    if let Some((val, mask)) = cached_part.scale_y_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTESCLY)])) {
+    if let Some((val, mask)) = cached_part.scale_y_keys.filter(|_| on(IDX_ATTRIBUTESCLY)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTESCLY)])) {
         part_state.set_scale_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSclY & mask;
     }
-    if let Some((val, mask)) = cached_part.local_scale_x_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTELOSCLX)])) {
+    if let Some((val, mask)) = cached_part.local_scale_x_keys.filter(|_| on(IDX_ATTRIBUTELOSCLX)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTELOSCLX)])) {
         part_state.set_local_scale_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeLosclX & mask;
     }
-    if let Some((val, mask)) = cached_part.local_scale_y_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTELOSCLY)])) {
+    if let Some((val, mask)) = cached_part.local_scale_y_keys.filter(|_| on(IDX_ATTRIBUTELOSCLY)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTELOSCLY)])) {
         part_state.set_local_scale_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeLosclY & mask;
     }
-    if let Some((val, mask)) = cached_part.alpha_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEALPHA)])) {
+    if let Some((val, mask)) = cached_part.alpha_keys.filter(|_| on(IDX_ATTRIBUTEALPHA)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEALPHA)])) {
         part_state.set_alpha(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeAlpha & mask;
     }
-    if let Some((val, mask)) = cached_part.local_alpha_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTELOALPHA)])) {
+    if let Some((val, mask)) = cached_part.local_alpha_keys.filter(|_| on(IDX_ATTRIBUTELOALPHA)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTELOALPHA)])) {
         part_state.set_local_alpha(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeLoAlpha & mask;
     }
-    if let Some((val, mask)) = cached_part.priority_keys.and_then(|run| evaluate_int(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEPRIO)])) {
+    if let Some((val, mask)) = cached_part.priority_keys.filter(|_| on(IDX_ATTRIBUTEPRIO)).and_then(|run| evaluate_int(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEPRIO)])) {
         part_state.set_priority(val as f32);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePrio & mask;
     }
-    if let Some(val) = cached_part.flip_h_keys.and_then(|run| evaluate_bool(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEFLIPH)])) {
+    if let Some(val) = cached_part.flip_h_keys.filter(|_| on(IDX_ATTRIBUTEFLIPH)).and_then(|run| evaluate_bool(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEFLIPH)])) {
         part_state.set_flip_h(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeFlipH;
     }
-    if let Some(val) = cached_part.flip_v_keys.and_then(|run| evaluate_bool(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEFLIPV)])) {
+    if let Some(val) = cached_part.flip_v_keys.filter(|_| on(IDX_ATTRIBUTEFLIPV)).and_then(|run| evaluate_bool(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEFLIPV)])) {
         part_state.set_flip_v(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeFlipV;
     }
-    if let Some(val) = cached_part.hide_keys.and_then(|run| evaluate_bool(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEHIDE)])) {
+    if let Some(val) = cached_part.hide_keys.filter(|_| on(IDX_ATTRIBUTEHIDE)).and_then(|run| evaluate_bool(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEHIDE)])) {
         part_state.set_hide(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeHide;
     }
 
-    if let Some((val, mask)) = cached_part.part_color_keys.and_then(|run| evaluate_partcolor(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEPARTCOLOR)])) {
+    if let Some((val, mask)) = cached_part.part_color_keys.filter(|_| on(IDX_ATTRIBUTEPARTCOLOR)).and_then(|run| evaluate_partcolor(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEPARTCOLOR)])) {
         result.part_color = Some(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor & mask;
     }
-    if let Some((val, mask)) = cached_part.shader_keys.and_then(|run| evaluate_shader(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTESHADER)])) {
+    if let Some((val, mask)) = cached_part.shader_keys.filter(|_| on(IDX_ATTRIBUTESHADER)).and_then(|run| evaluate_shader(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTESHADER)])) {
         result.shader = Some(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeShader & mask;
     }
-    if let Some((val, mask)) = cached_part.vertex_keys.and_then(|run| evaluate_vertex(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEVERTEX)])) {
+    if let Some((val, mask)) = cached_part.vertex_keys.filter(|_| on(IDX_ATTRIBUTEVERTEX)).and_then(|run| evaluate_vertex(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEVERTEX)])) {
         // Raw deform Y is kept in the source (Y-Up) orientation here; the always-on
         // local-vertex calc consumes it as deform offsets and the result is flipped
         // to YDown only at the very end. The intermediate raw deform value is never
@@ -911,74 +982,74 @@ pub(crate) fn evaluate_part(
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeVertex & mask;
     }
 
-    if let Some((val, mask)) = cached_part.pivot_x_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEPIVOTX)])) {
+    if let Some((val, mask)) = cached_part.pivot_x_keys.filter(|_| on(IDX_ATTRIBUTEPIVOTX)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEPIVOTX)])) {
         part_state.set_pivot_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePivotX & mask;
     }
-    if let Some((mut val, mask)) = cached_part.pivot_y_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEPIVOTY)])) {
+    if let Some((mut val, mask)) = cached_part.pivot_y_keys.filter(|_| on(IDX_ATTRIBUTEPIVOTY)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEPIVOTY)])) {
         if coordinate_system == SsCoordinateSystem::YDown {
             val = -val;
         }
         part_state.set_pivot_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePivotY & mask;
     }
-    if let Some((val, mask)) = cached_part.anchor_x_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEANCHORX)])) {
+    if let Some((val, mask)) = cached_part.anchor_x_keys.filter(|_| on(IDX_ATTRIBUTEANCHORX)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEANCHORX)])) {
         part_state.set_anchor_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeAnchorX & mask;
     }
-    if let Some((mut val, mask)) = cached_part.anchor_y_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEANCHORY)])) {
+    if let Some((mut val, mask)) = cached_part.anchor_y_keys.filter(|_| on(IDX_ATTRIBUTEANCHORY)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEANCHORY)])) {
         if coordinate_system == SsCoordinateSystem::YDown {
             val = -val;
         }
         part_state.set_anchor_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeAnchorY & mask;
     }
-    if let Some((val, mask)) = cached_part.size_x_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTESIZEX)])) {
+    if let Some((val, mask)) = cached_part.size_x_keys.filter(|_| on(IDX_ATTRIBUTESIZEX)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTESIZEX)])) {
         part_state.set_size_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSizeX & mask;
     }
-    if let Some((val, mask)) = cached_part.size_y_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTESIZEY)])) {
+    if let Some((val, mask)) = cached_part.size_y_keys.filter(|_| on(IDX_ATTRIBUTESIZEY)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTESIZEY)])) {
         part_state.set_size_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSizeY & mask;
     }
-    if let Some(val) = cached_part.img_flip_h_keys.and_then(|run| evaluate_bool(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEIMGFLIPH)])) {
+    if let Some(val) = cached_part.img_flip_h_keys.filter(|_| on(IDX_ATTRIBUTEIMGFLIPH)).and_then(|run| evaluate_bool(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEIMGFLIPH)])) {
         part_state.set_img_flip_h(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeImgFlipH;
     }
-    if let Some(val) = cached_part.img_flip_v_keys.and_then(|run| evaluate_bool(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEIMGFLIPV)])) {
+    if let Some(val) = cached_part.img_flip_v_keys.filter(|_| on(IDX_ATTRIBUTEIMGFLIPV)).and_then(|run| evaluate_bool(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEIMGFLIPV)])) {
         part_state.set_img_flip_v(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeImgFlipV;
     }
-    if let Some((val, mask)) = cached_part.uv_translation_x_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEUVTX)])) {
+    if let Some((val, mask)) = cached_part.uv_translation_x_keys.filter(|_| on(IDX_ATTRIBUTEUVTX)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEUVTX)])) {
         part_state.set_uv_translation_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvtX & mask;
     }
-    if let Some((val, mask)) = cached_part.uv_translation_y_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEUVTY)])) {
+    if let Some((val, mask)) = cached_part.uv_translation_y_keys.filter(|_| on(IDX_ATTRIBUTEUVTY)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEUVTY)])) {
         part_state.set_uv_translation_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvtY & mask;
     }
-    if let Some((val, mask)) = cached_part.uv_rotation_z_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEUVRZ)])) {
+    if let Some((val, mask)) = cached_part.uv_rotation_z_keys.filter(|_| on(IDX_ATTRIBUTEUVRZ)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEUVRZ)])) {
         part_state.set_uv_rotation_z(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvrZ & mask;
     }
-    if let Some((val, mask)) = cached_part.uv_scale_x_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEUVSX)])) {
+    if let Some((val, mask)) = cached_part.uv_scale_x_keys.filter(|_| on(IDX_ATTRIBUTEUVSX)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEUVSX)])) {
         part_state.set_uv_scale_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvsX & mask;
     }
-    if let Some((val, mask)) = cached_part.uv_scale_y_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEUVSY)])) {
+    if let Some((val, mask)) = cached_part.uv_scale_y_keys.filter(|_| on(IDX_ATTRIBUTEUVSY)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEUVSY)])) {
         part_state.set_uv_scale_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvsY & mask;
     }
-    if let Some((val, mask)) = cached_part.bounding_radius_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEBOUNDR)])) {
+    if let Some((val, mask)) = cached_part.bounding_radius_keys.filter(|_| on(IDX_ATTRIBUTEBOUNDR)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEBOUNDR)])) {
         part_state.set_bounding_radius(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeBoundr & mask;
     }
-    if let Some((val, mask)) = cached_part.mask_keys.and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEMASK)])) {
+    if let Some((val, mask)) = cached_part.mask_keys.filter(|_| on(IDX_ATTRIBUTEMASK)).and_then(|run| evaluate_float(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEMASK)])) {
         part_state.set_mask(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeMask & mask;
     }
 
-    if let Some((val_x, val_y, mask)) = cached_part.skew_keys.and_then(|run| evaluate_skew(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTESKEW)])) {
+    if let Some((val_x, val_y, mask)) = cached_part.skew_keys.filter(|_| on(IDX_ATTRIBUTESKEW)).and_then(|run| evaluate_skew(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTESKEW)])) {
         // Skew is stored raw here (no coordinate-system flip). It is a
         // Vertex-deform-mode attribute, so the Y-down conversion happens where
         // the shear is applied to local vertices — the same authored-Y-up path
@@ -987,8 +1058,10 @@ pub(crate) fn evaluate_part(
         part_state.set_skew_y(val_y);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSkew & mask;
     }
-    if let Some(mask) =
-        cached_part.deform_keys.and_then(|run| evaluate_deform(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEDEFORM)], start_workspace, end_workspace, out_workspace, deform_coord_workspace, deform_index_workspace))
+    if let Some(mask) = cached_part
+        .deform_keys
+        .filter(|_| on(IDX_ATTRIBUTEDEFORM))
+        .and_then(|run| evaluate_deform(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTEDEFORM)], start_workspace, end_workspace, out_workspace, deform_coord_workspace, deform_index_workspace))
     {
         // Deform offsets are an ssae animation attribute — Y-up native like
         // position / pivot / anchor — so they flip for a Y-down target, the
@@ -1004,7 +1077,7 @@ pub(crate) fn evaluate_part(
         result.deform_present = true;
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform & mask;
     }
-    if let Some(val) = cached_part.texture_keys.and_then(|run| evaluate_texture(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTETEXTURE)])) {
+    if let Some(val) = cached_part.texture_keys.filter(|_| on(IDX_ATTRIBUTETEXTURE)).and_then(|run| evaluate_texture(keys, &run, frame_no, &mut part_cursors[cursor_slot(cached_part.key_mask, IDX_ATTRIBUTETEXTURE)])) {
         part_state.set_texture(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeTexture;
     }
@@ -1023,6 +1096,67 @@ pub(crate) fn premultiply_part_color_corner(c: &crate::runtime::framedata::ss::r
     crate::runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&crate::runtime::framedata::ss::runtime::U8Color::new(new_a, rgba.r(), rgba.g(), rgba.b()), c.rate())
 }
 
+/// Every part's base for an animation under one coordinate setup: its state
+/// with the attributes that never change during the animation
+/// ([`CachedPartData::constant_mask`]) already applied. `extract_pose` starts
+/// each part from its base and evaluates only the rest.
+pub struct PartBases {
+    parts: Vec<PartBase>,
+    /// The constant part color, shader and vertex deform of the few parts that
+    /// have one, kept apart so the common part does not carry their room.
+    extras: Vec<PartBaseExtras>,
+}
+
+#[derive(Clone, Copy)]
+struct PartBase {
+    state: runtime::framedata::ss::runtime::PartState,
+    cell: Option<runtime::framedata::ss::runtime::PartAttributeCell>,
+    /// Index into `PartBases::extras`, or `u32::MAX`.
+    extras: u32,
+}
+
+#[derive(Clone, Copy)]
+struct PartBaseExtras {
+    part_color: Option<runtime::framedata::ss::runtime::PartAttributePartColor>,
+    shader: Option<runtime::framedata::ss::runtime::PartAttributeShader>,
+    vertex: Option<runtime::framedata::ss::runtime::PartAttributeVertex>,
+}
+
+impl PartBases {
+    #[allow(clippy::too_many_arguments)]
+    pub fn build(cached_parts: &[CachedPartData], keys: &KeyColumns, start_frame: f32, coordinate_system: SsCoordinateSystem, origin: SsOrigin, unit: SsUnit, canvas_width: f32, canvas_height: f32) -> Self {
+        // Constant attributes never search, and deform is never constant, so these stay as they are.
+        let (mut cursors, mut start, mut end, mut out, mut coords, mut indices) = (Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
+        let mut bases = PartBases { parts: Vec::with_capacity(cached_parts.len()), extras: Vec::new() };
+        for part in cached_parts {
+            cursors.clear();
+            cursors.resize(part.key_mask.count_ones() as usize, 0);
+            let r = evaluate_part(part, keys, start_frame, &mut cursors, None, part.constant_mask, coordinate_system, origin, unit, canvas_width, canvas_height, &mut start, &mut end, &mut out, &mut coords, &mut indices);
+            let extras = if r.part_color.is_some() || r.shader.is_some() || r.vertex.is_some() {
+                bases.extras.push(PartBaseExtras { part_color: r.part_color, shader: r.shader, vertex: r.vertex });
+                bases.extras.len() as u32 - 1
+            } else {
+                u32::MAX
+            };
+            bases.parts.push(PartBase { state: r.state, cell: r.cell, extras });
+        }
+        bases
+    }
+
+    /// Part `i`'s base, for `evaluate_part` to start from.
+    pub fn get(&self, i: usize) -> Option<PartBaseRef<'_>> {
+        let base = self.parts.get(i)?;
+        Some(PartBaseRef { base, extras: self.extras.get(base.extras as usize) })
+    }
+}
+
+/// One part's base, as [`PartBases::get`] hands it to `evaluate_part`.
+#[derive(Clone, Copy)]
+pub struct PartBaseRef<'b> {
+    base: &'b PartBase,
+    extras: Option<&'b PartBaseExtras>,
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn extract_pose<'a>(
     fb: &mut flatbuffers::FlatBufferBuilder<'a>,
@@ -1036,6 +1170,7 @@ pub fn extract_pose<'a>(
     deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
     raw_vertex_deform: &mut [RawVertexDeform],
     cursors: &mut Vec<u32>,
+    bases: Option<&PartBases>,
     cell_meta_per_part: &mut [f32],
     cell_texture_hashes: &mut [u32],
     mesh_deform: &mut Vec<PartDeformFrame>,
@@ -1085,7 +1220,11 @@ pub fn extract_pose<'a>(
 
     for (i, part) in cached_parts.iter().enumerate() {
         let part_cursors = part.cursors(cursors);
-        let mut result = evaluate_part(part, keys, frame_no, part_cursors, coordinate_system, origin, unit, canvas_width, canvas_height, start_workspace, end_workspace, out_workspace, deform_coord_workspace, deform_index_workspace);
+        // Start from the part's base and evaluate only what changes during the
+        // animation; without a base, evaluate every keyed attribute.
+        let base = bases.and_then(|b| b.get(i));
+        let evaluate = if base.is_some() { part.key_mask & !part.constant_mask } else { part.key_mask };
+        let mut result = evaluate_part(part, keys, frame_no, part_cursors, base, evaluate, coordinate_system, origin, unit, canvas_width, canvas_height, start_workspace, end_workspace, out_workspace, deform_coord_workspace, deform_index_workspace);
 
         let cell_meta = result.cell_meta.unwrap_or_default();
         let (cell_size_w, cell_size_h) = (cell_meta.size_w, cell_meta.size_h);
