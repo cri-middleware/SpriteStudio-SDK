@@ -842,15 +842,13 @@ pub(crate) fn evaluate_part(
     let on = |idx: usize| evaluate & (1u64 << idx) != 0;
     let from_base = base.is_some();
     let (mut part_state, mut update_flag, mut result) = match base {
-        Some(PartBaseRef { base, extras }) => {
-            // A constant cell is its run's only key, resolved at index 0.
-            let cell_meta = if cached_part.constant_mask & 1 << IDX_ATTRIBUTECELL != 0 { cached_part.resolved_cells.first().copied() } else { None };
-            let result = PartEvaluationResult { state: base.state, cell: base.cell, cell_meta, part_color: extras.and_then(|e| e.part_color), shader: extras.and_then(|e| e.shader), vertex: extras.and_then(|e| e.vertex), deform_present: false };
+        Some(base) => {
+            let result = base.result(cached_part);
             // Most parts change nothing during an animation: the base is the answer.
             if evaluate == 0 {
                 return result;
             }
-            (base.state, base.state.update_flag(), result)
+            (result.state, result.state.update_flag(), result)
         }
         None => {
             let (state, result) = default_part_evaluation(cached_part);
@@ -1157,6 +1155,17 @@ pub struct PartBaseRef<'b> {
     extras: Option<&'b PartBaseExtras>,
 }
 
+impl PartBaseRef<'_> {
+    /// The part as its base leaves it: what `evaluate_part` returns for a part
+    /// with nothing to evaluate.
+    fn result(self, cached_part: &CachedPartData) -> PartEvaluationResult {
+        // A constant cell is its run's only key, resolved at index 0.
+        let cell_meta = if cached_part.constant_mask & 1 << IDX_ATTRIBUTECELL != 0 { cached_part.resolved_cells.first().copied() } else { None };
+        let extras = self.extras;
+        PartEvaluationResult { state: self.base.state, cell: self.base.cell, cell_meta, part_color: extras.and_then(|e| e.part_color), shader: extras.and_then(|e| e.shader), vertex: extras.and_then(|e| e.vertex), deform_present: false }
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn extract_pose<'a>(
     fb: &mut flatbuffers::FlatBufferBuilder<'a>,
@@ -1221,10 +1230,14 @@ pub fn extract_pose<'a>(
     for (i, part) in cached_parts.iter().enumerate() {
         let part_cursors = part.cursors(cursors);
         // Start from the part's base and evaluate only what changes during the
-        // animation; without a base, evaluate every keyed attribute.
+        // animation; without a base, evaluate every keyed attribute. Most parts
+        // change nothing, and for them the base is the answer without the call.
         let base = bases.and_then(|b| b.get(i));
         let evaluate = if base.is_some() { part.key_mask & !part.constant_mask } else { part.key_mask };
-        let mut result = evaluate_part(part, keys, frame_no, part_cursors, base, evaluate, coordinate_system, origin, unit, canvas_width, canvas_height, start_workspace, end_workspace, out_workspace, deform_coord_workspace, deform_index_workspace);
+        let mut result = match base {
+            Some(base) if evaluate == 0 => base.result(part),
+            _ => evaluate_part(part, keys, frame_no, part_cursors, base, evaluate, coordinate_system, origin, unit, canvas_width, canvas_height, start_workspace, end_workspace, out_workspace, deform_coord_workspace, deform_index_workspace),
+        };
 
         let cell_meta = result.cell_meta.unwrap_or_default();
         let (cell_size_w, cell_size_h) = (cell_meta.size_w, cell_meta.size_h);
