@@ -23,12 +23,12 @@ impl ZOrderTable {
         Self { indices: Vec::new(), is_static: false, computed: false }
     }
 
-    pub fn setup(&mut self, cached_parts: &[CachedPartData<'_>]) {
+    pub fn setup(&mut self, cached_parts: &[CachedPartData]) {
         let num_parts = cached_parts.len();
         self.indices.clear();
         self.indices.extend(0..num_parts);
 
-        self.is_static = !cached_parts.iter().any(|p| p.priority_array.is_some());
+        self.is_static = !cached_parts.iter().any(|p| p.priority_keys.is_some());
         if self.is_static {
             // Without priority animation, priority() is uniformly 0.0 — sort reduces to part_index ascending.
             self.indices.sort_by_key(|&i| cached_parts[i].part_index);

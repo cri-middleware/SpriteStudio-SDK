@@ -20,7 +20,7 @@
 .ssab (SsAnimeBinary)
  │
  ├─ AnimationData
- │    └─ parts_animation_data: [PartAnimationData] (キーフレーム配列: POSX, ROTZ など)
+ │    └─ parts_animation_data: [PartAnimationData] (属性ごとのキーフレームの並び: POSX, ROTZ など)
  │
  ＋  現在のフレーム番号 (例: Frame 15)
  │
@@ -43,30 +43,30 @@ FrameData (FFI を介したメモリバッファ)
 
 ## 属性マッピング: SSAB から PartState へ
 
-以下の表は、SSAB の `PartAnimationData` のどの配列が評価され、`FrameData` の `PartState` のフィールドに格納されるかを正確に示しています。
+以下の表は、SSAB の `PartAnimationData` のどのフィールドが評価され、`FrameData` の `PartState` のフィールドに格納されるかを正確に示しています。
 
-| PartState フィールド | ソース: SSAB `PartAnimationData` 配列 | 備考 |
+| PartState フィールド | ソース: SSAB `PartAnimationData` フィールド | 備考 |
 |:---|:---|:---|
-| `position_x/y/z` | `position_x/y/z_array` | 補間済み座標 (ターゲット座標系へ変換済み)。 |
-| `rotation_x/y/z` | `rotation_x/y/z_array` | 補間済み回転角 (度数法)。 |
-| `scale_x/y` | `scale_x/y_array` | 補間済みスケール倍率。 |
-| `local_scale_x/y` | `local_scale_x/y_array` | 補間済みローカルスケール倍率。 |
-| `alpha` | `alpha_array` | 補間済み不透明度 (0.0 ～ 1.0)。 |
-| `local_alpha` | `local_alpha_array` | 補間済みローカル不透明度。 |
-| `priority` | `priority_array` | 現在の Z オーダー (優先度)。 |
-| `flip_h/v` | `flip_h/v_array` | 現在の真偽値反転フラグ。 |
-| `hide` | `hide_array` | 現在の非表示フラグ。 |
-| `pivot_x/y` | `pivot_x/y_array` | 補間済みピボット点 (回転・スケール中心)。 |
-| `anchor_x/y` | `anchor_x/y_array` | 補間済み配置アンカー。 |
-| `size_x/y` | `size_x/y_array` | 補間済みの物理サイズ。 |
-| `img_flip_h/v` | `img_flip_h/v_array` | 現在の画像のみ反転フラグ。 |
-| `uv_translation_x/y`| `uv_translation_x/y_array`| 補間済みテクスチャ UV オフセット。 |
-| `uv_rotation_z` | `uv_rotation_z_array` | 補間済み UV 回転。 |
-| `uv_scale_x/y` | `uv_scale_x/y_array` | 補間済み UV スケール。 |
-| `bounding_radius` | `bounding_radius_array` | 補間済み当たり判定半径。 |
-| `mask` | `mask_array` | 補間済みマスク影響度。 |
-| `skew_x/y` | `skew_array` | SSAB の Vec2 歪み補間から算出。 |
-| `texture` | `texture_array` | テクスチャ変更（`TCHG`）: テクスチャ名の fnv1a ハッシュで、`external_textures` から解決可能。`0` は上書き無し（パーツは自身のセルのテクスチャを使用）。ステップ評価であり補間されない。`DrawBatch.texture_hash` に反映済みのため、`texture_hash` でバッチ処理する Player はパーツ単位の対応を追加する必要はない。 |
+| `position_x/y/z` | `position_x/y/z_keys` | 補間済み座標 (ターゲット座標系へ変換済み)。 |
+| `rotation_x/y/z` | `rotation_x/y/z_keys` | 補間済み回転角 (度数法)。 |
+| `scale_x/y` | `scale_x/y_keys` | 補間済みスケール倍率。 |
+| `local_scale_x/y` | `local_scale_x/y_keys` | 補間済みローカルスケール倍率。 |
+| `alpha` | `alpha_keys` | 補間済み不透明度 (0.0 ～ 1.0)。 |
+| `local_alpha` | `local_alpha_keys` | 補間済みローカル不透明度。 |
+| `priority` | `priority_keys` | 現在の Z オーダー (優先度)。 |
+| `flip_h/v` | `flip_h/v_keys` | 現在の真偽値反転フラグ。 |
+| `hide` | `hide_keys` | 現在の非表示フラグ。 |
+| `pivot_x/y` | `pivot_x/y_keys` | 補間済みピボット点 (回転・スケール中心)。 |
+| `anchor_x/y` | `anchor_x/y_keys` | 補間済み配置アンカー。 |
+| `size_x/y` | `size_x/y_keys` | 補間済みの物理サイズ。 |
+| `img_flip_h/v` | `img_flip_h/v_keys` | 現在の画像のみ反転フラグ。 |
+| `uv_translation_x/y`| `uv_translation_x/y_keys`| 補間済みテクスチャ UV オフセット。 |
+| `uv_rotation_z` | `uv_rotation_z_keys` | 補間済み UV 回転。 |
+| `uv_scale_x/y` | `uv_scale_x/y_keys` | 補間済み UV スケール。 |
+| `bounding_radius` | `bounding_radius_keys` | 補間済み当たり判定半径。 |
+| `mask` | `mask_keys` | 補間済みマスク影響度。 |
+| `skew_x/y` | `skew_keys` | SSAB の Vec2 歪み補間から算出。 |
+| `texture` | `texture_keys` | テクスチャ変更（`TCHG`）: テクスチャ名の fnv1a ハッシュで、`external_textures` から解決可能。`0` は上書き無し（パーツは自身のセルのテクスチャを使用）。ステップ評価であり補間されない。`DrawBatch.texture_hash` に反映済みのため、`texture_hash` でバッチ処理する Player はパーツ単位の対応を追加する必要はない。 |
 
 ---
 
@@ -80,13 +80,13 @@ FrameData (FFI を介したメモリバッファ)
 
 複雑なデータ構造の重複を避けるため、複雑な属性は `FrameData` 内のプールに格納されます。これらは `PartState` 内で `short` 型のインデックスとして参照されます。インデックスが `-1` の場合は「このフレームにこの属性のエントリは無い」ことを意味します。
 
-| PartState 参照フィールド | ソース: SSAB `PartAnimationData` 配列 | FrameData 内のテーブル | 説明 |
+| PartState 参照フィールド | ソース: SSAB `PartAnimationData` フィールド | FrameData 内のテーブル | 説明 |
 |:---|:---|:---|:---|
-| `cell` | `cell_array` | `cells` | セルマップとセル名ハッシュへの参照。通常描画に使用されるテクスチャはここから取得されます。 |
-| `part_color` | `part_color_array` | `parts_color` | 4 頂点ぶんのカラーとブレンドタイプ。**RGBA の `a` チャンネルにはパーツの階層的 `alpha` が事前合成済み** なので、Player 側で再度アルファを掛ける必要はありません。 |
-| `shader` | `shader_array` | `shaders` | 補間済みのシェーダーパラメータとマップ ID。 |
-| `vertex` | `vertex_array` | `vertices` | **算出済みのローカル頂点座標**。4 隅 (`lt`/`rt`/`lb`/`rb`) は常に `pivot` / `size` / `img_flip_h/v` および補間済みの raw deform オフセット適用済みで、Player はそのままワールド行列を掛けて描画できます。5 番目の `center` 頂点は **`update_flag` に `AttributeVertex` か `AttributePartColor` が立っているときのみ** 設定されます (頂点変形やパーツカラーのグラデーションを center 起点の三角形ファンで滑らかに描画するため)。それ以外のケースでは `center = (0, 0)` で、Player は 4 隅から 2 三角形を組むだけで描画できます。生の deform オフセットは公開されません。`update_flag` 内の `AttributeVertex` フラグは、ソース SSAB に実際に頂点変形アニメがあるかどうかを引き続き示します。 |
-| `deform` | `deform_array` | `deforms` | 補間済みのメッシュ変形座標。 |
+| `cell` | `cell_keys` | `cells` | セルマップとセル名ハッシュへの参照。通常描画に使用されるテクスチャはここから取得されます。 |
+| `part_color` | `part_color_keys` | `parts_color` | 4 頂点ぶんのカラーとブレンドタイプ。**RGBA の `a` チャンネルにはパーツの階層的 `alpha` が事前合成済み** なので、Player 側で再度アルファを掛ける必要はありません。 |
+| `shader` | `shader_keys` | `shaders` | 補間済みのシェーダーパラメータとマップ ID。 |
+| `vertex` | `vertex_keys` | `vertices` | **算出済みのローカル頂点座標**。4 隅 (`lt`/`rt`/`lb`/`rb`) は常に `pivot` / `size` / `img_flip_h/v` および補間済みの raw deform オフセット適用済みで、Player はそのままワールド行列を掛けて描画できます。5 番目の `center` 頂点は **`update_flag` に `AttributeVertex` か `AttributePartColor` が立っているときのみ** 設定されます (頂点変形やパーツカラーのグラデーションを center 起点の三角形ファンで滑らかに描画するため)。それ以外のケースでは `center = (0, 0)` で、Player は 4 隅から 2 三角形を組むだけで描画できます。生の deform オフセットは公開されません。`update_flag` 内の `AttributeVertex` フラグは、ソース SSAB に実際に頂点変形アニメがあるかどうかを引き続き示します。 |
+| `deform` | `deform_keys` | `deforms` | 補間済みのメッシュ変形座標。 |
 
 ---
 
@@ -160,30 +160,30 @@ indices: c.particle_offset * 6      .. (c.particle_offset + c.quad_count) * 6
 
 `PartState` の `update_flag` は、現在のフレームにおいて、SSAB ソースデータでどのアトリビュートが明示的にアクティブであるか、または変更されたか（セットアップ値またはキーフレーム経由）を示すビットマスクを提供します。これにより、Player はデフォルト属性の処理をスキップできます。
 
-| フラグ名 | ソース: SSAB `PartAnimationData` 配列 |
+| フラグ名 | ソース: SSAB `PartAnimationData` フィールド |
 |:---|:---|
-| `AttributeCell` | `cell_array` |
-| `AttributePosX/Y/Z` | `position_x/y/z_array` |
-| `AttributeRotX/Y/Z` | `rotation_x/y/z_array` |
-| `AttributeSclX/Y` | `scale_x/y_array` |
-| `AttributeLosclX/Y` | `local_scale_x/y_array` |
-| `AttributeAlpha` | `alpha_array` |
-| `AttributeLoAlpha` | `local_alpha_array` |
-| `AttributePrio` | `priority_array` |
-| `AttributeFlipH/V` | `flip_h/v_array` |
-| `AttributeHide` | `hide_array` |
-| `AttributePartColor` | `part_color_array` |
-| `AttributeShader` | `shader_array` |
-| `AttributeVertex` | `vertex_array` |
-| `AttributePivotX/Y` | `pivot_x/y_array` |
-| `AttributeAnchorX/Y` | `anchor_x/y_array` |
-| `AttributeSizeX/Y` | `size_x/y_array` |
-| `AttributeImgFlipH/V` | `img_flip_h/v_array` |
-| `AttributeUvtX/Y` | `uv_translation_x/y_array` |
-| `AttributeUvrZ` | `uv_rotation_z_array` |
-| `AttributeUvsX/Y` | `uv_scale_x/y_array` |
-| `AttributeBoundr` | `bounding_radius_array` |
-| `AttributeMask` | `mask_array` |
-| `AttributeSkew` | `skew_array` |
-| `AttributeDeform` | `deform_array` |
-| `AttributeTexture` | `texture_array` |
+| `AttributeCell` | `cell_keys` |
+| `AttributePosX/Y/Z` | `position_x/y/z_keys` |
+| `AttributeRotX/Y/Z` | `rotation_x/y/z_keys` |
+| `AttributeSclX/Y` | `scale_x/y_keys` |
+| `AttributeLosclX/Y` | `local_scale_x/y_keys` |
+| `AttributeAlpha` | `alpha_keys` |
+| `AttributeLoAlpha` | `local_alpha_keys` |
+| `AttributePrio` | `priority_keys` |
+| `AttributeFlipH/V` | `flip_h/v_keys` |
+| `AttributeHide` | `hide_keys` |
+| `AttributePartColor` | `part_color_keys` |
+| `AttributeShader` | `shader_keys` |
+| `AttributeVertex` | `vertex_keys` |
+| `AttributePivotX/Y` | `pivot_x/y_keys` |
+| `AttributeAnchorX/Y` | `anchor_x/y_keys` |
+| `AttributeSizeX/Y` | `size_x/y_keys` |
+| `AttributeImgFlipH/V` | `img_flip_h/v_keys` |
+| `AttributeUvtX/Y` | `uv_translation_x/y_keys` |
+| `AttributeUvrZ` | `uv_rotation_z_keys` |
+| `AttributeUvsX/Y` | `uv_scale_x/y_keys` |
+| `AttributeBoundr` | `bounding_radius_keys` |
+| `AttributeMask` | `mask_keys` |
+| `AttributeSkew` | `skew_keys` |
+| `AttributeDeform` | `deform_keys` |
+| `AttributeTexture` | `texture_keys` |

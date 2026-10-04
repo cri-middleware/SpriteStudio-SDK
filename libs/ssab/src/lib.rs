@@ -90,6 +90,13 @@ pub mod ssab;
 #[path = "runtime/ssqb.rs"]
 pub mod ssqb;
 
+/// A `PartAnimationData` field with no run: the animation has no keys for that
+/// attribute on that part. It is the fields' schema default, so it is never written.
+pub const NO_KEYS: u32 = u32::MAX;
+
+/// `Keyframes.curve` for a key that reads neither a curve nor an easing rate.
+pub const NO_CURVE: u16 = u16::MAX;
+
 /// The `.ssab` schema version the converter stamps into every pack it emits and
 /// the runtime refuses to read anything else as.
 ///

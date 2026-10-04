@@ -133,276 +133,6 @@ impl From<&ssab::ssab::ss::format::MinMax2ValueEntryT> for MinMax2ValueEntryKey 
 }
 
 #[derive(Hash, Eq, PartialEq)]
-pub struct SsCurveKey {
-    pub start_time: ordered_float::OrderedFloat<f32>,
-    pub start_value: ordered_float::OrderedFloat<f32>,
-    pub end_time: ordered_float::OrderedFloat<f32>,
-    pub end_value: ordered_float::OrderedFloat<f32>,
-}
-impl From<&ssab::ssab::ss::format::SsCurveT> for SsCurveKey {
-    fn from(value: &ssab::ssab::ss::format::SsCurveT) -> Self {
-        Self { start_time: ordered_float::OrderedFloat(value.start_time), start_value: ordered_float::OrderedFloat(value.start_value), end_time: ordered_float::OrderedFloat(value.end_time), end_value: ordered_float::OrderedFloat(value.end_value) }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataFloatValueKey {
-    pub index: u16,
-    pub interpolation: ssab::ssab::ss::format::InterpolationType,
-    pub value: ordered_float::OrderedFloat<f32>,
-    pub curve: Option<SsCurveKey>,
-    pub easing_rate: ordered_float::OrderedFloat<f32>,
-}
-impl From<&ssab::ssab::ss::format::PartAnimationDataFloatValueT> for PartAnimationDataFloatValueKey {
-    fn from(value: &ssab::ssab::ss::format::PartAnimationDataFloatValueT) -> Self {
-        Self { index: value.index, interpolation: value.interpolation, value: ordered_float::OrderedFloat(value.value), curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())), easing_rate: ordered_float::OrderedFloat(value.easing_rate) }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataFloatValueVecKey {
-    pub v: Vec<PartAnimationDataFloatValueKey>,
-}
-impl From<&[ssab::ssab::ss::format::PartAnimationDataFloatValueT]> for PartAnimationDataFloatValueVecKey {
-    fn from(value: &[ssab::ssab::ss::format::PartAnimationDataFloatValueT]) -> Self {
-        Self { v: value.iter().map(PartAnimationDataFloatValueKey::from).collect() }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataIntValueKey {
-    pub index: u16,
-    pub interpolation: ssab::ssab::ss::format::InterpolationType,
-    pub value: i32,
-    pub curve: Option<SsCurveKey>,
-    pub easing_rate: ordered_float::OrderedFloat<f32>,
-}
-impl From<&ssab::ssab::ss::format::PartAnimationDataIntValueT> for PartAnimationDataIntValueKey {
-    fn from(value: &ssab::ssab::ss::format::PartAnimationDataIntValueT) -> Self {
-        Self { index: value.index, interpolation: value.interpolation, value: value.value, curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())), easing_rate: ordered_float::OrderedFloat(value.easing_rate) }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataIntValueVecKey {
-    pub v: Vec<PartAnimationDataIntValueKey>,
-}
-impl From<&[ssab::ssab::ss::format::PartAnimationDataIntValueT]> for PartAnimationDataIntValueVecKey {
-    fn from(value: &[ssab::ssab::ss::format::PartAnimationDataIntValueT]) -> Self {
-        Self { v: value.iter().map(PartAnimationDataIntValueKey::from).collect() }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataUIntValueKey {
-    pub index: u16,
-    pub interpolation: ssab::ssab::ss::format::InterpolationType,
-    pub value: u32,
-}
-impl From<&ssab::ssab::ss::format::PartAnimationDataUIntValueT> for PartAnimationDataUIntValueKey {
-    fn from(value: &ssab::ssab::ss::format::PartAnimationDataUIntValueT) -> Self {
-        Self { index: value.index, interpolation: value.interpolation, value: value.value }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataUIntValueVecKey {
-    pub v: Vec<PartAnimationDataUIntValueKey>,
-}
-impl From<&[ssab::ssab::ss::format::PartAnimationDataUIntValueT]> for PartAnimationDataUIntValueVecKey {
-    fn from(value: &[ssab::ssab::ss::format::PartAnimationDataUIntValueT]) -> Self {
-        Self { v: value.iter().map(PartAnimationDataUIntValueKey::from).collect() }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataBoolValueKey {
-    pub index: u16,
-    pub value: bool,
-}
-impl From<&ssab::ssab::ss::format::PartAnimationDataBoolValueT> for PartAnimationDataBoolValueKey {
-    fn from(value: &ssab::ssab::ss::format::PartAnimationDataBoolValueT) -> Self {
-        Self { index: value.index, value: value.value }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataBoolValueVecKey {
-    pub v: Vec<PartAnimationDataBoolValueKey>,
-}
-impl From<&[ssab::ssab::ss::format::PartAnimationDataBoolValueT]> for PartAnimationDataBoolValueVecKey {
-    fn from(value: &[ssab::ssab::ss::format::PartAnimationDataBoolValueT]) -> Self {
-        Self { v: value.iter().map(PartAnimationDataBoolValueKey::from).collect() }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataCellValueKey {
-    pub index: u16,
-    pub value: Option<PartAttributeCellKey>,
-}
-impl From<&ssab::ssab::ss::format::PartAnimationDataCellValueT> for PartAnimationDataCellValueKey {
-    fn from(value: &ssab::ssab::ss::format::PartAnimationDataCellValueT) -> Self {
-        Self { index: value.index, value: Some(PartAttributeCellKey::from(value.value.as_ref())) }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataCellValueVecKey {
-    pub v: Vec<PartAnimationDataCellValueKey>,
-}
-impl From<&[ssab::ssab::ss::format::PartAnimationDataCellValueT]> for PartAnimationDataCellValueVecKey {
-    fn from(value: &[ssab::ssab::ss::format::PartAnimationDataCellValueT]) -> Self {
-        Self { v: value.iter().map(PartAnimationDataCellValueKey::from).collect() }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataPartColorKey {
-    pub index: u16,
-    pub interpolation: ssab::ssab::ss::format::InterpolationType,
-    pub value: Option<PartAttributePartColorKey>,
-    pub curve: Option<SsCurveKey>,
-    pub easing_rate: ordered_float::OrderedFloat<f32>,
-}
-impl From<&ssab::ssab::ss::format::PartAnimationDataPartColorT> for PartAnimationDataPartColorKey {
-    fn from(value: &ssab::ssab::ss::format::PartAnimationDataPartColorT) -> Self {
-        Self {
-            index: value.index,
-            interpolation: value.interpolation,
-            value: Some(PartAttributePartColorKey::from(value.value.as_ref())),
-            curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())),
-            easing_rate: ordered_float::OrderedFloat(value.easing_rate),
-        }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataPartColorVecKey {
-    pub v: Vec<PartAnimationDataPartColorKey>,
-}
-impl From<&[ssab::ssab::ss::format::PartAnimationDataPartColorT]> for PartAnimationDataPartColorVecKey {
-    fn from(value: &[ssab::ssab::ss::format::PartAnimationDataPartColorT]) -> Self {
-        Self { v: value.iter().map(PartAnimationDataPartColorKey::from).collect() }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataShaderKey {
-    pub index: u16,
-    pub interpolation: ssab::ssab::ss::format::InterpolationType,
-    pub value: Option<PartAttributeShaderKey>,
-    pub curve: Option<SsCurveKey>,
-    pub easing_rate: ordered_float::OrderedFloat<f32>,
-}
-impl From<&ssab::ssab::ss::format::PartAnimationDataShaderT> for PartAnimationDataShaderKey {
-    fn from(value: &ssab::ssab::ss::format::PartAnimationDataShaderT) -> Self {
-        Self {
-            index: value.index,
-            interpolation: value.interpolation,
-            value: Some(PartAttributeShaderKey::from(value.value.as_ref())),
-            curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())),
-            easing_rate: ordered_float::OrderedFloat(value.easing_rate),
-        }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataShaderVecKey {
-    pub v: Vec<PartAnimationDataShaderKey>,
-}
-impl From<&[ssab::ssab::ss::format::PartAnimationDataShaderT]> for PartAnimationDataShaderVecKey {
-    fn from(value: &[ssab::ssab::ss::format::PartAnimationDataShaderT]) -> Self {
-        Self { v: value.iter().map(PartAnimationDataShaderKey::from).collect() }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataVertexKey {
-    pub index: u16,
-    pub interpolation: ssab::ssab::ss::format::InterpolationType,
-    pub value: Option<PartAttributeVertexKey>,
-    pub curve: Option<SsCurveKey>,
-    pub easing_rate: ordered_float::OrderedFloat<f32>,
-}
-impl From<&ssab::ssab::ss::format::PartAnimationDataVertexT> for PartAnimationDataVertexKey {
-    fn from(value: &ssab::ssab::ss::format::PartAnimationDataVertexT) -> Self {
-        Self {
-            index: value.index,
-            interpolation: value.interpolation,
-            value: Some(PartAttributeVertexKey::from(value.value.as_ref())),
-            curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())),
-            easing_rate: ordered_float::OrderedFloat(value.easing_rate),
-        }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataVertexVecKey {
-    pub v: Vec<PartAnimationDataVertexKey>,
-}
-impl From<&[ssab::ssab::ss::format::PartAnimationDataVertexT]> for PartAnimationDataVertexVecKey {
-    fn from(value: &[ssab::ssab::ss::format::PartAnimationDataVertexT]) -> Self {
-        Self { v: value.iter().map(PartAnimationDataVertexKey::from).collect() }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataVec2Key {
-    pub index: u16,
-    pub interpolation: ssab::ssab::ss::format::InterpolationType,
-    pub value: Option<Vec2Key>,
-    pub curve: Option<SsCurveKey>,
-    pub easing_rate: ordered_float::OrderedFloat<f32>,
-}
-impl From<&ssab::ssab::ss::format::PartAnimationDataVec2T> for PartAnimationDataVec2Key {
-    fn from(value: &ssab::ssab::ss::format::PartAnimationDataVec2T) -> Self {
-        Self { index: value.index, interpolation: value.interpolation, value: Some(Vec2Key::from(value.value.as_ref())), curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())), easing_rate: ordered_float::OrderedFloat(value.easing_rate) }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataVec2VecKey {
-    pub v: Vec<PartAnimationDataVec2Key>,
-}
-impl From<&[ssab::ssab::ss::format::PartAnimationDataVec2T]> for PartAnimationDataVec2VecKey {
-    fn from(value: &[ssab::ssab::ss::format::PartAnimationDataVec2T]) -> Self {
-        Self { v: value.iter().map(PartAnimationDataVec2Key::from).collect() }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataDeformKey {
-    pub index: u16,
-    pub interpolation: ssab::ssab::ss::format::InterpolationType,
-    pub value: Option<PartAttributeDeformKey>,
-    pub curve: Option<SsCurveKey>,
-    pub easing_rate: ordered_float::OrderedFloat<f32>,
-}
-impl From<&ssab::ssab::ss::format::PartAnimationDataDeformT> for PartAnimationDataDeformKey {
-    fn from(value: &ssab::ssab::ss::format::PartAnimationDataDeformT) -> Self {
-        Self {
-            index: value.index,
-            interpolation: value.interpolation,
-            value: Some(PartAttributeDeformKey::from(value.value.as_ref())),
-            curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())),
-            easing_rate: ordered_float::OrderedFloat(value.easing_rate),
-        }
-    }
-}
-
-// PartAnimationDataDeform
-#[derive(Hash, Eq, PartialEq)]
-pub struct PartAnimationDataDeformVecKey {
-    pub v: Vec<PartAnimationDataDeformKey>,
-}
-impl From<&[ssab::ssab::ss::format::PartAnimationDataDeformT]> for PartAnimationDataDeformVecKey {
-    fn from(value: &[ssab::ssab::ss::format::PartAnimationDataDeformT]) -> Self {
-        Self { v: value.iter().map(PartAnimationDataDeformKey::from).collect() }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq)]
 pub struct InitialEventsKey {
     pub user: Option<PartAttributeUserDataKey>,
     pub signal: Option<PartAttributeSignalKey>,
@@ -432,88 +162,54 @@ impl From<&[ssab::ssab::ss::format::InitialEventsT]> for InitialEventsVecKey {
     }
 }
 
+/// A part's run per attribute, in schema order.
 #[derive(Hash, Eq, PartialEq)]
 pub struct PartAnimationDataKey {
-    pub cell_array: Option<PartAnimationDataCellValueVecKey>,
-    pub position_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub position_y_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub position_z_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub rotation_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub rotation_y_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub rotation_z_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub scale_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub scale_y_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub local_scale_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub local_scale_y_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub alpha_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub local_alpha_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub priority_array: Option<PartAnimationDataIntValueVecKey>,
-    pub flip_h_array: Option<PartAnimationDataBoolValueVecKey>,
-    pub flip_v_array: Option<PartAnimationDataBoolValueVecKey>,
-    pub hide_array: Option<PartAnimationDataBoolValueVecKey>,
-    pub part_color_array: Option<PartAnimationDataPartColorVecKey>,
-    pub shader_array: Option<PartAnimationDataShaderVecKey>,
-    pub vertex_array: Option<PartAnimationDataVertexVecKey>,
-    pub pivot_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub pivot_y_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub anchor_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub anchor_y_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub size_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub size_y_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub img_flip_h_array: Option<PartAnimationDataBoolValueVecKey>,
-    pub img_flip_v_array: Option<PartAnimationDataBoolValueVecKey>,
-    pub uv_translation_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub uv_translation_y_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub uv_rotation_z_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub uv_scale_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub uv_scale_y_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub bounding_radius_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub mask_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub skew_array: Option<PartAnimationDataVec2VecKey>,
-    pub deform_array: Option<PartAnimationDataDeformVecKey>,
-    pub texture_array: Option<PartAnimationDataUIntValueVecKey>,
+    pub runs: [u32; 38],
 }
 impl From<&ssab::ssab::ss::format::PartAnimationDataT> for PartAnimationDataKey {
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataT) -> Self {
         Self {
-            cell_array: value.cell_array.as_ref().map(|c| PartAnimationDataCellValueVecKey::from(c.as_ref())),
-            position_x_array: value.position_x_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
-            position_y_array: value.position_y_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
-            position_z_array: value.position_z_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
-            rotation_x_array: value.rotation_x_array.as_ref().map(|r| PartAnimationDataFloatValueVecKey::from(r.as_ref())),
-            rotation_y_array: value.rotation_y_array.as_ref().map(|r| PartAnimationDataFloatValueVecKey::from(r.as_ref())),
-            rotation_z_array: value.rotation_z_array.as_ref().map(|r| PartAnimationDataFloatValueVecKey::from(r.as_ref())),
-            scale_x_array: value.scale_x_array.as_ref().map(|s| PartAnimationDataFloatValueVecKey::from(s.as_ref())),
-            scale_y_array: value.scale_y_array.as_ref().map(|s| PartAnimationDataFloatValueVecKey::from(s.as_ref())),
-            local_scale_x_array: value.local_scale_x_array.as_ref().map(|l| PartAnimationDataFloatValueVecKey::from(l.as_ref())),
-            local_scale_y_array: value.local_scale_y_array.as_ref().map(|l| PartAnimationDataFloatValueVecKey::from(l.as_ref())),
-            alpha_array: value.alpha_array.as_ref().map(|a| PartAnimationDataFloatValueVecKey::from(a.as_ref())),
-            local_alpha_array: value.local_alpha_array.as_ref().map(|l| PartAnimationDataFloatValueVecKey::from(l.as_ref())),
-            priority_array: value.priority_array.as_ref().map(|p| PartAnimationDataIntValueVecKey::from(p.as_ref())),
-            flip_h_array: value.flip_h_array.as_ref().map(|f| PartAnimationDataBoolValueVecKey::from(f.as_ref())),
-            flip_v_array: value.flip_v_array.as_ref().map(|f| PartAnimationDataBoolValueVecKey::from(f.as_ref())),
-            hide_array: value.hide_array.as_ref().map(|h| PartAnimationDataBoolValueVecKey::from(h.as_ref())),
-            part_color_array: value.part_color_array.as_ref().map(|c| PartAnimationDataPartColorVecKey::from(c.as_ref())),
-            shader_array: value.shader_array.as_ref().map(|s| PartAnimationDataShaderVecKey::from(s.as_ref())),
-            vertex_array: value.vertex_array.as_ref().map(|v| PartAnimationDataVertexVecKey::from(v.as_ref())),
-            pivot_x_array: value.pivot_x_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
-            pivot_y_array: value.pivot_y_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
-            anchor_x_array: value.anchor_x_array.as_ref().map(|a| PartAnimationDataFloatValueVecKey::from(a.as_ref())),
-            anchor_y_array: value.anchor_y_array.as_ref().map(|a| PartAnimationDataFloatValueVecKey::from(a.as_ref())),
-            size_x_array: value.size_x_array.as_ref().map(|s| PartAnimationDataFloatValueVecKey::from(s.as_ref())),
-            size_y_array: value.size_y_array.as_ref().map(|s| PartAnimationDataFloatValueVecKey::from(s.as_ref())),
-            img_flip_h_array: value.img_flip_h_array.as_ref().map(|i| PartAnimationDataBoolValueVecKey::from(i.as_ref())),
-            img_flip_v_array: value.img_flip_v_array.as_ref().map(|i| PartAnimationDataBoolValueVecKey::from(i.as_ref())),
-            uv_translation_x_array: value.uv_translation_x_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
-            uv_translation_y_array: value.uv_translation_y_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
-            uv_rotation_z_array: value.uv_rotation_z_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
-            uv_scale_x_array: value.uv_scale_x_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
-            uv_scale_y_array: value.uv_scale_y_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
-            bounding_radius_array: value.bounding_radius_array.as_ref().map(|b| PartAnimationDataFloatValueVecKey::from(b.as_ref())),
-            mask_array: value.mask_array.as_ref().map(|m| PartAnimationDataFloatValueVecKey::from(m.as_ref())),
-            skew_array: value.skew_array.as_ref().map(|s| PartAnimationDataVec2VecKey::from(s.as_ref())),
-            deform_array: value.deform_array.as_ref().map(|d| PartAnimationDataDeformVecKey::from(d.as_ref())),
-            texture_array: value.texture_array.as_ref().map(|t| PartAnimationDataUIntValueVecKey::from(t.as_ref())),
+            runs: [
+                value.cell_keys,
+                value.position_x_keys,
+                value.position_y_keys,
+                value.position_z_keys,
+                value.rotation_x_keys,
+                value.rotation_y_keys,
+                value.rotation_z_keys,
+                value.scale_x_keys,
+                value.scale_y_keys,
+                value.local_scale_x_keys,
+                value.local_scale_y_keys,
+                value.alpha_keys,
+                value.local_alpha_keys,
+                value.priority_keys,
+                value.flip_h_keys,
+                value.flip_v_keys,
+                value.hide_keys,
+                value.part_color_keys,
+                value.shader_keys,
+                value.vertex_keys,
+                value.pivot_x_keys,
+                value.pivot_y_keys,
+                value.anchor_x_keys,
+                value.anchor_y_keys,
+                value.size_x_keys,
+                value.size_y_keys,
+                value.img_flip_h_keys,
+                value.img_flip_v_keys,
+                value.uv_translation_x_keys,
+                value.uv_translation_y_keys,
+                value.uv_rotation_z_keys,
+                value.uv_scale_x_keys,
+                value.uv_scale_y_keys,
+                value.bounding_radius_keys,
+                value.mask_keys,
+                value.skew_keys,
+                value.deform_keys,
+                value.texture_keys,
+            ],
         }
     }
 }
@@ -911,7 +607,6 @@ pub struct SsabCache<'a> {
     pub vec2_value_table_cache: HashMap<Vec2ValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Vec2ValueEntry<'a>>>,
     pub min_max2_value_table_cache: HashMap<MinMax2ValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::MinMax2ValueEntry<'a>>>,
 
-    pub ss_curve_cache: HashMap<SsCurveKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::SsCurve<'a>>>,
     pub cell_cache: HashMap<CellKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Cell<'a>>>,
     pub label_cache: HashMap<LabelKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Label<'a>>>,
     pub part_attribute_cell_cache: HashMap<PartAttributeCellKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributeCell<'a>>>,
@@ -930,26 +625,6 @@ pub struct SsabCache<'a> {
     pub initial_events_cache: HashMap<InitialEventsKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::InitialEvents<'a>>>,
     pub initial_events_vec_cache: HashMap<InitialEventsVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialEvents<'a>>>>>,
 
-    pub part_animation_data_float_value_cache: HashMap<PartAnimationDataFloatValueKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>,
-    pub part_animation_data_float_value_vec_cache: HashMap<PartAnimationDataFloatValueVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>>,
-    pub part_animation_data_int_value_cache: HashMap<PartAnimationDataIntValueKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataIntValue<'a>>>,
-    pub part_animation_data_int_value_vec_cache: HashMap<PartAnimationDataIntValueVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataIntValue<'a>>>>>,
-    pub part_animation_data_uint_value_cache: HashMap<PartAnimationDataUIntValueKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataUIntValue<'a>>>,
-    pub part_animation_data_uint_value_vec_cache: HashMap<PartAnimationDataUIntValueVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataUIntValue<'a>>>>>,
-    pub part_animation_data_bool_value_cache: HashMap<PartAnimationDataBoolValueKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataBoolValue<'a>>>,
-    pub part_animation_data_bool_value_vec_cache: HashMap<PartAnimationDataBoolValueVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataBoolValue<'a>>>>>,
-    pub part_animation_data_cell_value_cache: HashMap<PartAnimationDataCellValueKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>,
-    pub part_animation_data_cell_value_vec_cache: HashMap<PartAnimationDataCellValueVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>>>,
-    pub part_animation_data_part_color_cache: HashMap<PartAnimationDataPartColorKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataPartColor<'a>>>,
-    pub part_animation_data_part_color_vec_cache: HashMap<PartAnimationDataPartColorVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataPartColor<'a>>>>>,
-    pub part_animation_data_shader_cache: HashMap<PartAnimationDataShaderKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataShader<'a>>>,
-    pub part_animation_data_shader_vec_cache: HashMap<PartAnimationDataShaderVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataShader<'a>>>>>,
-    pub part_animation_data_vertex_cache: HashMap<PartAnimationDataVertexKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataVertex<'a>>>,
-    pub part_animation_data_vertex_vec_cache: HashMap<PartAnimationDataVertexVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVertex<'a>>>>>,
-    pub part_animation_data_vec2_cache: HashMap<PartAnimationDataVec2Key, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataVec2<'a>>>,
-    pub part_animation_data_vec2_vec_cache: HashMap<PartAnimationDataVec2VecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVec2<'a>>>>>,
-    pub part_animation_data_deform_cache: HashMap<PartAnimationDataDeformKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'a>>>,
-    pub part_animation_data_deform_vec_cache: HashMap<PartAnimationDataDeformVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'a>>>>>,
     pub part_animation_data_cache: HashMap<PartAnimationDataKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationData<'a>>>,
 
     pub part_mesh_binding_cache: HashMap<PartMeshBindingKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartMeshBinding<'a>>>,
@@ -970,7 +645,6 @@ impl<'a> SsabCache<'a> {
             min_max2_value_table_cache: HashMap::new(),
             u8color_cache: HashMap::new(),
 
-            ss_curve_cache: HashMap::new(),
             cell_cache: HashMap::new(),
             label_cache: HashMap::new(),
             part_attribute_cell_cache: HashMap::new(),
@@ -989,26 +663,6 @@ impl<'a> SsabCache<'a> {
             initial_events_cache: HashMap::new(),
             initial_events_vec_cache: HashMap::new(),
 
-            part_animation_data_float_value_cache: HashMap::new(),
-            part_animation_data_float_value_vec_cache: HashMap::new(),
-            part_animation_data_int_value_cache: HashMap::new(),
-            part_animation_data_int_value_vec_cache: HashMap::new(),
-            part_animation_data_uint_value_cache: HashMap::new(),
-            part_animation_data_uint_value_vec_cache: HashMap::new(),
-            part_animation_data_bool_value_cache: HashMap::new(),
-            part_animation_data_bool_value_vec_cache: HashMap::new(),
-            part_animation_data_cell_value_cache: HashMap::new(),
-            part_animation_data_cell_value_vec_cache: HashMap::new(),
-            part_animation_data_part_color_cache: HashMap::new(),
-            part_animation_data_part_color_vec_cache: HashMap::new(),
-            part_animation_data_shader_cache: HashMap::new(),
-            part_animation_data_shader_vec_cache: HashMap::new(),
-            part_animation_data_vertex_cache: HashMap::new(),
-            part_animation_data_vertex_vec_cache: HashMap::new(),
-            part_animation_data_vec2_cache: HashMap::new(),
-            part_animation_data_vec2_vec_cache: HashMap::new(),
-            part_animation_data_deform_cache: HashMap::new(),
-            part_animation_data_deform_vec_cache: HashMap::new(),
             part_animation_data_cache: HashMap::new(),
 
             part_mesh_binding_cache: HashMap::new(),
@@ -1066,17 +720,6 @@ impl<'a> SsabCache<'a> {
         let args = ssab::ssab::ss::format::U8ColorArgs { a: u8colort.a, r: u8colort.r, g: u8colort.g, b: u8colort.b };
         let offset = ssab::ssab::ss::format::U8Color::create(fb, &args);
         self.u8color_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_ss_curve(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, curve: &ssab::ssab::ss::format::SsCurveT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::SsCurve<'a>> {
-        let key = SsCurveKey::from(curve);
-        if let Some(&offset) = self.ss_curve_cache.get(&key) {
-            return offset;
-        }
-        let args = ssab::ssab::ss::format::SsCurveArgs { start_time: curve.start_time, start_value: curve.start_value, end_time: curve.end_time, end_value: curve.end_value };
-        let offset = ssab::ssab::ss::format::SsCurve::create(fb, &args);
-        self.ss_curve_cache.insert(key, offset);
         offset
     }
 
@@ -1157,404 +800,39 @@ impl<'a> SsabCache<'a> {
         offset
     }
 
-    fn create_shared_part_animation_data_float_value(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_float_value_t: &ssab::ssab::ss::format::PartAnimationDataFloatValueT,
-    ) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>> {
-        let key = PartAnimationDataFloatValueKey::from(part_animation_data_float_value_t);
-        if let Some(&offset) = self.part_animation_data_float_value_cache.get(&key) {
-            return offset;
-        }
-        let curve_off = part_animation_data_float_value_t.curve.as_ref().map(|c| self.create_shared_ss_curve(fb, c.as_ref()));
-        let args = ssab::ssab::ss::format::PartAnimationDataFloatValueArgs {
-            index: part_animation_data_float_value_t.index,
-            interpolation: part_animation_data_float_value_t.interpolation,
-            value: part_animation_data_float_value_t.value,
-            curve: curve_off,
-            easing_rate: part_animation_data_float_value_t.easing_rate,
-        };
-        let offset = ssab::ssab::ss::format::PartAnimationDataFloatValue::create(fb, &args);
-        self.part_animation_data_float_value_cache.insert(key, offset);
-        offset
-    }
-
-    // PartAnimationDataFloatValueVecKey
-    fn create_shared_part_animation_data_float_value_list(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_float_value_t_array: &[ssab::ssab::ss::format::PartAnimationDataFloatValueT],
-    ) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>> {
-        let key = PartAnimationDataFloatValueVecKey::from(part_animation_data_float_value_t_array);
-        if let Some(&offset) = self.part_animation_data_float_value_vec_cache.get(&key) {
-            return offset;
-        }
-        let v = part_animation_data_float_value_t_array.iter().map(|t| self.create_shared_part_animation_data_float_value(fb, t)).collect::<Vec<_>>();
-        let offset = fb.create_vector(&v);
-        self.part_animation_data_float_value_vec_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_int_value(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_int_value_t: &ssab::ssab::ss::format::PartAnimationDataIntValueT,
-    ) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataIntValue<'a>> {
-        let key = PartAnimationDataIntValueKey::from(part_animation_data_int_value_t);
-        if let Some(&offset) = self.part_animation_data_int_value_cache.get(&key) {
-            return offset;
-        }
-        let curve_off = part_animation_data_int_value_t.curve.as_ref().map(|c| self.create_shared_ss_curve(fb, c.as_ref()));
-        let args = ssab::ssab::ss::format::PartAnimationDataIntValueArgs {
-            index: part_animation_data_int_value_t.index,
-            interpolation: part_animation_data_int_value_t.interpolation,
-            value: part_animation_data_int_value_t.value,
-            curve: curve_off,
-            easing_rate: part_animation_data_int_value_t.easing_rate,
-        };
-        let offset = ssab::ssab::ss::format::PartAnimationDataIntValue::create(fb, &args);
-        self.part_animation_data_int_value_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_int_value_list(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_int_value_t_array: &[ssab::ssab::ss::format::PartAnimationDataIntValueT],
-    ) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataIntValue<'a>>>> {
-        let key = PartAnimationDataIntValueVecKey::from(part_animation_data_int_value_t_array);
-        if let Some(&offset) = self.part_animation_data_int_value_vec_cache.get(&key) {
-            return offset;
-        }
-        let v = part_animation_data_int_value_t_array.iter().map(|t| self.create_shared_part_animation_data_int_value(fb, t)).collect::<Vec<_>>();
-        let offset = fb.create_vector(&v);
-        self.part_animation_data_int_value_vec_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_uint_value(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_uint_value_t: &ssab::ssab::ss::format::PartAnimationDataUIntValueT,
-    ) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataUIntValue<'a>> {
-        let key = PartAnimationDataUIntValueKey::from(part_animation_data_uint_value_t);
-        if let Some(&offset) = self.part_animation_data_uint_value_cache.get(&key) {
-            return offset;
-        }
-        let args = ssab::ssab::ss::format::PartAnimationDataUIntValueArgs { index: part_animation_data_uint_value_t.index, interpolation: part_animation_data_uint_value_t.interpolation, value: part_animation_data_uint_value_t.value };
-        let offset = ssab::ssab::ss::format::PartAnimationDataUIntValue::create(fb, &args);
-        self.part_animation_data_uint_value_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_uint_value_list(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_uint_value_t_array: &[ssab::ssab::ss::format::PartAnimationDataUIntValueT],
-    ) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataUIntValue<'a>>>> {
-        let key = PartAnimationDataUIntValueVecKey::from(part_animation_data_uint_value_t_array);
-        if let Some(&offset) = self.part_animation_data_uint_value_vec_cache.get(&key) {
-            return offset;
-        }
-        let v = part_animation_data_uint_value_t_array.iter().map(|t| self.create_shared_part_animation_data_uint_value(fb, t)).collect::<Vec<_>>();
-        let offset = fb.create_vector(&v);
-        self.part_animation_data_uint_value_vec_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_bool_value(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_bool_value_t: &ssab::ssab::ss::format::PartAnimationDataBoolValueT,
-    ) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataBoolValue<'a>> {
-        let key = PartAnimationDataBoolValueKey::from(part_animation_data_bool_value_t);
-        if let Some(&offset) = self.part_animation_data_bool_value_cache.get(&key) {
-            return offset;
-        }
-        let args = ssab::ssab::ss::format::PartAnimationDataBoolValueArgs { index: part_animation_data_bool_value_t.index, value: part_animation_data_bool_value_t.value };
-        let offset = ssab::ssab::ss::format::PartAnimationDataBoolValue::create(fb, &args);
-        self.part_animation_data_bool_value_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_bool_value_list(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_bool_value_t_array: &[ssab::ssab::ss::format::PartAnimationDataBoolValueT],
-    ) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataBoolValue<'a>>>> {
-        let key = PartAnimationDataBoolValueVecKey::from(part_animation_data_bool_value_t_array);
-        if let Some(&offset) = self.part_animation_data_bool_value_vec_cache.get(&key) {
-            return offset;
-        }
-        let v = part_animation_data_bool_value_t_array.iter().map(|t| self.create_shared_part_animation_data_bool_value(fb, t)).collect::<Vec<_>>();
-        let offset = fb.create_vector(&v);
-        self.part_animation_data_bool_value_vec_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_cell_value(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_cell_value_t: &ssab::ssab::ss::format::PartAnimationDataCellValueT,
-    ) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>> {
-        let key = PartAnimationDataCellValueKey::from(part_animation_data_cell_value_t);
-        if let Some(&offset) = self.part_animation_data_cell_value_cache.get(&key) {
-            return offset;
-        }
-        let args = ssab::ssab::ss::format::PartAnimationDataCellValueArgs { index: part_animation_data_cell_value_t.index, value: Some(self.create_shared_part_attribute_cell(fb, &part_animation_data_cell_value_t.value)) };
-
-        let offset = ssab::ssab::ss::format::PartAnimationDataCellValue::create(fb, &args);
-        self.part_animation_data_cell_value_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_cell_value_list(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_cell_value_t_array: &[ssab::ssab::ss::format::PartAnimationDataCellValueT],
-    ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>> {
-        let key = PartAnimationDataCellValueVecKey::from(part_animation_data_cell_value_t_array);
-        if let Some(&offset) = self.part_animation_data_cell_value_vec_cache.get(&key) {
-            return offset;
-        }
-        let v = part_animation_data_cell_value_t_array.iter().map(|t| self.create_shared_part_animation_data_cell_value(fb, t)).collect::<Vec<_>>();
-        let offset = fb.create_vector(&v);
-        self.part_animation_data_cell_value_vec_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_part_color(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_part_color: &ssab::ssab::ss::format::PartAnimationDataPartColorT,
-    ) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataPartColor<'a>> {
-        let key = PartAnimationDataPartColorKey::from(part_animation_data_part_color);
-        if let Some(&offset) = self.part_animation_data_part_color_cache.get(&key) {
-            return offset;
-        }
-        let curve_off = part_animation_data_part_color.curve.as_ref().map(|c| self.create_shared_ss_curve(fb, c.as_ref()));
-        let args = ssab::ssab::ss::format::PartAnimationDataPartColorArgs {
-            index: part_animation_data_part_color.index,
-            interpolation: part_animation_data_part_color.interpolation,
-            value: Some(self.create_shared_part_attribute_part_color(fb, &part_animation_data_part_color.value)),
-            curve: curve_off,
-            easing_rate: part_animation_data_part_color.easing_rate,
-        };
-        let offset = ssab::ssab::ss::format::PartAnimationDataPartColor::create(fb, &args);
-        self.part_animation_data_part_color_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_part_color_list(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_part_color_array: &[ssab::ssab::ss::format::PartAnimationDataPartColorT],
-    ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataPartColor<'a>>>> {
-        let key = PartAnimationDataPartColorVecKey::from(part_animation_data_part_color_array);
-        if let Some(&offset) = self.part_animation_data_part_color_vec_cache.get(&key) {
-            return offset;
-        }
-        let v = part_animation_data_part_color_array.iter().map(|t| self.create_shared_part_animation_data_part_color(fb, t)).collect::<Vec<_>>();
-        let offset = fb.create_vector(&v);
-        self.part_animation_data_part_color_vec_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_shader(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_shader: &ssab::ssab::ss::format::PartAnimationDataShaderT,
-    ) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataShader<'a>> {
-        let key = PartAnimationDataShaderKey::from(part_animation_data_shader);
-        if let Some(&offset) = self.part_animation_data_shader_cache.get(&key) {
-            return offset;
-        }
-        let curve_off = part_animation_data_shader.curve.as_ref().map(|c| self.create_shared_ss_curve(fb, c.as_ref()));
-        let args = ssab::ssab::ss::format::PartAnimationDataShaderArgs {
-            index: part_animation_data_shader.index,
-            interpolation: part_animation_data_shader.interpolation,
-            value: Some(self.create_shared_part_attribute_shader(fb, &part_animation_data_shader.value)),
-            curve: curve_off,
-            easing_rate: part_animation_data_shader.easing_rate,
-        };
-        let offset = ssab::ssab::ss::format::PartAnimationDataShader::create(fb, &args);
-        self.part_animation_data_shader_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_shader_list(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_shader: &[ssab::ssab::ss::format::PartAnimationDataShaderT],
-    ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataShader<'a>>>> {
-        let key = PartAnimationDataShaderVecKey::from(part_animation_data_shader);
-        if let Some(&offset) = self.part_animation_data_shader_vec_cache.get(&key) {
-            return offset;
-        }
-        let v = part_animation_data_shader.iter().map(|t| self.create_shared_part_animation_data_shader(fb, t)).collect::<Vec<_>>();
-        let offset = fb.create_vector(&v);
-        self.part_animation_data_shader_vec_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_vertex(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_vertex: &ssab::ssab::ss::format::PartAnimationDataVertexT,
-    ) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataVertex<'a>> {
-        let key = PartAnimationDataVertexKey::from(part_animation_data_vertex);
-        if let Some(&offset) = self.part_animation_data_vertex_cache.get(&key) {
-            return offset;
-        }
-        let curve_off = part_animation_data_vertex.curve.as_ref().map(|c| self.create_shared_ss_curve(fb, c.as_ref()));
-        let args = ssab::ssab::ss::format::PartAnimationDataVertexArgs {
-            index: part_animation_data_vertex.index,
-            interpolation: part_animation_data_vertex.interpolation,
-            value: Some(self.create_shared_part_attribute_vertex(fb, &part_animation_data_vertex.value)),
-            curve: curve_off,
-            easing_rate: part_animation_data_vertex.easing_rate,
-        };
-        let offset = ssab::ssab::ss::format::PartAnimationDataVertex::create(fb, &args);
-        self.part_animation_data_vertex_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_vertex_list(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_vertex_array: &[ssab::ssab::ss::format::PartAnimationDataVertexT],
-    ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVertex<'a>>>> {
-        let key = PartAnimationDataVertexVecKey::from(part_animation_data_vertex_array);
-        if let Some(&offset) = self.part_animation_data_vertex_vec_cache.get(&key) {
-            return offset;
-        }
-        let v = part_animation_data_vertex_array.iter().map(|t| self.create_shared_part_animation_data_vertex(fb, t)).collect::<Vec<_>>();
-        let offset = fb.create_vector(&v);
-        self.part_animation_data_vertex_vec_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_vec2(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_vec2: &ssab::ssab::ss::format::PartAnimationDataVec2T) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataVec2<'a>> {
-        let key = PartAnimationDataVec2Key::from(part_animation_data_vec2);
-        if let Some(&offset) = self.part_animation_data_vec2_cache.get(&key) {
-            return offset;
-        }
-        let curve_off = part_animation_data_vec2.curve.as_ref().map(|c| self.create_shared_ss_curve(fb, c.as_ref()));
-        let args = ssab::ssab::ss::format::PartAnimationDataVec2Args {
-            index: part_animation_data_vec2.index,
-            interpolation: part_animation_data_vec2.interpolation,
-            value: Some(self.create_shared_vec2(fb, &part_animation_data_vec2.value)),
-            curve: curve_off,
-            easing_rate: part_animation_data_vec2.easing_rate,
-        };
-        let offset = ssab::ssab::ss::format::PartAnimationDataVec2::create(fb, &args);
-        self.part_animation_data_vec2_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_vec2_list(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_vec2_array: &[ssab::ssab::ss::format::PartAnimationDataVec2T],
-    ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVec2<'a>>>> {
-        let key = PartAnimationDataVec2VecKey::from(part_animation_data_vec2_array);
-        if let Some(&offset) = self.part_animation_data_vec2_vec_cache.get(&key) {
-            return offset;
-        }
-        let v = part_animation_data_vec2_array.iter().map(|t| self.create_shared_part_animation_data_vec2(fb, t)).collect::<Vec<_>>();
-        let offset = fb.create_vector(&v);
-        self.part_animation_data_vec2_vec_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_deform(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_deform: &ssab::ssab::ss::format::PartAnimationDataDeformT,
-    ) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'a>> {
-        let key = PartAnimationDataDeformKey::from(part_animation_data_deform);
-        if let Some(&offset) = self.part_animation_data_deform_cache.get(&key) {
-            return offset;
-        }
-        let curve_off = part_animation_data_deform.curve.as_ref().map(|c| self.create_shared_ss_curve(fb, c.as_ref()));
-        let args = ssab::ssab::ss::format::PartAnimationDataDeformArgs {
-            index: part_animation_data_deform.index,
-            interpolation: part_animation_data_deform.interpolation,
-            value: Some(self.create_shared_part_attribute_deform(fb, &part_animation_data_deform.value)),
-            curve: curve_off,
-            easing_rate: part_animation_data_deform.easing_rate,
-        };
-        let offset = ssab::ssab::ss::format::PartAnimationDataDeform::create(fb, &args);
-        self.part_animation_data_deform_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_part_animation_data_deform_list(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        part_animation_data_deform_array: &[ssab::ssab::ss::format::PartAnimationDataDeformT],
-    ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'a>>>> {
-        let key = PartAnimationDataDeformVecKey::from(part_animation_data_deform_array);
-        if let Some(&offset) = self.part_animation_data_deform_vec_cache.get(&key) {
-            return offset;
-        }
-        let v = part_animation_data_deform_array.iter().map(|t| self.create_shared_part_animation_data_deform(fb, t)).collect::<Vec<_>>();
-        let offset = fb.create_vector(&v);
-        self.part_animation_data_deform_vec_cache.insert(key, offset);
-        offset
-    }
-
     fn create_shared_part_animation_data(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data: &ssab::ssab::ss::format::PartAnimationDataT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationData<'a>> {
         let key = PartAnimationDataKey::from(part_animation_data);
         if let Some(&offset) = self.part_animation_data_cache.get(&key) {
             return offset;
         }
-
-        let mut p_args = ssab::ssab::ss::format::PartAnimationDataArgs::default();
-        p_args.cell_array = part_animation_data.cell_array.as_ref().map(|cell_array| self.create_shared_part_animation_data_cell_value_list(fb, cell_array));
-
-        p_args.position_x_array = part_animation_data.position_x_array.as_ref().map(|position_x_array| self.create_shared_part_animation_data_float_value_list(fb, position_x_array));
-
-        p_args.position_y_array = part_animation_data.position_y_array.as_ref().map(|position_y_array| self.create_shared_part_animation_data_float_value_list(fb, position_y_array));
-        p_args.position_z_array = part_animation_data.position_z_array.as_ref().map(|position_z_array| self.create_shared_part_animation_data_float_value_list(fb, position_z_array));
-        p_args.rotation_x_array = part_animation_data.rotation_x_array.as_ref().map(|rotation_x_array| self.create_shared_part_animation_data_float_value_list(fb, rotation_x_array));
-        p_args.rotation_y_array = part_animation_data.rotation_y_array.as_ref().map(|rotation_y_array| self.create_shared_part_animation_data_float_value_list(fb, rotation_y_array));
-        p_args.rotation_z_array = part_animation_data.rotation_z_array.as_ref().map(|rotation_z_array| self.create_shared_part_animation_data_float_value_list(fb, rotation_z_array));
-        p_args.scale_x_array = part_animation_data.scale_x_array.as_ref().map(|scale_x_array| self.create_shared_part_animation_data_float_value_list(fb, scale_x_array));
-        p_args.scale_y_array = part_animation_data.scale_y_array.as_ref().map(|scale_y_array| self.create_shared_part_animation_data_float_value_list(fb, scale_y_array));
-        p_args.local_scale_x_array = part_animation_data.local_scale_x_array.as_ref().map(|local_scale_x_array| self.create_shared_part_animation_data_float_value_list(fb, local_scale_x_array));
-        p_args.local_scale_y_array = part_animation_data.local_scale_y_array.as_ref().map(|local_scale_y_array| self.create_shared_part_animation_data_float_value_list(fb, local_scale_y_array));
-        p_args.alpha_array = part_animation_data.alpha_array.as_ref().map(|alpha_array| self.create_shared_part_animation_data_float_value_list(fb, alpha_array));
-        p_args.local_alpha_array = part_animation_data.local_alpha_array.as_ref().map(|local_alpha_array| self.create_shared_part_animation_data_float_value_list(fb, local_alpha_array));
-        p_args.priority_array = part_animation_data.priority_array.as_ref().map(|priority_array| self.create_shared_part_animation_data_int_value_list(fb, priority_array));
-        p_args.flip_h_array = part_animation_data.flip_h_array.as_ref().map(|flip_h_array| self.create_shared_part_animation_data_bool_value_list(fb, flip_h_array));
-        p_args.flip_v_array = part_animation_data.flip_v_array.as_ref().map(|flip_v_array| self.create_shared_part_animation_data_bool_value_list(fb, flip_v_array));
-        p_args.hide_array = part_animation_data.hide_array.as_ref().map(|hide_array| self.create_shared_part_animation_data_bool_value_list(fb, hide_array));
-        p_args.part_color_array = part_animation_data.part_color_array.as_ref().map(|part_color_array| self.create_shared_part_animation_data_part_color_list(fb, part_color_array));
-        p_args.shader_array = part_animation_data.shader_array.as_ref().map(|shader_array| self.create_shared_part_animation_data_shader_list(fb, shader_array));
-        p_args.vertex_array = part_animation_data.vertex_array.as_ref().map(|vertex_array| self.create_shared_part_animation_data_vertex_list(fb, vertex_array));
-        p_args.pivot_x_array = part_animation_data.pivot_x_array.as_ref().map(|pivot_x_array| self.create_shared_part_animation_data_float_value_list(fb, pivot_x_array));
-        p_args.pivot_y_array = part_animation_data.pivot_y_array.as_ref().map(|pivot_y_array| self.create_shared_part_animation_data_float_value_list(fb, pivot_y_array));
-        p_args.anchor_x_array = part_animation_data.anchor_x_array.as_ref().map(|anchor_x_array| self.create_shared_part_animation_data_float_value_list(fb, anchor_x_array));
-        p_args.anchor_y_array = part_animation_data.anchor_y_array.as_ref().map(|anchor_y_array| self.create_shared_part_animation_data_float_value_list(fb, anchor_y_array));
-        p_args.size_x_array = part_animation_data.size_x_array.as_ref().map(|size_x_array| self.create_shared_part_animation_data_float_value_list(fb, size_x_array));
-        p_args.size_y_array = part_animation_data.size_y_array.as_ref().map(|size_y_array| self.create_shared_part_animation_data_float_value_list(fb, size_y_array));
-        p_args.img_flip_h_array = part_animation_data.img_flip_h_array.as_ref().map(|img_flip_h_array| self.create_shared_part_animation_data_bool_value_list(fb, img_flip_h_array));
-        p_args.img_flip_v_array = part_animation_data.img_flip_v_array.as_ref().map(|img_flip_v_array| self.create_shared_part_animation_data_bool_value_list(fb, img_flip_v_array));
-        p_args.uv_translation_x_array = part_animation_data.uv_translation_x_array.as_ref().map(|uv_translation_x_array| self.create_shared_part_animation_data_float_value_list(fb, uv_translation_x_array));
-        p_args.uv_translation_y_array = part_animation_data.uv_translation_y_array.as_ref().map(|uv_translation_y_array| self.create_shared_part_animation_data_float_value_list(fb, uv_translation_y_array));
-        p_args.uv_rotation_z_array = part_animation_data.uv_rotation_z_array.as_ref().map(|uv_rotation_z_array| self.create_shared_part_animation_data_float_value_list(fb, uv_rotation_z_array));
-        p_args.uv_scale_x_array = part_animation_data.uv_scale_x_array.as_ref().map(|uv_scale_x_array| self.create_shared_part_animation_data_float_value_list(fb, uv_scale_x_array));
-        p_args.uv_scale_y_array = part_animation_data.uv_scale_y_array.as_ref().map(|uv_scale_y_array| self.create_shared_part_animation_data_float_value_list(fb, uv_scale_y_array));
-        p_args.bounding_radius_array = part_animation_data.bounding_radius_array.as_ref().map(|bounding_radius_array| self.create_shared_part_animation_data_float_value_list(fb, bounding_radius_array));
-        p_args.mask_array = part_animation_data.mask_array.as_ref().map(|mask_array| self.create_shared_part_animation_data_float_value_list(fb, mask_array));
-        p_args.skew_array = part_animation_data.skew_array.as_ref().map(|skew_array| self.create_shared_part_animation_data_vec2_list(fb, skew_array));
-        p_args.deform_array = part_animation_data.deform_array.as_ref().map(|deform_array| self.create_shared_part_animation_data_deform_list(fb, deform_array));
-        p_args.texture_array = part_animation_data.texture_array.as_ref().map(|texture_array| self.create_shared_part_animation_data_uint_value_list(fb, texture_array));
-
-        let offset = ssab::ssab::ss::format::PartAnimationData::create(fb, &p_args);
+        let offset = part_animation_data.pack(fb);
         self.part_animation_data_cache.insert(key, offset);
         offset
+    }
+
+    fn create_keyframes(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, keyframes: &ssab::ssab::ss::format::KeyframesT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::Keyframes<'a>> {
+        let mut args = ssab::ssab::ss::format::KeyframesArgs::default();
+        args.runs = Some(fb.create_vector(&keyframes.runs));
+        args.frame = Some(fb.create_vector(&keyframes.frame));
+        args.interpolation = Some(fb.create_vector(&keyframes.interpolation));
+        args.curve = Some(fb.create_vector(&keyframes.curve));
+        args.value = Some(fb.create_vector(&keyframes.value));
+        let curves = keyframes.curves.iter().map(|curve| curve.pack()).collect::<Vec<_>>();
+        args.curves = Some(fb.create_vector(&curves));
+        args.easing_rates = Some(fb.create_vector(&keyframes.easing_rates));
+        let cells = keyframes.cells.iter().map(|cell| self.create_shared_part_attribute_cell(fb, cell)).collect::<Vec<_>>();
+        args.cells = Some(fb.create_vector(&cells));
+        let part_colors = keyframes.part_colors.iter().map(|part_color| self.create_shared_part_attribute_part_color(fb, part_color)).collect::<Vec<_>>();
+        args.part_colors = Some(fb.create_vector(&part_colors));
+        let shaders = keyframes.shaders.iter().map(|shader| self.create_shared_part_attribute_shader(fb, shader)).collect::<Vec<_>>();
+        args.shaders = Some(fb.create_vector(&shaders));
+        let vertices = keyframes.vertices.iter().map(|vertex| self.create_shared_part_attribute_vertex(fb, vertex)).collect::<Vec<_>>();
+        args.vertices = Some(fb.create_vector(&vertices));
+        let skews = keyframes.skews.iter().map(|skew| self.create_shared_vec2(fb, skew)).collect::<Vec<_>>();
+        args.skews = Some(fb.create_vector(&skews));
+        let deforms = keyframes.deforms.iter().map(|deform| self.create_shared_part_attribute_deform(fb, deform)).collect::<Vec<_>>();
+        args.deforms = Some(fb.create_vector(&deforms));
+        ssab::ssab::ss::format::Keyframes::create(fb, &args)
     }
 }
 
@@ -2406,6 +1684,7 @@ impl<'a> SsabCache<'a> {
         args.name = Some(fb.create_shared_string(&ss_anime_binary_t.name));
         args.parts = Some(self.create_shared_part_list(fb, &ss_anime_binary_t.parts));
         args.animations = Some(self.create_animation_data_list(fb, &ss_anime_binary_t.animations));
+        args.keyframes = Some(self.create_keyframes(fb, &ss_anime_binary_t.keyframes));
         args.cellmaps = ss_anime_binary_t.cellmaps.as_ref().map(|cell_map| self.create_shared_cell_map(fb, cell_map));
         args.effects = ss_anime_binary_t.effects.as_ref().map(|effect| self.create_shared_effect_list(fb, effect));
         args.sound_lists = ss_anime_binary_t.sound_lists.as_ref().map(|sound_list| self.create_shared_sound_list(fb, sound_list));

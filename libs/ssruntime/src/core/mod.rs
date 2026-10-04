@@ -19,6 +19,7 @@
 pub mod effect;
 pub mod framedata;
 pub mod interpolation;
+pub mod keyframes;
 pub mod math;
 pub mod matrix;
 pub mod override_layer;
