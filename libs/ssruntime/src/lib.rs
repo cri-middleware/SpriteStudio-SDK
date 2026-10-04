@@ -1779,10 +1779,11 @@ impl<'a> Context<'a> {
         globals.inheritance_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
         globals.local_uvs.clear();
         globals.local_uvs.resize(num_parts * 10, 0.0);
-        globals.shape_vertices.clear();
-        globals.shape_vertices.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
-        globals.shape_vertex_box_coords.clear();
-        globals.shape_vertex_box_coords.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
+        // Shape buffers keep their `part_index * SHAPE_VERTICES_STRIDE` layout, but
+        // only a pack with a shape part has anything to put in them.
+        let shape_len = if metadata.cached_parts().iter().any(|p| p.shape_kind.is_some()) { num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE } else { 0 };
+        globals.shape_vertices = alloc::vec![0.0; shape_len];
+        globals.shape_vertex_box_coords = alloc::vec![0.0; shape_len];
         globals.shape_vertex_counts.clear();
         globals.shape_vertex_counts.resize(num_parts, 0);
         // Invalidate the static mesh buffers so compute_mesh_vertices rebuilds
@@ -2580,24 +2581,16 @@ impl<'a> Context<'a> {
         let globals = &mut instance.globals;
         let num_parts = layer.parts_vec.len();
         let stride = crate::core::framedata::SHAPE_VERTICES_STRIDE;
-        if globals.shape_vertices.len() != num_parts * stride {
-            globals.shape_vertices.resize(num_parts * stride, 0.0);
-        }
-        if globals.shape_vertex_box_coords.len() != num_parts * stride {
-            globals.shape_vertex_box_coords.resize(num_parts * stride, 0.0);
-        }
         if globals.shape_vertex_counts.len() != num_parts {
             globals.shape_vertex_counts.resize(num_parts, 0);
         }
-        for slot in globals.shape_vertices.iter_mut() {
-            *slot = 0.0;
+        globals.shape_vertex_counts.fill(0);
+        // `setup_animation` leaves the vertex buffers empty when no part is a shape.
+        if globals.shape_vertices.len() != num_parts * stride {
+            return;
         }
-        for slot in globals.shape_vertex_box_coords.iter_mut() {
-            *slot = 0.0;
-        }
-        for slot in globals.shape_vertex_counts.iter_mut() {
-            *slot = 0;
-        }
+        globals.shape_vertices.fill(0.0);
+        globals.shape_vertex_box_coords.fill(0.0);
 
         for i in 0..num_parts {
             let Some(shape_kind) = cached_parts[i].shape_kind else { continue };
