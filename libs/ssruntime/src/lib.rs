@@ -799,7 +799,7 @@ struct LayerState<'a> {
     shader_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
     vertex_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
-    cursors: Vec<usize>,
+    cursors: Vec<u32>,
     cell_meta_per_part: Vec<f32>,
     cell_texture_hashes: Vec<u32>,
     local_vertices: Vec<f32>,
@@ -2590,7 +2590,7 @@ impl<'a> Context<'a> {
             // sampled image (not just the quad size/texture) reflects the swap.
             let meta = match override_cell_uv_meta.get(i).and_then(|m| m.as_ref()) {
                 Some(m) => m,
-                None => match cached_parts[i].resolved_cells.get(cursor) {
+                None => match cached_parts[i].resolved_cells.get(cursor as usize) {
                     Some(m) => m,
                     None => continue,
                 },

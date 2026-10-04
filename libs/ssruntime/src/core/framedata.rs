@@ -662,7 +662,7 @@ pub(crate) fn evaluate_part(
     cached_part: &CachedPartData,
     keys: &KeyColumns,
     frame_no: f32,
-    part_cursors: &mut [usize],
+    part_cursors: &mut [u32],
     coordinate_system: SsCoordinateSystem,
     origin: SsOrigin,
     unit: SsUnit,
@@ -706,7 +706,7 @@ pub(crate) fn evaluate_part(
 
     if let Some(value) = cached_part.cell_keys.and_then(|run| evaluate_cell(keys, &run, frame_no, &mut part_cursors[IDX_ATTRIBUTECELL])) {
         result.cell = Some(runtime::framedata::ss::runtime::PartAttributeCell::new(value.cellmap_name_hash(), value.name_hash()));
-        result.cell_meta = cached_part.resolved_cells.get(part_cursors[IDX_ATTRIBUTECELL]).copied();
+        result.cell_meta = cached_part.resolved_cells.get(part_cursors[IDX_ATTRIBUTECELL] as usize).copied();
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell;
     }
 
@@ -945,7 +945,7 @@ pub fn extract_pose<'a>(
     shader_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
     deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
     raw_vertex_deform: &mut [RawVertexDeform],
-    cursors: &mut [usize],
+    cursors: &mut [u32],
     cell_meta_per_part: &mut [f32],
     cell_texture_hashes: &mut [u32],
     mesh_deform: &mut Vec<PartDeformFrame>,
