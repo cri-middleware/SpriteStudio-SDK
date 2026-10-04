@@ -1266,6 +1266,8 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
     resolved_layer.deform_vec.clone_from(&primary.deform_vec);
     resolved_layer.cell_meta_per_part.clone_from(&primary.cell_meta_per_part);
     resolved_layer.cell_texture_hashes.clone_from(&primary.cell_texture_hashes);
+    // The cell cursor says which of the part's cells is showing; the UVs sample it.
+    resolved_layer.cursors.clone_from(&primary.cursors);
 
     // mesh_deform holds variable-size per-part deltas; deep-copy from primary.
     if resolved_layer.mesh_deform.len() != num_parts {
@@ -3974,6 +3976,38 @@ mod tests {
     /// reports nothing when there is not one. Without the guard the accessors
     /// would read an unfinished `FlatBufferBuilder`, which asserts — and under
     /// `panic = "abort"` that assert ends the host process.
+    #[test]
+    fn a_mixed_pose_samples_the_primary_cell_for_its_uvs() {
+        // A second source at a negligible weight sends every frame through the
+        // mix, while the pose stays the primary's to within 1e-6 and the cell is
+        // the primary's by definition. The UVs must follow the cell the primary
+        // shows on each frame, as they do when it plays alone.
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
+        let meta = &resource.animations()[resource.find_animation_index("dance").expect("fixture sanity: Ringo has dance")];
+
+        let (mut solo, mut mixed) = (Context::new(), Context::new());
+        solo.bind_resource(&resource);
+        mixed.bind_resource(&resource);
+        solo.setup_animation("dance").expect("setup");
+        mixed.setup_animation("dance").expect("setup");
+        mixed.add_track_source(0, "dance", 1e-6).expect("second source");
+
+        let uvs = |c: &Context| unsafe { ::core::slice::from_raw_parts(c.get_local_uvs_ptr(), c.get_local_uvs_len()) }.to_vec();
+        for f in meta.start_frame..=meta.end_frame {
+            solo.get_frame_data(f as f32).expect("frame");
+            mixed.get_frame_data(f as f32).expect("frame");
+            let (a, b) = (uvs(&solo), uvs(&mixed));
+            assert_eq!(a.len(), b.len());
+            for (i, (x, y)) in a.iter().zip(&b).enumerate() {
+                assert!((x - y).abs() < 1e-2, "frame {f}, part {}: solo uv {x}, mixed uv {y}", i / 10);
+            }
+        }
+    }
+
     #[test]
     fn static_mesh_buffers_are_shared_not_copied() {
         prepare();
