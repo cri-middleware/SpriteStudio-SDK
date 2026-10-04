@@ -558,11 +558,17 @@ impl<'a> AnimationResource<'a> {
         let fb_animations = ssab.animations();
         let mut animations = Vec::with_capacity(fb_animations.len());
 
+        // A part's skin weights and a mesh cell's geometry are the same in every
+        // animation, so each is decoded once here and shared rather than copied
+        // into every animation's `CachedPartData`.
+        let fb_parts = ssab.parts();
+        let mesh_bindings: Vec<_> = fb_parts.iter().map(|part| crate::core::framedata::build_mesh_binding_cache(part.mesh_binding()).map(alloc::sync::Arc::new)).collect();
+        let mut mesh_cells = alloc::collections::BTreeMap::new();
+
         for anim in fb_animations {
             let parts = anim.parts_animation_data();
             let mut cached_parts = Vec::with_capacity(parts.len());
 
-            let fb_parts = ssab.parts();
             for (i, p) in parts.iter().enumerate() {
                 let part_meta = fb_parts.get(i);
                 let parent_index = part_meta.parent_index();
@@ -580,8 +586,13 @@ impl<'a> AnimationResource<'a> {
                     _ => None,
                 });
                 let nines = crate::core::framedata::build_nines_part_data(&part_meta);
-                let mesh_binding = crate::core::framedata::build_mesh_binding_cache(part_meta.mesh_binding());
-                let mesh_cell = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMesh { crate::core::framedata::build_mesh_cell_data(&ssab, &keys, keys.run(p.cell_keys())) } else { None };
+                let mesh_binding = mesh_bindings[i].clone();
+                let mesh_cell = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMesh {
+                    crate::core::framedata::mesh_part_cell(&keys, keys.run(p.cell_keys()))
+                        .and_then(|cell| mesh_cells.entry((cell.cellmap_name_hash(), cell.name_hash())).or_insert_with(|| crate::core::framedata::build_mesh_cell_data(&ssab, cell).map(alloc::sync::Arc::new)).clone())
+                } else {
+                    None
+                };
                 let name_hash = fnv1a_hash_str(part_meta.name());
                 cached_parts.push(crate::core::framedata::CachedPartData::new(p, &keys, i as i16, parent_index, name_hash, resolved_cells, shape_kind, nines, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor));
             }

@@ -117,8 +117,9 @@ pub(crate) fn resolve_single_cell(ssab: &ssab::ssab::ss::format::SsAnimeBinary, 
 
 /// Pre-decoded skinned mesh bind-pose data for a single part.
 ///
-/// Built once at SSAB load time from `PartData.mesh_binding()` (AoS in the
-/// FlatBuffer) and stored on `CachedPartData`. CSR layout for influence
+/// Built once per part at SSAB load time from `PartData.mesh_binding()` (AoS
+/// in the FlatBuffer), and shared by that part's `CachedPartData` in every
+/// animation: the binding belongs to the part, not to an animation. CSR layout for influence
 /// offsets + SoA for weights / bind coords so the per-frame skinning pass
 /// (`compute_skinned_mesh_vertices`) can stream the data SIMD-friendly.
 ///
@@ -161,7 +162,8 @@ pub fn build_mesh_binding_cache(mesh_binding: Option<ssab::ssab::ss::format::Par
 /// Per-part static mesh geometry resolved from the part's Cell.
 ///
 /// Mesh parts may not change their cell after frame 0 (SS spec), so this is
-/// resolved once at SSAB load time. `uvs` are interleaved `[u, v, ...]` in
+/// resolved once per cell at SSAB load time and shared by every part and
+/// animation that draws that cell. `uvs` are interleaved `[u, v, ...]` in
 /// cellmap texture-pixel space (the cell rectangle origin is already added —
 /// divide by the texture size to normalize). `rest_x` / `rest_y` are SoA
 /// rest-pose positions (cell coordinate minus the cell pivot's pixel
@@ -213,17 +215,19 @@ pub struct RawVertexDeform {
     pub dy: [f32; 4],
 }
 
-/// Resolves a mesh part's Cell — fixed at frame 0 per the SS mesh spec, so the
-/// first cell keyframe is authoritative — and extracts its triangulated
-/// geometry. Returns `None` when the part has no cell or the cell carries no
-/// mesh tables (i.e. it is not a mesh cell).
-pub fn build_mesh_cell_data(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'_>, keys: &KeyColumns<'_>, cell_keys: Option<KeyRun>) -> Option<MeshCellData> {
+/// A mesh part's Cell — fixed at frame 0 per the SS mesh spec, so the first
+/// cell keyframe is authoritative. `None` when the part has no cell keys.
+pub fn mesh_part_cell<'a>(keys: &KeyColumns<'a>, cell_keys: Option<KeyRun>) -> Option<ssab::ssab::ss::format::PartAttributeCell<'a>> {
     let cell_keys = cell_keys?;
     if cell_keys.count() == 0 {
         return None;
     }
-    let value = keys.key(cell_keys.first() as usize).cell();
+    Some(keys.key(cell_keys.first() as usize).cell())
+}
 
+/// Extracts a mesh cell's triangulated geometry. Returns `None` when the cell
+/// cannot be resolved or carries no mesh tables (i.e. it is not a mesh cell).
+pub fn build_mesh_cell_data(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'_>, value: ssab::ssab::ss::format::PartAttributeCell<'_>) -> Option<MeshCellData> {
     let cellmaps = ssab.cellmaps()?;
     let cellmap = crate::core::ssab_lookup::find_cellmap(&cellmaps, value.cellmap_name_hash())?;
     let cells = cellmap.cells()?;
@@ -346,8 +350,8 @@ pub struct CachedPartData {
     pub resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
     pub shape_kind: Option<crate::core::geometry::ShapeType>,
     pub nines: Option<NinesPartData>,
-    pub mesh_binding: Option<MeshBindingCache>,
-    pub mesh_cell: Option<MeshCellData>,
+    pub mesh_binding: Option<alloc::sync::Arc<MeshBindingCache>>,
+    pub mesh_cell: Option<alloc::sync::Arc<MeshCellData>>,
 
     // バッチキー用の静的メタデータ (setup 時に SSAB PartData から1回だけ読む)。
     // フレームごとの DrawBatch 計算で参照される。
@@ -449,8 +453,8 @@ impl CachedPartData {
         resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
         shape_kind: Option<crate::core::geometry::ShapeType>,
         nines: Option<NinesPartData>,
-        mesh_binding: Option<MeshBindingCache>,
-        mesh_cell: Option<MeshCellData>,
+        mesh_binding: Option<alloc::sync::Arc<MeshBindingCache>>,
+        mesh_cell: Option<alloc::sync::Arc<MeshCellData>>,
         blend_type: ssab::ssab::ss::format::BlendType,
         part_type_disc: ssab::ssab::ss::format::PartType,
         mask_influence: bool,
