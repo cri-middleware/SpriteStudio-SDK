@@ -89,7 +89,8 @@ pub fn compute_local_uvs(
     let fy = if part_flip.1 { -1.0 } else { 1.0 };
 
     let rot_rad = rot_deg * core::f32::consts::PI / 180.0;
-    let (sin_r, cos_r) = crate::core::math::sincosf(rot_rad);
+    // Most parts never rotate their UVs, and sin and cos of ±0 are ±0 and 1.
+    let (sin_r, cos_r) = if rot_rad == 0.0 { (rot_rad, 1.0) } else { crate::core::math::sincosf(rot_rad) };
 
     let ou = center_u + tu;
     let ov = center_v + tv;
@@ -863,6 +864,15 @@ mod tests {
         // Translate 0.1 -> (1.6, -0.4)
         assert_approx_eq(u[0], 1.6);
         assert_approx_eq(v[0], -0.4);
+    }
+
+    #[test]
+    fn test_uvs_zero_rotation_is_what_sincosf_gives() {
+        // compute_local_uvs skips sincosf for a zero rotation.
+        for zero in [0.0f32, -0.0] {
+            let (sin, cos) = crate::core::math::sincosf(zero);
+            assert_eq!((sin.to_bits(), cos.to_bits()), (zero.to_bits(), 1.0f32.to_bits()));
+        }
     }
 
     #[test]
