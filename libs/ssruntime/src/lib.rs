@@ -1896,7 +1896,7 @@ impl<'a> Context<'a> {
         // static mesh buffers.
         globals.mesh_layout = NO_MESH_LAYOUT;
 
-        self.instance.z_order.setup(metadata.cached_parts());
+        self.instance.z_order.setup(index as i32, metadata.cached_parts());
         self.rebuild_setup_pose();
 
         Ok(())
@@ -2396,6 +2396,8 @@ impl<'a> Context<'a> {
         // Stage B + C + draw plan on the resolved pose.
         let nines = &mut self.instance.globals.nines;
         let resolved = &mut self.instance.resolved_layer;
+        // A track-0 change can hand the primary role to another animation.
+        self.instance.z_order.fit(primary_anim_idx, primary_metadata.cached_parts());
         let offset = core::framedata::compose_frame_data(
             &mut self.eval.fb,
             primary_metadata.cached_parts(),
