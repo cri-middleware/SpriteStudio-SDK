@@ -2040,6 +2040,7 @@ impl<'a> Context<'a> {
         }
         let metadata = &resource.animations[anim_idx as usize];
         let (coordinate_system, origin, unit) = (self.instance.coordinate_system, self.instance.origin, self.instance.unit);
+        self.instance.setup_pose.reserve_exact(metadata.initial_attributes.len());
         for (i, a) in metadata.initial_attributes.iter().enumerate() {
             let parent_index = metadata.cached_parts().get(i).map_or(-1, |p| p.parent_index);
             self.instance.setup_pose.push(crate::core::framedata::setup_pose_part(&a, parent_index, coordinate_system, origin, unit, metadata.canvas_width, metadata.canvas_height));
