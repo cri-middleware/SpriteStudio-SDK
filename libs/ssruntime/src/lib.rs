@@ -396,6 +396,9 @@ pub struct AnimationMetadata<'a> {
     animation: ssab::ssab::ss::format::AnimationData<'a>,
     source: alloc::sync::Arc<PartCacheSource<'a>>,
     cached_parts: once_cell::race::OnceBox<Vec<crate::core::framedata::CachedPartData>>,
+    /// Which of the pack's mesh layouts this animation draws with
+    /// (`PartCacheSource::mesh_buffers`).
+    mesh_layout: usize,
 }
 
 impl AnimationMetadata<'_> {
@@ -405,6 +408,64 @@ impl AnimationMetadata<'_> {
     /// different threads may both build it; one result is kept.
     pub fn cached_parts(&self) -> &[crate::core::framedata::CachedPartData] {
         self.cached_parts.get_or_init(|| alloc::boxed::Box::new(self.source.build(self.animation)))
+    }
+
+    /// The static mesh buffers this animation draws with, built the first time
+    /// any animation with the same mesh cells asks for them and shared by all of
+    /// them.
+    fn static_mesh(&self) -> &StaticMeshBuffers {
+        self.source.mesh_buffers[self.mesh_layout].get_or_init(|| alloc::boxed::Box::new(StaticMeshBuffers::build(self.cached_parts())))
+    }
+}
+
+/// What a Player draws a mesh part with besides its per-frame vertices: the
+/// UVs (interleaved `[u, v, ...]`, texture-pixel space) and triangle indices of
+/// each mesh part's cell, concatenated over the parts in CSR form. Fixed by
+/// which cell each mesh part shows (its first key, by the SS mesh spec), so
+/// every animation drawing its meshes with the same cells shares one.
+struct StaticMeshBuffers {
+    /// CSR prefix sum over vertices, length `num_parts + 1`; slices `uvs` (two
+    /// floats a vertex) and the per-instance vertex buffers.
+    vertex_offsets: Vec<u32>,
+    uvs: Vec<f32>,
+    indices: Vec<i32>,
+    /// CSR prefix sum over `indices`, length `num_parts + 1`.
+    index_offsets: Vec<u32>,
+}
+
+impl StaticMeshBuffers {
+    fn build(cached_parts: &[crate::core::framedata::CachedPartData]) -> Self {
+        let cell = |p: &crate::core::framedata::CachedPartData| p.mesh_cell.clone();
+        // Non-mesh parts contribute an empty range. The Cell is the authoritative
+        // geometry source for both skeletal and Deform-only meshes; the bind
+        // cache only adds skinning.
+        let mut vertex_offsets = Vec::with_capacity(cached_parts.len() + 1);
+        let mut index_offsets = Vec::with_capacity(cached_parts.len() + 1);
+        let (mut vertices, mut indices) = (0u32, 0u32);
+        vertex_offsets.push(0);
+        index_offsets.push(0);
+        for p in cached_parts {
+            if let Some(m) = cell(p) {
+                vertices += m.num_vertices() as u32;
+                indices += m.indices.len() as u32;
+            }
+            vertex_offsets.push(vertices);
+            index_offsets.push(indices);
+        }
+
+        let mut uvs = alloc::vec![0.0; vertices as usize * 2];
+        let mut all_indices = Vec::with_capacity(indices as usize);
+        for (i, p) in cached_parts.iter().enumerate() {
+            let Some(m) = cell(p) else { continue };
+            all_indices.extend_from_slice(&m.indices);
+            // UVs share the vertex CSR; copy only when the cell vertex count
+            // matches the slot (true for well-formed meshes).
+            let (start, end) = (vertex_offsets[i] as usize, vertex_offsets[i + 1] as usize);
+            if m.uvs.len() == (end - start) * 2 {
+                uvs[start * 2..end * 2].copy_from_slice(&m.uvs);
+            }
+        }
+        Self { vertex_offsets, uvs, indices: all_indices, index_offsets }
     }
 }
 
@@ -417,6 +478,11 @@ struct PartCacheSource<'a> {
     keys: crate::core::keyframes::KeyColumns<'a>,
     mesh_bindings: Vec<Option<alloc::sync::Arc<crate::core::framedata::MeshBindingCache>>>,
     mesh_cells: alloc::collections::BTreeMap<(u32, u32), Option<alloc::sync::Arc<crate::core::framedata::MeshCellData>>>,
+    /// One slot per distinct set of cells the pack's animations show on their
+    /// mesh parts, filled the first time an animation using it plays.
+    mesh_buffers: Vec<once_cell::race::OnceBox<StaticMeshBuffers>>,
+    /// Each animation's slot in `mesh_buffers`, by animation index.
+    mesh_layouts: Vec<usize>,
 }
 
 impl<'a> PartCacheSource<'a> {
@@ -424,17 +490,26 @@ impl<'a> PartCacheSource<'a> {
         let fb_parts = ssab.parts();
         let mesh_bindings = fb_parts.iter().map(|part| crate::core::framedata::build_mesh_binding_cache(part.mesh_binding()).map(alloc::sync::Arc::new)).collect();
         let mut mesh_cells = alloc::collections::BTreeMap::new();
+        // Animations that show the same cell on every mesh part draw with the
+        // same static mesh buffers; number each distinct set as it appears.
+        let mut layout_of = alloc::collections::BTreeMap::<Vec<(usize, u32, u32)>, usize>::new();
+        let mut mesh_layouts = Vec::with_capacity(ssab.animations().len());
         for anim in ssab.animations() {
+            let mut layout = Vec::new();
             for (i, p) in anim.parts_animation_data().iter().enumerate() {
                 if fb_parts.get(i).part_type_type() != ssab::ssab::ss::format::PartType::PartTypeMesh {
                     continue;
                 }
                 if let Some(cell) = crate::core::framedata::mesh_part_cell(&keys, keys.run(p.cell_keys())) {
+                    layout.push((i, cell.cellmap_name_hash(), cell.name_hash()));
                     mesh_cells.entry((cell.cellmap_name_hash(), cell.name_hash())).or_insert_with(|| crate::core::framedata::build_mesh_cell_data(&ssab, cell).map(alloc::sync::Arc::new));
                 }
             }
+            let next = layout_of.len();
+            mesh_layouts.push(*layout_of.entry(layout).or_insert(next));
         }
-        Self { ssab, keys, mesh_bindings, mesh_cells }
+        let mesh_buffers = (0..layout_of.len()).map(|_| once_cell::race::OnceBox::new()).collect();
+        Self { ssab, keys, mesh_bindings, mesh_cells, mesh_buffers, mesh_layouts }
     }
 
     fn build(&self, anim: ssab::ssab::ss::format::AnimationData<'a>) -> Vec<crate::core::framedata::CachedPartData> {
@@ -514,6 +589,7 @@ pub struct AnimationResource<'a> {
     data: &'a [u8],
     animations: Vec<AnimationMetadata<'a>>,
     keys: crate::core::keyframes::KeyColumns<'a>,
+    source: alloc::sync::Arc<PartCacheSource<'a>>,
 }
 
 /// A thread-safe, shared resource containing SSAB data and its parsed metadata.
@@ -636,7 +712,7 @@ impl<'a> AnimationResource<'a> {
         let mut animations = Vec::with_capacity(fb_animations.len());
         let source = alloc::sync::Arc::new(PartCacheSource::new(ssab, keys));
 
-        for anim in fb_animations {
+        for (index, anim) in fb_animations.iter().enumerate() {
             let name_hash = anim.name_hash();
             let canvas_size = anim.canvas_size();
             let (canvas_width, canvas_height) = (canvas_size.v1(), canvas_size.v2());
@@ -654,10 +730,17 @@ impl<'a> AnimationResource<'a> {
                 animation: anim,
                 source: source.clone(),
                 cached_parts: once_cell::race::OnceBox::new(),
+                mesh_layout: source.mesh_layouts[index],
             });
         }
 
-        Ok(Self { data, animations, keys })
+        Ok(Self { data, animations, keys, source })
+    }
+
+    /// The static mesh buffers of mesh layout `layout`, if an animation using it
+    /// has built them.
+    fn static_mesh(&self, layout: usize) -> Option<&StaticMeshBuffers> {
+        self.source.mesh_buffers.get(layout)?.get()
     }
 
     pub fn get_ssab_data(&self) -> &'a [u8] {
@@ -796,13 +879,12 @@ struct GlobalBuffers {
     mesh_vertices_y: Vec<f32>,
     /// CSR-style prefix sum, length = `num_parts + 1`.
     mesh_vertex_offsets: Vec<u32>,
-    /// Static mesh UV (interleaved `[u, v, ...]`, texture-pixel space) and
-    /// triangle indices, resolved once from each mesh part's frame-0 Cell.
-    /// `mesh_uvs` is sliced per-part by `mesh_vertex_offsets`; `mesh_indices`
-    /// by `mesh_index_offsets` (CSR, length `num_parts + 1`).
-    mesh_uvs: Vec<f32>,
-    mesh_indices: Vec<i32>,
-    mesh_index_offsets: Vec<u32>,
+    /// The mesh layout (`AnimationMetadata::mesh_layout`) whose static UVs and
+    /// triangle indices the getters hand out, and that `mesh_vertex_offsets`
+    /// and the vertex buffers are sized for; [`NO_MESH_LAYOUT`] until
+    /// `compute_mesh_vertices` sets them up, and in Indirect mode. The buffers
+    /// themselves are the animation's, shared by every instance.
+    mesh_layout: usize,
     /// Per-frame Nine-Slice grids, CSR-sliced per part. Written by
     /// `compose_frame_data` (the draw plan needs the counts), not by Phase 2.
     nines: crate::core::framedata::NinesBuffers,
@@ -820,13 +902,14 @@ impl GlobalBuffers {
             mesh_vertices_x: Vec::new(),
             mesh_vertices_y: Vec::new(),
             mesh_vertex_offsets: Vec::new(),
-            mesh_uvs: Vec::new(),
-            mesh_indices: Vec::new(),
-            mesh_index_offsets: Vec::new(),
+            mesh_layout: NO_MESH_LAYOUT,
             nines: crate::core::framedata::NinesBuffers::default(),
         }
     }
 }
+
+/// `GlobalBuffers::mesh_layout` before the static mesh buffers are set up.
+const NO_MESH_LAYOUT: usize = usize::MAX;
 
 /// Static / shareable evaluation context. The resource borrow and the
 /// FlatBufferBuilder workspace live here because they are candidates for
@@ -1786,9 +1869,9 @@ impl<'a> Context<'a> {
         globals.shape_vertex_box_coords = alloc::vec![0.0; shape_len];
         globals.shape_vertex_counts.clear();
         globals.shape_vertex_counts.resize(num_parts, 0);
-        // Invalidate the static mesh buffers so compute_mesh_vertices rebuilds
-        // them for the newly selected animation's Cells.
-        globals.mesh_index_offsets.clear();
+        // Have compute_mesh_vertices set up the newly selected animation's
+        // static mesh buffers.
+        globals.mesh_layout = NO_MESH_LAYOUT;
 
         self.instance.z_order.setup(metadata.cached_parts());
         self.rebuild_setup_pose();
@@ -2326,7 +2409,7 @@ impl<'a> Context<'a> {
             Self::compute_matrices(instance, metadata.cached_parts());
             // Skinned mesh skinning depends on world matrices, so it lives in the
             // Direct path. Mesh parts in Indirect mode get empty per-part ranges.
-            Self::compute_mesh_vertices(instance, metadata.cached_parts());
+            Self::compute_mesh_vertices(instance, metadata);
         } else {
             Self::clear_mesh_vertices(instance, metadata.cached_parts().len());
         }
@@ -2341,19 +2424,20 @@ impl<'a> Context<'a> {
     ///
     /// Layout: x/y are SoA, sliced per part by `mesh_vertex_offsets` (a CSR
     /// prefix sum of length `num_parts + 1`; non-mesh parts get an empty
-    /// range). The CSR offsets and the static UV / index buffers are built
-    /// once by `setup_static_mesh_buffers`; only the vertex positions are
+    /// range). The CSR offsets and the static UV / index buffers are the
+    /// animation's (`StaticMeshBuffers`); only the vertex positions are
     /// recomputed each frame.
     #[allow(clippy::needless_range_loop)]
-    fn compute_mesh_vertices(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
+    fn compute_mesh_vertices(instance: &mut InstanceState<'a>, metadata: &AnimationMetadata<'a>) {
         let num_parts = instance.resolved_layer.parts_vec.len();
+        let cached_parts = metadata.cached_parts();
 
         // The CSR offsets and the static UV / index buffers depend only on the
-        // chosen animation's per-part Cells (fixed by the SS mesh spec). Build
-        // them — and size the SoA position buffers — once; `play()` clears
-        // `mesh_index_offsets` so a new animation forces the rebuild.
-        if instance.globals.mesh_index_offsets.len() != num_parts + 1 {
-            Self::setup_static_mesh_buffers(instance, cached_parts);
+        // animation's per-part Cells (fixed by the SS mesh spec). Take the
+        // offsets and size the SoA position buffers once per layout;
+        // `setup_animation` resets `mesh_layout` so a new animation sets up again.
+        if instance.globals.mesh_layout != metadata.mesh_layout {
+            Self::setup_static_mesh_buffers(instance, metadata);
         }
 
         let layer = &instance.resolved_layer;
@@ -2433,61 +2517,20 @@ impl<'a> Context<'a> {
         }
     }
 
-    /// Builds the per-instance static mesh buffers — CSR vertex / index
-    /// offsets, texture-space UVs, triangle indices — and sizes and zeroes the
-    /// SoA position buffers. These depend only on the chosen animation's
-    /// per-part Cells (fixed by the SS mesh spec), so this runs once per
-    /// `play()` rather than every frame. A statically malformed mesh part
-    /// keeps the zeros written here, so the per-frame pass needs no clear.
-    fn setup_static_mesh_buffers(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
-        let num_parts = instance.resolved_layer.parts_vec.len();
+    /// Points the instance at the animation's static mesh buffers: copies their
+    /// vertex offsets, and sizes and zeroes the SoA position buffers. A
+    /// statically malformed mesh part keeps the zeros written here, so the
+    /// per-frame pass needs no clear.
+    fn setup_static_mesh_buffers(instance: &mut InstanceState<'a>, metadata: &AnimationMetadata<'a>) {
         let globals = &mut instance.globals;
-
-        // CSR vertex offsets — non-mesh parts contribute an empty range. The
-        // Cell is the authoritative geometry source for both skeletal and
-        // Deform-only meshes; the bind cache only adds skinning.
-        globals.mesh_vertex_offsets.clear();
-        globals.mesh_vertex_offsets.resize(num_parts + 1, 0);
-        for i in 0..num_parts {
-            let vertex_count = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()).map(|m| m.num_vertices()).unwrap_or(0);
-            globals.mesh_vertex_offsets[i + 1] = globals.mesh_vertex_offsets[i] + vertex_count as u32;
-        }
-        let total_vertices = *globals.mesh_vertex_offsets.last().unwrap_or(&0) as usize;
-
-        // CSR triangle-index offsets.
-        globals.mesh_index_offsets.clear();
-        globals.mesh_index_offsets.resize(num_parts + 1, 0);
-        for i in 0..num_parts {
-            let index_count = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()).map(|m| m.indices.len()).unwrap_or(0);
-            globals.mesh_index_offsets[i + 1] = globals.mesh_index_offsets[i] + index_count as u32;
-        }
-        let total_indices = *globals.mesh_index_offsets.last().unwrap_or(&0) as usize;
-
-        // Static UVs (texture-pixel space) and triangle indices, per part.
-        globals.mesh_indices.clear();
-        globals.mesh_indices.reserve(total_indices);
-        globals.mesh_uvs.clear();
-        globals.mesh_uvs.resize(total_vertices * 2, 0.0);
-        for i in 0..num_parts {
-            let Some(mesh_cell) = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()) else {
-                continue;
-            };
-            globals.mesh_indices.extend_from_slice(&mesh_cell.indices);
-            // UVs share the position CSR; copy only when the cell vertex count
-            // matches the slot (true for well-formed meshes).
-            let start = globals.mesh_vertex_offsets[i] as usize;
-            let end = globals.mesh_vertex_offsets[i + 1] as usize;
-            if mesh_cell.uvs.len() == (end - start) * 2 {
-                globals.mesh_uvs[start * 2..end * 2].copy_from_slice(&mesh_cell.uvs);
-            }
-        }
-
-        // SoA position buffers — sized and zeroed once. Each valid mesh part
-        // overwrites its whole range every frame.
+        let mesh = metadata.static_mesh();
+        globals.mesh_vertex_offsets.clone_from(&mesh.vertex_offsets);
+        let total_vertices = *mesh.vertex_offsets.last().unwrap_or(&0) as usize;
         globals.mesh_vertices_x.clear();
         globals.mesh_vertices_x.resize(total_vertices, 0.0);
         globals.mesh_vertices_y.clear();
         globals.mesh_vertices_y.resize(total_vertices, 0.0);
+        globals.mesh_layout = metadata.mesh_layout;
     }
 
     fn clear_mesh_vertices(instance: &mut InstanceState<'a>, num_parts: usize) {
@@ -2500,9 +2543,7 @@ impl<'a> Context<'a> {
         }
         globals.mesh_vertices_x.clear();
         globals.mesh_vertices_y.clear();
-        globals.mesh_uvs.clear();
-        globals.mesh_indices.clear();
-        globals.mesh_index_offsets.clear();
+        globals.mesh_layout = NO_MESH_LAYOUT;
     }
 
     #[allow(clippy::needless_range_loop)]
@@ -2758,28 +2799,34 @@ impl<'a> Context<'a> {
         self.instance.globals.mesh_vertex_offsets.len()
     }
 
+    /// The static mesh buffers this instance draws with: none before the first
+    /// Direct-mode `get_frame_data`, and none in Indirect mode.
+    fn static_mesh(&self) -> Option<&StaticMeshBuffers> {
+        self.eval.resource?.static_mesh(self.instance.globals.mesh_layout)
+    }
+
     pub fn get_mesh_uvs_ptr(&self) -> *const f32 {
-        self.instance.globals.mesh_uvs.as_ptr()
+        self.static_mesh().map_or(::core::ptr::NonNull::dangling().as_ptr(), |m| m.uvs.as_ptr())
     }
 
     pub fn get_mesh_uvs_len(&self) -> usize {
-        self.instance.globals.mesh_uvs.len()
+        self.static_mesh().map_or(0, |m| m.uvs.len())
     }
 
     pub fn get_mesh_indices_ptr(&self) -> *const i32 {
-        self.instance.globals.mesh_indices.as_ptr()
+        self.static_mesh().map_or(::core::ptr::NonNull::dangling().as_ptr(), |m| m.indices.as_ptr())
     }
 
     pub fn get_mesh_indices_len(&self) -> usize {
-        self.instance.globals.mesh_indices.len()
+        self.static_mesh().map_or(0, |m| m.indices.len())
     }
 
     pub fn get_mesh_index_offsets_ptr(&self) -> *const u32 {
-        self.instance.globals.mesh_index_offsets.as_ptr()
+        self.static_mesh().map_or(::core::ptr::NonNull::dangling().as_ptr(), |m| m.index_offsets.as_ptr())
     }
 
     pub fn get_mesh_index_offsets_len(&self) -> usize {
-        self.instance.globals.mesh_index_offsets.len()
+        self.static_mesh().map_or(0, |m| m.index_offsets.len())
     }
 
     pub fn get_nines_vertices_ptr(&self) -> *const f32 {
@@ -3927,6 +3974,43 @@ mod tests {
     /// reports nothing when there is not one. Without the guard the accessors
     /// would read an unfinished `FlatBufferBuilder`, which asserts — and under
     /// `panic = "abort"` that assert ends the host process.
+    #[test]
+    fn static_mesh_buffers_are_shared_not_copied() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
+        let names = resource.get_animation_names();
+        let start = |name: &str| resource.animations()[resource.find_animation_index(name).unwrap()].start_frame as f32;
+
+        let (mut a, mut b) = (Context::new(), Context::new());
+        a.bind_resource(&resource);
+        b.bind_resource(&resource);
+        a.setup_animation(&names[0]).expect("setup");
+        assert_eq!(a.get_mesh_uvs_len(), 0, "nothing is handed out before the first frame");
+        a.get_frame_data(start(&names[0])).expect("frame");
+        assert!(a.get_mesh_uvs_len() > 0 && a.get_mesh_indices_len() > 0, "fixture sanity: Ringo has mesh parts");
+
+        // A second instance hands out the very same buffers.
+        b.setup_animation(&names[0]).expect("setup");
+        b.get_frame_data(start(&names[0])).expect("frame");
+        assert_eq!(a.get_mesh_uvs_ptr(), b.get_mesh_uvs_ptr());
+        assert_eq!(a.get_mesh_indices_ptr(), b.get_mesh_indices_ptr());
+        assert_eq!(a.get_mesh_index_offsets_ptr(), b.get_mesh_index_offsets_ptr());
+
+        // So does another animation that shows the same cells on its meshes.
+        let same = names.iter().skip(1).find(|n| resource.animations()[resource.find_animation_index(n).unwrap()].mesh_layout == resource.animations()[0].mesh_layout).expect("fixture sanity: Ringo's animations share their mesh cells");
+        b.setup_animation(same).expect("setup");
+        b.get_frame_data(start(same)).expect("frame");
+        assert_eq!(a.get_mesh_uvs_ptr(), b.get_mesh_uvs_ptr());
+
+        // Indirect mode skins no mesh, so it hands out none.
+        b.set_render_mode(crate::core::RenderMode::SceneGraph);
+        b.get_frame_data(start(same)).expect("frame");
+        assert_eq!((b.get_mesh_uvs_len(), b.get_mesh_indices_len(), b.get_mesh_index_offsets_len()), (0, 0, 0));
+    }
+
     #[test]
     fn the_frame_data_accessors_never_read_an_unfinished_buffer() {
         prepare();
