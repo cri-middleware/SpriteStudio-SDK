@@ -792,8 +792,10 @@ pub fn fnv1a_hash_str(text: &str) -> u32 {
 /// (`cell_meta_per_part`, `cell_texture_hashes`, `local_vertices`) that
 /// are written in lockstep with the pose evaluation.
 ///
-/// Phase 3 will introduce a second `LayerState` per instance and a
-/// `mix_poses()` stage between Phase 1 and Phase 2.
+/// An instance has one per source, and the resolved one the mix writes
+/// (`InstanceState::resolved_layer`). While one source plays alone, its pose
+/// is extracted straight into the resolved layer, and its own layer stays
+/// unallocated until a mix needs it.
 struct LayerState<'a> {
     parts_vec: Vec<crate::runtime::framedata::ss::runtime::PartState>,
     cell_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
@@ -860,6 +862,18 @@ impl<'a> LayerState<'a> {
         self.local_vertices.resize(num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE, 0.0);
         self.raw_vertex_deform.clear();
         self.raw_vertex_deform.resize(num_parts, crate::core::framedata::RawVertexDeform::default());
+    }
+
+    /// Size the buffers for `metadata`'s animation unless they already are: the
+    /// first time a source's own layer is extracted into, or after the layer
+    /// last held a different part count.
+    fn fit(&mut self, metadata: &AnimationMetadata<'_>) {
+        let num_parts = metadata.cached_parts().len();
+        let sized = self.raw_vertex_deform.len() == num_parts && self.cell_texture_hashes.len() == num_parts && self.cell_meta_per_part.len() == num_parts * 6 && self.local_vertices.len() == num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE;
+        if !sized {
+            let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
+            self.resize_for_parts(num_parts, crate::core::framedata::cursor_count(metadata.cached_parts()), cell_c, color_c, shader_c, vertex_c, deform_c);
+        }
     }
 }
 
@@ -1366,8 +1380,9 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
                 // sources" fast path (almost never fires — a part is only uniform
                 // when all 26 bits agree) and a branch-free bit-mask form (identical
                 // timing; the cost is the stores, not the branches). Single-source
-                // playback does not reach here at all — `get_frame_data` swaps the
-                // layer instead — so nothing that ships today pays it.
+                // playback does not reach here at all — `get_frame_data` extracts
+                // straight into the resolved layer instead — so nothing that ships
+                // today pays it.
                 let w = src.weight;
                 let cov = layer_coverage(&layers[j], i);
                 let mut wk = [0.0f32; MIX_ATTR_COUNT];
@@ -1593,11 +1608,12 @@ impl<'a> InstanceState<'a> {
         &mut self.sources[idx]
     }
 
-    /// `true` when the primary is the only active source. The mix step can
-    /// short-circuit to a `mem::swap` in this case — the weighted sum would
-    /// yield primary's pose verbatim with `inv_total * primary.weight == 1.0`,
-    /// so the swap is byte-equivalent to running `mix_poses` while skipping
-    /// the per-part vec clone + 27 per-part PartState setter calls.
+    /// `true` when the primary is the only active source. The mix step is
+    /// skipped in this case: the weighted sum would yield the primary's pose
+    /// verbatim with `inv_total * primary.weight == 1.0`, so the pose is
+    /// extracted straight into the resolved layer instead, which skips the
+    /// per-part vec clone + 27 per-part PartState setter calls and the
+    /// primary's own layer.
     fn is_single_full_track(&self) -> bool {
         let primary_idx = self.primary_idx();
         let primary = &self.sources[primary_idx];
@@ -1851,8 +1867,10 @@ impl<'a> Context<'a> {
         let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
         let cursor_c = crate::core::framedata::cursor_count(metadata.cached_parts());
 
+        // A new setup plays one source alone, extracted straight into the
+        // resolved layer; the source's own layer is sized when a mix needs it.
         for layer in self.instance.layers.iter_mut() {
-            layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
+            *layer = LayerState::new();
         }
         self.instance.resolved_layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
 
@@ -2277,6 +2295,11 @@ impl<'a> Context<'a> {
         let primary_idx = self.instance.primary_idx();
         let primary_num_parts = primary_metadata.cached_parts().len();
         let num_sources = self.instance.sources.len();
+        // One audible source at full alpha resolves to its own pose verbatim, so
+        // it is extracted straight into the resolved layer and the two-level fold
+        // is skipped. The floor is unobservable here: an attribute nothing keys
+        // reads the same from the setup pose as from the extracted pose.
+        let single = self.instance.is_single_full_track();
         for i in 0..num_sources {
             let source_anim_idx = self.instance.sources[i].animation_idx;
             if source_anim_idx < 0 {
@@ -2287,7 +2310,9 @@ impl<'a> Context<'a> {
             }
             let frame_for_source = if i == primary_idx { frame_no } else { self.instance.sources[i].controller.get_frame_no() };
             let metadata = &resource.animations[source_anim_idx as usize];
-            let layer = &mut self.instance.layers[i];
+            let into_resolved = single && i == primary_idx;
+            let layer = if into_resolved { &mut self.instance.resolved_layer } else { &mut self.instance.layers[i] };
+            layer.fit(metadata);
             core::framedata::extract_pose(
                 &mut self.eval.fb,
                 metadata.cached_parts(),
@@ -2319,19 +2344,15 @@ impl<'a> Context<'a> {
             // Record which attributes this animation actually carries, per part,
             // for the mix's coverage rule. Animation-level and therefore constant
             // for the source's lifetime; copied per frame because a source can be
-            // repointed at another animation at any time.
-            layer.coverage_vec.clear();
-            layer.coverage_vec.extend(metadata.cached_parts().iter().map(|p| p.coverage));
+            // repointed at another animation at any time. The resolved layer is
+            // never mixed from, so it needs none.
+            if !into_resolved {
+                layer.coverage_vec.clear();
+                layer.coverage_vec.extend(metadata.cached_parts().iter().map(|p| p.coverage));
+            }
         }
 
-        if self.instance.is_single_full_track() {
-            // Fast path: one audible track at full alpha with one active source
-            // resolves to that source's pose verbatim, so the whole two-level fold
-            // collapses to a swap — O(1) against `mix_tracks`'s per-part vec clone
-            // and 27 setters. The floor is unobservable here: an attribute nothing
-            // keys reads the same from the setup pose as from the extracted pose.
-            ::core::mem::swap(&mut self.instance.layers[primary_idx], &mut self.instance.resolved_layer);
-        } else {
+        if !single {
             mix_tracks(&self.instance.sources, &self.instance.layers, &self.instance.tracks, primary_idx, &self.instance.setup_pose, &mut self.instance.resolved_layer);
         }
 
