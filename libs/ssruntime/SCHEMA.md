@@ -20,7 +20,7 @@ Specifically, `FrameData` takes the `AnimationData` from an `.ssab` file, evalua
 .ssab (SsAnimeBinary)
  │
  ├─ AnimationData
- │    └─ parts_animation_data: [PartAnimationData] (Keyframe arrays: POSX, ROTZ, etc.)
+ │    └─ parts_animation_data: [PartAnimationData] (a run of keyframes per attribute: POSX, ROTZ, etc.)
  │
  ＋  Current Frame Number (e.g., Frame 15)
  │
@@ -43,30 +43,30 @@ FrameData (Memory Buffer via FFI)
 
 ## Attribute Mapping: SSAB to PartState
 
-The following table shows exactly which arrays from SSAB's `PartAnimationData` are evaluated to populate the fields of `PartState` in `FrameData`.
+The following table shows exactly which fields of SSAB's `PartAnimationData` are evaluated to populate the fields of `PartState` in `FrameData`.
 
-| PartState Field | Source: SSAB `PartAnimationData` Array | Notes |
+| PartState Field | Source: SSAB `PartAnimationData` Field | Notes |
 |:---|:---|:---|
-| `position_x/y/z` | `position_x/y/z_array` | Interpolated position, converted to target coordinate system. |
-| `rotation_x/y/z` | `rotation_x/y/z_array` | Interpolated rotation (degrees). |
-| `scale_x/y` | `scale_x/y_array` | Interpolated scale multiplier. |
-| `local_scale_x/y` | `local_scale_x/y_array` | Interpolated local scale multiplier. |
-| `alpha` | `alpha_array` | Interpolated opacity (0.0 to 1.0). |
-| `local_alpha` | `local_alpha_array` | Interpolated local opacity. |
-| `priority` | `priority_array` | Current Z-order/priority. |
-| `flip_h/v` | `flip_h/v_array` | Current boolean flip state. |
-| `hide` | `hide_array` | Current boolean visibility state. |
-| `pivot_x/y` | `pivot_x/y_array` | Interpolated center of rotation/scale. |
-| `anchor_x/y` | `anchor_x/y_array` | Interpolated alignment anchor. |
-| `size_x/y` | `size_x/y_array` | Interpolated physical dimensions. |
-| `img_flip_h/v` | `img_flip_h/v_array` | Current visual-only flip state. |
-| `uv_translation_x/y`| `uv_translation_x/y_array`| Interpolated texture coordinate offset. |
-| `uv_rotation_z` | `uv_rotation_z_array` | Interpolated UV rotation. |
-| `uv_scale_x/y` | `uv_scale_x/y_array` | Interpolated UV scale. |
-| `bounding_radius` | `bounding_radius_array` | Interpolated collision radius. |
-| `mask` | `mask_array` | Interpolated mask influence. |
-| `skew_x/y` | `skew_array` | Derived from SSAB's Vec2 skew interpolation. |
-| `texture` | `texture_array` | Texture override (`TCHG`): fnv1a hash of the texture name, resolvable via `external_textures`. `0` = no override (the part keeps its cell's own texture). Step-evaluated — never interpolated. Already folded into `DrawBatch.texture_hash`, so a Player that batches by `texture_hash` needs no per-part handling. |
+| `position_x/y/z` | `position_x/y/z_keys` | Interpolated position, converted to target coordinate system. |
+| `rotation_x/y/z` | `rotation_x/y/z_keys` | Interpolated rotation (degrees). |
+| `scale_x/y` | `scale_x/y_keys` | Interpolated scale multiplier. |
+| `local_scale_x/y` | `local_scale_x/y_keys` | Interpolated local scale multiplier. |
+| `alpha` | `alpha_keys` | Interpolated opacity (0.0 to 1.0). |
+| `local_alpha` | `local_alpha_keys` | Interpolated local opacity. |
+| `priority` | `priority_keys` | Current Z-order/priority. |
+| `flip_h/v` | `flip_h/v_keys` | Current boolean flip state. |
+| `hide` | `hide_keys` | Current boolean visibility state. |
+| `pivot_x/y` | `pivot_x/y_keys` | Interpolated center of rotation/scale. |
+| `anchor_x/y` | `anchor_x/y_keys` | Interpolated alignment anchor. |
+| `size_x/y` | `size_x/y_keys` | Interpolated physical dimensions. |
+| `img_flip_h/v` | `img_flip_h/v_keys` | Current visual-only flip state. |
+| `uv_translation_x/y`| `uv_translation_x/y_keys`| Interpolated texture coordinate offset. |
+| `uv_rotation_z` | `uv_rotation_z_keys` | Interpolated UV rotation. |
+| `uv_scale_x/y` | `uv_scale_x/y_keys` | Interpolated UV scale. |
+| `bounding_radius` | `bounding_radius_keys` | Interpolated collision radius. |
+| `mask` | `mask_keys` | Interpolated mask influence. |
+| `skew_x/y` | `skew_keys` | Derived from SSAB's Vec2 skew interpolation. |
+| `texture` | `texture_keys` | Texture override (`TCHG`): fnv1a hash of the texture name, resolvable via `external_textures`. `0` = no override (the part keeps its cell's own texture). Step-evaluated — never interpolated. Already folded into `DrawBatch.texture_hash`, so a Player that batches by `texture_hash` needs no per-part handling. |
 
 ---
 
@@ -80,13 +80,13 @@ The following table shows exactly which arrays from SSAB's `PartAnimationData` a
 
 Complex attributes are stored in pools within `FrameData` to avoid duplicating large data structures. They are referenced by `short` indices in `PartState`. An index of `-1` means "no entry for this attribute on this frame."
 
-| PartState Index Field | Source: SSAB `PartAnimationData` Array | Table in FrameData | Description |
+| PartState Index Field | Source: SSAB `PartAnimationData` Field | Table in FrameData | Description |
 |:---|:---|:---|:---|
-| `cell` | `cell_array` | `cells` | Reference to cell map and cell name hash. Normal drawing texture is derived from this attribute. |
-| `part_color` | `part_color_array` | `parts_color` | Per-vertex color and blend type. **The RGBA `a` channel is pre-multiplied with the part's hierarchical `alpha`**, so the Player can write the color directly without a second alpha multiply. |
-| `shader` | `shader_array` | `shaders` | Interpolated shader parameters and map IDs. |
-| `vertex` | `vertex_array` | `vertices` | **Pre-computed local vertex coordinates** for the part's quad. The four corners (`lt`/`rt`/`lb`/`rb`) are always populated with `pivot`, `size`, `img_flip_h/v`, and the interpolated raw deform offsets all applied; the Player consumes them directly through the world matrix. The fifth `center` vertex is populated **only when** `update_flag` has `AttributeVertex` or `AttributePartColor` set — those cases want a triangle fan from the center for smoother per-vertex deform / colour gradients. Otherwise `center` is `(0, 0)` and the Player should render the quad as two triangles from the four corners only. The raw deform offsets are not exposed; the `AttributeVertex` flag still indicates whether the part actually has deform animation in the source SSAB. |
-| `deform` | `deform_array` | `deforms` | Interpolated mesh deformation coordinates. |
+| `cell` | `cell_keys` | `cells` | Reference to cell map and cell name hash. Normal drawing texture is derived from this attribute. |
+| `part_color` | `part_color_keys` | `parts_color` | Per-vertex color and blend type. **The RGBA `a` channel is pre-multiplied with the part's hierarchical `alpha`**, so the Player can write the color directly without a second alpha multiply. |
+| `shader` | `shader_keys` | `shaders` | Interpolated shader parameters and map IDs. |
+| `vertex` | `vertex_keys` | `vertices` | **Pre-computed local vertex coordinates** for the part's quad. The four corners (`lt`/`rt`/`lb`/`rb`) are always populated with `pivot`, `size`, `img_flip_h/v`, and the interpolated raw deform offsets all applied; the Player consumes them directly through the world matrix. The fifth `center` vertex is populated **only when** `update_flag` has `AttributeVertex` or `AttributePartColor` set — those cases want a triangle fan from the center for smoother per-vertex deform / colour gradients. Otherwise `center` is `(0, 0)` and the Player should render the quad as two triangles from the four corners only. The raw deform offsets are not exposed; the `AttributeVertex` flag still indicates whether the part actually has deform animation in the source SSAB. |
+| `deform` | `deform_keys` | `deforms` | Interpolated mesh deformation coordinates. |
 
 ---
 
@@ -160,30 +160,30 @@ indices: c.particle_offset * 6      .. (c.particle_offset + c.quad_count) * 6
 
 The `update_flag` in `PartState` provides a bitmask indicating which attributes were explicitly active or changed in the SSAB source data (either via setup/initial values or keyframes) for the current frame. This allows the Player to skip processing default attributes.
 
-| Flag Name | Source: SSAB `PartAnimationData` Array |
+| Flag Name | Source: SSAB `PartAnimationData` Field |
 |:---|:---|
-| `AttributeCell` | `cell_array` |
-| `AttributePosX/Y/Z` | `position_x/y/z_array` |
-| `AttributeRotX/Y/Z` | `rotation_x/y/z_array` |
-| `AttributeSclX/Y` | `scale_x/y_array` |
-| `AttributeLosclX/Y` | `local_scale_x/y_array` |
-| `AttributeAlpha` | `alpha_array` |
-| `AttributeLoAlpha` | `local_alpha_array` |
-| `AttributePrio` | `priority_array` |
-| `AttributeFlipH/V` | `flip_h/v_array` |
-| `AttributeHide` | `hide_array` |
-| `AttributePartColor` | `part_color_array` |
-| `AttributeShader` | `shader_array` |
-| `AttributeVertex` | `vertex_array` |
-| `AttributePivotX/Y` | `pivot_x/y_array` |
-| `AttributeAnchorX/Y` | `anchor_x/y_array` |
-| `AttributeSizeX/Y` | `size_x/y_array` |
-| `AttributeImgFlipH/V` | `img_flip_h/v_array` |
-| `AttributeUvtX/Y` | `uv_translation_x/y_array` |
-| `AttributeUvrZ` | `uv_rotation_z_array` |
-| `AttributeUvsX/Y` | `uv_scale_x/y_array` |
-| `AttributeBoundr` | `bounding_radius_array` |
-| `AttributeMask` | `mask_array` |
-| `AttributeSkew` | `skew_array` |
-| `AttributeDeform` | `deform_array` |
-| `AttributeTexture` | `texture_array` |
+| `AttributeCell` | `cell_keys` |
+| `AttributePosX/Y/Z` | `position_x/y/z_keys` |
+| `AttributeRotX/Y/Z` | `rotation_x/y/z_keys` |
+| `AttributeSclX/Y` | `scale_x/y_keys` |
+| `AttributeLosclX/Y` | `local_scale_x/y_keys` |
+| `AttributeAlpha` | `alpha_keys` |
+| `AttributeLoAlpha` | `local_alpha_keys` |
+| `AttributePrio` | `priority_keys` |
+| `AttributeFlipH/V` | `flip_h/v_keys` |
+| `AttributeHide` | `hide_keys` |
+| `AttributePartColor` | `part_color_keys` |
+| `AttributeShader` | `shader_keys` |
+| `AttributeVertex` | `vertex_keys` |
+| `AttributePivotX/Y` | `pivot_x/y_keys` |
+| `AttributeAnchorX/Y` | `anchor_x/y_keys` |
+| `AttributeSizeX/Y` | `size_x/y_keys` |
+| `AttributeImgFlipH/V` | `img_flip_h/v_keys` |
+| `AttributeUvtX/Y` | `uv_translation_x/y_keys` |
+| `AttributeUvrZ` | `uv_rotation_z_keys` |
+| `AttributeUvsX/Y` | `uv_scale_x/y_keys` |
+| `AttributeBoundr` | `bounding_radius_keys` |
+| `AttributeMask` | `mask_keys` |
+| `AttributeSkew` | `skew_keys` |
+| `AttributeDeform` | `deform_keys` |
+| `AttributeTexture` | `texture_keys` |

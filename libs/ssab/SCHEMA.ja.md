@@ -58,6 +58,7 @@
 | `external_textures` | [ExternalTexture] | — | 外部テクスチャ参照。`name_hash` でソート。プロジェクトの `<ExternalTextures>` リストと、この pack 内の `TCHG` キーが指す全ての `TextureName`（`common.png` のようなセルマップ画像を含む）の和集合。Player が `TCHG` のハッシュ（ひいては `DrawBatch.texture_hash`）をロード可能な名前へ逆引きするためのテーブルであり、両方の供給元を網羅する必要がある。 |
 | `external_instances` | [ExternalInstance] | — | クロスパックインスタンス参照。`(anime_pack_name_hash, anime_name_hash)` でソートされる。このテーブルに FlatBuffers の `(key)` は無いため、`LookupByKey` ではなくベクタを走査して引く。各エントリは `anime_pack_name_hash`（参照先 pack の `SsAnimeBinary.name_hash` と一致）、`anime_pack_name`（隣接する `<pack>.ssab` ファイル探索に使用）、`anime_name_hash`、`anime_name`（診断用）を持つ。 |
 | `embedded_assets` | [EmbeddedAsset] | — | オプションで埋め込まれるバイナリアセット（画像、サウンドなど） |
+| `keyframes` | Keyframes | `SsAnimePack.anime_list` (ssae) | このパック内の全アニメーションの全キーフレームを、フィールドごとの列で持つ。キーフレームデータ参照 |
 
 ---
 
@@ -219,61 +220,71 @@ SsAnimation
 
 各属性はタグ文字列（例: `"POSX"`, `"ROTZ"`, `"ALPH"`）で識別されます。
 
-### ssab: カラム型（パーツごと・属性タイプ別の配列）
+### ssab: 属性ごとのキーの並び（ラン）と、列にまとめたキー
 
-ssab では各パーツのアニメーションデータに、属性ごとの**型付き配列**の固定セットが含まれます:
+ssab では各パーツの `PartAnimationData` が、属性ごとにそれを動かすキーの並び（ラン）を指します。キー本体は、パック内の全アニメーションの分を 1 組の列 `SsAnimeBinary.keyframes` にまとめて持ちます:
 
 ```
-AnimationData
-  └─ parts_animation_data: [PartAnimationData]   // パーツごとに1つ
-       ├─ position_x_array: [{ index: 0, value: 10.0 }, { index: 30, value: 50.0 }]
-       ├─ rotation_z_array: [{ index: 0, value: 0.0 }, { index: 15, value: 90.0 }]
-       ├─ alpha_array: [{ index: 0, value: 1.0 }]
-       └─ (他の配列はすべて空/null)
+SsAnimeBinary
+  ├─ animations: [AnimationData]
+  │    └─ parts_animation_data: [PartAnimationData]   // パーツごとに1つ
+  │         ├─ position_x_keys: 3                     // ラン 3
+  │         ├─ rotation_z_keys: 4                     // ラン 4
+  │         └─ (他のフィールドはすべて無し: キー無し)
+  └─ keyframes: Keyframes
+       ├─ runs:          [ …, 10, 12, 14, … ]         // ラン 3 はキー 10 と 11
+       ├─ frame:         [ …, 0, 30, 0, 15, … ]
+       ├─ interpolation: [ …, Linear, None, Linear, None, … ]
+       ├─ curve:         [ …, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, … ]
+       └─ value:         [ …, 10.0, 50.0, 0.0, 90.0, … ]   // float のビット列
 ```
+
+`PartAnimationData` のフィールドはランのインデックスで、そのアニメーションがそのパーツのその属性にキーを持たないときは既定値の `0xFFFFFFFF`（`ssab::NO_KEYS`）です。ラン `r` はキー `runs[r]` から `runs[r + 1]` の手前までです。同じキーを持つランは 1 回だけ格納するので、全アニメーションに入るセットアップポーズは、いくつのアニメーションが指してもラン 1 つ分で済みます。
 
 ### 属性タグのマッピング
 
-| ssae タグ | ssab 配列 | 値の型 |
+値の列は、その属性でキーの `Keyframes.value` をどう読むかを示します。
+
+| ssae タグ | ssab フィールド | 値 |
 |---------|----------|------|
-| `CELL` | `cell_array` | PartAnimationDataCellValue |
-| `POSX` | `position_x_array` | PartAnimationDataFloatValue |
-| `POSY` | `position_y_array` | PartAnimationDataFloatValue |
-| `POSZ` | `position_z_array` | PartAnimationDataFloatValue |
-| `ROTX` | `rotation_x_array` | PartAnimationDataFloatValue |
-| `ROTY` | `rotation_y_array` | PartAnimationDataFloatValue |
-| `ROTZ` | `rotation_z_array` | PartAnimationDataFloatValue |
-| `SCLX` | `scale_x_array` | PartAnimationDataFloatValue |
-| `SCLY` | `scale_y_array` | PartAnimationDataFloatValue |
-| `LSCX` | `local_scale_x_array` | PartAnimationDataFloatValue |
-| `LSCY` | `local_scale_y_array` | PartAnimationDataFloatValue |
-| `ALPH` | `alpha_array` | PartAnimationDataFloatValue |
-| `LALP` | `local_alpha_array` | PartAnimationDataFloatValue |
-| `PRIO` | `priority_array` | PartAnimationDataIntValue |
-| `FLPH` | `flip_h_array` | PartAnimationDataBoolValue |
-| `FLPV` | `flip_v_array` | PartAnimationDataBoolValue |
-| `HIDE` | `hide_array` | PartAnimationDataBoolValue |
-| `PCOL` | `part_color_array` | PartAnimationDataPartColor |
-| `SHDR` | `shader_array` | PartAnimationDataShader |
-| `VERT` | `vertex_array` | PartAnimationDataVertex |
-| `PVTX` | `pivot_x_array` | PartAnimationDataFloatValue |
-| `PVTY` | `pivot_y_array` | PartAnimationDataFloatValue |
-| `ANCX` | `anchor_x_array` | PartAnimationDataFloatValue |
-| `ANCY` | `anchor_y_array` | PartAnimationDataFloatValue |
-| `SIZX` | `size_x_array` | PartAnimationDataFloatValue |
-| `SIZY` | `size_y_array` | PartAnimationDataFloatValue |
-| `IFLH` | `img_flip_h_array` | PartAnimationDataBoolValue |
-| `IFLV` | `img_flip_v_array` | PartAnimationDataBoolValue |
-| `UVTX` | `uv_translation_x_array` | PartAnimationDataFloatValue |
-| `UVTY` | `uv_translation_y_array` | PartAnimationDataFloatValue |
-| `UVRZ` | `uv_rotation_z_array` | PartAnimationDataFloatValue |
-| `UVSX` | `uv_scale_x_array` | PartAnimationDataFloatValue |
-| `UVSY` | `uv_scale_y_array` | PartAnimationDataFloatValue |
-| `BNDR` | `bounding_radius_array` | PartAnimationDataFloatValue |
-| `MASK` | `mask_array` | PartAnimationDataFloatValue |
-| `VERT` (skew) | `skew_array` | PartAnimationDataVec2 | *注: ssae の `VERT` タグは単一の `SsAttributeVertexKeyValue` に頂点オフセットと skew データの両方を含みます。ssab ではこれらが `vertex_array` と `skew_array` に分離されます。* |
-| `DEFM` | `deform_array` | PartAnimationDataDeform |
-| `TCHG` | `texture_array` | PartAnimationDataUIntValue | *値は `fnv1a(TextureName)` で、`external_textures` から解決可能。空の `TextureName`（作画上の「上書き無し」）はハッシュ化せず `0` に正規化するため、実テクスチャと区別でき `texture` の既定値とも一致する。ステップ評価であり補間されない。* |
+| `CELL` | `cell_keys` | `cells`（PartAttributeCell）のインデックス |
+| `POSX` | `position_x_keys` | `float` |
+| `POSY` | `position_y_keys` | `float` |
+| `POSZ` | `position_z_keys` | `float` |
+| `ROTX` | `rotation_x_keys` | `float` |
+| `ROTY` | `rotation_y_keys` | `float` |
+| `ROTZ` | `rotation_z_keys` | `float` |
+| `SCLX` | `scale_x_keys` | `float` |
+| `SCLY` | `scale_y_keys` | `float` |
+| `LSCX` | `local_scale_x_keys` | `float` |
+| `LSCY` | `local_scale_y_keys` | `float` |
+| `ALPH` | `alpha_keys` | `float` |
+| `LALP` | `local_alpha_keys` | `float` |
+| `PRIO` | `priority_keys` | `int` |
+| `FLPH` | `flip_h_keys` | `bool`（0 か 1） |
+| `FLPV` | `flip_v_keys` | `bool`（0 か 1） |
+| `HIDE` | `hide_keys` | `bool`（0 か 1） |
+| `PCOL` | `part_color_keys` | `part_colors`（PartAttributePartColor）のインデックス |
+| `SHDR` | `shader_keys` | `shaders`（PartAttributeShader）のインデックス |
+| `VERT` | `vertex_keys` | `vertices`（PartAttributeVertex）のインデックス |
+| `PVTX` | `pivot_x_keys` | `float` |
+| `PVTY` | `pivot_y_keys` | `float` |
+| `ANCX` | `anchor_x_keys` | `float` |
+| `ANCY` | `anchor_y_keys` | `float` |
+| `SIZX` | `size_x_keys` | `float` |
+| `SIZY` | `size_y_keys` | `float` |
+| `IFLH` | `img_flip_h_keys` | `bool`（0 か 1） |
+| `IFLV` | `img_flip_v_keys` | `bool`（0 か 1） |
+| `UVTX` | `uv_translation_x_keys` | `float` |
+| `UVTY` | `uv_translation_y_keys` | `float` |
+| `UVRZ` | `uv_rotation_z_keys` | `float` |
+| `UVSX` | `uv_scale_x_keys` | `float` |
+| `UVSY` | `uv_scale_y_keys` | `float` |
+| `BNDR` | `bounding_radius_keys` | `float` |
+| `MASK` | `mask_keys` | `float` |
+| `VERT` (skew) | `skew_keys` | `skews`（Vec2）のインデックス | *注: ssae の `VERT` タグは単一の `SsAttributeVertexKeyValue` に頂点オフセットと skew データの両方を含みます。ssab ではこれらが `vertex_keys` と `skew_keys` に分離されます。* |
+| `DEFM` | `deform_keys` | `deforms`（PartAttributeDeform）のインデックス |
+| `TCHG` | `texture_keys` | `uint32` | *値は `fnv1a(TextureName)` で、`external_textures` から解決可能。空の `TextureName`（作画上の「上書き無し」）はハッシュ化せず `0` に正規化するため、実テクスチャと区別でき `texture` の既定値とも一致する。ステップ評価であり補間されない。* |
 
 ### イベント属性（特殊な処理）
 
@@ -302,15 +313,16 @@ AnimationData.events: [EventsPerFrame]
 
 ## キーフレームデータ
 
-### 補間
+### 列
 
-| ssab フィールド | ssae フィールド | 備考 |
+| `Keyframes` の列 | ssae フィールド | 備考 |
 |---------------|---------------|------|
-| `index` (ushort, key) | `time` (i32) | フレームインデックス / 時間 |
+| `frame` (ushort) | `time` (i32) | フレームインデックス |
 | `interpolation` | `ip_type` | 補間タイプの列挙型 |
-| `value` | `value` | 属性値 |
+| `curve` (ushort) | `curve`, `easing_rate` | インデックス。下記参照 |
+| `value` (uint) | `value` | 値のビット列、またはインデックス。属性タグのマッピング参照 |
 
-ssae ではキーフレームに Bezier/Hermite 補間用の `curve` データ (`SsCurve`) を持つことができ、`start_time`, `start_value`, `end_time`, `end_value`, `sync_start_end` を含みます。ssab もこのうち 4 つの制御値をキーフレームごとに `curve: SsCurve` として保持します（`easing_rate` も同居）。保持するのは必要な 7 テーブル — `PartAnimationDataFloatValue`, `PartAnimationDataIntValue`, `PartAnimationDataPartColor`, `PartAnimationDataShader`, `PartAnimationDataVertex`, `PartAnimationDataVec2`, `PartAnimationDataDeform` — だけです。`sync_start_end` は作画側の利便フラグなので引き継ぎません。残りのキーフレームテーブル（`Cell`, `UInt`, `Bool`, `Instance`, `Effect`）に curve フィールドは無く、補間タイプの列挙型のみでイージング動作が決まります。
+ssae ではキーフレームに Bezier/Hermite 補間用の `curve` データ (`SsCurve`) を持つことができ、`start_time`, `start_value`, `end_time`, `end_value`, `sync_start_end` を含みます。ssab は 4 つの制御値の組を種類ごとに 1 回だけ `Keyframes.curves`（`KeyCurve`）に、イージング率を種類ごとに 1 回だけ `Keyframes.easing_rates` に格納します。キーの `curve` は、Hermite と Bezier なら `curves` を、率を取る 6 種のイーズ（`EaseIn`, `EaseOut`, `EaseInOut`, `EaseElasticIn`, `EaseElasticOut`, `EaseElasticInOut`）なら `easing_rates` を指し、それ以外のキーでは `0xFFFF`（`ssab::NO_CURVE`）です。`sync_start_end` は作画側の利便フラグなので引き継ぎません。複合値（セル、パーツカラー、シェーダー、頂点、skew、デフォーム）も同様に、属性タグのマッピングが示す表に種類ごとに 1 回だけ格納し、キーの `value` はそのインデックスです。
 
 ### セル属性
 
@@ -565,6 +577,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | `Region` | `{ x, y, w, h: float }` | `pos` + `size` のペア（`.ssce`）、または `x`/`y`/`width`/`height`（`.fnt`） |
 | `MinMax2` | `{ x_min, y_min, x_max, y_max: float }` | 軸ごとの `value` / `subvalue` ペア（エフェクトの乱数範囲） |
 | `U8Color` | `{ a, r, g, b: ubyte }` | `SsU8Color { a, r, g, b }` |
+| `KeyCurve` | `{ start_time, start_value, end_time, end_value: float }`（struct） | `sync_start_end` を除いた `SsCurve` |
 
 ---
 
@@ -574,7 +587,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 
 2. **ハッシュベースの検索**: すべての名前付きエンティティに `name_hash: uint32` フィールドを含み、ランタイムでの文字列比較を回避して O(1) 検索を実現。
 
-3. **カラム型アニメーションデータ**: 属性値はタグ付き列挙型ではなく型付き配列として格納され、フレーム間の単一属性に対する効率的なイテレーションが可能。
+3. **カラム型キーフレーム**: パック内の全キーをフレーム・補間・カーブ・値の列にまとめ、パーツの各属性はその連続区間（ラン）を指す。キーの探索は連続したメモリをたどり、キー 1 個は 9 バイトで済む。繰り返し現れるラン・カーブ・複合値は 1 回だけ格納する。
 
 4. **イベントの分離**: イベント型属性（ユーザーデータ、シグナル、オーディオ、インスタンス、エフェクト）はパーツごとではなくフレームごとに格納され、フレームベースのイベントディスパッチを最適化。
 
