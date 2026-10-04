@@ -542,7 +542,9 @@ impl<'a> PartCacheSource<'a> {
                 None
             };
             let name_hash = fnv1a_hash_str(part_meta.name());
-            cached_parts.push(crate::core::framedata::CachedPartData::new(p, keys, i as i16, parent_index, name_hash, resolved_cells, shape_kind, nines, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor));
+            let mut part = crate::core::framedata::CachedPartData::new(p, keys, i as i16, parent_index, name_hash, resolved_cells, shape_kind, nines, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor);
+            part.cursor_base = crate::core::framedata::cursor_count(&cached_parts) as u32;
+            cached_parts.push(part);
         }
         cached_parts
     }
@@ -834,7 +836,7 @@ impl<'a> LayerState<'a> {
         }
     }
 
-    fn resize_for_parts(&mut self, num_parts: usize, cell_c: usize, color_c: usize, shader_c: usize, vertex_c: usize, deform_c: usize) {
+    fn resize_for_parts(&mut self, num_parts: usize, cursor_c: usize, cell_c: usize, color_c: usize, shader_c: usize, vertex_c: usize, deform_c: usize) {
         self.parts_vec.clear();
         self.parts_vec.reserve(num_parts);
         self.cell_vec.clear();
@@ -849,7 +851,7 @@ impl<'a> LayerState<'a> {
         self.deform_vec.reserve(deform_c);
 
         self.cursors.clear();
-        self.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
+        self.cursors.resize(cursor_c, 0);
         self.cell_meta_per_part.clear();
         self.cell_meta_per_part.resize(num_parts * 6, 0.0);
         self.cell_texture_hashes.clear();
@@ -1847,11 +1849,12 @@ impl<'a> Context<'a> {
 
         let num_parts = metadata.cached_parts().len();
         let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
+        let cursor_c = crate::core::framedata::cursor_count(metadata.cached_parts());
 
         for layer in self.instance.layers.iter_mut() {
-            layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
+            layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
         }
-        self.instance.resolved_layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
+        self.instance.resolved_layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
 
         // Override Layer: a new animation clears Visibility and NON/NOW Color
         // overrides but keeps PERMANENT ones (handover D-3/D-5).
@@ -2178,6 +2181,7 @@ impl<'a> Context<'a> {
         let metadata = &resource.animations[animation_idx];
         let num_parts = metadata.cached_parts().len();
         let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
+        let cursor_c = crate::core::framedata::cursor_count(metadata.cached_parts());
 
         let mut source = SourceState::new();
         source.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
@@ -2189,13 +2193,13 @@ impl<'a> Context<'a> {
         let handle = match free {
             Some(i) => {
                 self.instance.sources[i] = source;
-                self.instance.layers[i].resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
+                self.instance.layers[i].resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
                 i
             }
             None => {
                 self.instance.sources.push(source);
                 let mut layer = LayerState::new();
-                layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
+                layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
                 self.instance.layers.push(layer);
                 self.instance.sources.len() - 1
             }
@@ -2587,12 +2591,11 @@ impl<'a> Context<'a> {
             if state.cell() < 0 {
                 continue;
             }
-            let cursor = layer.cursors[i * core::framedata::NUM_PART_ATTRIBUTES + core::framedata::IDX_ATTRIBUTECELL];
             // A cell override recorded at the seam wins for UVs too, so the
             // sampled image (not just the quad size/texture) reflects the swap.
             let meta = match override_cell_uv_meta.get(i).and_then(|m| m.as_ref()) {
                 Some(m) => m,
-                None => match cached_parts[i].resolved_cells.get(cursor as usize) {
+                None => match cached_parts[i].cell_cursor(&layer.cursors).and_then(|c| cached_parts[i].resolved_cells.get(c)) {
                     Some(m) => m,
                     None => continue,
                 },
@@ -3976,6 +3979,27 @@ mod tests {
     /// reports nothing when there is not one. Without the guard the accessors
     /// would read an unfinished `FlatBufferBuilder`, which asserts — and under
     /// `panic = "abort"` that assert ends the host process.
+    #[test]
+    fn an_instance_keeps_a_cursor_per_keyed_attribute_only() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
+        for meta in resource.animations() {
+            let parts = meta.cached_parts();
+            let mut base = 0;
+            for p in parts {
+                assert_eq!(p.cursor_base, base, "cursors are packed in part order");
+                assert_eq!(p.key_mask >> crate::core::framedata::IDX_ATTRIBUTECELL & 1 == 1, p.cell_keys.is_some());
+                assert_eq!(p.key_mask >> crate::core::framedata::IDX_ATTRIBUTEDEFORM & 1 == 1, p.deform_keys.is_some());
+                base += p.key_mask.count_ones();
+            }
+            assert_eq!(crate::core::framedata::cursor_count(parts), base as usize);
+            assert!((base as usize) < parts.len() * crate::core::framedata::NUM_PART_ATTRIBUTES / 2, "fixture sanity: most attributes of most parts carry no keys");
+        }
+    }
+
     #[test]
     fn a_mixed_pose_samples_the_primary_cell_for_its_uvs() {
         // A second source at a negligible weight sends every frame through the
