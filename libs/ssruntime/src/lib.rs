@@ -385,7 +385,6 @@ pub struct AnimationMetadata<'a> {
     pub fps: i32,
     pub canvas_width: f32,
     pub canvas_height: f32,
-    pub cached_parts: Vec<crate::core::framedata::CachedPartData>,
     /// The SSAE's setup pose, as stored. It is identical for every animation of
     /// an AnimationPack — the converter writes the same `isSetup` animation into
     /// each — and becomes the floor of the track stack once transformed into the
@@ -394,6 +393,84 @@ pub struct AnimationMetadata<'a> {
     pub events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::EventsPerFrame<'a>>>>,
     pub initial_events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialEvents<'a>>>>,
     pub labels: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::Label<'a>>>>,
+    animation: ssab::ssab::ss::format::AnimationData<'a>,
+    source: alloc::sync::Arc<PartCacheSource<'a>>,
+    cached_parts: once_cell::race::OnceBox<Vec<crate::core::framedata::CachedPartData>>,
+}
+
+impl AnimationMetadata<'_> {
+    /// Every part's cache for this animation, built the first time it is asked
+    /// for — in practice by the first `setup_animation` of the animation — so a
+    /// pack pays only for the animations it plays. Two first calls racing on
+    /// different threads may both build it; one result is kept.
+    pub fn cached_parts(&self) -> &[crate::core::framedata::CachedPartData] {
+        self.cached_parts.get_or_init(|| alloc::boxed::Box::new(self.source.build(self.animation)))
+    }
+}
+
+/// What building an animation's part cache needs from its pack, shared by all
+/// of the pack's animations. A part's skin weights and a mesh cell's geometry
+/// are the same whichever animation plays them, so they are decoded once, at
+/// load, and every animation's `CachedPartData` shares them.
+struct PartCacheSource<'a> {
+    ssab: ssab::ssab::ss::format::SsAnimeBinary<'a>,
+    keys: crate::core::keyframes::KeyColumns<'a>,
+    mesh_bindings: Vec<Option<alloc::sync::Arc<crate::core::framedata::MeshBindingCache>>>,
+    mesh_cells: alloc::collections::BTreeMap<(u32, u32), Option<alloc::sync::Arc<crate::core::framedata::MeshCellData>>>,
+}
+
+impl<'a> PartCacheSource<'a> {
+    fn new(ssab: ssab::ssab::ss::format::SsAnimeBinary<'a>, keys: crate::core::keyframes::KeyColumns<'a>) -> Self {
+        let fb_parts = ssab.parts();
+        let mesh_bindings = fb_parts.iter().map(|part| crate::core::framedata::build_mesh_binding_cache(part.mesh_binding()).map(alloc::sync::Arc::new)).collect();
+        let mut mesh_cells = alloc::collections::BTreeMap::new();
+        for anim in ssab.animations() {
+            for (i, p) in anim.parts_animation_data().iter().enumerate() {
+                if fb_parts.get(i).part_type_type() != ssab::ssab::ss::format::PartType::PartTypeMesh {
+                    continue;
+                }
+                if let Some(cell) = crate::core::framedata::mesh_part_cell(&keys, keys.run(p.cell_keys())) {
+                    mesh_cells.entry((cell.cellmap_name_hash(), cell.name_hash())).or_insert_with(|| crate::core::framedata::build_mesh_cell_data(&ssab, cell).map(alloc::sync::Arc::new));
+                }
+            }
+        }
+        Self { ssab, keys, mesh_bindings, mesh_cells }
+    }
+
+    fn build(&self, anim: ssab::ssab::ss::format::AnimationData<'a>) -> Vec<crate::core::framedata::CachedPartData> {
+        let (ssab, keys) = (&self.ssab, &self.keys);
+        let fb_parts = ssab.parts();
+        let parts = anim.parts_animation_data();
+        let mut cached_parts = Vec::with_capacity(parts.len());
+
+        for (i, p) in parts.iter().enumerate() {
+            let part_meta = fb_parts.get(i);
+            let parent_index = part_meta.parent_index();
+            let blend_type = part_meta.blend_type();
+            let part_type_disc = part_meta.part_type_type();
+            let mask_influence = part_meta.mask_influence();
+            // PartTypeMask is always a pure mask; drawing parts use the unified draw_as_mask flag.
+            let is_mask_contributor = part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMask || part_meta.draw_as_mask();
+            let resolved_cells = crate::core::framedata::resolve_cell_keys_meta(ssab, keys, keys.run(p.cell_keys()));
+            let shape_kind = part_meta.part_type_as_part_type_shape().and_then(|s| match s.shape_type() {
+                ssab::ssab::ss::format::ShapeType::Rectangle => Some(crate::core::geometry::ShapeType::Rectangle),
+                ssab::ssab::ss::format::ShapeType::Triangle => Some(crate::core::geometry::ShapeType::Triangle),
+                ssab::ssab::ss::format::ShapeType::Star => Some(crate::core::geometry::ShapeType::Star),
+                ssab::ssab::ss::format::ShapeType::Arrow => Some(crate::core::geometry::ShapeType::Arrow),
+                _ => None,
+            });
+            let nines = crate::core::framedata::build_nines_part_data(&part_meta);
+            let mesh_binding = self.mesh_bindings[i].clone();
+            let mesh_cell = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMesh {
+                crate::core::framedata::mesh_part_cell(keys, keys.run(p.cell_keys())).and_then(|cell| self.mesh_cells.get(&(cell.cellmap_name_hash(), cell.name_hash())).cloned().flatten())
+            } else {
+                None
+            };
+            let name_hash = fnv1a_hash_str(part_meta.name());
+            cached_parts.push(crate::core::framedata::CachedPartData::new(p, keys, i as i16, parent_index, name_hash, resolved_cells, shape_kind, nines, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor));
+        }
+        cached_parts
+    }
 }
 
 pub struct SsabData {
@@ -557,46 +634,9 @@ impl<'a> AnimationResource<'a> {
         let keys = crate::core::keyframes::KeyColumns::new(ssab.keyframes());
         let fb_animations = ssab.animations();
         let mut animations = Vec::with_capacity(fb_animations.len());
-
-        // A part's skin weights and a mesh cell's geometry are the same in every
-        // animation, so each is decoded once here and shared rather than copied
-        // into every animation's `CachedPartData`.
-        let fb_parts = ssab.parts();
-        let mesh_bindings: Vec<_> = fb_parts.iter().map(|part| crate::core::framedata::build_mesh_binding_cache(part.mesh_binding()).map(alloc::sync::Arc::new)).collect();
-        let mut mesh_cells = alloc::collections::BTreeMap::new();
+        let source = alloc::sync::Arc::new(PartCacheSource::new(ssab, keys));
 
         for anim in fb_animations {
-            let parts = anim.parts_animation_data();
-            let mut cached_parts = Vec::with_capacity(parts.len());
-
-            for (i, p) in parts.iter().enumerate() {
-                let part_meta = fb_parts.get(i);
-                let parent_index = part_meta.parent_index();
-                let blend_type = part_meta.blend_type();
-                let part_type_disc = part_meta.part_type_type();
-                let mask_influence = part_meta.mask_influence();
-                // PartTypeMask is always a pure mask; drawing parts use the unified draw_as_mask flag.
-                let is_mask_contributor = part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMask || part_meta.draw_as_mask();
-                let resolved_cells = crate::core::framedata::resolve_cell_keys_meta(&ssab, &keys, keys.run(p.cell_keys()));
-                let shape_kind = part_meta.part_type_as_part_type_shape().and_then(|s| match s.shape_type() {
-                    ssab::ssab::ss::format::ShapeType::Rectangle => Some(crate::core::geometry::ShapeType::Rectangle),
-                    ssab::ssab::ss::format::ShapeType::Triangle => Some(crate::core::geometry::ShapeType::Triangle),
-                    ssab::ssab::ss::format::ShapeType::Star => Some(crate::core::geometry::ShapeType::Star),
-                    ssab::ssab::ss::format::ShapeType::Arrow => Some(crate::core::geometry::ShapeType::Arrow),
-                    _ => None,
-                });
-                let nines = crate::core::framedata::build_nines_part_data(&part_meta);
-                let mesh_binding = mesh_bindings[i].clone();
-                let mesh_cell = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMesh {
-                    crate::core::framedata::mesh_part_cell(&keys, keys.run(p.cell_keys()))
-                        .and_then(|cell| mesh_cells.entry((cell.cellmap_name_hash(), cell.name_hash())).or_insert_with(|| crate::core::framedata::build_mesh_cell_data(&ssab, cell).map(alloc::sync::Arc::new)).clone())
-                } else {
-                    None
-                };
-                let name_hash = fnv1a_hash_str(part_meta.name());
-                cached_parts.push(crate::core::framedata::CachedPartData::new(p, &keys, i as i16, parent_index, name_hash, resolved_cells, shape_kind, nines, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor));
-            }
-
             let name_hash = anim.name_hash();
             let canvas_size = anim.canvas_size();
             let (canvas_width, canvas_height) = (canvas_size.v1(), canvas_size.v2());
@@ -607,11 +647,13 @@ impl<'a> AnimationResource<'a> {
                 fps: anim.fps() as i32,
                 canvas_width,
                 canvas_height,
-                cached_parts,
                 initial_attributes: anim.parts_initial_attributes(),
                 events: anim.events(),
                 initial_events: anim.initial_events(),
                 labels: anim.labels(),
+                animation: anim,
+                source: source.clone(),
+                cached_parts: once_cell::race::OnceBox::new(),
             });
         }
 
@@ -938,7 +980,7 @@ fn count_attribute_capacities(metadata: &AnimationMetadata<'_>) -> (usize, usize
     let mut shader_c = 0;
     let mut vertex_c = 0;
     let mut deform_c = 0;
-    for p in &metadata.cached_parts {
+    for p in metadata.cached_parts() {
         if p.cell_keys.is_some() {
             cell_c += 1;
         }
@@ -1549,7 +1591,7 @@ impl<'a> Context<'a> {
             return -1;
         }
         let hash = fnv1a_hash_str(name);
-        resource.animations[anim_idx as usize].cached_parts.iter().position(|p| p.name_hash == hash).map(|i| i as i32).unwrap_or(-1)
+        resource.animations[anim_idx as usize].cached_parts().iter().position(|p| p.name_hash == hash).map(|i| i as i32).unwrap_or(-1)
     }
 
     /// The integer frame the primary playhead is on right now — baked into a NON
@@ -1703,7 +1745,7 @@ impl<'a> Context<'a> {
         primary.animation_idx = index as i32;
         primary.weight = 1.0;
 
-        let num_parts = metadata.cached_parts.len();
+        let num_parts = metadata.cached_parts().len();
         let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
 
         for layer in self.instance.layers.iter_mut() {
@@ -1732,7 +1774,7 @@ impl<'a> Context<'a> {
         // them for the newly selected animation's Cells.
         globals.mesh_index_offsets.clear();
 
-        self.instance.z_order.setup(&metadata.cached_parts);
+        self.instance.z_order.setup(metadata.cached_parts());
         self.rebuild_setup_pose();
 
         Ok(())
@@ -1999,7 +2041,7 @@ impl<'a> Context<'a> {
         let metadata = &resource.animations[anim_idx as usize];
         let (coordinate_system, origin, unit) = (self.instance.coordinate_system, self.instance.origin, self.instance.unit);
         for (i, a) in metadata.initial_attributes.iter().enumerate() {
-            let parent_index = metadata.cached_parts.get(i).map_or(-1, |p| p.parent_index);
+            let parent_index = metadata.cached_parts().get(i).map_or(-1, |p| p.parent_index);
             self.instance.setup_pose.push(crate::core::framedata::setup_pose_part(&a, parent_index, coordinate_system, origin, unit, metadata.canvas_width, metadata.canvas_height));
         }
     }
@@ -2032,7 +2074,7 @@ impl<'a> Context<'a> {
             return Err(error::SSRuntimeError::NotLoaded);
         };
         let metadata = &resource.animations[animation_idx];
-        let num_parts = metadata.cached_parts.len();
+        let num_parts = metadata.cached_parts().len();
         let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
 
         let mut source = SourceState::new();
@@ -2127,7 +2169,7 @@ impl<'a> Context<'a> {
         // the discrete-attribute / structure source even when its continuous
         // contribution is zero.
         let primary_idx = self.instance.primary_idx();
-        let primary_num_parts = primary_metadata.cached_parts.len();
+        let primary_num_parts = primary_metadata.cached_parts().len();
         let num_sources = self.instance.sources.len();
         for i in 0..num_sources {
             let source_anim_idx = self.instance.sources[i].animation_idx;
@@ -2142,7 +2184,7 @@ impl<'a> Context<'a> {
             let layer = &mut self.instance.layers[i];
             core::framedata::extract_pose(
                 &mut self.eval.fb,
-                &metadata.cached_parts,
+                metadata.cached_parts(),
                 &resource.keys,
                 frame_for_source,
                 &mut layer.parts_vec,
@@ -2173,7 +2215,7 @@ impl<'a> Context<'a> {
             // for the source's lifetime; copied per frame because a source can be
             // repointed at another animation at any time.
             layer.coverage_vec.clear();
-            layer.coverage_vec.extend(metadata.cached_parts.iter().map(|p| p.coverage));
+            layer.coverage_vec.extend(metadata.cached_parts().iter().map(|p| p.coverage));
         }
 
         if self.instance.is_single_full_track() {
@@ -2207,7 +2249,7 @@ impl<'a> Context<'a> {
             self.eval.override_passed_frames_workspace.extend_from_slice(self.instance.primary_source().controller.get_passed_frames());
             crate::core::override_layer::apply_part_overrides(
                 &mut self.instance.part_overrides,
-                &primary_metadata.cached_parts,
+                primary_metadata.cached_parts(),
                 &resource.keys,
                 &mut self.instance.resolved_layer.parts_vec,
                 &mut self.instance.resolved_layer.parts_color_vec,
@@ -2229,7 +2271,7 @@ impl<'a> Context<'a> {
         let resolved = &mut self.instance.resolved_layer;
         let offset = core::framedata::compose_frame_data(
             &mut self.eval.fb,
-            &primary_metadata.cached_parts,
+            primary_metadata.cached_parts(),
             &mut self.instance.z_order,
             &mut resolved.parts_vec,
             &resolved.cell_vec,
@@ -2264,15 +2306,15 @@ impl<'a> Context<'a> {
     /// and shape vertex buffers.
     fn resolve_global_state(instance: &mut InstanceState<'a>, metadata: &AnimationMetadata<'a>) {
         if instance.render_mode == crate::core::RenderMode::Direct {
-            Self::compute_matrices(instance, &metadata.cached_parts);
+            Self::compute_matrices(instance, metadata.cached_parts());
             // Skinned mesh skinning depends on world matrices, so it lives in the
             // Direct path. Mesh parts in Indirect mode get empty per-part ranges.
-            Self::compute_mesh_vertices(instance, &metadata.cached_parts);
+            Self::compute_mesh_vertices(instance, metadata.cached_parts());
         } else {
-            Self::clear_mesh_vertices(instance, metadata.cached_parts.len());
+            Self::clear_mesh_vertices(instance, metadata.cached_parts().len());
         }
-        Self::compute_local_uvs(instance, &metadata.cached_parts);
-        Self::compute_shape_vertices(instance, &metadata.cached_parts);
+        Self::compute_local_uvs(instance, metadata.cached_parts());
+        Self::compute_shape_vertices(instance, metadata.cached_parts());
     }
 
     /// Writes per-part mesh world-space vertex positions to

@@ -35,6 +35,9 @@ ssruntime = { version = "7.0.0-beta.1", path = "libs/ssruntime" }
 flatbuffers = { version = "25.12.19", default-features = false }
 wide = { version = "1.7.1", default-features = false }
 libm = "0.2.16"
+# `race::OnceBox` alone: a lock-free, no_std "build once on first use" for the
+# runtime's per-animation cache. No std, no critical-section.
+once_cell = { version = "1.21.4", default-features = false, features = ["race", "alloc"] }
 wasm-bindgen = { version = "0.2.129", default-features = false }
 dlmalloc = "0.2.14"
 rayon = "1.12.0"
