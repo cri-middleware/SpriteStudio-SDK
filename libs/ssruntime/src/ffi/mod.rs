@@ -662,7 +662,8 @@ pub unsafe extern "C" fn ss_runtime_get_local_vertices(context: *mut c_void, out
 /// world matrix. Only the first
 /// `ss_runtime_get_shape_vertex_counts(...)[part_index]` vertices are
 /// valid; remaining slots are zero-initialized. Non-shape parts carry zero
-/// count and zero-filled vertex slots.
+/// count and zero-filled vertex slots. When no part of the pack is a shape,
+/// the buffer is empty, as is `ss_runtime_get_shape_vertex_box_coords`.
 ///
 /// # Safety
 ///

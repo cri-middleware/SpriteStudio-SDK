@@ -77,9 +77,11 @@ fn evaluate_curve_value_f32(interpolation: InterpolationType, frame_no: f32, pre
 
 // Optimized for both forward and reverse playback (O(1) fast path).
 // Long distance seeks will fallback to binary search (O(log N)).
-// `hint` counts keys from the start of `run`.
+// `hint` counts keys from the start of `run`. A frame that sits on a key
+// returns that key alone, whichever path finds it: the result depends on
+// `frame_no` only, never on where the hint was left.
 #[inline]
-pub fn search_prev_next<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no: f32, hint: &mut usize) -> Option<(Key<'c, 'a>, Option<Key<'c, 'a>>)> {
+pub fn search_prev_next<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<(Key<'c, 'a>, Option<Key<'c, 'a>>)> {
     let first = run.first() as usize;
     let len = run.count() as usize;
     if len == 0 {
@@ -87,7 +89,7 @@ pub fn search_prev_next<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no
     }
     let get = |i: usize| keys.key(first + i);
 
-    let mut i = *hint;
+    let mut i = *hint as usize;
     if i >= len {
         i = len - 1;
     }
@@ -101,15 +103,16 @@ pub fn search_prev_next<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no
             let next_val = get(i + 1);
             let next_idx = next_val.index() as i32;
             if frame_no < next_idx as f32 {
-                *hint = i;
-                return Some((curr_val, Some(next_val)));
+                *hint = i as u32;
+                let on_key = curr_val.index() as i32 as f32 == frame_no;
+                return Some((curr_val, (!on_key).then_some(next_val)));
             }
             i += 1;
             curr_val = next_val;
             checks += 1;
         }
         if i + 1 == len {
-            *hint = i;
+            *hint = i as u32;
             return Some((curr_val, None));
         }
     } else {
@@ -120,8 +123,9 @@ pub fn search_prev_next<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no
             let prev_val = get(local_i);
             let prev_idx = prev_val.index() as i32;
             if (prev_idx as f32) <= frame_no {
-                *hint = local_i;
-                return Some((prev_val, Some(get(local_i + 1))));
+                *hint = local_i as u32;
+                let on_key = prev_idx as f32 == frame_no;
+                return Some((prev_val, (!on_key).then(|| get(local_i + 1))));
             }
             checks += 1;
         }
@@ -139,7 +143,7 @@ pub fn search_prev_next<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no
     }
 
     let res_idx = if left == 0 { 0 } else { left - 1 };
-    *hint = res_idx;
+    *hint = res_idx as u32;
 
     if left == 0 {
         return Some((get(0), None));
@@ -158,7 +162,7 @@ pub fn search_prev_next<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no
 // Long distance seeks will fallback to binary search (O(log N)).
 // `hint` counts keys from the start of `run`.
 #[inline]
-pub fn search_prev<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no: i32, hint: &mut usize) -> Option<Key<'c, 'a>> {
+pub fn search_prev<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no: i32, hint: &mut u32) -> Option<Key<'c, 'a>> {
     let first = run.first() as usize;
     let len = run.count() as usize;
     if len == 0 {
@@ -166,7 +170,7 @@ pub fn search_prev<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no: i32
     }
     let get = |i: usize| keys.key(first + i);
 
-    let mut i = *hint;
+    let mut i = *hint as usize;
     if i >= len {
         i = len - 1;
     }
@@ -180,7 +184,7 @@ pub fn search_prev<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no: i32
             let next_val = get(i + 1);
             let next_idx = next_val.index() as i32;
             if frame_no < next_idx {
-                *hint = i;
+                *hint = i as u32;
                 return Some(curr_val);
             }
             i += 1;
@@ -188,7 +192,7 @@ pub fn search_prev<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no: i32
             checks += 1;
         }
         if i + 1 == len {
-            *hint = i;
+            *hint = i as u32;
             return Some(curr_val);
         }
     } else {
@@ -199,7 +203,7 @@ pub fn search_prev<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no: i32
             let prev_val = get(local_i);
             let prev_idx = prev_val.index() as i32;
             if prev_idx <= frame_no {
-                *hint = local_i;
+                *hint = local_i as u32;
                 return Some(prev_val);
             }
             checks += 1;
@@ -218,13 +222,13 @@ pub fn search_prev<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no: i32
     }
 
     let res_idx = if left == 0 { 0 } else { left - 1 };
-    *hint = res_idx;
+    *hint = res_idx as u32;
 
     if left == 0 { None } else { Some(get(left - 1)) }
 }
 
 #[inline]
-pub fn evaluate_float(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut usize) -> Option<(f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+pub fn evaluate_float(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<(f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(keys, run, frame_no, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
             let prev_index = prev.index() as i32 as f32;
@@ -244,7 +248,7 @@ pub fn evaluate_float(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: 
 }
 
 #[inline]
-pub fn evaluate_int(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut usize) -> Option<(i32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+pub fn evaluate_int(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<(i32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(keys, run, frame_no, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
             let prev_index = prev.index() as i32 as f32;
@@ -264,7 +268,7 @@ pub fn evaluate_int(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &m
 }
 
 #[inline]
-pub fn evaluate_partcolor(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut usize) -> Option<(runtime::framedata::ss::runtime::PartAttributePartColor, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+pub fn evaluate_partcolor(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<(runtime::framedata::ss::runtime::PartAttributePartColor, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(keys, run, frame_no, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
             let prev_index = prev.index() as i32 as f32;
@@ -382,7 +386,7 @@ fn transfer_partcolor(source: &ssab::ssab::ss::format::PartAttributePartColor) -
 }
 
 #[inline]
-pub fn evaluate_shader(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut usize) -> Option<(runtime::framedata::ss::runtime::PartAttributeShader, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+pub fn evaluate_shader(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<(runtime::framedata::ss::runtime::PartAttributeShader, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(keys, run, frame_no, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
             let prev_index = prev.index() as i32 as f32;
@@ -448,7 +452,7 @@ fn transfer_shader(source: &ssab::ssab::ss::format::PartAttributeShader) -> runt
 }
 
 #[inline]
-pub fn evaluate_vertex(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut usize) -> Option<(runtime::framedata::ss::runtime::PartAttributeVertex, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+pub fn evaluate_vertex(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<(runtime::framedata::ss::runtime::PartAttributeVertex, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(keys, run, frame_no, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
             let prev_index = prev.index() as i32 as f32;
@@ -514,7 +518,7 @@ fn transfer_vertex(source: &ssab::ssab::ss::format::PartAttributeVertex) -> runt
 }
 
 #[inline]
-pub fn evaluate_skew(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut usize) -> Option<(f32, f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+pub fn evaluate_skew(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<(f32, f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(keys, run, frame_no, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
             let prev_value = prev.skew();
@@ -550,7 +554,7 @@ pub fn evaluate_deform(
     keys: &KeyColumns<'_>,
     run: &KeyRun,
     frame_no: f32,
-    hint: &mut usize,
+    hint: &mut u32,
     start_workspace: &mut Vec<f32>,
     end_workspace: &mut Vec<f32>,
     out_workspace: &mut Vec<f32>,
@@ -697,19 +701,19 @@ fn transfer_deform(source: &ssab::ssab::ss::format::PartAttributeDeform, coord_o
 }
 
 #[inline]
-pub fn evaluate_bool(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut usize) -> Option<bool> {
+pub fn evaluate_bool(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<bool> {
     let frame_no = crate::core::math::floorf(frame_no) as i32;
     search_prev(keys, run, frame_no, hint).map(|prev| prev.bool())
 }
 
 #[inline]
-pub fn evaluate_cell<'a>(keys: &KeyColumns<'a>, run: &KeyRun, frame_no: f32, hint: &mut usize) -> Option<ssab::ssab::ss::format::PartAttributeCell<'a>> {
+pub fn evaluate_cell<'a>(keys: &KeyColumns<'a>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<ssab::ssab::ss::format::PartAttributeCell<'a>> {
     let frame_no = crate::core::math::floorf(frame_no) as i32;
     search_prev(keys, run, frame_no, hint).map(|prev| prev.cell())
 }
 
 #[inline]
-pub fn evaluate_texture(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut usize) -> Option<u32> {
+pub fn evaluate_texture(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<u32> {
     let frame_no = crate::core::math::floorf(frame_no) as i32;
     search_prev(keys, run, frame_no, hint).map(|prev| prev.uint())
 }
@@ -947,6 +951,23 @@ mod tests {
     }
 
     #[test]
+    fn a_frame_on_a_key_reads_that_key_whatever_the_hint() {
+        // The Bezier solve does not land exactly on a segment's start, so
+        // reading key 10 as "the 10..20 segment at rate 0" would come out a
+        // little off key 10's own value. Every hint must give the key's value.
+        let curve = KeyCurve::new(3.0, 40.0, -3.0, -40.0);
+        let keys = [curved(0, InterpolationType::Bezier, f(0.0), 0), curved(10, InterpolationType::Bezier, f(100.0), 0), curved(20, InterpolationType::Bezier, f(50.0), 0), key(30, InterpolationType::None, f(0.0))];
+        let buf = pack(&keys, &[curve], &[], |_, _| {});
+        let (keys, run) = (columns(&buf), run(4));
+        for start in 0..4 {
+            for (frame, value) in [(10.0, 100.0), (20.0, 50.0)] {
+                let mut hint = start;
+                assert_eq!(evaluate_float(&keys, &run, frame, &mut hint).unwrap().0, value, "frame {frame}, hint {start}");
+            }
+        }
+    }
+
+    #[test]
     fn test_evaluate_float_ease_in() {
         let buf = pack(&[curved(0, InterpolationType::EaseIn, f(0.0), 0), key(10, InterpolationType::None, f(1.0))], &[], &[2.0], |_, _| {});
         let (keys, run) = (columns(&buf), run(2));
@@ -1049,7 +1070,7 @@ mod tests {
         index: alloc::vec::Vec<i16>,
     }
 
-    fn eval_deform_owned(buf: &[u8], frame_no: f32, hint: &mut usize) -> Option<(DeformOut, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+    fn eval_deform_owned(buf: &[u8], frame_no: f32, hint: &mut u32) -> Option<(DeformOut, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
         let keys = columns(buf);
         let run = run(keys_len(buf));
         let mut start = alloc::vec::Vec::new();

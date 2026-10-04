@@ -396,6 +396,9 @@ pub struct AnimationMetadata<'a> {
     animation: ssab::ssab::ss::format::AnimationData<'a>,
     source: alloc::sync::Arc<PartCacheSource<'a>>,
     cached_parts: once_cell::race::OnceBox<Vec<crate::core::framedata::CachedPartData>>,
+    /// Which of the pack's mesh layouts this animation draws with
+    /// (`PartCacheSource::mesh_buffers`).
+    mesh_layout: usize,
 }
 
 impl AnimationMetadata<'_> {
@@ -405,6 +408,64 @@ impl AnimationMetadata<'_> {
     /// different threads may both build it; one result is kept.
     pub fn cached_parts(&self) -> &[crate::core::framedata::CachedPartData] {
         self.cached_parts.get_or_init(|| alloc::boxed::Box::new(self.source.build(self.animation)))
+    }
+
+    /// The static mesh buffers this animation draws with, built the first time
+    /// any animation with the same mesh cells asks for them and shared by all of
+    /// them.
+    fn static_mesh(&self) -> &StaticMeshBuffers {
+        self.source.mesh_buffers[self.mesh_layout].get_or_init(|| alloc::boxed::Box::new(StaticMeshBuffers::build(self.cached_parts())))
+    }
+}
+
+/// What a Player draws a mesh part with besides its per-frame vertices: the
+/// UVs (interleaved `[u, v, ...]`, texture-pixel space) and triangle indices of
+/// each mesh part's cell, concatenated over the parts in CSR form. Fixed by
+/// which cell each mesh part shows (its first key, by the SS mesh spec), so
+/// every animation drawing its meshes with the same cells shares one.
+struct StaticMeshBuffers {
+    /// CSR prefix sum over vertices, length `num_parts + 1`; slices `uvs` (two
+    /// floats a vertex) and the per-instance vertex buffers.
+    vertex_offsets: Vec<u32>,
+    uvs: Vec<f32>,
+    indices: Vec<i32>,
+    /// CSR prefix sum over `indices`, length `num_parts + 1`.
+    index_offsets: Vec<u32>,
+}
+
+impl StaticMeshBuffers {
+    fn build(cached_parts: &[crate::core::framedata::CachedPartData]) -> Self {
+        let cell = |p: &crate::core::framedata::CachedPartData| p.mesh_cell.clone();
+        // Non-mesh parts contribute an empty range. The Cell is the authoritative
+        // geometry source for both skeletal and Deform-only meshes; the bind
+        // cache only adds skinning.
+        let mut vertex_offsets = Vec::with_capacity(cached_parts.len() + 1);
+        let mut index_offsets = Vec::with_capacity(cached_parts.len() + 1);
+        let (mut vertices, mut indices) = (0u32, 0u32);
+        vertex_offsets.push(0);
+        index_offsets.push(0);
+        for p in cached_parts {
+            if let Some(m) = cell(p) {
+                vertices += m.num_vertices() as u32;
+                indices += m.indices.len() as u32;
+            }
+            vertex_offsets.push(vertices);
+            index_offsets.push(indices);
+        }
+
+        let mut uvs = alloc::vec![0.0; vertices as usize * 2];
+        let mut all_indices = Vec::with_capacity(indices as usize);
+        for (i, p) in cached_parts.iter().enumerate() {
+            let Some(m) = cell(p) else { continue };
+            all_indices.extend_from_slice(&m.indices);
+            // UVs share the vertex CSR; copy only when the cell vertex count
+            // matches the slot (true for well-formed meshes).
+            let (start, end) = (vertex_offsets[i] as usize, vertex_offsets[i + 1] as usize);
+            if m.uvs.len() == (end - start) * 2 {
+                uvs[start * 2..end * 2].copy_from_slice(&m.uvs);
+            }
+        }
+        Self { vertex_offsets, uvs, indices: all_indices, index_offsets }
     }
 }
 
@@ -417,6 +478,11 @@ struct PartCacheSource<'a> {
     keys: crate::core::keyframes::KeyColumns<'a>,
     mesh_bindings: Vec<Option<alloc::sync::Arc<crate::core::framedata::MeshBindingCache>>>,
     mesh_cells: alloc::collections::BTreeMap<(u32, u32), Option<alloc::sync::Arc<crate::core::framedata::MeshCellData>>>,
+    /// One slot per distinct set of cells the pack's animations show on their
+    /// mesh parts, filled the first time an animation using it plays.
+    mesh_buffers: Vec<once_cell::race::OnceBox<StaticMeshBuffers>>,
+    /// Each animation's slot in `mesh_buffers`, by animation index.
+    mesh_layouts: Vec<usize>,
 }
 
 impl<'a> PartCacheSource<'a> {
@@ -424,17 +490,26 @@ impl<'a> PartCacheSource<'a> {
         let fb_parts = ssab.parts();
         let mesh_bindings = fb_parts.iter().map(|part| crate::core::framedata::build_mesh_binding_cache(part.mesh_binding()).map(alloc::sync::Arc::new)).collect();
         let mut mesh_cells = alloc::collections::BTreeMap::new();
+        // Animations that show the same cell on every mesh part draw with the
+        // same static mesh buffers; number each distinct set as it appears.
+        let mut layout_of = alloc::collections::BTreeMap::<Vec<(usize, u32, u32)>, usize>::new();
+        let mut mesh_layouts = Vec::with_capacity(ssab.animations().len());
         for anim in ssab.animations() {
+            let mut layout = Vec::new();
             for (i, p) in anim.parts_animation_data().iter().enumerate() {
                 if fb_parts.get(i).part_type_type() != ssab::ssab::ss::format::PartType::PartTypeMesh {
                     continue;
                 }
                 if let Some(cell) = crate::core::framedata::mesh_part_cell(&keys, keys.run(p.cell_keys())) {
+                    layout.push((i, cell.cellmap_name_hash(), cell.name_hash()));
                     mesh_cells.entry((cell.cellmap_name_hash(), cell.name_hash())).or_insert_with(|| crate::core::framedata::build_mesh_cell_data(&ssab, cell).map(alloc::sync::Arc::new));
                 }
             }
+            let next = layout_of.len();
+            mesh_layouts.push(*layout_of.entry(layout).or_insert(next));
         }
-        Self { ssab, keys, mesh_bindings, mesh_cells }
+        let mesh_buffers = (0..layout_of.len()).map(|_| once_cell::race::OnceBox::new()).collect();
+        Self { ssab, keys, mesh_bindings, mesh_cells, mesh_buffers, mesh_layouts }
     }
 
     fn build(&self, anim: ssab::ssab::ss::format::AnimationData<'a>) -> Vec<crate::core::framedata::CachedPartData> {
@@ -467,7 +542,9 @@ impl<'a> PartCacheSource<'a> {
                 None
             };
             let name_hash = fnv1a_hash_str(part_meta.name());
-            cached_parts.push(crate::core::framedata::CachedPartData::new(p, keys, i as i16, parent_index, name_hash, resolved_cells, shape_kind, nines, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor));
+            let mut part = crate::core::framedata::CachedPartData::new(p, keys, i as i16, parent_index, name_hash, resolved_cells, shape_kind, nines, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor);
+            part.cursor_base = crate::core::framedata::cursor_count(&cached_parts) as u32;
+            cached_parts.push(part);
         }
         cached_parts
     }
@@ -514,6 +591,7 @@ pub struct AnimationResource<'a> {
     data: &'a [u8],
     animations: Vec<AnimationMetadata<'a>>,
     keys: crate::core::keyframes::KeyColumns<'a>,
+    source: alloc::sync::Arc<PartCacheSource<'a>>,
 }
 
 /// A thread-safe, shared resource containing SSAB data and its parsed metadata.
@@ -636,7 +714,7 @@ impl<'a> AnimationResource<'a> {
         let mut animations = Vec::with_capacity(fb_animations.len());
         let source = alloc::sync::Arc::new(PartCacheSource::new(ssab, keys));
 
-        for anim in fb_animations {
+        for (index, anim) in fb_animations.iter().enumerate() {
             let name_hash = anim.name_hash();
             let canvas_size = anim.canvas_size();
             let (canvas_width, canvas_height) = (canvas_size.v1(), canvas_size.v2());
@@ -654,10 +732,17 @@ impl<'a> AnimationResource<'a> {
                 animation: anim,
                 source: source.clone(),
                 cached_parts: once_cell::race::OnceBox::new(),
+                mesh_layout: source.mesh_layouts[index],
             });
         }
 
-        Ok(Self { data, animations, keys })
+        Ok(Self { data, animations, keys, source })
+    }
+
+    /// The static mesh buffers of mesh layout `layout`, if an animation using it
+    /// has built them.
+    fn static_mesh(&self, layout: usize) -> Option<&StaticMeshBuffers> {
+        self.source.mesh_buffers.get(layout)?.get()
     }
 
     pub fn get_ssab_data(&self) -> &'a [u8] {
@@ -707,8 +792,10 @@ pub fn fnv1a_hash_str(text: &str) -> u32 {
 /// (`cell_meta_per_part`, `cell_texture_hashes`, `local_vertices`) that
 /// are written in lockstep with the pose evaluation.
 ///
-/// Phase 3 will introduce a second `LayerState` per instance and a
-/// `mix_poses()` stage between Phase 1 and Phase 2.
+/// An instance has one per source, and the resolved one the mix writes
+/// (`InstanceState::resolved_layer`). While one source plays alone, its pose
+/// is extracted straight into the resolved layer, and its own layer stays
+/// unallocated until a mix needs it.
 struct LayerState<'a> {
     parts_vec: Vec<crate::runtime::framedata::ss::runtime::PartState>,
     cell_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
@@ -716,7 +803,7 @@ struct LayerState<'a> {
     shader_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
     vertex_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
-    cursors: Vec<usize>,
+    cursors: Vec<u32>,
     cell_meta_per_part: Vec<f32>,
     cell_texture_hashes: Vec<u32>,
     local_vertices: Vec<f32>,
@@ -751,7 +838,7 @@ impl<'a> LayerState<'a> {
         }
     }
 
-    fn resize_for_parts(&mut self, num_parts: usize, cell_c: usize, color_c: usize, shader_c: usize, vertex_c: usize, deform_c: usize) {
+    fn resize_for_parts(&mut self, num_parts: usize, cursor_c: usize, cell_c: usize, color_c: usize, shader_c: usize, vertex_c: usize, deform_c: usize) {
         self.parts_vec.clear();
         self.parts_vec.reserve(num_parts);
         self.cell_vec.clear();
@@ -766,7 +853,7 @@ impl<'a> LayerState<'a> {
         self.deform_vec.reserve(deform_c);
 
         self.cursors.clear();
-        self.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
+        self.cursors.resize(cursor_c, 0);
         self.cell_meta_per_part.clear();
         self.cell_meta_per_part.resize(num_parts * 6, 0.0);
         self.cell_texture_hashes.clear();
@@ -775,6 +862,18 @@ impl<'a> LayerState<'a> {
         self.local_vertices.resize(num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE, 0.0);
         self.raw_vertex_deform.clear();
         self.raw_vertex_deform.resize(num_parts, crate::core::framedata::RawVertexDeform::default());
+    }
+
+    /// Size the buffers for `metadata`'s animation unless they already are: the
+    /// first time a source's own layer is extracted into, or after the layer
+    /// last held a different part count.
+    fn fit(&mut self, metadata: &AnimationMetadata<'_>) {
+        let num_parts = metadata.cached_parts().len();
+        let sized = self.raw_vertex_deform.len() == num_parts && self.cell_texture_hashes.len() == num_parts && self.cell_meta_per_part.len() == num_parts * 6 && self.local_vertices.len() == num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE;
+        if !sized {
+            let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
+            self.resize_for_parts(num_parts, crate::core::framedata::cursor_count(metadata.cached_parts()), cell_c, color_c, shader_c, vertex_c, deform_c);
+        }
     }
 }
 
@@ -796,13 +895,12 @@ struct GlobalBuffers {
     mesh_vertices_y: Vec<f32>,
     /// CSR-style prefix sum, length = `num_parts + 1`.
     mesh_vertex_offsets: Vec<u32>,
-    /// Static mesh UV (interleaved `[u, v, ...]`, texture-pixel space) and
-    /// triangle indices, resolved once from each mesh part's frame-0 Cell.
-    /// `mesh_uvs` is sliced per-part by `mesh_vertex_offsets`; `mesh_indices`
-    /// by `mesh_index_offsets` (CSR, length `num_parts + 1`).
-    mesh_uvs: Vec<f32>,
-    mesh_indices: Vec<i32>,
-    mesh_index_offsets: Vec<u32>,
+    /// The mesh layout (`AnimationMetadata::mesh_layout`) whose static UVs and
+    /// triangle indices the getters hand out, and that `mesh_vertex_offsets`
+    /// and the vertex buffers are sized for; [`NO_MESH_LAYOUT`] until
+    /// `compute_mesh_vertices` sets them up, and in Indirect mode. The buffers
+    /// themselves are the animation's, shared by every instance.
+    mesh_layout: usize,
     /// Per-frame Nine-Slice grids, CSR-sliced per part. Written by
     /// `compose_frame_data` (the draw plan needs the counts), not by Phase 2.
     nines: crate::core::framedata::NinesBuffers,
@@ -820,13 +918,14 @@ impl GlobalBuffers {
             mesh_vertices_x: Vec::new(),
             mesh_vertices_y: Vec::new(),
             mesh_vertex_offsets: Vec::new(),
-            mesh_uvs: Vec::new(),
-            mesh_indices: Vec::new(),
-            mesh_index_offsets: Vec::new(),
+            mesh_layout: NO_MESH_LAYOUT,
             nines: crate::core::framedata::NinesBuffers::default(),
         }
     }
 }
+
+/// `GlobalBuffers::mesh_layout` before the static mesh buffers are set up.
+const NO_MESH_LAYOUT: usize = usize::MAX;
 
 /// Static / shareable evaluation context. The resource borrow and the
 /// FlatBufferBuilder workspace live here because they are candidates for
@@ -1183,6 +1282,8 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
     resolved_layer.deform_vec.clone_from(&primary.deform_vec);
     resolved_layer.cell_meta_per_part.clone_from(&primary.cell_meta_per_part);
     resolved_layer.cell_texture_hashes.clone_from(&primary.cell_texture_hashes);
+    // The cell cursor says which of the part's cells is showing; the UVs sample it.
+    resolved_layer.cursors.clone_from(&primary.cursors);
 
     // mesh_deform holds variable-size per-part deltas; deep-copy from primary.
     if resolved_layer.mesh_deform.len() != num_parts {
@@ -1279,8 +1380,9 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
                 // sources" fast path (almost never fires — a part is only uniform
                 // when all 26 bits agree) and a branch-free bit-mask form (identical
                 // timing; the cost is the stores, not the branches). Single-source
-                // playback does not reach here at all — `get_frame_data` swaps the
-                // layer instead — so nothing that ships today pays it.
+                // playback does not reach here at all — `get_frame_data` extracts
+                // straight into the resolved layer instead — so nothing that ships
+                // today pays it.
                 let w = src.weight;
                 let cov = layer_coverage(&layers[j], i);
                 let mut wk = [0.0f32; MIX_ATTR_COUNT];
@@ -1395,8 +1497,9 @@ struct InstanceState<'a> {
     unit: crate::core::SsUnit,
     render_mode: crate::core::RenderMode,
     /// Per-part runtime Override Layer table (Phase 2). Dense by `part_index`,
-    /// `None` = no override; sized to `num_parts` on `setup_animation`. Empty
-    /// until an animation is set up.
+    /// `None` = no override. Created at the part count by the first override
+    /// set on the instance, and dropped again when a new animation leaves no
+    /// override in it, so an instance that overrides nothing never allocates it.
     part_overrides: Vec<Option<crate::core::override_layer::PartOverride>>,
     /// Per-part resolved cell meta recorded by the seam when a cell override is
     /// applied, so `compute_local_uvs` samples the overridden cell (not just the
@@ -1449,6 +1552,9 @@ impl<'a> InstanceState<'a> {
     /// new count are dropped by the resize — the PERMANENT re-validation).
     fn retain_permanent_overrides_on_setup(&mut self, num_parts: usize) {
         use crate::core::override_layer::PriorityMode;
+        if self.part_overrides.is_empty() {
+            return;
+        }
         for entry in self.part_overrides.iter_mut() {
             let Some(p) = entry.as_mut() else { continue };
             p.visibility = None;
@@ -1462,7 +1568,11 @@ impl<'a> InstanceState<'a> {
                 *entry = None;
             }
         }
-        self.part_overrides.resize(num_parts, None);
+        if self.part_overrides.iter().all(Option::is_none) {
+            self.part_overrides = Vec::new();
+        } else {
+            self.part_overrides.resize(num_parts, None);
+        }
     }
 
     fn primary_idx(&self) -> usize {
@@ -1498,11 +1608,12 @@ impl<'a> InstanceState<'a> {
         &mut self.sources[idx]
     }
 
-    /// `true` when the primary is the only active source. The mix step can
-    /// short-circuit to a `mem::swap` in this case — the weighted sum would
-    /// yield primary's pose verbatim with `inv_total * primary.weight == 1.0`,
-    /// so the swap is byte-equivalent to running `mix_poses` while skipping
-    /// the per-part vec clone + 27 per-part PartState setter calls.
+    /// `true` when the primary is the only active source. The mix step is
+    /// skipped in this case: the weighted sum would yield the primary's pose
+    /// verbatim with `inv_total * primary.weight == 1.0`, so the pose is
+    /// extracted straight into the resolved layer instead, which skips the
+    /// per-part vec clone + 27 per-part PartState setter calls and the
+    /// primary's own layer.
     fn is_single_full_track(&self) -> bool {
         let primary_idx = self.primary_idx();
         let primary = &self.sources[primary_idx];
@@ -1601,24 +1712,52 @@ impl<'a> Context<'a> {
         crate::core::math::floorf(self.instance.primary_source().controller.get_frame_no()) as i32
     }
 
+    /// The primary animation's part count — the range an override's part index
+    /// must fall in — or 0 before an animation is set up.
+    fn override_part_count(&self) -> usize {
+        let anim_idx = self.instance.primary_source().animation_idx;
+        match self.eval.resource {
+            Some(resource) if anim_idx >= 0 => resource.animations[anim_idx as usize].cached_parts().len(),
+            _ => 0,
+        }
+    }
+
+    /// The override slot of `part`, creating the table the first time an
+    /// override is set.
+    fn override_slot(&mut self, part: u32) -> Result<&mut Option<crate::core::override_layer::PartOverride>, error::SSRuntimeError> {
+        let (idx, num_parts) = (part as usize, self.override_part_count());
+        if idx >= num_parts {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        if self.instance.part_overrides.is_empty() {
+            self.instance.part_overrides.resize(num_parts, None);
+        }
+        Ok(&mut self.instance.part_overrides[idx])
+    }
+
+    /// Clear one kind of override on `part`. Nothing to do when the table was
+    /// never created.
+    fn clear_override(&mut self, part: u32, clear: impl FnOnce(&mut crate::core::override_layer::PartOverride)) -> Result<(), error::SSRuntimeError> {
+        let idx = part as usize;
+        if idx >= self.override_part_count() {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        if let Some(entry) = self.instance.part_overrides.get_mut(idx).and_then(|e| e.as_mut()) {
+            clear(entry);
+        }
+        self.instance.compact_override(idx);
+        Ok(())
+    }
+
     /// Set or clear a per-part visibility override.
     /// `force`: `0` = clear/revert to animation, `1` = force-hide,
     /// `2` = force-visible (reserved, not implemented — rejected).
     /// `cascade` propagates a force-hide to descendants.
     pub fn set_part_visibility_override(&mut self, part: u32, force: u8, cascade: bool) -> Result<(), error::SSRuntimeError> {
-        let idx = part as usize;
-        if idx >= self.instance.part_overrides.len() {
-            return Err(error::SSRuntimeError::InvalidParameter);
-        }
         match force {
-            0 => {
-                if let Some(entry) = self.instance.part_overrides[idx].as_mut() {
-                    entry.visibility = None;
-                }
-                self.instance.compact_override(idx);
-            }
+            0 => self.clear_override(part, |entry| entry.visibility = None)?,
             1 => {
-                let entry = self.instance.part_overrides[idx].get_or_insert_with(Default::default);
+                let entry = self.override_slot(part)?.get_or_insert_with(Default::default);
                 entry.visibility = Some(crate::core::override_layer::VisibilityOverride { cascade });
             }
             // 2 = force-visible is reserved (handover D-5) but not implemented.
@@ -1649,29 +1788,17 @@ impl<'a> Context<'a> {
         let Some(priority) = crate::core::override_layer::PriorityMode::from_u8(priority) else {
             return Err(error::SSRuntimeError::InvalidParameter);
         };
-        let idx = part as usize;
-        if idx >= self.instance.part_overrides.len() {
-            return Err(error::SSRuntimeError::InvalidParameter);
-        }
         // Anchor the NON one-shot to "from the moment of override": remember the
         // set frame (its own keyframe is skipped on the first evaluation).
         let set_frame = self.override_set_frame();
-        let entry = self.instance.part_overrides[idx].get_or_insert_with(Default::default);
+        let entry = self.override_slot(part)?.get_or_insert_with(Default::default);
         entry.color = Some(crate::core::override_layer::ColorOverride { blend_op, corners_rgba, rate: 1.0, priority, set_frame, pending_first_eval: true });
         Ok(())
     }
 
     /// Clear the color override on a part.
     pub fn clear_part_color_override(&mut self, part: u32) -> Result<(), error::SSRuntimeError> {
-        let idx = part as usize;
-        if idx >= self.instance.part_overrides.len() {
-            return Err(error::SSRuntimeError::InvalidParameter);
-        }
-        if let Some(entry) = self.instance.part_overrides[idx].as_mut() {
-            entry.color = None;
-        }
-        self.instance.compact_override(idx);
-        Ok(())
+        self.clear_override(part, |entry| entry.color = None)
     }
 
     /// Set a per-part cell override, identified by `(cellmap_name_hash,
@@ -1687,8 +1814,7 @@ impl<'a> Context<'a> {
         let Some(priority) = crate::core::override_layer::PriorityMode::from_u8(priority) else {
             return Err(error::SSRuntimeError::InvalidParameter);
         };
-        let idx = part as usize;
-        if idx >= self.instance.part_overrides.len() {
+        if part as usize >= self.override_part_count() {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
         let Some(resource) = self.eval.resource else {
@@ -1699,22 +1825,14 @@ impl<'a> Context<'a> {
             return Err(error::SSRuntimeError::InvalidParameter);
         };
         let set_frame = self.override_set_frame();
-        let entry = self.instance.part_overrides[idx].get_or_insert_with(Default::default);
+        let entry = self.override_slot(part)?.get_or_insert_with(Default::default);
         entry.cell = Some(crate::core::override_layer::CellOverride { cellmap_name_hash, cell_name_hash, resolved, priority, set_frame, pending_first_eval: true });
         Ok(())
     }
 
     /// Clear the cell override on a part.
     pub fn clear_part_cell_override(&mut self, part: u32) -> Result<(), error::SSRuntimeError> {
-        let idx = part as usize;
-        if idx >= self.instance.part_overrides.len() {
-            return Err(error::SSRuntimeError::InvalidParameter);
-        }
-        if let Some(entry) = self.instance.part_overrides[idx].as_mut() {
-            entry.cell = None;
-        }
-        self.instance.compact_override(idx);
-        Ok(())
+        self.clear_override(part, |entry| entry.cell = None)
     }
 
     /// Clear every per-part override.
@@ -1747,11 +1865,14 @@ impl<'a> Context<'a> {
 
         let num_parts = metadata.cached_parts().len();
         let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
+        let cursor_c = crate::core::framedata::cursor_count(metadata.cached_parts());
 
+        // A new setup plays one source alone, extracted straight into the
+        // resolved layer; the source's own layer is sized when a mix needs it.
         for layer in self.instance.layers.iter_mut() {
-            layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
+            *layer = LayerState::new();
         }
-        self.instance.resolved_layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
+        self.instance.resolved_layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
 
         // Override Layer: a new animation clears Visibility and NON/NOW Color
         // overrides but keeps PERMANENT ones (handover D-3/D-5).
@@ -1764,15 +1885,16 @@ impl<'a> Context<'a> {
         globals.inheritance_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
         globals.local_uvs.clear();
         globals.local_uvs.resize(num_parts * 10, 0.0);
-        globals.shape_vertices.clear();
-        globals.shape_vertices.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
-        globals.shape_vertex_box_coords.clear();
-        globals.shape_vertex_box_coords.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
+        // Shape buffers keep their `part_index * SHAPE_VERTICES_STRIDE` layout, but
+        // only a pack with a shape part has anything to put in them.
+        let shape_len = if metadata.cached_parts().iter().any(|p| p.shape_kind.is_some()) { num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE } else { 0 };
+        globals.shape_vertices = alloc::vec![0.0; shape_len];
+        globals.shape_vertex_box_coords = alloc::vec![0.0; shape_len];
         globals.shape_vertex_counts.clear();
         globals.shape_vertex_counts.resize(num_parts, 0);
-        // Invalidate the static mesh buffers so compute_mesh_vertices rebuilds
-        // them for the newly selected animation's Cells.
-        globals.mesh_index_offsets.clear();
+        // Have compute_mesh_vertices set up the newly selected animation's
+        // static mesh buffers.
+        globals.mesh_layout = NO_MESH_LAYOUT;
 
         self.instance.z_order.setup(metadata.cached_parts());
         self.rebuild_setup_pose();
@@ -2040,6 +2162,7 @@ impl<'a> Context<'a> {
         }
         let metadata = &resource.animations[anim_idx as usize];
         let (coordinate_system, origin, unit) = (self.instance.coordinate_system, self.instance.origin, self.instance.unit);
+        self.instance.setup_pose.reserve_exact(metadata.initial_attributes.len());
         for (i, a) in metadata.initial_attributes.iter().enumerate() {
             let parent_index = metadata.cached_parts().get(i).map_or(-1, |p| p.parent_index);
             self.instance.setup_pose.push(crate::core::framedata::setup_pose_part(&a, parent_index, coordinate_system, origin, unit, metadata.canvas_width, metadata.canvas_height));
@@ -2076,6 +2199,7 @@ impl<'a> Context<'a> {
         let metadata = &resource.animations[animation_idx];
         let num_parts = metadata.cached_parts().len();
         let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
+        let cursor_c = crate::core::framedata::cursor_count(metadata.cached_parts());
 
         let mut source = SourceState::new();
         source.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
@@ -2087,13 +2211,13 @@ impl<'a> Context<'a> {
         let handle = match free {
             Some(i) => {
                 self.instance.sources[i] = source;
-                self.instance.layers[i].resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
+                self.instance.layers[i].resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
                 i
             }
             None => {
                 self.instance.sources.push(source);
                 let mut layer = LayerState::new();
-                layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
+                layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
                 self.instance.layers.push(layer);
                 self.instance.sources.len() - 1
             }
@@ -2171,6 +2295,11 @@ impl<'a> Context<'a> {
         let primary_idx = self.instance.primary_idx();
         let primary_num_parts = primary_metadata.cached_parts().len();
         let num_sources = self.instance.sources.len();
+        // One audible source at full alpha resolves to its own pose verbatim, so
+        // it is extracted straight into the resolved layer and the two-level fold
+        // is skipped. The floor is unobservable here: an attribute nothing keys
+        // reads the same from the setup pose as from the extracted pose.
+        let single = self.instance.is_single_full_track();
         for i in 0..num_sources {
             let source_anim_idx = self.instance.sources[i].animation_idx;
             if source_anim_idx < 0 {
@@ -2181,7 +2310,9 @@ impl<'a> Context<'a> {
             }
             let frame_for_source = if i == primary_idx { frame_no } else { self.instance.sources[i].controller.get_frame_no() };
             let metadata = &resource.animations[source_anim_idx as usize];
-            let layer = &mut self.instance.layers[i];
+            let into_resolved = single && i == primary_idx;
+            let layer = if into_resolved { &mut self.instance.resolved_layer } else { &mut self.instance.layers[i] };
+            layer.fit(metadata);
             core::framedata::extract_pose(
                 &mut self.eval.fb,
                 metadata.cached_parts(),
@@ -2213,19 +2344,15 @@ impl<'a> Context<'a> {
             // Record which attributes this animation actually carries, per part,
             // for the mix's coverage rule. Animation-level and therefore constant
             // for the source's lifetime; copied per frame because a source can be
-            // repointed at another animation at any time.
-            layer.coverage_vec.clear();
-            layer.coverage_vec.extend(metadata.cached_parts().iter().map(|p| p.coverage));
+            // repointed at another animation at any time. The resolved layer is
+            // never mixed from, so it needs none.
+            if !into_resolved {
+                layer.coverage_vec.clear();
+                layer.coverage_vec.extend(metadata.cached_parts().iter().map(|p| p.coverage));
+            }
         }
 
-        if self.instance.is_single_full_track() {
-            // Fast path: one audible track at full alpha with one active source
-            // resolves to that source's pose verbatim, so the whole two-level fold
-            // collapses to a swap — O(1) against `mix_tracks`'s per-part vec clone
-            // and 27 setters. The floor is unobservable here: an attribute nothing
-            // keys reads the same from the setup pose as from the extracted pose.
-            ::core::mem::swap(&mut self.instance.layers[primary_idx], &mut self.instance.resolved_layer);
-        } else {
+        if !single {
             mix_tracks(&self.instance.sources, &self.instance.layers, &self.instance.tracks, primary_idx, &self.instance.setup_pose, &mut self.instance.resolved_layer);
         }
 
@@ -2309,7 +2436,7 @@ impl<'a> Context<'a> {
             Self::compute_matrices(instance, metadata.cached_parts());
             // Skinned mesh skinning depends on world matrices, so it lives in the
             // Direct path. Mesh parts in Indirect mode get empty per-part ranges.
-            Self::compute_mesh_vertices(instance, metadata.cached_parts());
+            Self::compute_mesh_vertices(instance, metadata);
         } else {
             Self::clear_mesh_vertices(instance, metadata.cached_parts().len());
         }
@@ -2324,19 +2451,20 @@ impl<'a> Context<'a> {
     ///
     /// Layout: x/y are SoA, sliced per part by `mesh_vertex_offsets` (a CSR
     /// prefix sum of length `num_parts + 1`; non-mesh parts get an empty
-    /// range). The CSR offsets and the static UV / index buffers are built
-    /// once by `setup_static_mesh_buffers`; only the vertex positions are
+    /// range). The CSR offsets and the static UV / index buffers are the
+    /// animation's (`StaticMeshBuffers`); only the vertex positions are
     /// recomputed each frame.
     #[allow(clippy::needless_range_loop)]
-    fn compute_mesh_vertices(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
+    fn compute_mesh_vertices(instance: &mut InstanceState<'a>, metadata: &AnimationMetadata<'a>) {
         let num_parts = instance.resolved_layer.parts_vec.len();
+        let cached_parts = metadata.cached_parts();
 
         // The CSR offsets and the static UV / index buffers depend only on the
-        // chosen animation's per-part Cells (fixed by the SS mesh spec). Build
-        // them — and size the SoA position buffers — once; `play()` clears
-        // `mesh_index_offsets` so a new animation forces the rebuild.
-        if instance.globals.mesh_index_offsets.len() != num_parts + 1 {
-            Self::setup_static_mesh_buffers(instance, cached_parts);
+        // animation's per-part Cells (fixed by the SS mesh spec). Take the
+        // offsets and size the SoA position buffers once per layout;
+        // `setup_animation` resets `mesh_layout` so a new animation sets up again.
+        if instance.globals.mesh_layout != metadata.mesh_layout {
+            Self::setup_static_mesh_buffers(instance, metadata);
         }
 
         let layer = &instance.resolved_layer;
@@ -2416,61 +2544,20 @@ impl<'a> Context<'a> {
         }
     }
 
-    /// Builds the per-instance static mesh buffers — CSR vertex / index
-    /// offsets, texture-space UVs, triangle indices — and sizes and zeroes the
-    /// SoA position buffers. These depend only on the chosen animation's
-    /// per-part Cells (fixed by the SS mesh spec), so this runs once per
-    /// `play()` rather than every frame. A statically malformed mesh part
-    /// keeps the zeros written here, so the per-frame pass needs no clear.
-    fn setup_static_mesh_buffers(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
-        let num_parts = instance.resolved_layer.parts_vec.len();
+    /// Points the instance at the animation's static mesh buffers: copies their
+    /// vertex offsets, and sizes and zeroes the SoA position buffers. A
+    /// statically malformed mesh part keeps the zeros written here, so the
+    /// per-frame pass needs no clear.
+    fn setup_static_mesh_buffers(instance: &mut InstanceState<'a>, metadata: &AnimationMetadata<'a>) {
         let globals = &mut instance.globals;
-
-        // CSR vertex offsets — non-mesh parts contribute an empty range. The
-        // Cell is the authoritative geometry source for both skeletal and
-        // Deform-only meshes; the bind cache only adds skinning.
-        globals.mesh_vertex_offsets.clear();
-        globals.mesh_vertex_offsets.resize(num_parts + 1, 0);
-        for i in 0..num_parts {
-            let vertex_count = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()).map(|m| m.num_vertices()).unwrap_or(0);
-            globals.mesh_vertex_offsets[i + 1] = globals.mesh_vertex_offsets[i] + vertex_count as u32;
-        }
-        let total_vertices = *globals.mesh_vertex_offsets.last().unwrap_or(&0) as usize;
-
-        // CSR triangle-index offsets.
-        globals.mesh_index_offsets.clear();
-        globals.mesh_index_offsets.resize(num_parts + 1, 0);
-        for i in 0..num_parts {
-            let index_count = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()).map(|m| m.indices.len()).unwrap_or(0);
-            globals.mesh_index_offsets[i + 1] = globals.mesh_index_offsets[i] + index_count as u32;
-        }
-        let total_indices = *globals.mesh_index_offsets.last().unwrap_or(&0) as usize;
-
-        // Static UVs (texture-pixel space) and triangle indices, per part.
-        globals.mesh_indices.clear();
-        globals.mesh_indices.reserve(total_indices);
-        globals.mesh_uvs.clear();
-        globals.mesh_uvs.resize(total_vertices * 2, 0.0);
-        for i in 0..num_parts {
-            let Some(mesh_cell) = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()) else {
-                continue;
-            };
-            globals.mesh_indices.extend_from_slice(&mesh_cell.indices);
-            // UVs share the position CSR; copy only when the cell vertex count
-            // matches the slot (true for well-formed meshes).
-            let start = globals.mesh_vertex_offsets[i] as usize;
-            let end = globals.mesh_vertex_offsets[i + 1] as usize;
-            if mesh_cell.uvs.len() == (end - start) * 2 {
-                globals.mesh_uvs[start * 2..end * 2].copy_from_slice(&mesh_cell.uvs);
-            }
-        }
-
-        // SoA position buffers — sized and zeroed once. Each valid mesh part
-        // overwrites its whole range every frame.
+        let mesh = metadata.static_mesh();
+        globals.mesh_vertex_offsets.clone_from(&mesh.vertex_offsets);
+        let total_vertices = *mesh.vertex_offsets.last().unwrap_or(&0) as usize;
         globals.mesh_vertices_x.clear();
         globals.mesh_vertices_x.resize(total_vertices, 0.0);
         globals.mesh_vertices_y.clear();
         globals.mesh_vertices_y.resize(total_vertices, 0.0);
+        globals.mesh_layout = metadata.mesh_layout;
     }
 
     fn clear_mesh_vertices(instance: &mut InstanceState<'a>, num_parts: usize) {
@@ -2483,9 +2570,7 @@ impl<'a> Context<'a> {
         }
         globals.mesh_vertices_x.clear();
         globals.mesh_vertices_y.clear();
-        globals.mesh_uvs.clear();
-        globals.mesh_indices.clear();
-        globals.mesh_index_offsets.clear();
+        globals.mesh_layout = NO_MESH_LAYOUT;
     }
 
     #[allow(clippy::needless_range_loop)]
@@ -2527,12 +2612,11 @@ impl<'a> Context<'a> {
             if state.cell() < 0 {
                 continue;
             }
-            let cursor = layer.cursors[i * core::framedata::NUM_PART_ATTRIBUTES + core::framedata::IDX_ATTRIBUTECELL];
             // A cell override recorded at the seam wins for UVs too, so the
             // sampled image (not just the quad size/texture) reflects the swap.
             let meta = match override_cell_uv_meta.get(i).and_then(|m| m.as_ref()) {
                 Some(m) => m,
-                None => match cached_parts[i].resolved_cells.get(cursor) {
+                None => match cached_parts[i].cell_cursor(&layer.cursors).and_then(|c| cached_parts[i].resolved_cells.get(c)) {
                     Some(m) => m,
                     None => continue,
                 },
@@ -2564,24 +2648,16 @@ impl<'a> Context<'a> {
         let globals = &mut instance.globals;
         let num_parts = layer.parts_vec.len();
         let stride = crate::core::framedata::SHAPE_VERTICES_STRIDE;
-        if globals.shape_vertices.len() != num_parts * stride {
-            globals.shape_vertices.resize(num_parts * stride, 0.0);
-        }
-        if globals.shape_vertex_box_coords.len() != num_parts * stride {
-            globals.shape_vertex_box_coords.resize(num_parts * stride, 0.0);
-        }
         if globals.shape_vertex_counts.len() != num_parts {
             globals.shape_vertex_counts.resize(num_parts, 0);
         }
-        for slot in globals.shape_vertices.iter_mut() {
-            *slot = 0.0;
+        globals.shape_vertex_counts.fill(0);
+        // `setup_animation` leaves the vertex buffers empty when no part is a shape.
+        if globals.shape_vertices.len() != num_parts * stride {
+            return;
         }
-        for slot in globals.shape_vertex_box_coords.iter_mut() {
-            *slot = 0.0;
-        }
-        for slot in globals.shape_vertex_counts.iter_mut() {
-            *slot = 0;
-        }
+        globals.shape_vertices.fill(0.0);
+        globals.shape_vertex_box_coords.fill(0.0);
 
         for i in 0..num_parts {
             let Some(shape_kind) = cached_parts[i].shape_kind else { continue };
@@ -2749,28 +2825,34 @@ impl<'a> Context<'a> {
         self.instance.globals.mesh_vertex_offsets.len()
     }
 
+    /// The static mesh buffers this instance draws with: none before the first
+    /// Direct-mode `get_frame_data`, and none in Indirect mode.
+    fn static_mesh(&self) -> Option<&StaticMeshBuffers> {
+        self.eval.resource?.static_mesh(self.instance.globals.mesh_layout)
+    }
+
     pub fn get_mesh_uvs_ptr(&self) -> *const f32 {
-        self.instance.globals.mesh_uvs.as_ptr()
+        self.static_mesh().map_or(::core::ptr::NonNull::dangling().as_ptr(), |m| m.uvs.as_ptr())
     }
 
     pub fn get_mesh_uvs_len(&self) -> usize {
-        self.instance.globals.mesh_uvs.len()
+        self.static_mesh().map_or(0, |m| m.uvs.len())
     }
 
     pub fn get_mesh_indices_ptr(&self) -> *const i32 {
-        self.instance.globals.mesh_indices.as_ptr()
+        self.static_mesh().map_or(::core::ptr::NonNull::dangling().as_ptr(), |m| m.indices.as_ptr())
     }
 
     pub fn get_mesh_indices_len(&self) -> usize {
-        self.instance.globals.mesh_indices.len()
+        self.static_mesh().map_or(0, |m| m.indices.len())
     }
 
     pub fn get_mesh_index_offsets_ptr(&self) -> *const u32 {
-        self.instance.globals.mesh_index_offsets.as_ptr()
+        self.static_mesh().map_or(::core::ptr::NonNull::dangling().as_ptr(), |m| m.index_offsets.as_ptr())
     }
 
     pub fn get_mesh_index_offsets_len(&self) -> usize {
-        self.instance.globals.mesh_index_offsets.len()
+        self.static_mesh().map_or(0, |m| m.index_offsets.len())
     }
 
     pub fn get_nines_vertices_ptr(&self) -> *const f32 {
@@ -3919,6 +4001,96 @@ mod tests {
     /// would read an unfinished `FlatBufferBuilder`, which asserts — and under
     /// `panic = "abort"` that assert ends the host process.
     #[test]
+    fn an_instance_keeps_a_cursor_per_keyed_attribute_only() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
+        for meta in resource.animations() {
+            let parts = meta.cached_parts();
+            let mut base = 0;
+            for p in parts {
+                assert_eq!(p.cursor_base, base, "cursors are packed in part order");
+                assert_eq!(p.key_mask >> crate::core::framedata::IDX_ATTRIBUTECELL & 1 == 1, p.cell_keys.is_some());
+                assert_eq!(p.key_mask >> crate::core::framedata::IDX_ATTRIBUTEDEFORM & 1 == 1, p.deform_keys.is_some());
+                base += p.key_mask.count_ones();
+            }
+            assert_eq!(crate::core::framedata::cursor_count(parts), base as usize);
+            assert!((base as usize) < parts.len() * crate::core::framedata::NUM_PART_ATTRIBUTES / 2, "fixture sanity: most attributes of most parts carry no keys");
+        }
+    }
+
+    #[test]
+    fn a_mixed_pose_samples_the_primary_cell_for_its_uvs() {
+        // A second source at a negligible weight sends every frame through the
+        // mix, while the pose stays the primary's to within 1e-6 and the cell is
+        // the primary's by definition. The UVs must follow the cell the primary
+        // shows on each frame, as they do when it plays alone.
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
+        let meta = &resource.animations()[resource.find_animation_index("dance").expect("fixture sanity: Ringo has dance")];
+
+        let (mut solo, mut mixed) = (Context::new(), Context::new());
+        solo.bind_resource(&resource);
+        mixed.bind_resource(&resource);
+        solo.setup_animation("dance").expect("setup");
+        mixed.setup_animation("dance").expect("setup");
+        mixed.add_track_source(0, "dance", 1e-6).expect("second source");
+
+        let uvs = |c: &Context| unsafe { ::core::slice::from_raw_parts(c.get_local_uvs_ptr(), c.get_local_uvs_len()) }.to_vec();
+        for f in meta.start_frame..=meta.end_frame {
+            solo.get_frame_data(f as f32).expect("frame");
+            mixed.get_frame_data(f as f32).expect("frame");
+            let (a, b) = (uvs(&solo), uvs(&mixed));
+            assert_eq!(a.len(), b.len());
+            for (i, (x, y)) in a.iter().zip(&b).enumerate() {
+                assert!((x - y).abs() < 1e-2, "frame {f}, part {}: solo uv {x}, mixed uv {y}", i / 10);
+            }
+        }
+    }
+
+    #[test]
+    fn static_mesh_buffers_are_shared_not_copied() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
+        let names = resource.get_animation_names();
+        let start = |name: &str| resource.animations()[resource.find_animation_index(name).unwrap()].start_frame as f32;
+
+        let (mut a, mut b) = (Context::new(), Context::new());
+        a.bind_resource(&resource);
+        b.bind_resource(&resource);
+        a.setup_animation(&names[0]).expect("setup");
+        assert_eq!(a.get_mesh_uvs_len(), 0, "nothing is handed out before the first frame");
+        a.get_frame_data(start(&names[0])).expect("frame");
+        assert!(a.get_mesh_uvs_len() > 0 && a.get_mesh_indices_len() > 0, "fixture sanity: Ringo has mesh parts");
+
+        // A second instance hands out the very same buffers.
+        b.setup_animation(&names[0]).expect("setup");
+        b.get_frame_data(start(&names[0])).expect("frame");
+        assert_eq!(a.get_mesh_uvs_ptr(), b.get_mesh_uvs_ptr());
+        assert_eq!(a.get_mesh_indices_ptr(), b.get_mesh_indices_ptr());
+        assert_eq!(a.get_mesh_index_offsets_ptr(), b.get_mesh_index_offsets_ptr());
+
+        // So does another animation that shows the same cells on its meshes.
+        let same = names.iter().skip(1).find(|n| resource.animations()[resource.find_animation_index(n).unwrap()].mesh_layout == resource.animations()[0].mesh_layout).expect("fixture sanity: Ringo's animations share their mesh cells");
+        b.setup_animation(same).expect("setup");
+        b.get_frame_data(start(same)).expect("frame");
+        assert_eq!(a.get_mesh_uvs_ptr(), b.get_mesh_uvs_ptr());
+
+        // Indirect mode skins no mesh, so it hands out none.
+        b.set_render_mode(crate::core::RenderMode::SceneGraph);
+        b.get_frame_data(start(same)).expect("frame");
+        assert_eq!((b.get_mesh_uvs_len(), b.get_mesh_indices_len(), b.get_mesh_index_offsets_len()), (0, 0, 0));
+    }
+
+    #[test]
     fn the_frame_data_accessors_never_read_an_unfinished_buffer() {
         prepare();
         let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
@@ -4075,6 +4247,41 @@ mod tests {
         assert_eq!(context.find_part_index("SCL_XY"), 7);
         assert_eq!(context.find_part_index("root"), 0);
         assert_eq!(context.find_part_index("does_not_exist"), -1);
+    }
+
+    #[test]
+    fn override_table_is_created_by_the_first_override() {
+        let ssab_data = load_basic_ssab();
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        // No animation yet: every part index is out of range.
+        assert!(matches!(context.set_part_visibility_override(0, 1, false), Err(error::SSRuntimeError::InvalidParameter)));
+
+        context.setup_animation("anime_1").expect("setup");
+        let num_parts = context.override_part_count();
+        assert!(num_parts > 1);
+        assert!(context.instance.part_overrides.is_empty(), "setup allocates no table");
+
+        // Clearing what was never set is a no-op, and still range-checked; a
+        // rejected set allocates nothing.
+        context.clear_part_color_override(0).expect("clear without a table");
+        assert!(matches!(context.clear_part_color_override(num_parts as u32), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(matches!(context.set_part_visibility_override(num_parts as u32, 1, false), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(context.instance.part_overrides.is_empty());
+
+        context.set_part_visibility_override(1, 1, false).expect("set");
+        assert_eq!(context.instance.part_overrides.len(), num_parts);
+
+        // A new animation drops the visibility override, and the empty table with it.
+        context.setup_animation("anime_1").expect("re-setup");
+        assert!(context.instance.part_overrides.is_empty());
+
+        // A PERMANENT color override survives it, and keeps the table.
+        context.set_part_color_override(1, 0, 0xff0000ff, 2).expect("permanent color");
+        context.setup_animation("anime_1").expect("re-setup");
+        assert_eq!(context.instance.part_overrides.len(), num_parts);
+        assert!(context.instance.part_overrides[1].as_ref().is_some_and(|o| o.color.is_some()));
     }
 
     #[test]

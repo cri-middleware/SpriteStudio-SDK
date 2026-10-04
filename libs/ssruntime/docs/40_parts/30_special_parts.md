@@ -41,6 +41,7 @@ A shape is a part that draws a figure such as a triangle, a rectangle, or a star
 | `ss_runtime_get_shape_vertex_counts` | 1 value | The number of valid vertices for that part. The remaining slots are 0 |
 | `ss_runtime_get_shape_vertex_box_coords` | 24 floats | Each vertex's position `(fx, fy)` within the bounding rectangle. The top-left is `(0, 0)` and the bottom-right is `(1, 1)` |
 
+- The vertex and box-coordinate buffers are indexed by `part_index * 24`. When no part of the pack is a shape, both are empty; the vertex counts are still one per part, all `0`.
 - The vertices are ordered as a **triangle fan**. The first vertex is the center, and the last vertex returns to the position of the second vertex to close the figure.
 - For the parts color, bilinearly interpolate the four corner colors by `(fx, fy)` to get each vertex's color ([Parts Color §4-3](./10_parts_color.md#4-3-shape)).
 - For a shape authored as a mask, the mask threshold has no effect, and the whole figure becomes the mask ([Mask §2-5](./40_mask.md#2-5-cutout-threshold)).
