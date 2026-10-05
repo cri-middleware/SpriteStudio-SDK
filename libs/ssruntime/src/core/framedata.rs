@@ -494,14 +494,23 @@ impl CachedPartData {
             (keys.run(part.texture_keys()), IDX_ATTRIBUTETEXTURE),
         ];
         let key_mask = all.iter().filter(|(run, _)| run.is_some()).fold(0u64, |mask, (_, idx)| mask | 1 << idx);
-        let mut keyed: alloc::vec::Vec<(usize, KeyRun)> = all.iter().filter_map(|(run, idx)| run.map(|run| (*idx, run))).collect();
-        keyed.sort_unstable_by_key(|(idx, _)| *idx);
+        // `all` is not in attribute order: place each run at its attribute's
+        // bit, then gather them in `key_mask` order into one allocation of
+        // their exact size. This runs for every part of every animation set up.
+        let mut by_idx = [KeyRun::new(0, 0); u64::BITS as usize];
+        for (run, idx) in all.iter() {
+            if let Some(run) = run {
+                by_idx[*idx] = *run;
+            }
+        }
+        let mut runs = alloc::vec::Vec::with_capacity(key_mask.count_ones() as usize);
+        runs.extend((0..u64::BITS as usize).filter(|idx| key_mask >> idx & 1 == 1).map(|idx| by_idx[idx]));
         let mut cached = Self {
             part_index,
             parent_index,
             name_hash,
             key_mask,
-            runs: keyed.into_iter().map(|(_, run)| run).collect(),
+            runs: runs.into_boxed_slice(),
             cursor_base: 0,
             constant_mask: 0,
             coverage: mixed_attribute_coverage(&part),
