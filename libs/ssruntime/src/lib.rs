@@ -2355,8 +2355,11 @@ impl<'a> Context<'a> {
         if self.eval.fb_need > self.eval.fb_capacity {
             // The last frame outgrew the builder, which doubled. Size it to the
             // largest frame so far, with a sixteenth to spare for frames that
-            // carry a little more; the old buffer is released.
-            self.eval.fb_capacity = self.eval.fb_need + self.eval.fb_need / 16;
+            // carry a little more; the old buffer is released. The builder
+            // writes back to front from the end of its buffer, so the size sets
+            // where the frame data starts: a multiple of 8 keeps it on the
+            // boundary `PartState` needs, as the doubled sizes did.
+            self.eval.fb_capacity = (self.eval.fb_need + self.eval.fb_need / 16).next_multiple_of(8);
             self.eval.fb = flatbuffers::FlatBufferBuilder::with_capacity(self.eval.fb_capacity);
         }
         self.eval.fb.reset();
@@ -4197,6 +4200,35 @@ mod tests {
                 assert!((x - y).abs() < 1e-2, "frame {f}, part {}: solo uv {x}, mixed uv {y}", i / 10);
             }
         }
+    }
+
+    #[test]
+    fn frame_data_starts_aligned_after_the_builder_is_resized() {
+        // A Player reads FrameData's structs where they lie, and `PartState`
+        // holds a u64: every frame has to start on an 8-byte boundary,
+        // including the frames after the builder is re-sized to the largest.
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
+
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        let mut resized = 0;
+        for name in resource.get_animation_names() {
+            let meta = &resource.animations()[resource.find_animation_index(&name).unwrap()];
+            ctx.setup_animation(&name).expect("setup");
+            for _ in 0..2 {
+                for f in meta.start_frame..=meta.end_frame {
+                    let capacity = ctx.eval.fb_capacity;
+                    let start = ctx.get_frame_data(f as f32).expect("frame").as_ptr() as usize;
+                    assert_eq!(start % 8, 0, "{name} frame {f}: frame data starts off an 8-byte boundary");
+                    resized += usize::from(ctx.eval.fb_capacity != capacity);
+                }
+            }
+        }
+        assert!(resized > 0, "fixture sanity: the builder is re-sized");
     }
 
     #[test]
