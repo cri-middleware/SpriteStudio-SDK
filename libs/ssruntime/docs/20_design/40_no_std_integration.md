@@ -82,10 +82,11 @@ cargo rustc -p ssruntime-ffi --release --features "custom_alloc,panic-handler" -
 
 ### 4-2. Defining the functions
 
-In the C / C++ project you link against, define the following three `extern "C"` functions. C runtime functions such as `memcpy` / `memset` / `memmove` / `memcmp` / `strlen` are also needed at the final link, but the engine's CRT usually provides them (on bare metal, supply them separately).
+In the C / C++ project you link against, define the following three `extern "C"` functions, with the types `ssruntime.h` declares them with, so the same file can include it. C runtime functions such as `memcpy` / `memset` / `memmove` / `memcmp` / `strlen` are also needed at the final link, but the engine's CRT usually provides them (on bare metal, supply them separately).
 
 ```cpp
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #if defined(_MSC_VER)
 #include <malloc.h> // _aligned_malloc / _aligned_free
@@ -94,24 +95,22 @@ In the C / C++ project you link against, define the following three `extern "C"`
 extern "C" {
 
 // 1. Memory allocation
-//    The returned pointer must be aligned to an `align`-byte boundary (`align` is always a power of two).
+//    The returned pointer must be aligned to an `align`-byte boundary (`align` is always a power of two,
+//    and at least 8: a Player reads FrameData's structs in place, so the Brain never asks for less).
 //    Plain malloc guarantees alignment only up to max_align_t (usually 8-16 bytes),
 //    so a request for a larger boundary is undefined behavior. The Brain does not correct the alignment.
-void* ss_custom_alloc(size_t size, size_t align) {
+uint8_t* ss_custom_alloc(uintptr_t size, uintptr_t align) {
     // Example: for Unreal Engine
     // return FMemory::Malloc(size, align);
 #if defined(_MSC_VER)
-    return _aligned_malloc(size, align);
+    return (uint8_t*)_aligned_malloc(size, align);
 #else
-    // posix_memalign requires align to be a multiple of sizeof(void*)
-    if (align < sizeof(void*)) {
-        align = sizeof(void*);
-    }
+    // align is at least 8, so already a multiple of sizeof(void*), as posix_memalign requires
     void* ptr = NULL;
     if (posix_memalign(&ptr, align, size) != 0) {
         return NULL; // return NULL on allocation failure (the Brain detects it)
     }
-    return ptr;
+    return (uint8_t*)ptr;
 #endif
 }
 
@@ -119,7 +118,7 @@ void* ss_custom_alloc(size_t size, size_t align) {
 //    The same size / align used for the allocation are passed in. A pool allocator that needs the size to free can use them.
 //    Use the free function that pairs with the allocation function. On MSVC, calling free on memory
 //    allocated with _aligned_malloc is undefined behavior.
-void ss_custom_free(void* ptr, size_t size, size_t align) {
+void ss_custom_free(void* ptr, uintptr_t size, uintptr_t align) {
     (void)size;
     (void)align;
     // Example: for Unreal Engine

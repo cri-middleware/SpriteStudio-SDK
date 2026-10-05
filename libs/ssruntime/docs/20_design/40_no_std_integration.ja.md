@@ -82,10 +82,11 @@ cargo rustc -p ssruntime-ffi --release --features "custom_alloc,panic-handler" -
 
 ### 4-2. 関数を定義する
 
-リンクする C / C++ のプロジェクトで、次の 3 つの `extern "C"` 関数を定義します。`memcpy` / `memset` / `memmove` / `memcmp` / `strlen` などの C ランタイム関数も最終的なリンクで必要ですが、通常はエンジンの CRT が提供します（ベアメタル環境では別に用意してください）。
+リンクする C / C++ のプロジェクトで、次の 3 つの `extern "C"` 関数を、`ssruntime.h` の宣言と同じ型で定義します。同じファイルで `ssruntime.h` を読み込めます。`memcpy` / `memset` / `memmove` / `memcmp` / `strlen` などの C ランタイム関数も最終的なリンクで必要ですが、通常はエンジンの CRT が提供します（ベアメタル環境では別に用意してください）。
 
 ```cpp
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #if defined(_MSC_VER)
 #include <malloc.h> // _aligned_malloc / _aligned_free
@@ -94,24 +95,22 @@ cargo rustc -p ssruntime-ffi --release --features "custom_alloc,panic-handler" -
 extern "C" {
 
 // 1. メモリの確保
-//    返すポインタは `align` バイト境界に揃っていなければなりません（`align` は常に 2 の冪）。
+//    返すポインタは `align` バイト境界に揃っていなければなりません（`align` は常に 2 の冪で、8 以上。
+//    Player は FrameData の構造体をその場で読むので、Brain は 8 未満を要求しません）。
 //    素の malloc は max_align_t（通常 8〜16 バイト）までしか保証しないので、
 //    それより大きな境界を要求されると未定義動作になります。Brain は境界を補正しません。
-void* ss_custom_alloc(size_t size, size_t align) {
+uint8_t* ss_custom_alloc(uintptr_t size, uintptr_t align) {
     // 例: Unreal Engine の場合
     // return FMemory::Malloc(size, align);
 #if defined(_MSC_VER)
-    return _aligned_malloc(size, align);
+    return (uint8_t*)_aligned_malloc(size, align);
 #else
-    // posix_memalign は align が sizeof(void*) の倍数であることを要求する
-    if (align < sizeof(void*)) {
-        align = sizeof(void*);
-    }
+    // align は 8 以上なので、posix_memalign が要求する sizeof(void*) の倍数になっている
     void* ptr = NULL;
     if (posix_memalign(&ptr, align, size) != 0) {
         return NULL; // 確保に失敗したら NULL を返す（Brain が検知する）
     }
-    return ptr;
+    return (uint8_t*)ptr;
 #endif
 }
 
@@ -119,7 +118,7 @@ void* ss_custom_alloc(size_t size, size_t align) {
 //    確保したときと同じ size / align が渡されます。解放に size が要るプールアロケータで使えます。
 //    確保関数と対になる解放関数を使ってください。MSVC では、_aligned_malloc で確保したメモリを
 //    free すると未定義動作になります。
-void ss_custom_free(void* ptr, size_t size, size_t align) {
+void ss_custom_free(void* ptr, uintptr_t size, uintptr_t align) {
     (void)size;
     (void)align;
     // 例: Unreal Engine の場合
