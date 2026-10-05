@@ -378,6 +378,11 @@ impl SsabStorage {
     }
 }
 
+/// Which of an animation's eight per-coordinate-setup slots a setup uses.
+fn coordinate_slot(coordinate_system: crate::core::SsCoordinateSystem, origin: crate::core::SsOrigin, unit: crate::core::SsUnit) -> usize {
+    usize::from(coordinate_system == crate::core::SsCoordinateSystem::YDown) | usize::from(origin == crate::core::SsOrigin::TopLeft) << 1 | usize::from(unit == crate::core::SsUnit::Normalized) << 2
+}
+
 pub struct AnimationMetadata<'a> {
     pub name_hash: u32,
     pub start_frame: i32,
@@ -388,7 +393,7 @@ pub struct AnimationMetadata<'a> {
     /// The SSAE's setup pose, as stored. It is identical for every animation of
     /// an AnimationPack — the converter writes the same `isSetup` animation into
     /// each — and becomes the floor of the track stack once transformed into the
-    /// instance's coordinate space (`Context::rebuild_setup_pose`).
+    /// instance's coordinate space (`AnimationMetadata::setup_pose`).
     pub initial_attributes: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialPartAttributes<'a>>>,
     pub events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::EventsPerFrame<'a>>>>,
     pub initial_events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialEvents<'a>>>>,
@@ -401,6 +406,8 @@ pub struct AnimationMetadata<'a> {
     mesh_layout: usize,
     /// Every part's base (`build_part_bases`), one slot per coordinate setup.
     part_bases: [once_cell::race::OnceBox<crate::core::framedata::PartBases>; 8],
+    /// The track stack's floor, one slot per coordinate setup like `part_bases`.
+    setup_pose: [once_cell::race::OnceBox<alloc::vec::Vec<crate::runtime::framedata::ss::runtime::PartState>>; 8],
 }
 
 impl AnimationMetadata<'_> {
@@ -419,8 +426,21 @@ impl AnimationMetadata<'_> {
     /// the first time an instance with that setup plays it and shared by all of
     /// them. Built only from attributes that never change during the animation.
     pub(crate) fn part_bases(&self, coordinate_system: crate::core::SsCoordinateSystem, origin: crate::core::SsOrigin, unit: crate::core::SsUnit) -> &crate::core::framedata::PartBases {
-        let slot = usize::from(coordinate_system == crate::core::SsCoordinateSystem::YDown) | usize::from(origin == crate::core::SsOrigin::TopLeft) << 1 | usize::from(unit == crate::core::SsUnit::Normalized) << 2;
+        let slot = coordinate_slot(coordinate_system, origin, unit);
         self.part_bases[slot].get_or_init(|| alloc::boxed::Box::new(crate::core::framedata::PartBases::build(self.cached_parts(), &self.source.keys, self.start_frame as f32, coordinate_system, origin, unit, self.canvas_width, self.canvas_height)))
+    }
+
+    /// The setup pose under one coordinate setup — the floor of the track stack —
+    /// built the first time an instance with that setup mixes tracks and shared
+    /// by all of them. A single track at full alpha never reads it, so an
+    /// animation that is only ever played alone never builds it.
+    pub(crate) fn setup_pose(&self, coordinate_system: crate::core::SsCoordinateSystem, origin: crate::core::SsOrigin, unit: crate::core::SsUnit) -> &[crate::runtime::framedata::ss::runtime::PartState] {
+        self.setup_pose[coordinate_slot(coordinate_system, origin, unit)].get_or_init(|| {
+            let parts = self.cached_parts();
+            alloc::boxed::Box::new(
+                self.initial_attributes.iter().enumerate().map(|(i, a)| crate::core::framedata::setup_pose_part(&a, parts.get(i).map_or(-1, |p| p.parent_index), coordinate_system, origin, unit, self.canvas_width, self.canvas_height)).collect(),
+            )
+        })
     }
 
     fn static_mesh(&self) -> &StaticMeshBuffers {
@@ -745,6 +765,7 @@ impl<'a> AnimationResource<'a> {
                 cached_parts: once_cell::race::OnceBox::new(),
                 mesh_layout: source.mesh_layouts[index],
                 part_bases: Default::default(),
+                setup_pose: Default::default(),
             });
         }
 
@@ -820,8 +841,8 @@ struct LayerState<'a> {
     cell_texture_hashes: Vec<u32>,
     local_vertices: Vec<f32>,
     /// Per-part mesh deform retained from Phase 1 for the Phase 2 skinning pass.
-    mesh_deform: Vec<crate::core::framedata::PartDeformFrame>,
-    raw_vertex_deform: Vec<crate::core::framedata::RawVertexDeform>,
+    mesh_deform: Vec<crate::core::framedata::DeformSlot<crate::core::framedata::PartDeformFrame>>,
+    raw_vertex_deform: Vec<crate::core::framedata::DeformSlot<crate::core::framedata::RawVertexDeform>>,
     /// Per-part attribute coverage of the animation this layer was extracted
     /// from (`CachedPartData::coverage`), consulted by [`mix_poses`]. Copied in
     /// after pose extraction; an **empty** vec means "no coverage data", which
@@ -850,7 +871,7 @@ impl<'a> LayerState<'a> {
         }
     }
 
-    fn resize_for_parts(&mut self, num_parts: usize, cursor_c: usize, cell_c: usize, color_c: usize, shader_c: usize, vertex_c: usize, deform_c: usize) {
+    fn resize_for_parts(&mut self, num_parts: usize, cursor_c: usize, cell_c: usize, color_c: usize, shader_c: usize, deform_c: usize) {
         self.parts_vec.clear();
         self.parts_vec.reserve(num_parts);
         self.cell_vec.clear();
@@ -859,8 +880,6 @@ impl<'a> LayerState<'a> {
         self.parts_color_vec.reserve(color_c);
         self.shader_vec.clear();
         self.shader_vec.reserve(shader_c);
-        self.vertex_vec.clear();
-        self.vertex_vec.reserve(vertex_c);
         self.deform_vec.clear();
         self.deform_vec.reserve(deform_c);
 
@@ -873,7 +892,7 @@ impl<'a> LayerState<'a> {
         self.local_vertices.clear();
         self.local_vertices.resize(num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE, 0.0);
         self.raw_vertex_deform.clear();
-        self.raw_vertex_deform.resize(num_parts, crate::core::framedata::RawVertexDeform::default());
+        self.raw_vertex_deform.resize_with(num_parts, || None);
     }
 
     /// Size the buffers for `metadata`'s animation unless they already are: the
@@ -883,8 +902,8 @@ impl<'a> LayerState<'a> {
         let num_parts = metadata.cached_parts().len();
         let sized = self.raw_vertex_deform.len() == num_parts && self.cell_texture_hashes.len() == num_parts && self.cell_meta_per_part.len() == num_parts * 6 && self.local_vertices.len() == num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE;
         if !sized {
-            let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
-            self.resize_for_parts(num_parts, crate::core::framedata::cursor_count(metadata.cached_parts()), cell_c, color_c, shader_c, vertex_c, deform_c);
+            let (cell_c, color_c, shader_c, deform_c) = count_attribute_capacities(metadata);
+            self.resize_for_parts(num_parts, crate::core::framedata::cursor_count(metadata.cached_parts()), cell_c, color_c, shader_c, deform_c);
         }
     }
 }
@@ -950,6 +969,12 @@ struct EvaluationContext<'a> {
     /// zero-copy accessors: `finished_data()` asserts on an unfinished builder,
     /// and `panic = "abort"` makes that assert fatal.
     frame_data_ready: bool,
+    /// The largest frame data `fb` has finished, and the capacity it was last
+    /// given. The builder grows by doubling, so a frame that outgrows the
+    /// capacity leaves up to half of it unused; the next frame starts on a
+    /// builder sized to the largest frame instead.
+    fb_need: usize,
+    fb_capacity: usize,
 
     // Workspace buffers to avoid per-frame allocations
     draw_order_workspace: Vec<u16>,
@@ -974,6 +999,8 @@ impl<'a> EvaluationContext<'a> {
             resource: None,
             fb: flatbuffers::FlatBufferBuilder::new(),
             frame_data_ready: false,
+            fb_need: 0,
+            fb_capacity: 0,
             draw_order_workspace: Vec::new(),
             batches_workspace: Vec::new(),
             mask_indices_workspace: Vec::new(),
@@ -1085,30 +1112,31 @@ impl TrackFade {
     }
 }
 
-fn count_attribute_capacities(metadata: &AnimationMetadata<'_>) -> (usize, usize, usize, usize, usize) {
+fn count_attribute_capacities(metadata: &AnimationMetadata<'_>) -> (usize, usize, usize, usize) {
     let mut cell_c = 0;
     let mut color_c = 0;
     let mut shader_c = 0;
-    let mut vertex_c = 0;
     let mut deform_c = 0;
     for p in metadata.cached_parts() {
-        if p.cell_keys.is_some() {
+        if p.run(crate::core::framedata::IDX_ATTRIBUTECELL).is_some() {
             cell_c += 1;
         }
-        if p.part_color_keys.is_some() {
+        if p.run(crate::core::framedata::IDX_ATTRIBUTEPARTCOLOR).is_some() {
             color_c += 1;
         }
-        if p.shader_keys.is_some() {
+        if p.run(crate::core::framedata::IDX_ATTRIBUTESHADER).is_some() {
             shader_c += 1;
         }
-        if p.vertex_keys.is_some() {
-            vertex_c += 1;
-        }
-        if p.deform_keys.is_some() {
+        if p.run(crate::core::framedata::IDX_ATTRIBUTEDEFORM).is_some() {
             deform_c += 1;
         }
     }
-    (cell_c, color_c, shader_c, vertex_c, deform_c)
+    (cell_c, color_c, shader_c, deform_c)
+}
+
+/// Make room for `total` elements in all, whatever `v` holds now.
+fn reserve_total<T>(v: &mut Vec<T>, total: usize) {
+    v.reserve(total.saturating_sub(v.len()));
 }
 
 // Indices into the mix's per-attribute weight / accumulator arrays. One entry
@@ -1299,15 +1327,25 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
 
     // mesh_deform holds variable-size per-part deltas; deep-copy from primary.
     if resolved_layer.mesh_deform.len() != num_parts {
-        resolved_layer.mesh_deform.resize(num_parts, crate::core::framedata::PartDeformFrame::default());
+        resolved_layer.mesh_deform.resize_with(num_parts, || None);
     }
     for (dst, src) in resolved_layer.mesh_deform.iter_mut().zip(primary.mesh_deform.iter()) {
-        dst.indices.clear();
-        dst.indices.extend_from_slice(&src.indices);
-        dst.dx.clear();
-        dst.dx.extend_from_slice(&src.dx);
-        dst.dy.clear();
-        dst.dy.extend_from_slice(&src.dy);
+        match src.as_deref() {
+            Some(src) => {
+                let dst = dst.get_or_insert_with(Default::default);
+                dst.indices.clear();
+                dst.indices.extend_from_slice(&src.indices);
+                dst.dx.clear();
+                dst.dx.extend_from_slice(&src.dx);
+                dst.dy.clear();
+                dst.dy.extend_from_slice(&src.dy);
+            }
+            None => {
+                if let Some(dst) = dst.as_deref_mut() {
+                    dst.clear();
+                }
+            }
+        }
     }
 
     // Stage B fills these; clear them so stale post-mix data is never read.
@@ -1320,10 +1358,10 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
     resolved_layer.parts_vec.reserve(num_parts);
     if resolved_layer.raw_vertex_deform.len() != num_parts {
         resolved_layer.raw_vertex_deform.clear();
-        resolved_layer.raw_vertex_deform.resize(num_parts, crate::core::framedata::RawVertexDeform::default());
+        resolved_layer.raw_vertex_deform.resize_with(num_parts, || None);
     } else {
-        for slot in resolved_layer.raw_vertex_deform.iter_mut() {
-            *slot = crate::core::framedata::RawVertexDeform::default();
+        for slot in resolved_layer.raw_vertex_deform.iter_mut().flatten() {
+            slot.present = false;
         }
     }
 
@@ -1416,9 +1454,7 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
                 // same signal as coverage for the other attributes: normalize over
                 // the sources that actually have a deform, so a source without one
                 // does not pull the deltas toward zero.
-                if let Some(rvd) = layers[j].raw_vertex_deform.get(i)
-                    && rvd.present
-                {
+                if let Some(rvd) = crate::core::framedata::vertex_deform_at(&layers[j].raw_vertex_deform, i) {
                     deform_weight += w;
                     let w_v = wide::f32x4::splat(w);
                     dx_acc = w_v.mul_add(wide::f32x4::from(rvd.dx), dx_acc);
@@ -1467,7 +1503,7 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
             mixed.set_update_flag(flag);
         }
         if deform_present {
-            resolved_layer.raw_vertex_deform[i] = crate::core::framedata::RawVertexDeform { present: true, dx: cur_dx.to_array(), dy: cur_dy.to_array() };
+            **resolved_layer.raw_vertex_deform[i].get_or_insert_with(Default::default) = crate::core::framedata::RawVertexDeform { present: true, dx: cur_dx.to_array(), dy: cur_dy.to_array() };
         }
 
         resolved_layer.parts_vec.push(mixed);
@@ -1486,10 +1522,6 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
 /// authoritative source for events and non-blendable discrete attributes.
 struct InstanceState<'a> {
     sources: Vec<SourceState>,
-    /// The setup pose in this instance's coordinate space — the floor the track
-    /// stack folds onto, and the reference an additive track offsets from.
-    /// Rebuilt on `setup_animation` and whenever a coordinate setting changes.
-    setup_pose: Vec<crate::runtime::framedata::ss::runtime::PartState>,
     /// The track stack, ascending. Always holds at least track 0, which carries
     /// the structure (discrete attributes and events) for the whole instance.
     tracks: Vec<TrackState>,
@@ -1523,7 +1555,6 @@ impl<'a> InstanceState<'a> {
     fn new() -> Self {
         Self {
             sources: alloc::vec![SourceState::new()],
-            setup_pose: Vec::new(),
             tracks: alloc::vec![TrackState::new()],
             layers: alloc::vec![LayerState::new()],
             resolved_layer: LayerState::new(),
@@ -1876,7 +1907,7 @@ impl<'a> Context<'a> {
         primary.weight = 1.0;
 
         let num_parts = metadata.cached_parts().len();
-        let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
+        let (cell_c, color_c, shader_c, deform_c) = count_attribute_capacities(metadata);
         let cursor_c = crate::core::framedata::cursor_count(metadata.cached_parts());
 
         // A new setup plays one source alone, extracted straight into the
@@ -1884,7 +1915,7 @@ impl<'a> Context<'a> {
         for layer in self.instance.layers.iter_mut() {
             *layer = LayerState::new();
         }
-        self.instance.resolved_layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
+        self.instance.resolved_layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, deform_c);
 
         // Override Layer: a new animation clears Visibility and NON/NOW Color
         // overrides but keeps PERMANENT ones (handover D-3/D-5).
@@ -1909,9 +1940,46 @@ impl<'a> Context<'a> {
         globals.mesh_layout = NO_MESH_LAYOUT;
 
         self.instance.z_order.setup(index as i32, metadata.cached_parts());
-        self.rebuild_setup_pose();
+        self.prepare_part_bases();
+        self.reserve_frame_workspaces(metadata);
 
         Ok(())
+    }
+
+    /// Size up front what the first frame of `metadata`'s animation would
+    /// otherwise grow on its way: the buffers whose size the parts decide, by
+    /// their count or by their meshes' vertices. What a frame's contents decide
+    /// — the frame data, the draw batches, a deform, an effect's particles, the
+    /// frames an update passes — still grows on first use.
+    fn reserve_frame_workspaces(&mut self, metadata: &AnimationMetadata<'a>) {
+        let parts = metadata.cached_parts();
+        let num_parts = parts.len();
+
+        let resolved = &mut self.instance.resolved_layer;
+        // One vertex attribute per part that shows a cell, whether or not it
+        // keys a vertex deform.
+        resolved.vertex_vec.clear();
+        resolved.vertex_vec.reserve(parts.iter().filter(|p| p.run(crate::core::framedata::IDX_ATTRIBUTECELL).is_some()).count());
+        if resolved.mesh_deform.len() != num_parts {
+            resolved.mesh_deform.resize_with(num_parts, || None);
+        }
+
+        let eval = &mut self.eval;
+        reserve_total(&mut eval.inheritance_alphas_workspace, num_parts);
+        reserve_total(&mut eval.draw_order_workspace, num_parts);
+        reserve_total(&mut eval.mask_indices_workspace, parts.iter().filter(|p| p.is_mask_contributor).count());
+
+        let globals = &mut self.instance.globals;
+        reserve_total(&mut globals.nines.vertex_offsets, num_parts + 1);
+        reserve_total(&mut globals.nines.index_offsets, num_parts + 1);
+        // Room only: the static mesh buffers are still handed out from the
+        // first frame on, and only a Direct instance positions mesh vertices.
+        reserve_total(&mut globals.mesh_vertex_offsets, num_parts + 1);
+        if self.instance.render_mode == crate::core::RenderMode::Direct {
+            let total_vertices = parts.iter().map(|p| p.mesh_cell.as_ref().map_or(0, |m| m.num_vertices())).sum();
+            reserve_total(&mut globals.mesh_vertices_x, total_vertices);
+            reserve_total(&mut globals.mesh_vertices_y, total_vertices);
+        }
     }
 
     /// Put `name` on `track`, replacing whatever it was playing.
@@ -2160,11 +2228,9 @@ impl<'a> Context<'a> {
 
     // ---- internals shared by the track API ---------------------------------
 
-    /// Transform the setup pose into this instance's coordinate space. Cheap and
-    /// rare — it only has to run when the animation or a coordinate setting
-    /// changes, never per frame.
-    fn rebuild_setup_pose(&mut self) {
-        self.instance.setup_pose.clear();
+    /// Build the part bases for this instance's coordinate setup now, not on the
+    /// first frame. Runs when the animation or a coordinate setting changes.
+    fn prepare_part_bases(&mut self) {
         let Some(resource) = self.eval.resource else {
             return;
         };
@@ -2172,15 +2238,7 @@ impl<'a> Context<'a> {
         if anim_idx < 0 {
             return;
         }
-        let metadata = &resource.animations[anim_idx as usize];
-        let (coordinate_system, origin, unit) = (self.instance.coordinate_system, self.instance.origin, self.instance.unit);
-        self.instance.setup_pose.reserve_exact(metadata.initial_attributes.len());
-        // Build the part bases for this setup now, not on the first frame.
-        metadata.part_bases(coordinate_system, origin, unit);
-        for (i, a) in metadata.initial_attributes.iter().enumerate() {
-            let parent_index = metadata.cached_parts().get(i).map_or(-1, |p| p.parent_index);
-            self.instance.setup_pose.push(crate::core::framedata::setup_pose_part(&a, parent_index, coordinate_system, origin, unit, metadata.canvas_width, metadata.canvas_height));
-        }
+        resource.animations[anim_idx as usize].part_bases(self.instance.coordinate_system, self.instance.origin, self.instance.unit);
     }
 
     fn resolve_animation(&self, hash: u32) -> Result<usize, error::SSRuntimeError> {
@@ -2212,7 +2270,7 @@ impl<'a> Context<'a> {
         };
         let metadata = &resource.animations[animation_idx];
         let num_parts = metadata.cached_parts().len();
-        let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
+        let (cell_c, color_c, shader_c, deform_c) = count_attribute_capacities(metadata);
         let cursor_c = crate::core::framedata::cursor_count(metadata.cached_parts());
 
         metadata.part_bases(self.instance.coordinate_system, self.instance.origin, self.instance.unit);
@@ -2226,13 +2284,13 @@ impl<'a> Context<'a> {
         let handle = match free {
             Some(i) => {
                 self.instance.sources[i] = source;
-                self.instance.layers[i].resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
+                self.instance.layers[i].resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, deform_c);
                 i
             }
             None => {
                 self.instance.sources.push(source);
                 let mut layer = LayerState::new();
-                layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
+                layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, deform_c);
                 self.instance.layers.push(layer);
                 self.instance.sources.len() - 1
             }
@@ -2294,6 +2352,13 @@ impl<'a> Context<'a> {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
 
+        if self.eval.fb_need > self.eval.fb_capacity {
+            // The last frame outgrew the builder, which doubled. Size it to the
+            // largest frame so far, with a sixteenth to spare for frames that
+            // carry a little more; the old buffer is released.
+            self.eval.fb_capacity = self.eval.fb_need + self.eval.fb_need / 16;
+            self.eval.fb = flatbuffers::FlatBufferBuilder::with_capacity(self.eval.fb_capacity);
+        }
         self.eval.fb.reset();
         self.eval.frame_data_ready = false;
 
@@ -2369,7 +2434,7 @@ impl<'a> Context<'a> {
         }
 
         if !single {
-            mix_tracks(&self.instance.sources, &self.instance.layers, &self.instance.tracks, primary_idx, &self.instance.setup_pose, &mut self.instance.resolved_layer);
+            mix_tracks(&self.instance.sources, &self.instance.layers, &self.instance.tracks, primary_idx, primary_metadata.setup_pose(coordinate_system, origin, unit), &mut self.instance.resolved_layer);
         }
 
         // ⟵ SEAM: apply the per-part runtime Override Layer on the resolved
@@ -2442,6 +2507,7 @@ impl<'a> Context<'a> {
 
         self.eval.fb.finish_minimal(offset);
         self.eval.frame_data_ready = true;
+        self.eval.fb_need = self.eval.fb_need.max(self.eval.fb.finished_data().len());
         Ok(self.eval.fb.finished_data())
     }
 
@@ -2526,7 +2592,7 @@ impl<'a> Context<'a> {
                 if binding.num_vertices() < end - start {
                     continue; // bind has fewer vertices than the cell — cannot skin
                 }
-                let deform = layer.mesh_deform.get(i).filter(|d| !d.indices.is_empty()).map(|d| (d.indices.as_slice(), d.dx.as_slice(), d.dy.as_slice(), &globals.world_matrices[i]));
+                let deform = layer.mesh_deform.get(i).and_then(|d| d.as_deref()).filter(|d| !d.indices.is_empty()).map(|d| (d.indices.as_slice(), d.dx.as_slice(), d.dy.as_slice(), &globals.world_matrices[i]));
                 let (out_x, out_y) = (&mut globals.mesh_vertices_x[start..end], &mut globals.mesh_vertices_y[start..end]);
                 crate::core::geometry::compute_skinned_mesh_vertices(&binding.influence_offsets, &binding.bone_indices, &binding.weights, &binding.coords_x, &binding.coords_y, &globals.world_matrices, deform, flip_y, out_x, out_y);
                 continue;
@@ -2547,7 +2613,7 @@ impl<'a> Context<'a> {
             }
             // Apply deform deltas as-is — evaluate_part has already applied any
             // coordinate-system Y conversion. Sparse scatter, kept scalar.
-            if let Some(deform) = layer.mesh_deform.get(i) {
+            if let Some(deform) = layer.mesh_deform.get(i).and_then(|d| d.as_deref()) {
                 let vert_count = end - start;
                 let mat = &globals.world_matrices[i];
                 let (m0, m1, m4, m5) = (mat.m[0], mat.m[1], mat.m[4], mat.m[5]);
@@ -2706,7 +2772,7 @@ impl<'a> Context<'a> {
             // weighting the renderer uses for per-corner PartColor. Offsets are
             // added in Y-up space, before the YDown negation, so the dy sign
             // matches the 4-corner deform path in `compute_local_vertices`.
-            let deform = layer.raw_vertex_deform.get(i).filter(|d| d.present);
+            let deform = crate::core::framedata::vertex_deform_at(&layer.raw_vertex_deform, i);
             // Skew shares the Vertex-deform slot; applied as a shear about the
             // pivot origin in Y-up, before the Y-down flip, like the deform.
             let skew = crate::core::geometry::skew_local_tans(state.skew_x(), state.skew_y());
@@ -3026,8 +3092,8 @@ impl<'a> Context<'a> {
 
     pub fn set_coordinate_system(&mut self, coordinate_system: crate::core::SsCoordinateSystem) {
         self.instance.coordinate_system = coordinate_system;
-        // The stack's floor lives in this space, so it has to move with it.
-        self.rebuild_setup_pose();
+        // The part bases live in this space, so they have to move with it.
+        self.prepare_part_bases();
     }
 
     pub fn get_coordinate_system(&self) -> crate::core::SsCoordinateSystem {
@@ -3036,8 +3102,8 @@ impl<'a> Context<'a> {
 
     pub fn set_origin(&mut self, origin: crate::core::SsOrigin) {
         self.instance.origin = origin;
-        // The stack's floor lives in this space, so it has to move with it.
-        self.rebuild_setup_pose();
+        // The part bases live in this space, so they have to move with it.
+        self.prepare_part_bases();
     }
 
     pub fn get_origin(&self) -> crate::core::SsOrigin {
@@ -3046,8 +3112,8 @@ impl<'a> Context<'a> {
 
     pub fn set_unit(&mut self, unit: crate::core::SsUnit) {
         self.instance.unit = unit;
-        // The stack's floor lives in this space, so it has to move with it.
-        self.rebuild_setup_pose();
+        // The part bases live in this space, so they have to move with it.
+        self.prepare_part_bases();
     }
 
     pub fn get_unit(&self) -> crate::core::SsUnit {
@@ -4092,8 +4158,8 @@ mod tests {
             let mut base = 0;
             for p in parts {
                 assert_eq!(p.cursor_base, base, "cursors are packed in part order");
-                assert_eq!(p.key_mask >> crate::core::framedata::IDX_ATTRIBUTECELL & 1 == 1, p.cell_keys.is_some());
-                assert_eq!(p.key_mask >> crate::core::framedata::IDX_ATTRIBUTEDEFORM & 1 == 1, p.deform_keys.is_some());
+                assert_eq!(p.key_mask >> crate::core::framedata::IDX_ATTRIBUTECELL & 1 == 1, p.run(crate::core::framedata::IDX_ATTRIBUTECELL).is_some());
+                assert_eq!(p.key_mask >> crate::core::framedata::IDX_ATTRIBUTEDEFORM & 1 == 1, p.run(crate::core::framedata::IDX_ATTRIBUTEDEFORM).is_some());
                 base += p.key_mask.count_ones();
             }
             assert_eq!(crate::core::framedata::cursor_count(parts), base as usize);
@@ -5273,7 +5339,7 @@ mod tests {
                 Some((dx, dy)) => crate::core::framedata::RawVertexDeform { present: true, dx, dy },
                 None => crate::core::framedata::RawVertexDeform::default(),
             };
-            layer.raw_vertex_deform.push(rvd);
+            layer.raw_vertex_deform.push(Some(alloc::boxed::Box::new(rvd)));
         }
         layer
     }
@@ -5369,7 +5435,7 @@ mod tests {
         for part in [primary_part, secondary_part] {
             let mut layer = LayerState::new();
             layer.parts_vec.push(part);
-            layer.raw_vertex_deform.push(crate::core::framedata::RawVertexDeform::default());
+            layer.raw_vertex_deform.push(None);
             layers.push(layer);
         }
 
@@ -5752,7 +5818,7 @@ mod tests {
         let mut resolved = LayerState::new();
         mix_poses(&sources, &layers, 0, &mut resolved);
 
-        let d = &resolved.raw_vertex_deform[0];
+        let d = resolved.raw_vertex_deform[0].as_deref().unwrap();
         assert!(d.present);
         assert!((d.dx[0] - 3.0).abs() < 1e-6);
         assert!((d.dx[3] - 6.0).abs() < 1e-6);
@@ -5861,7 +5927,8 @@ mod tests {
         ctx.set_track_alpha(0, 0.0).unwrap();
         ctx.get_frame_data(start).expect("get_frame_data");
 
-        let setup = ctx.instance.setup_pose.clone();
+        let walk = &resource.animations()[resource.find_animation_index("walk").unwrap()];
+        let setup = walk.setup_pose(ctx.instance.coordinate_system, ctx.instance.origin, ctx.instance.unit).to_vec();
         for (i, part) in ctx.instance.resolved_layer.parts_vec.iter().enumerate() {
             assert!((part.position_x() - setup[i].position_x()).abs() < 1e-4, "part {i} position_x: resolved={} setup={}", part.position_x(), setup[i].position_x());
             assert!((part.rotation_z() - setup[i].rotation_z()).abs() < 1e-4, "part {i} rotation_z");
