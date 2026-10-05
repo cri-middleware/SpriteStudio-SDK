@@ -971,6 +971,12 @@ struct EvaluationContext<'a> {
     /// zero-copy accessors: `finished_data()` asserts on an unfinished builder,
     /// and `panic = "abort"` makes that assert fatal.
     frame_data_ready: bool,
+    /// The largest frame data `fb` has finished, and the capacity it was last
+    /// given. The builder grows by doubling, so a frame that outgrows the
+    /// capacity leaves up to half of it unused; the next frame starts on a
+    /// builder sized to the largest frame instead.
+    fb_need: usize,
+    fb_capacity: usize,
 
     // Workspace buffers to avoid per-frame allocations
     draw_order_workspace: Vec<u16>,
@@ -995,6 +1001,8 @@ impl<'a> EvaluationContext<'a> {
             resource: None,
             fb: flatbuffers::FlatBufferBuilder::new(),
             frame_data_ready: false,
+            fb_need: 0,
+            fb_capacity: 0,
             draw_order_workspace: Vec::new(),
             batches_workspace: Vec::new(),
             mask_indices_workspace: Vec::new(),
@@ -2300,6 +2308,13 @@ impl<'a> Context<'a> {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
 
+        if self.eval.fb_need > self.eval.fb_capacity {
+            // The last frame outgrew the builder, which doubled. Size it to the
+            // largest frame so far, with a sixteenth to spare for frames that
+            // carry a little more; the old buffer is released.
+            self.eval.fb_capacity = self.eval.fb_need + self.eval.fb_need / 16;
+            self.eval.fb = flatbuffers::FlatBufferBuilder::with_capacity(self.eval.fb_capacity);
+        }
         self.eval.fb.reset();
         self.eval.frame_data_ready = false;
 
@@ -2448,6 +2463,7 @@ impl<'a> Context<'a> {
 
         self.eval.fb.finish_minimal(offset);
         self.eval.frame_data_ready = true;
+        self.eval.fb_need = self.eval.fb_need.max(self.eval.fb.finished_data().len());
         Ok(self.eval.fb.finished_data())
     }
 
