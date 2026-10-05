@@ -1518,6 +1518,25 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
     }
 }
 
+/// The transport of the whole character. A source's own controller keeps its
+/// playhead, speed, loop count and section, but whether it moves at all is
+/// decided here, so a source attached mid-playback moves with the rest and
+/// pause / stop reach every track. Track 0 finishing does not stop it: the
+/// other tracks and the fades carry on.
+#[derive(Debug, Clone, Copy, Default)]
+struct CharacterClock {
+    /// Set by `play`, cleared by `stop` and by a new setup.
+    playing: bool,
+    /// A hold on a playing clock. Never set while `playing` is false.
+    pausing: bool,
+}
+
+impl CharacterClock {
+    fn is_running(&self) -> bool {
+        self.playing && !self.pausing
+    }
+}
+
 /// Per-instance playback state. Owns one playback source per blend layer,
 /// the per-source pose buffers (`layers`), the post-mix pose
 /// (`resolved_layer`) that feeds global resolution, the resolved global
@@ -1529,6 +1548,9 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
 /// least one slot (the primary). The `primary` field designates the
 /// authoritative source for events and non-blendable discrete attributes.
 struct InstanceState<'a> {
+    /// Whether the character is playing, and held. Every source on every track
+    /// advances on this one clock, and every fade with it.
+    clock: CharacterClock,
     sources: Vec<SourceState>,
     /// The track stack, ascending. Always holds at least track 0, which carries
     /// the structure (discrete attributes and events) for the whole instance.
@@ -1562,6 +1584,7 @@ struct InstanceState<'a> {
 impl<'a> InstanceState<'a> {
     fn new() -> Self {
         Self {
+            clock: CharacterClock::default(),
             sources: alloc::vec![SourceState::new()],
             tracks: alloc::vec![TrackState::new()],
             layers: alloc::vec![LayerState::new()],
@@ -1728,6 +1751,7 @@ impl<'a> Context<'a> {
         self.eval.fb.reset();
         self.eval.frame_data_ready = false;
         self.instance.collapse_to_track_zero();
+        self.instance.clock = CharacterClock::default();
         self.instance.layers[0].cursors.clear();
         self.instance.resolved_layer.cursors.clear();
         // A new SSAB invalidates part identity — drop all overrides.
@@ -1909,6 +1933,8 @@ impl<'a> Context<'a> {
 
         let metadata = &resource.animations[index];
         self.instance.collapse_to_track_zero();
+        // Selecting an animation does not start it; `play` does.
+        self.instance.clock = CharacterClock::default();
         let primary = self.instance.primary_source_mut();
         primary.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
         primary.animation_idx = index as i32;
@@ -2284,6 +2310,11 @@ impl<'a> Context<'a> {
         metadata.part_bases(self.instance.coordinate_system, self.instance.origin, self.instance.unit);
         let mut source = SourceState::new();
         source.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
+        // A source laid on a track plays from the moment it is attached; the
+        // character's clock decides whether it actually moves. Left stopped, an
+        // overlay sat on its first frame and a completed crossfade froze the
+        // character, since nothing but `play` ever started a controller.
+        source.controller.play();
         source.animation_idx = animation_idx as i32;
         source.weight = weight;
         source.track = track as u16;
@@ -3019,8 +3050,10 @@ impl<'a> Context<'a> {
     }
 
     // setting getter functions
+    /// `true` while the clock runs and track 0 has not finished. A held
+    /// character is still playing.
     pub fn is_playing(&self) -> bool {
-        self.instance.primary_source().controller.is_playing()
+        self.instance.clock.playing && self.instance.primary_source().controller.is_playing()
     }
 
     pub fn is_playing_forward(&self) -> bool {
@@ -3028,7 +3061,7 @@ impl<'a> Context<'a> {
     }
 
     pub fn is_pausing(&self) -> bool {
-        self.instance.primary_source().controller.is_pausing()
+        self.instance.clock.pausing
     }
 
     pub fn get_skip_frames(&self) -> bool {
@@ -3143,15 +3176,23 @@ impl<'a> Context<'a> {
     /// against the incoming one, which failed with `InvalidParameter` on the
     /// completion tick whenever the incoming animation was the shorter of the
     /// two.
+    ///
+    /// Nothing moves while the character's clock is stopped or held, fades
+    /// included. The controllers are still updated with no elapsed time, which
+    /// is what reports a frame a seek has just landed on.
     pub fn update(&mut self, delta: f32) -> f32 {
+        let running = self.instance.clock.is_running();
+        let elapsed = if running { delta } else { 0.0 };
         for source in self.instance.sources.iter_mut() {
             if !source.has_real_animation() {
                 continue;
             }
-            source.controller.update(delta);
+            source.controller.update(elapsed);
         }
 
-        self.advance_track_fades(delta);
+        if running {
+            self.advance_track_fades(delta);
+        }
         self.collect_events();
 
         self.get_frame_no()
@@ -3409,27 +3450,42 @@ impl<'a> Context<'a> {
         fallback
     }
 
+    /// Heads track 0 out — back to its section start, loop count re-armed — and
+    /// starts the character's clock. The other tracks keep their playheads, as
+    /// they do when track 0 loops or ends on its own.
     pub fn play(&mut self) {
         self.instance.primary_source_mut().controller.play();
+        self.start_clock();
     }
 
     pub fn play_with_start_frame(&mut self, frame_no: f32) {
         self.instance.primary_source_mut().controller.play_with_start_frame(frame_no);
+        self.start_clock();
     }
 
-    /// Holds playback in place. Idempotent; `is_playing` stays `true`.
+    fn start_clock(&mut self) {
+        self.instance.clock = CharacterClock { playing: true, pausing: false };
+    }
+
+    /// Holds the whole character in place: every track and every fade.
+    /// Idempotent, and ignored while the clock is stopped; `is_playing` stays
+    /// `true`.
     pub fn pause(&mut self) {
-        self.instance.primary_source_mut().controller.pause();
+        if self.instance.clock.playing {
+            self.instance.clock.pausing = true;
+        }
     }
 
     /// Lifts a [`Self::pause`]. Idempotent, and not a way to start a stopped
     /// animation — `play` rewinds, so it cannot serve as a resume.
     pub fn resume(&mut self) {
-        self.instance.primary_source_mut().controller.resume();
+        self.instance.clock.pausing = false;
     }
 
+    /// Stops the whole character where it stands: every track and every fade.
+    /// Nothing rewinds; only `play` starts it again.
     pub fn stop(&mut self) {
-        self.instance.primary_source_mut().controller.stop();
+        self.instance.clock = CharacterClock::default();
     }
 
     pub fn set_frame_no(&mut self, frame: f32) {
@@ -5981,6 +6037,8 @@ mod tests {
         let ssab = load_ringo_resource();
         let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
+        // Fades run on the character's clock, so it has to be playing.
+        ctx.play();
         let walk = ctx.instance.tracks[0].main;
 
         ctx.crossfade(0, "run", 1000.0).unwrap();
@@ -6072,6 +6130,8 @@ mod tests {
         let ssab = load_ringo_resource();
         let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
+        // Fades run on the character's clock, so it has to be playing.
+        ctx.play();
 
         ctx.fade_track(0, 0.0, 400.0).unwrap();
         ctx.update(200.0);
@@ -6246,6 +6306,171 @@ mod tests {
         ctx.set_track_speed(1, 0.0).unwrap();
         ctx.update(1000.0);
         assert_eq!(ctx.get_track_frame(1), Some(3.0), "speed 0 parks the track");
+    }
+
+    // --- The character's clock ---------------------------------------------
+    //
+    // Playback state is the character's, not track 0's: every source a track
+    // holds advances while the character plays, and pause / stop / play act on
+    // the whole stack. Before this, a source attached by `set_track_animation`
+    // or `crossfade` was set up but never started, so an overlay sat on its
+    // first frame and a finished crossfade left the character frozen.
+
+    /// Step `ctx` by `ms` milliseconds in 60 fps ticks, the way a host does.
+    fn tick(ctx: &mut Context<'_>, ms: f32) {
+        let step: f32 = 1000.0 / 60.0;
+        let mut left = ms;
+        while left > 0.0 {
+            ctx.update(step.min(left));
+            left -= step;
+        }
+    }
+
+    /// A playing Ringo on `walk`, its clock running.
+    fn playing_ringo<'a>(resource: &'a AnimationResource<'a>) -> Context<'a> {
+        let (mut ctx, _) = ringo_ctx(resource, "walk");
+        ctx.play();
+        tick(&mut ctx, 100.0);
+        assert!(ctx.get_track_frame(0).unwrap() > 0.0, "fixture sanity: track 0 advances");
+        ctx
+    }
+
+    #[test]
+    fn an_overlay_track_plays_with_the_character() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let mut ctx = playing_ringo(&resource);
+
+        ctx.set_track_animation(1, "run").unwrap();
+        let start = ctx.get_track_frame(1).unwrap();
+        tick(&mut ctx, 100.0);
+        assert_ne!(ctx.get_track_frame(1).unwrap(), start, "the overlay is stuck on its first frame");
+    }
+
+    #[test]
+    fn a_crossfade_on_an_empty_track_plays_with_the_character() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let mut ctx = playing_ringo(&resource);
+
+        ctx.crossfade(1, "run", 500.0).unwrap();
+        let start = ctx.get_track_frame(1).unwrap();
+        tick(&mut ctx, 100.0);
+        assert_ne!(ctx.get_track_frame(1).unwrap(), start, "a crossfade from nothing starts playing at once");
+    }
+
+    #[test]
+    fn the_incoming_animation_of_a_crossfade_keeps_playing() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let mut ctx = playing_ringo(&resource);
+
+        ctx.crossfade(0, "run", 200.0).unwrap();
+        let incoming = ctx.instance.sources.len() - 1;
+        let start = ctx.get_source_frame(incoming as u32).unwrap();
+        tick(&mut ctx, 100.0);
+        assert!(ctx.get_track_fade_progress(0).is_some(), "fixture sanity: still mid-fade");
+        assert_ne!(ctx.get_source_frame(incoming as u32).unwrap(), start, "the incoming animation is stuck while it fades in");
+
+        tick(&mut ctx, 200.0);
+        assert!(ctx.get_track_fade_progress(0).is_none(), "fixture sanity: the fade has completed");
+        assert!(ctx.is_playing(), "the character stopped when the crossfade completed");
+        let settled = ctx.get_track_frame(0).unwrap();
+        tick(&mut ctx, 100.0);
+        assert_ne!(ctx.get_track_frame(0).unwrap(), settled, "track 0 is frozen after the crossfade");
+    }
+
+    #[test]
+    fn pause_holds_every_track_and_every_fade() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let mut ctx = playing_ringo(&resource);
+        ctx.set_track_animation(1, "run").unwrap();
+        ctx.crossfade(0, "wait1", 400.0).unwrap();
+        tick(&mut ctx, 100.0);
+
+        ctx.pause();
+        let frames = (ctx.get_track_frame(0), ctx.get_track_frame(1));
+        let progress = ctx.get_track_fade_progress(0);
+        tick(&mut ctx, 200.0);
+        assert_eq!((ctx.get_track_frame(0), ctx.get_track_frame(1)), frames, "a track advanced while paused");
+        assert_eq!(ctx.get_track_fade_progress(0), progress, "the crossfade advanced while paused");
+
+        ctx.resume();
+        tick(&mut ctx, 100.0);
+        assert_ne!(ctx.get_track_frame(1), frames.1, "resume did not restart the overlay");
+        assert_ne!(ctx.get_track_fade_progress(0), progress, "resume did not restart the crossfade");
+    }
+
+    #[test]
+    fn stop_halts_the_whole_character_where_it_stands() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let mut ctx = playing_ringo(&resource);
+        ctx.set_track_animation(1, "run").unwrap();
+        ctx.fade_track(1, 0.0, 400.0).unwrap();
+        tick(&mut ctx, 100.0);
+
+        ctx.stop();
+        assert!(!ctx.is_playing());
+        let frames = (ctx.get_track_frame(0), ctx.get_track_frame(1));
+        let alpha = ctx.get_track_alpha(1);
+        tick(&mut ctx, 200.0);
+        assert_eq!((ctx.get_track_frame(0), ctx.get_track_frame(1)), frames, "a track advanced while stopped");
+        assert_eq!(ctx.get_track_alpha(1), alpha, "the alpha fade advanced while stopped");
+
+        ctx.resume();
+        tick(&mut ctx, 100.0);
+        assert_eq!((ctx.get_track_frame(0), ctx.get_track_frame(1)), frames, "resume is not a way out of stop");
+    }
+
+    /// `play` is a head-out of track 0, and only of track 0: the other tracks
+    /// keep their place, as they do when track 0 loops or ends on its own.
+    #[test]
+    fn play_heads_out_track_zero_and_leaves_the_other_tracks_in_place() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let mut ctx = playing_ringo(&resource);
+        ctx.set_track_animation(1, "run").unwrap();
+        ctx.set_track_animation(2, "dance").unwrap();
+        ctx.set_track_speed(2, 0.0).unwrap();
+        ctx.set_track_frame(2, 5.0).unwrap();
+        tick(&mut ctx, 100.0);
+
+        let overlay = ctx.get_track_frame(1).unwrap();
+        assert!(overlay > 0.0, "fixture sanity: the overlay has moved off its first frame");
+        ctx.stop();
+        ctx.play();
+        let start = ctx.instance.primary_source().controller.get_start_frame() as f32;
+        assert_eq!(ctx.get_track_frame(0), Some(start), "play rewinds track 0");
+        assert_eq!(ctx.get_track_frame(1), Some(overlay), "play moved the overlay");
+        assert_eq!(ctx.get_track_frame(2), Some(5.0), "play moved the scrubbed track");
+
+        tick(&mut ctx, 100.0);
+        assert_ne!(ctx.get_track_frame(1), Some(overlay), "the overlay did not carry on after play");
+    }
+
+    #[test]
+    fn the_clock_runs_on_after_track_zero_finishes() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "attack1");
+        ctx.set_loop_count(1);
+        ctx.play();
+        ctx.set_track_animation(1, "run").unwrap();
+        ctx.fade_track(1, 0.0, 60_000.0).unwrap();
+
+        let mut ticks = 0;
+        while !ctx.is_finished() {
+            tick(&mut ctx, 1000.0 / 60.0);
+            ticks += 1;
+            assert!(ticks < 60 * 60, "fixture sanity: attack1 with one loop finishes");
+        }
+        let overlay = ctx.get_track_frame(1);
+        let alpha = ctx.get_track_alpha(1);
+        tick(&mut ctx, 100.0);
+        assert_ne!(ctx.get_track_frame(1), overlay, "the overlay stopped with track 0");
+        assert_ne!(ctx.get_track_alpha(1), alpha, "the fade stopped with track 0");
     }
 
     #[test]
