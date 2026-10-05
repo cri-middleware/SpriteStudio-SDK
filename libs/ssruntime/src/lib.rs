@@ -378,6 +378,11 @@ impl SsabStorage {
     }
 }
 
+/// Which of an animation's eight per-coordinate-setup slots a setup uses.
+fn coordinate_slot(coordinate_system: crate::core::SsCoordinateSystem, origin: crate::core::SsOrigin, unit: crate::core::SsUnit) -> usize {
+    usize::from(coordinate_system == crate::core::SsCoordinateSystem::YDown) | usize::from(origin == crate::core::SsOrigin::TopLeft) << 1 | usize::from(unit == crate::core::SsUnit::Normalized) << 2
+}
+
 pub struct AnimationMetadata<'a> {
     pub name_hash: u32,
     pub start_frame: i32,
@@ -388,7 +393,7 @@ pub struct AnimationMetadata<'a> {
     /// The SSAE's setup pose, as stored. It is identical for every animation of
     /// an AnimationPack — the converter writes the same `isSetup` animation into
     /// each — and becomes the floor of the track stack once transformed into the
-    /// instance's coordinate space (`Context::rebuild_setup_pose`).
+    /// instance's coordinate space (`AnimationMetadata::setup_pose`).
     pub initial_attributes: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialPartAttributes<'a>>>,
     pub events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::EventsPerFrame<'a>>>>,
     pub initial_events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialEvents<'a>>>>,
@@ -401,6 +406,8 @@ pub struct AnimationMetadata<'a> {
     mesh_layout: usize,
     /// Every part's base (`build_part_bases`), one slot per coordinate setup.
     part_bases: [once_cell::race::OnceBox<crate::core::framedata::PartBases>; 8],
+    /// The track stack's floor, one slot per coordinate setup like `part_bases`.
+    setup_pose: [once_cell::race::OnceBox<alloc::vec::Vec<crate::runtime::framedata::ss::runtime::PartState>>; 8],
 }
 
 impl AnimationMetadata<'_> {
@@ -419,8 +426,21 @@ impl AnimationMetadata<'_> {
     /// the first time an instance with that setup plays it and shared by all of
     /// them. Built only from attributes that never change during the animation.
     pub(crate) fn part_bases(&self, coordinate_system: crate::core::SsCoordinateSystem, origin: crate::core::SsOrigin, unit: crate::core::SsUnit) -> &crate::core::framedata::PartBases {
-        let slot = usize::from(coordinate_system == crate::core::SsCoordinateSystem::YDown) | usize::from(origin == crate::core::SsOrigin::TopLeft) << 1 | usize::from(unit == crate::core::SsUnit::Normalized) << 2;
+        let slot = coordinate_slot(coordinate_system, origin, unit);
         self.part_bases[slot].get_or_init(|| alloc::boxed::Box::new(crate::core::framedata::PartBases::build(self.cached_parts(), &self.source.keys, self.start_frame as f32, coordinate_system, origin, unit, self.canvas_width, self.canvas_height)))
+    }
+
+    /// The setup pose under one coordinate setup — the floor of the track stack —
+    /// built the first time an instance with that setup mixes tracks and shared
+    /// by all of them. A single track at full alpha never reads it, so an
+    /// animation that is only ever played alone never builds it.
+    pub(crate) fn setup_pose(&self, coordinate_system: crate::core::SsCoordinateSystem, origin: crate::core::SsOrigin, unit: crate::core::SsUnit) -> &[crate::runtime::framedata::ss::runtime::PartState] {
+        self.setup_pose[coordinate_slot(coordinate_system, origin, unit)].get_or_init(|| {
+            let parts = self.cached_parts();
+            alloc::boxed::Box::new(
+                self.initial_attributes.iter().enumerate().map(|(i, a)| crate::core::framedata::setup_pose_part(&a, parts.get(i).map_or(-1, |p| p.parent_index), coordinate_system, origin, unit, self.canvas_width, self.canvas_height)).collect(),
+            )
+        })
     }
 
     fn static_mesh(&self) -> &StaticMeshBuffers {
@@ -745,6 +765,7 @@ impl<'a> AnimationResource<'a> {
                 cached_parts: once_cell::race::OnceBox::new(),
                 mesh_layout: source.mesh_layouts[index],
                 part_bases: Default::default(),
+                setup_pose: Default::default(),
             });
         }
 
@@ -1486,10 +1507,6 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
 /// authoritative source for events and non-blendable discrete attributes.
 struct InstanceState<'a> {
     sources: Vec<SourceState>,
-    /// The setup pose in this instance's coordinate space — the floor the track
-    /// stack folds onto, and the reference an additive track offsets from.
-    /// Rebuilt on `setup_animation` and whenever a coordinate setting changes.
-    setup_pose: Vec<crate::runtime::framedata::ss::runtime::PartState>,
     /// The track stack, ascending. Always holds at least track 0, which carries
     /// the structure (discrete attributes and events) for the whole instance.
     tracks: Vec<TrackState>,
@@ -1523,7 +1540,6 @@ impl<'a> InstanceState<'a> {
     fn new() -> Self {
         Self {
             sources: alloc::vec![SourceState::new()],
-            setup_pose: Vec::new(),
             tracks: alloc::vec![TrackState::new()],
             layers: alloc::vec![LayerState::new()],
             resolved_layer: LayerState::new(),
@@ -1909,7 +1925,7 @@ impl<'a> Context<'a> {
         globals.mesh_layout = NO_MESH_LAYOUT;
 
         self.instance.z_order.setup(index as i32, metadata.cached_parts());
-        self.rebuild_setup_pose();
+        self.prepare_part_bases();
 
         Ok(())
     }
@@ -2160,11 +2176,9 @@ impl<'a> Context<'a> {
 
     // ---- internals shared by the track API ---------------------------------
 
-    /// Transform the setup pose into this instance's coordinate space. Cheap and
-    /// rare — it only has to run when the animation or a coordinate setting
-    /// changes, never per frame.
-    fn rebuild_setup_pose(&mut self) {
-        self.instance.setup_pose.clear();
+    /// Build the part bases for this instance's coordinate setup now, not on the
+    /// first frame. Runs when the animation or a coordinate setting changes.
+    fn prepare_part_bases(&mut self) {
         let Some(resource) = self.eval.resource else {
             return;
         };
@@ -2172,15 +2186,7 @@ impl<'a> Context<'a> {
         if anim_idx < 0 {
             return;
         }
-        let metadata = &resource.animations[anim_idx as usize];
-        let (coordinate_system, origin, unit) = (self.instance.coordinate_system, self.instance.origin, self.instance.unit);
-        self.instance.setup_pose.reserve_exact(metadata.initial_attributes.len());
-        // Build the part bases for this setup now, not on the first frame.
-        metadata.part_bases(coordinate_system, origin, unit);
-        for (i, a) in metadata.initial_attributes.iter().enumerate() {
-            let parent_index = metadata.cached_parts().get(i).map_or(-1, |p| p.parent_index);
-            self.instance.setup_pose.push(crate::core::framedata::setup_pose_part(&a, parent_index, coordinate_system, origin, unit, metadata.canvas_width, metadata.canvas_height));
-        }
+        resource.animations[anim_idx as usize].part_bases(self.instance.coordinate_system, self.instance.origin, self.instance.unit);
     }
 
     fn resolve_animation(&self, hash: u32) -> Result<usize, error::SSRuntimeError> {
@@ -2369,7 +2375,7 @@ impl<'a> Context<'a> {
         }
 
         if !single {
-            mix_tracks(&self.instance.sources, &self.instance.layers, &self.instance.tracks, primary_idx, &self.instance.setup_pose, &mut self.instance.resolved_layer);
+            mix_tracks(&self.instance.sources, &self.instance.layers, &self.instance.tracks, primary_idx, primary_metadata.setup_pose(coordinate_system, origin, unit), &mut self.instance.resolved_layer);
         }
 
         // ⟵ SEAM: apply the per-part runtime Override Layer on the resolved
@@ -3026,8 +3032,8 @@ impl<'a> Context<'a> {
 
     pub fn set_coordinate_system(&mut self, coordinate_system: crate::core::SsCoordinateSystem) {
         self.instance.coordinate_system = coordinate_system;
-        // The stack's floor lives in this space, so it has to move with it.
-        self.rebuild_setup_pose();
+        // The part bases live in this space, so they have to move with it.
+        self.prepare_part_bases();
     }
 
     pub fn get_coordinate_system(&self) -> crate::core::SsCoordinateSystem {
@@ -3036,8 +3042,8 @@ impl<'a> Context<'a> {
 
     pub fn set_origin(&mut self, origin: crate::core::SsOrigin) {
         self.instance.origin = origin;
-        // The stack's floor lives in this space, so it has to move with it.
-        self.rebuild_setup_pose();
+        // The part bases live in this space, so they have to move with it.
+        self.prepare_part_bases();
     }
 
     pub fn get_origin(&self) -> crate::core::SsOrigin {
@@ -3046,8 +3052,8 @@ impl<'a> Context<'a> {
 
     pub fn set_unit(&mut self, unit: crate::core::SsUnit) {
         self.instance.unit = unit;
-        // The stack's floor lives in this space, so it has to move with it.
-        self.rebuild_setup_pose();
+        // The part bases live in this space, so they have to move with it.
+        self.prepare_part_bases();
     }
 
     pub fn get_unit(&self) -> crate::core::SsUnit {
@@ -5861,7 +5867,8 @@ mod tests {
         ctx.set_track_alpha(0, 0.0).unwrap();
         ctx.get_frame_data(start).expect("get_frame_data");
 
-        let setup = ctx.instance.setup_pose.clone();
+        let walk = &resource.animations()[resource.find_animation_index("walk").unwrap()];
+        let setup = walk.setup_pose(ctx.instance.coordinate_system, ctx.instance.origin, ctx.instance.unit).to_vec();
         for (i, part) in ctx.instance.resolved_layer.parts_vec.iter().enumerate() {
             assert!((part.position_x() - setup[i].position_x()).abs() < 1e-4, "part {i} position_x: resolved={} setup={}", part.position_x(), setup[i].position_x());
             assert!((part.rotation_z() - setup[i].rotation_z()).abs() < 1e-4, "part {i} rotation_z");
