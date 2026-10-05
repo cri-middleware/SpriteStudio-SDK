@@ -235,7 +235,7 @@ pub fn apply_part_overrides(
         // the first evaluation). Dropping the slot makes it permanent: it
         // survives loops and only a re-set / new animation brings it back.
         if color.priority == PriorityMode::OverwriteOnNextKeyframe {
-            let handed_over = passed_reaches_key(passed_frames, color.set_frame, color.pending_first_eval, |f| run_has_key_at(keys, cached_parts[i].part_color_keys, f));
+            let handed_over = passed_reaches_key(passed_frames, color.set_frame, color.pending_first_eval, |f| run_has_key_at(keys, cached_parts[i].run(crate::core::framedata::IDX_ATTRIBUTEPARTCOLOR), f));
             if let Some(o) = part_overrides.get_mut(i).and_then(|o| o.as_mut()) {
                 if handed_over {
                     o.color = None;
@@ -284,7 +284,7 @@ pub fn apply_part_overrides(
 
         // NON one-shot handover (see the color pass for the rationale).
         if cell.priority == PriorityMode::OverwriteOnNextKeyframe {
-            let handed_over = passed_reaches_key(passed_frames, cell.set_frame, cell.pending_first_eval, |f| run_has_key_at(keys, cp.cell_keys, f));
+            let handed_over = passed_reaches_key(passed_frames, cell.set_frame, cell.pending_first_eval, |f| run_has_key_at(keys, cp.run(crate::core::framedata::IDX_ATTRIBUTECELL), f));
             if let Some(o) = part_overrides.get_mut(i).and_then(|o| o.as_mut()) {
                 if handed_over {
                     o.cell = None;

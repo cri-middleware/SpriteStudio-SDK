@@ -1121,19 +1121,19 @@ fn count_attribute_capacities(metadata: &AnimationMetadata<'_>) -> (usize, usize
     let mut vertex_c = 0;
     let mut deform_c = 0;
     for p in metadata.cached_parts() {
-        if p.cell_keys.is_some() {
+        if p.run(crate::core::framedata::IDX_ATTRIBUTECELL).is_some() {
             cell_c += 1;
         }
-        if p.part_color_keys.is_some() {
+        if p.run(crate::core::framedata::IDX_ATTRIBUTEPARTCOLOR).is_some() {
             color_c += 1;
         }
-        if p.shader_keys.is_some() {
+        if p.run(crate::core::framedata::IDX_ATTRIBUTESHADER).is_some() {
             shader_c += 1;
         }
-        if p.vertex_keys.is_some() {
+        if p.run(crate::core::framedata::IDX_ATTRIBUTEVERTEX).is_some() {
             vertex_c += 1;
         }
-        if p.deform_keys.is_some() {
+        if p.run(crate::core::framedata::IDX_ATTRIBUTEDEFORM).is_some() {
             deform_c += 1;
         }
     }
@@ -4122,8 +4122,8 @@ mod tests {
             let mut base = 0;
             for p in parts {
                 assert_eq!(p.cursor_base, base, "cursors are packed in part order");
-                assert_eq!(p.key_mask >> crate::core::framedata::IDX_ATTRIBUTECELL & 1 == 1, p.cell_keys.is_some());
-                assert_eq!(p.key_mask >> crate::core::framedata::IDX_ATTRIBUTEDEFORM & 1 == 1, p.deform_keys.is_some());
+                assert_eq!(p.key_mask >> crate::core::framedata::IDX_ATTRIBUTECELL & 1 == 1, p.run(crate::core::framedata::IDX_ATTRIBUTECELL).is_some());
+                assert_eq!(p.key_mask >> crate::core::framedata::IDX_ATTRIBUTEDEFORM & 1 == 1, p.run(crate::core::framedata::IDX_ATTRIBUTEDEFORM).is_some());
                 base += p.key_mask.count_ones();
             }
             assert_eq!(crate::core::framedata::cursor_count(parts), base as usize);
