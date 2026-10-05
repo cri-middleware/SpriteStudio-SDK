@@ -227,10 +227,11 @@ mod emscripten_allocator {
 /// symbols the linking application must provide (e.g. a game engine allocator):
 ///
 /// - `ss_custom_alloc(size, align)`: return `size` bytes aligned to `align`
-///   (always a power of two) or null on failure. Unlike the `libc_alloc`
-///   allocator, the runtime does **not** fix up alignment itself, so the host
-///   must honor `align` (use `posix_memalign` / `_aligned_malloc` / the engine's
-///   aligned allocator — plain `malloc` only guarantees `max_align_t`).
+///   (always a power of two, and at least 8) or null on failure. Unlike the
+///   `libc_alloc` allocator, the runtime does **not** fix up alignment itself,
+///   so the host must honor `align` (use `posix_memalign` / `_aligned_malloc` /
+///   the engine's aligned allocator — plain `malloc` only guarantees
+///   `max_align_t`).
 /// - `ss_custom_free(ptr, size, align)`: free a block returned by
 ///   `ss_custom_alloc`, given the same `size` and `align`. Allocators that track
 ///   the size internally (`malloc`/`free`, `FMemory::Free`, ...) may ignore them.
@@ -247,13 +248,20 @@ mod custom_allocator {
     #[global_allocator]
     static ALLOCATOR: CustomAlloc = CustomAlloc;
 
+    /// The least alignment asked of the host. FrameData is built in a byte
+    /// buffer, which Rust asks for at alignment 1, and a Player reads its
+    /// structs where they lie: `PartState` holds a u64. Raising every request
+    /// to 8 keeps that buffer on an 8-byte boundary, whatever the host's
+    /// allocator does with a smaller `align`.
+    const MIN_ALIGN: usize = 8;
+
     unsafe impl alloc::alloc::GlobalAlloc for CustomAlloc {
         unsafe fn alloc(&self, layout: alloc::alloc::Layout) -> *mut u8 {
-            unsafe { ss_custom_alloc(layout.size(), layout.align()) }
+            unsafe { ss_custom_alloc(layout.size(), layout.align().max(MIN_ALIGN)) }
         }
 
         unsafe fn dealloc(&self, ptr: *mut u8, layout: alloc::alloc::Layout) {
-            unsafe { ss_custom_free(ptr as *mut ::core::ffi::c_void, layout.size(), layout.align()) }
+            unsafe { ss_custom_free(ptr as *mut ::core::ffi::c_void, layout.size(), layout.align().max(MIN_ALIGN)) }
         }
     }
 }

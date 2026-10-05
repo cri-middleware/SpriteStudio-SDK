@@ -94,7 +94,8 @@ In the C / C++ project you link against, define the following three `extern "C"`
 extern "C" {
 
 // 1. Memory allocation
-//    The returned pointer must be aligned to an `align`-byte boundary (`align` is always a power of two).
+//    The returned pointer must be aligned to an `align`-byte boundary (`align` is always a power of two,
+//    and at least 8: a Player reads FrameData's structs in place, so the Brain never asks for less).
 //    Plain malloc guarantees alignment only up to max_align_t (usually 8-16 bytes),
 //    so a request for a larger boundary is undefined behavior. The Brain does not correct the alignment.
 void* ss_custom_alloc(size_t size, size_t align) {
@@ -103,10 +104,7 @@ void* ss_custom_alloc(size_t size, size_t align) {
 #if defined(_MSC_VER)
     return _aligned_malloc(size, align);
 #else
-    // posix_memalign requires align to be a multiple of sizeof(void*)
-    if (align < sizeof(void*)) {
-        align = sizeof(void*);
-    }
+    // align is at least 8, so already a multiple of sizeof(void*), as posix_memalign requires
     void* ptr = NULL;
     if (posix_memalign(&ptr, align, size) != 0) {
         return NULL; // return NULL on allocation failure (the Brain detects it)

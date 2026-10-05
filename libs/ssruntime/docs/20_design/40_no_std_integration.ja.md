@@ -94,7 +94,8 @@ cargo rustc -p ssruntime-ffi --release --features "custom_alloc,panic-handler" -
 extern "C" {
 
 // 1. メモリの確保
-//    返すポインタは `align` バイト境界に揃っていなければなりません（`align` は常に 2 の冪）。
+//    返すポインタは `align` バイト境界に揃っていなければなりません（`align` は常に 2 の冪で、8 以上。
+//    Player は FrameData の構造体をその場で読むので、Brain は 8 未満を要求しません）。
 //    素の malloc は max_align_t（通常 8〜16 バイト）までしか保証しないので、
 //    それより大きな境界を要求されると未定義動作になります。Brain は境界を補正しません。
 void* ss_custom_alloc(size_t size, size_t align) {
@@ -103,10 +104,7 @@ void* ss_custom_alloc(size_t size, size_t align) {
 #if defined(_MSC_VER)
     return _aligned_malloc(size, align);
 #else
-    // posix_memalign は align が sizeof(void*) の倍数であることを要求する
-    if (align < sizeof(void*)) {
-        align = sizeof(void*);
-    }
+    // align は 8 以上なので、posix_memalign が要求する sizeof(void*) の倍数になっている
     void* ptr = NULL;
     if (posix_memalign(&ptr, align, size) != 0) {
         return NULL; // 確保に失敗したら NULL を返す（Brain が検知する）
