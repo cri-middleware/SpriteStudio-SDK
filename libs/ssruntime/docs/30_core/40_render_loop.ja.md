@@ -128,6 +128,8 @@ for (auto batch : *frame_data->draw_batches()) {
 3. **描画のリソースを使い回す。** 頂点バッファ・インデックスバッファ・ドローコールの中間オブジェクトは、毎フレーム作って捨てず、プールして再利用します。
 4. **毎フレームのメモリ確保をしない。** 描画ループの中でマネージドな配列を `new` したり、重い UI の仕組み（Unity の uGUI の Canvas の再構築など）に任せたりすると、性能が落ち、GC による停止が起きます。確保済みのネイティブのメモリ（`NativeArray` など）を再利用し、頂点バッファを直接更新してください（`SetVertexBufferData` など）。
 
+Brain も、アニメーションを 2 回再生し終えたあとは同じ決まりを守ります。最初の再生ではバッファが伸びます。`ss_runtime_setup_animation` がパーツで決まる分を確保し、残り（FrameData・DrawBatch・メッシュの変形・エフェクトのパーティクル）は、再生中のいちばん大きなフレームに合わせて伸びます。FrameData のバッファは、その次の呼び出しでそのフレームに合う大きさに作り直されます。この作り直しは、2 回目の再生の頭に来ることがあります。それ以降は、`ss_runtime_update`・`ss_runtime_get_frame_data`・`ss_effect_slot_step`・`ss_instance_slot_step` はメモリを確保しません。そのインスタンスで初めて起きることがあると、ここからやり直しになります。[ミキシング](../50_features/10_animation_mixing.ja.md)、[パーツオーバーライド](../50_features/20_part_overrides.ja.md)、それまでより多くのフレームを一度に進める `ss_runtime_update`、それまでより多くのパーティクルが同時に存在するエフェクトです。再生中に確保させたくない場面では、読み込み中などにそのアニメーションを 2 回再生しておいてください。
+
 ### 4-1. マルチスレッドの描画と破棄
 
 Unity の Job System、Godot のマルチスレッドの RenderingServer、Unreal Engine の RenderThread のように、アニメーションの更新と、頂点の組み立てや描画を別のスレッドで行うエンジンでは、SoA バッファのポインタをそのまま描画のスレッドに渡すことがあります。
