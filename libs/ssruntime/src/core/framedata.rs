@@ -215,6 +215,18 @@ pub struct RawVertexDeform {
     pub dy: [f32; 4],
 }
 
+/// One part's entry in a per-part deform work area (`RawVertexDeform`,
+/// `PartDeformFrame`): nothing until the part first carries a deform, then a
+/// box that stays allocated and is cleared every frame. Most parts never
+/// deform, so they cost a pointer rather than the whole entry.
+pub type DeformSlot<T> = Option<alloc::boxed::Box<T>>;
+
+/// Part `i`'s vertex deform this frame, if it has one.
+#[inline]
+pub fn vertex_deform_at(raw_vertex_deform: &[DeformSlot<RawVertexDeform>], i: usize) -> Option<&RawVertexDeform> {
+    raw_vertex_deform.get(i).and_then(|d| d.as_deref()).filter(|d| d.present)
+}
+
 /// A mesh part's Cell — fixed at frame 0 per the SS mesh spec, so the first
 /// cell keyframe is authoritative. `None` when the part has no cell keys.
 pub fn mesh_part_cell<'a>(keys: &KeyColumns<'a>, cell_keys: Option<KeyRun>) -> Option<ssab::ssab::ss::format::PartAttributeCell<'a>> {
@@ -1177,12 +1189,12 @@ pub fn extract_pose<'a>(
     parts_color_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
     shader_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
     deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
-    raw_vertex_deform: &mut [RawVertexDeform],
+    raw_vertex_deform: &mut [DeformSlot<RawVertexDeform>],
     cursors: &mut Vec<u32>,
     bases: Option<&PartBases>,
     cell_meta_per_part: &mut [f32],
     cell_texture_hashes: &mut [u32],
-    mesh_deform: &mut Vec<PartDeformFrame>,
+    mesh_deform: &mut Vec<DeformSlot<PartDeformFrame>>,
     coordinate_system: SsCoordinateSystem,
     origin: SsOrigin,
     unit: SsUnit,
@@ -1196,9 +1208,9 @@ pub fn extract_pose<'a>(
     inheritance_alphas_workspace: &mut Vec<f32>,
 ) {
     if mesh_deform.len() != cached_parts.len() {
-        mesh_deform.resize(cached_parts.len(), PartDeformFrame::default());
+        mesh_deform.resize_with(cached_parts.len(), || None);
     }
-    for d in mesh_deform.iter_mut() {
+    for d in mesh_deform.iter_mut().flatten() {
         d.clear();
     }
     parts_vec.clear();
@@ -1212,8 +1224,8 @@ pub fn extract_pose<'a>(
     for slot in cell_texture_hashes.iter_mut() {
         *slot = 0;
     }
-    for slot in raw_vertex_deform.iter_mut() {
-        *slot = RawVertexDeform::default();
+    for slot in raw_vertex_deform.iter_mut().flatten() {
+        slot.present = false;
     }
 
     inheritance_alphas_workspace.clear();
@@ -1300,7 +1312,7 @@ pub fn extract_pose<'a>(
             let rt = v.rt();
             let lb = v.lb();
             let rb = v.rb();
-            raw_vertex_deform[i] = RawVertexDeform { present: true, dx: [lt.x(), rt.x(), lb.x(), rb.x()], dy: [lt.y(), rt.y(), lb.y(), rb.y()] };
+            **raw_vertex_deform[i].get_or_insert_with(Default::default) = RawVertexDeform { present: true, dx: [lt.x(), rt.x(), lb.x(), rb.x()], dy: [lt.y(), rt.y(), lb.y(), rb.y()] };
         }
 
         if let Some(cell) = result.cell {
@@ -1327,10 +1339,11 @@ pub fn extract_pose<'a>(
             deform_vec.push(deform_off);
             result.state.set_deform((deform_vec.len() - 1) as i16);
             // Retain per-part deform so the Phase 2 mesh-vertex pass can apply it.
-            mesh_deform[i].indices.extend_from_slice(deform_index_workspace.as_slice());
+            let retained = mesh_deform[i].get_or_insert_with(Default::default);
+            retained.indices.extend_from_slice(deform_index_workspace.as_slice());
             for c in deform_coord_workspace.iter() {
-                mesh_deform[i].dx.push(c.x());
-                mesh_deform[i].dy.push(c.y());
+                retained.dx.push(c.x());
+                retained.dy.push(c.y());
             }
         }
         parts_vec.push(result.state);
@@ -1354,7 +1367,7 @@ pub fn compute_nines_geometry_for_parts(
     parts_vec: &[runtime::framedata::ss::runtime::PartState],
     cached_parts: &[CachedPartData],
     cell_meta_per_part: &[f32],
-    raw_vertex_deform: &[RawVertexDeform],
+    raw_vertex_deform: &[DeformSlot<RawVertexDeform>],
     coordinate_system: SsCoordinateSystem,
     out: &mut NinesBuffers,
 ) {
@@ -1393,7 +1406,7 @@ pub fn compute_nines_geometry_for_parts(
 
         let mirror_u = state.flip_h() != state.img_flip_h();
         let mirror_v = state.flip_v() != state.img_flip_v();
-        let deform = raw_vertex_deform.get(i).filter(|d| d.present);
+        let deform = vertex_deform_at(raw_vertex_deform, i);
         // Skew shares the Vertex-deform slot; applied as a shear about the pivot
         // origin in Y-up, before the Y-down flip, like the 4-corner deform.
         let skew = crate::core::geometry::skew_local_tans(state.skew_x(), state.skew_y());
@@ -1444,7 +1457,7 @@ pub fn compute_nines_geometry_for_parts(
 pub fn compute_local_vertices_for_parts(
     parts_vec: &mut [runtime::framedata::ss::runtime::PartState],
     cell_meta_per_part: &[f32],
-    raw_vertex_deform: &[RawVertexDeform],
+    raw_vertex_deform: &[DeformSlot<RawVertexDeform>],
     vertex_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     local_vertices: &mut [f32],
     coordinate_system: SsCoordinateSystem,
@@ -1463,7 +1476,7 @@ pub fn compute_local_vertices_for_parts(
         let cell_pivot_y = cell_meta_per_part.get(i * 6 + 1).copied().unwrap_or(0.0);
         let pivot = (cell_pivot_x, cell_pivot_y);
 
-        let deform = raw_vertex_deform.get(i).filter(|d| d.present).map(|d| (d.dx, d.dy));
+        let deform = vertex_deform_at(raw_vertex_deform, i).map(|d| (d.dx, d.dy));
 
         let mut pivot_y = state.pivot_y();
         if coordinate_system == SsCoordinateSystem::YDown {
@@ -1743,7 +1756,7 @@ pub fn compose_frame_data<'a>(
     shader_vec: &[crate::runtime::framedata::ss::runtime::PartAttributeShader],
     vertex_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: &[flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>],
-    raw_vertex_deform: &[RawVertexDeform],
+    raw_vertex_deform: &[DeformSlot<RawVertexDeform>],
     cell_meta_per_part: &[f32],
     cell_texture_hashes: &[u32],
     local_vertices: &mut [f32],
@@ -1875,7 +1888,7 @@ mod tests {
     fn stage_b_skips_cellless_parts() {
         let mut parts_vec = vec![make_stage_b_state(-1, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::empty())];
         let cell_meta_per_part = vec![0.0_f32; 6];
-        let raw_vertex_deform = vec![RawVertexDeform::default()];
+        let raw_vertex_deform: alloc::vec::Vec<DeformSlot<RawVertexDeform>> = vec![None];
         let mut vertex_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
         let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
 
@@ -1892,7 +1905,7 @@ mod tests {
         // 5-corner box centered at origin: LT(-5,10), RT(5,10), LB(-5,-10), RB(5,-10), center(0,0).
         let mut parts_vec = vec![make_stage_b_state(0, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell)];
         let cell_meta_per_part = vec![0.0_f32; 6];
-        let raw_vertex_deform = vec![RawVertexDeform::default()];
+        let raw_vertex_deform: alloc::vec::Vec<DeformSlot<RawVertexDeform>> = vec![None];
         let mut vertex_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
         let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
 
@@ -1914,7 +1927,7 @@ mod tests {
         // the packed `PartAttributeVertex.center` carries the Varignon-mean center.
         let mut parts_vec = vec![make_stage_b_state(0, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell | UpdateAttributeFlags::AttributeVertex)];
         let cell_meta_per_part = vec![0.0_f32; 6];
-        let raw_vertex_deform = vec![RawVertexDeform { present: true, dx: [1.0, 2.0, 3.0, 4.0], dy: [10.0, 20.0, 30.0, 40.0] }];
+        let raw_vertex_deform = vec![Some(alloc::boxed::Box::new(RawVertexDeform { present: true, dx: [1.0, 2.0, 3.0, 4.0], dy: [10.0, 20.0, 30.0, 40.0] }))];
         let mut vertex_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
         let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
 
@@ -1934,7 +1947,7 @@ mod tests {
         // Same setup as stage_b_resolves_no_deform_box, but Y-Down flips all vy.
         let mut parts_vec = vec![make_stage_b_state(0, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell | UpdateAttributeFlags::AttributeVertex)];
         let cell_meta_per_part = vec![0.0_f32; 6];
-        let raw_vertex_deform = vec![RawVertexDeform::default()];
+        let raw_vertex_deform: alloc::vec::Vec<DeformSlot<RawVertexDeform>> = vec![None];
         let mut vertex_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
         let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
 
@@ -2024,7 +2037,7 @@ mod tests {
     fn stage_b_center_is_gated_by_update_flag() {
         // Cell pivot (0.1, 0.2) produces a non-symmetric box whose Varignon center is (-1, -4).
         let cell_meta_per_part = vec![0.1_f32, 0.2, 10.0, 20.0, 0.0, 0.0];
-        let raw_vertex_deform = vec![RawVertexDeform::default()];
+        let raw_vertex_deform: alloc::vec::Vec<DeformSlot<RawVertexDeform>> = vec![None];
 
         // Case A: only AttributeCell — center field in vertex_vec stays at default (0, 0),
         // but local_vertices always carries the computed center.
@@ -2062,7 +2075,8 @@ mod tests {
 
     fn run_nines(parts_vec: &[runtime::framedata::ss::runtime::PartState], cached: &[CachedPartData], deform: &[RawVertexDeform], coordinate_system: crate::core::SsCoordinateSystem) -> NinesBuffers {
         let mut out = NinesBuffers::default();
-        compute_nines_geometry_for_parts(parts_vec, cached, &nines_cell_meta(), deform, coordinate_system, &mut out);
+        let deform: Vec<DeformSlot<RawVertexDeform>> = deform.iter().map(|d| Some(alloc::boxed::Box::new(*d))).collect();
+        compute_nines_geometry_for_parts(parts_vec, cached, &nines_cell_meta(), &deform, coordinate_system, &mut out);
         out
     }
 

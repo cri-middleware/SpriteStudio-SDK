@@ -841,8 +841,8 @@ struct LayerState<'a> {
     cell_texture_hashes: Vec<u32>,
     local_vertices: Vec<f32>,
     /// Per-part mesh deform retained from Phase 1 for the Phase 2 skinning pass.
-    mesh_deform: Vec<crate::core::framedata::PartDeformFrame>,
-    raw_vertex_deform: Vec<crate::core::framedata::RawVertexDeform>,
+    mesh_deform: Vec<crate::core::framedata::DeformSlot<crate::core::framedata::PartDeformFrame>>,
+    raw_vertex_deform: Vec<crate::core::framedata::DeformSlot<crate::core::framedata::RawVertexDeform>>,
     /// Per-part attribute coverage of the animation this layer was extracted
     /// from (`CachedPartData::coverage`), consulted by [`mix_poses`]. Copied in
     /// after pose extraction; an **empty** vec means "no coverage data", which
@@ -894,7 +894,7 @@ impl<'a> LayerState<'a> {
         self.local_vertices.clear();
         self.local_vertices.resize(num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE, 0.0);
         self.raw_vertex_deform.clear();
-        self.raw_vertex_deform.resize(num_parts, crate::core::framedata::RawVertexDeform::default());
+        self.raw_vertex_deform.resize_with(num_parts, || None);
     }
 
     /// Size the buffers for `metadata`'s animation unless they already are: the
@@ -1328,15 +1328,25 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
 
     // mesh_deform holds variable-size per-part deltas; deep-copy from primary.
     if resolved_layer.mesh_deform.len() != num_parts {
-        resolved_layer.mesh_deform.resize(num_parts, crate::core::framedata::PartDeformFrame::default());
+        resolved_layer.mesh_deform.resize_with(num_parts, || None);
     }
     for (dst, src) in resolved_layer.mesh_deform.iter_mut().zip(primary.mesh_deform.iter()) {
-        dst.indices.clear();
-        dst.indices.extend_from_slice(&src.indices);
-        dst.dx.clear();
-        dst.dx.extend_from_slice(&src.dx);
-        dst.dy.clear();
-        dst.dy.extend_from_slice(&src.dy);
+        match src.as_deref() {
+            Some(src) => {
+                let dst = dst.get_or_insert_with(Default::default);
+                dst.indices.clear();
+                dst.indices.extend_from_slice(&src.indices);
+                dst.dx.clear();
+                dst.dx.extend_from_slice(&src.dx);
+                dst.dy.clear();
+                dst.dy.extend_from_slice(&src.dy);
+            }
+            None => {
+                if let Some(dst) = dst.as_deref_mut() {
+                    dst.clear();
+                }
+            }
+        }
     }
 
     // Stage B fills these; clear them so stale post-mix data is never read.
@@ -1349,10 +1359,10 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
     resolved_layer.parts_vec.reserve(num_parts);
     if resolved_layer.raw_vertex_deform.len() != num_parts {
         resolved_layer.raw_vertex_deform.clear();
-        resolved_layer.raw_vertex_deform.resize(num_parts, crate::core::framedata::RawVertexDeform::default());
+        resolved_layer.raw_vertex_deform.resize_with(num_parts, || None);
     } else {
-        for slot in resolved_layer.raw_vertex_deform.iter_mut() {
-            *slot = crate::core::framedata::RawVertexDeform::default();
+        for slot in resolved_layer.raw_vertex_deform.iter_mut().flatten() {
+            slot.present = false;
         }
     }
 
@@ -1445,9 +1455,7 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
                 // same signal as coverage for the other attributes: normalize over
                 // the sources that actually have a deform, so a source without one
                 // does not pull the deltas toward zero.
-                if let Some(rvd) = layers[j].raw_vertex_deform.get(i)
-                    && rvd.present
-                {
+                if let Some(rvd) = crate::core::framedata::vertex_deform_at(&layers[j].raw_vertex_deform, i) {
                     deform_weight += w;
                     let w_v = wide::f32x4::splat(w);
                     dx_acc = w_v.mul_add(wide::f32x4::from(rvd.dx), dx_acc);
@@ -1496,7 +1504,7 @@ fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[
             mixed.set_update_flag(flag);
         }
         if deform_present {
-            resolved_layer.raw_vertex_deform[i] = crate::core::framedata::RawVertexDeform { present: true, dx: cur_dx.to_array(), dy: cur_dy.to_array() };
+            **resolved_layer.raw_vertex_deform[i].get_or_insert_with(Default::default) = crate::core::framedata::RawVertexDeform { present: true, dx: cur_dx.to_array(), dy: cur_dy.to_array() };
         }
 
         resolved_layer.parts_vec.push(mixed);
@@ -2548,7 +2556,7 @@ impl<'a> Context<'a> {
                 if binding.num_vertices() < end - start {
                     continue; // bind has fewer vertices than the cell — cannot skin
                 }
-                let deform = layer.mesh_deform.get(i).filter(|d| !d.indices.is_empty()).map(|d| (d.indices.as_slice(), d.dx.as_slice(), d.dy.as_slice(), &globals.world_matrices[i]));
+                let deform = layer.mesh_deform.get(i).and_then(|d| d.as_deref()).filter(|d| !d.indices.is_empty()).map(|d| (d.indices.as_slice(), d.dx.as_slice(), d.dy.as_slice(), &globals.world_matrices[i]));
                 let (out_x, out_y) = (&mut globals.mesh_vertices_x[start..end], &mut globals.mesh_vertices_y[start..end]);
                 crate::core::geometry::compute_skinned_mesh_vertices(&binding.influence_offsets, &binding.bone_indices, &binding.weights, &binding.coords_x, &binding.coords_y, &globals.world_matrices, deform, flip_y, out_x, out_y);
                 continue;
@@ -2569,7 +2577,7 @@ impl<'a> Context<'a> {
             }
             // Apply deform deltas as-is — evaluate_part has already applied any
             // coordinate-system Y conversion. Sparse scatter, kept scalar.
-            if let Some(deform) = layer.mesh_deform.get(i) {
+            if let Some(deform) = layer.mesh_deform.get(i).and_then(|d| d.as_deref()) {
                 let vert_count = end - start;
                 let mat = &globals.world_matrices[i];
                 let (m0, m1, m4, m5) = (mat.m[0], mat.m[1], mat.m[4], mat.m[5]);
@@ -2728,7 +2736,7 @@ impl<'a> Context<'a> {
             // weighting the renderer uses for per-corner PartColor. Offsets are
             // added in Y-up space, before the YDown negation, so the dy sign
             // matches the 4-corner deform path in `compute_local_vertices`.
-            let deform = layer.raw_vertex_deform.get(i).filter(|d| d.present);
+            let deform = crate::core::framedata::vertex_deform_at(&layer.raw_vertex_deform, i);
             // Skew shares the Vertex-deform slot; applied as a shear about the
             // pivot origin in Y-up, before the Y-down flip, like the deform.
             let skew = crate::core::geometry::skew_local_tans(state.skew_x(), state.skew_y());
@@ -5295,7 +5303,7 @@ mod tests {
                 Some((dx, dy)) => crate::core::framedata::RawVertexDeform { present: true, dx, dy },
                 None => crate::core::framedata::RawVertexDeform::default(),
             };
-            layer.raw_vertex_deform.push(rvd);
+            layer.raw_vertex_deform.push(Some(alloc::boxed::Box::new(rvd)));
         }
         layer
     }
@@ -5391,7 +5399,7 @@ mod tests {
         for part in [primary_part, secondary_part] {
             let mut layer = LayerState::new();
             layer.parts_vec.push(part);
-            layer.raw_vertex_deform.push(crate::core::framedata::RawVertexDeform::default());
+            layer.raw_vertex_deform.push(None);
             layers.push(layer);
         }
 
@@ -5774,7 +5782,7 @@ mod tests {
         let mut resolved = LayerState::new();
         mix_poses(&sources, &layers, 0, &mut resolved);
 
-        let d = &resolved.raw_vertex_deform[0];
+        let d = resolved.raw_vertex_deform[0].as_deref().unwrap();
         assert!(d.present);
         assert!((d.dx[0] - 3.0).abs() < 1e-6);
         assert!((d.dx[3] - 6.0).abs() < 1e-6);
