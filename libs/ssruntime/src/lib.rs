@@ -871,7 +871,7 @@ impl<'a> LayerState<'a> {
         }
     }
 
-    fn resize_for_parts(&mut self, num_parts: usize, cursor_c: usize, cell_c: usize, color_c: usize, shader_c: usize, vertex_c: usize, deform_c: usize) {
+    fn resize_for_parts(&mut self, num_parts: usize, cursor_c: usize, cell_c: usize, color_c: usize, shader_c: usize, deform_c: usize) {
         self.parts_vec.clear();
         self.parts_vec.reserve(num_parts);
         self.cell_vec.clear();
@@ -880,8 +880,6 @@ impl<'a> LayerState<'a> {
         self.parts_color_vec.reserve(color_c);
         self.shader_vec.clear();
         self.shader_vec.reserve(shader_c);
-        self.vertex_vec.clear();
-        self.vertex_vec.reserve(vertex_c);
         self.deform_vec.clear();
         self.deform_vec.reserve(deform_c);
 
@@ -904,8 +902,8 @@ impl<'a> LayerState<'a> {
         let num_parts = metadata.cached_parts().len();
         let sized = self.raw_vertex_deform.len() == num_parts && self.cell_texture_hashes.len() == num_parts && self.cell_meta_per_part.len() == num_parts * 6 && self.local_vertices.len() == num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE;
         if !sized {
-            let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
-            self.resize_for_parts(num_parts, crate::core::framedata::cursor_count(metadata.cached_parts()), cell_c, color_c, shader_c, vertex_c, deform_c);
+            let (cell_c, color_c, shader_c, deform_c) = count_attribute_capacities(metadata);
+            self.resize_for_parts(num_parts, crate::core::framedata::cursor_count(metadata.cached_parts()), cell_c, color_c, shader_c, deform_c);
         }
     }
 }
@@ -1114,11 +1112,10 @@ impl TrackFade {
     }
 }
 
-fn count_attribute_capacities(metadata: &AnimationMetadata<'_>) -> (usize, usize, usize, usize, usize) {
+fn count_attribute_capacities(metadata: &AnimationMetadata<'_>) -> (usize, usize, usize, usize) {
     let mut cell_c = 0;
     let mut color_c = 0;
     let mut shader_c = 0;
-    let mut vertex_c = 0;
     let mut deform_c = 0;
     for p in metadata.cached_parts() {
         if p.run(crate::core::framedata::IDX_ATTRIBUTECELL).is_some() {
@@ -1130,14 +1127,16 @@ fn count_attribute_capacities(metadata: &AnimationMetadata<'_>) -> (usize, usize
         if p.run(crate::core::framedata::IDX_ATTRIBUTESHADER).is_some() {
             shader_c += 1;
         }
-        if p.run(crate::core::framedata::IDX_ATTRIBUTEVERTEX).is_some() {
-            vertex_c += 1;
-        }
         if p.run(crate::core::framedata::IDX_ATTRIBUTEDEFORM).is_some() {
             deform_c += 1;
         }
     }
-    (cell_c, color_c, shader_c, vertex_c, deform_c)
+    (cell_c, color_c, shader_c, deform_c)
+}
+
+/// Make room for `total` elements in all, whatever `v` holds now.
+fn reserve_total<T>(v: &mut Vec<T>, total: usize) {
+    v.reserve(total.saturating_sub(v.len()));
 }
 
 // Indices into the mix's per-attribute weight / accumulator arrays. One entry
@@ -1908,7 +1907,7 @@ impl<'a> Context<'a> {
         primary.weight = 1.0;
 
         let num_parts = metadata.cached_parts().len();
-        let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
+        let (cell_c, color_c, shader_c, deform_c) = count_attribute_capacities(metadata);
         let cursor_c = crate::core::framedata::cursor_count(metadata.cached_parts());
 
         // A new setup plays one source alone, extracted straight into the
@@ -1916,7 +1915,7 @@ impl<'a> Context<'a> {
         for layer in self.instance.layers.iter_mut() {
             *layer = LayerState::new();
         }
-        self.instance.resolved_layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
+        self.instance.resolved_layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, deform_c);
 
         // Override Layer: a new animation clears Visibility and NON/NOW Color
         // overrides but keeps PERMANENT ones (handover D-3/D-5).
@@ -1942,8 +1941,45 @@ impl<'a> Context<'a> {
 
         self.instance.z_order.setup(index as i32, metadata.cached_parts());
         self.prepare_part_bases();
+        self.reserve_frame_workspaces(metadata);
 
         Ok(())
+    }
+
+    /// Size up front what the first frame of `metadata`'s animation would
+    /// otherwise grow on its way: the buffers whose size the parts decide, by
+    /// their count or by their meshes' vertices. What a frame's contents decide
+    /// — the frame data, the draw batches, a deform, an effect's particles, the
+    /// frames an update passes — still grows on first use.
+    fn reserve_frame_workspaces(&mut self, metadata: &AnimationMetadata<'a>) {
+        let parts = metadata.cached_parts();
+        let num_parts = parts.len();
+
+        let resolved = &mut self.instance.resolved_layer;
+        // One vertex attribute per part that shows a cell, whether or not it
+        // keys a vertex deform.
+        resolved.vertex_vec.clear();
+        resolved.vertex_vec.reserve(parts.iter().filter(|p| p.run(crate::core::framedata::IDX_ATTRIBUTECELL).is_some()).count());
+        if resolved.mesh_deform.len() != num_parts {
+            resolved.mesh_deform.resize_with(num_parts, || None);
+        }
+
+        let eval = &mut self.eval;
+        reserve_total(&mut eval.inheritance_alphas_workspace, num_parts);
+        reserve_total(&mut eval.draw_order_workspace, num_parts);
+        reserve_total(&mut eval.mask_indices_workspace, parts.iter().filter(|p| p.is_mask_contributor).count());
+
+        let globals = &mut self.instance.globals;
+        reserve_total(&mut globals.nines.vertex_offsets, num_parts + 1);
+        reserve_total(&mut globals.nines.index_offsets, num_parts + 1);
+        // Room only: the static mesh buffers are still handed out from the
+        // first frame on, and only a Direct instance positions mesh vertices.
+        reserve_total(&mut globals.mesh_vertex_offsets, num_parts + 1);
+        if self.instance.render_mode == crate::core::RenderMode::Direct {
+            let total_vertices = parts.iter().map(|p| p.mesh_cell.as_ref().map_or(0, |m| m.num_vertices())).sum();
+            reserve_total(&mut globals.mesh_vertices_x, total_vertices);
+            reserve_total(&mut globals.mesh_vertices_y, total_vertices);
+        }
     }
 
     /// Put `name` on `track`, replacing whatever it was playing.
@@ -2234,7 +2270,7 @@ impl<'a> Context<'a> {
         };
         let metadata = &resource.animations[animation_idx];
         let num_parts = metadata.cached_parts().len();
-        let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
+        let (cell_c, color_c, shader_c, deform_c) = count_attribute_capacities(metadata);
         let cursor_c = crate::core::framedata::cursor_count(metadata.cached_parts());
 
         metadata.part_bases(self.instance.coordinate_system, self.instance.origin, self.instance.unit);
@@ -2248,13 +2284,13 @@ impl<'a> Context<'a> {
         let handle = match free {
             Some(i) => {
                 self.instance.sources[i] = source;
-                self.instance.layers[i].resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
+                self.instance.layers[i].resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, deform_c);
                 i
             }
             None => {
                 self.instance.sources.push(source);
                 let mut layer = LayerState::new();
-                layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, vertex_c, deform_c);
+                layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, deform_c);
                 self.instance.layers.push(layer);
                 self.instance.sources.len() - 1
             }
