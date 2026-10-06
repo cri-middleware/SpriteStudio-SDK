@@ -67,8 +67,8 @@ Then dispatch the release workflow from the branch. With `upload_release` left f
 
 ```bash
 BRANCH=$(git branch --show-current | grep '^release/')
-git push origin "${BRANCH:?}"
-RUN=$(gh workflow run release.yml --ref "${BRANCH:?}" | sed 's|.*/||')
+git push origin "${BRANCH:?}" &&
+  RUN=$(gh workflow run release.yml --ref "${BRANCH:?}" | sed 's|.*/||')
 gh run watch "${RUN:?}" --exit-status
 gh run view "${RUN:?}" --log | grep -E 'not set|Skipping' | grep -v 'echo '   # must print nothing
 ```
@@ -103,8 +103,8 @@ gh pr merge "${BRANCH:?}" --merge
 Then tag `main`. The tag goes on the merge commit only when its tree is the branch's, which `git diff` confirms by printing nothing:
 
 ```bash
-git switch main && git pull --ff-only
-git diff --stat --exit-code HEAD^2 HEAD &&
+git switch main && git pull --ff-only &&
+  git diff --stat --exit-code HEAD^2 HEAD &&
   TAG=v$(scripts/release-version.sh) &&
   git tag -a "$TAG" -m "$TAG" && git push origin "$TAG"
 ```
@@ -143,8 +143,8 @@ Merge `main` into `develop`. After a patch release this conflicts where `develop
 ```bash
 git fetch origin --tags
 TAG=$(git describe --exact-match --tags --match 'v[0-9]*' origin/main)
-git switch develop && git pull --ff-only
-git merge --no-ff origin/main && git push origin develop
+git switch develop && git pull --ff-only &&
+  git merge --no-ff origin/main && git push origin develop
 git push origin --delete "release/$(echo "${TAG:?}" | sed 's/^v//' | cut -d. -f1,2)"
 ```
 
@@ -176,9 +176,9 @@ git push origin ":refs/tags/${TAG:?}" && git tag -d "${TAG:?}"
 
 ```bash
 RUN=<run-id>
-git checkout "$(gh run view "${RUN:?}" --json headSha -q .headSha)"
-gh run download "${RUN:?}" -D artifacts
-scripts/build-release.sh
+git checkout "$(gh run view "${RUN:?}" --json headSha -q .headSha)" &&
+  gh run download "${RUN:?}" -D artifacts &&
+  scripts/build-release.sh
 ```
 
 `verify=yes`, the default, re-opens the finished zips and checks what has broken releases before: an empty archive, a tree that lost the root layout the Players' `download-sdk.sh` navigate, a macOS `libssruntime.framework` whose version symlinks the zip dereferenced, a `SHA256SUMS` covering the wrong set.
@@ -256,8 +256,8 @@ gh pr create -B main -H "${BRANCH:?}" --title "Release v$(scripts/release-versio
 
 ```bash
 BRANCH=$(git branch --show-current | grep '^release/')
-git push origin "${BRANCH:?}"
-RUN=$(gh workflow run release.yml --ref "${BRANCH:?}" | sed 's|.*/||')
+git push origin "${BRANCH:?}" &&
+  RUN=$(gh workflow run release.yml --ref "${BRANCH:?}" | sed 's|.*/||')
 gh run watch "${RUN:?}" --exit-status
 gh run view "${RUN:?}" --log | grep -E 'not set|Skipping' | grep -v 'echo '   # 何も出力されないこと
 ```
@@ -292,8 +292,8 @@ gh pr merge "${BRANCH:?}" --merge
 続けて `main` にタグを打ちます。タグはマージコミットのツリーがブランチと同じときにだけ打たれます。`git diff` が何も出力しないことがその確認です。
 
 ```bash
-git switch main && git pull --ff-only
-git diff --stat --exit-code HEAD^2 HEAD &&
+git switch main && git pull --ff-only &&
+  git diff --stat --exit-code HEAD^2 HEAD &&
   TAG=v$(scripts/release-version.sh) &&
   git tag -a "$TAG" -m "$TAG" && git push origin "$TAG"
 ```
@@ -332,8 +332,8 @@ gh run watch "${RUN:?}" --exit-status             # run が出るまで RUN は�
 ```bash
 git fetch origin --tags
 TAG=$(git describe --exact-match --tags --match 'v[0-9]*' origin/main)
-git switch develop && git pull --ff-only
-git merge --no-ff origin/main && git push origin develop
+git switch develop && git pull --ff-only &&
+  git merge --no-ff origin/main && git push origin develop
 git push origin --delete "release/$(echo "${TAG:?}" | sed 's/^v//' | cut -d. -f1,2)"
 ```
 
@@ -365,9 +365,9 @@ git push origin ":refs/tags/${TAG:?}" && git tag -d "${TAG:?}"
 
 ```bash
 RUN=<run-id>
-git checkout "$(gh run view "${RUN:?}" --json headSha -q .headSha)"
-gh run download "${RUN:?}" -D artifacts
-scripts/build-release.sh
+git checkout "$(gh run view "${RUN:?}" --json headSha -q .headSha)" &&
+  gh run download "${RUN:?}" -D artifacts &&
+  scripts/build-release.sh
 ```
 
 既定の `verify=yes` は、出来上がった zip を開き直して、過去に実際にリリースを壊したものを確認します — 空のアーカイブ、各 Player の `download-sdk.sh` が辿るルートレイアウトの欠落、zip が実体化してしまった macOS `libssruntime.framework` のバージョン symlink、対象を取り違えた `SHA256SUMS`。
