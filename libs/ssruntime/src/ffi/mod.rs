@@ -1860,7 +1860,7 @@ pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index:
 /// Which source fired the collected event at `index` — parallel to
 /// `ss_runtime_get_passed_event_index`, and read with the same index.
 ///
-/// With every source at the default event threshold (`1.0`) this is uniformly
+/// With every source at the default event threshold (`+∞`) this is uniformly
 /// `ss_runtime_get_track_main_source` of track 0, so a Player that does not use
 /// animation mixing can ignore it. It diverges once a secondary source opts in
 /// to firing events via `ss_runtime_set_source_event_threshold`, and that is

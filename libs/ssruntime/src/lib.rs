@@ -1032,15 +1032,20 @@ struct SourceState {
     track: u16,
     weight: f32,
     /// Minimum weight at which this source's events should fire (only meaningful
-    /// for non-primary sources). Default `1.0` preserves the legacy "Primary
-    /// fires events; secondaries never do" semantics — secondaries fire when
-    /// the caller opts-in by lowering the threshold to <= their current weight.
+    /// for non-primary sources). The default, [`NO_EVENT_THRESHOLD`], keeps
+    /// "track 0's animation fires events; other sources never do" — the caller
+    /// opts a source in by lowering the threshold to <= its current weight.
     event_threshold: f32,
 }
 
+/// The default event threshold: no weight reaches it, so a source fires only
+/// once the host lowers it. It used to be `1.0`, which the weight of a track's
+/// lone source meets, so an overlay fired every event it passed.
+const NO_EVENT_THRESHOLD: f32 = f32::INFINITY;
+
 impl SourceState {
     fn new() -> Self {
-        Self { animation_idx: -1, controller: core::playback_controller::PlaybackController::new(), track: 0, weight: 1.0, event_threshold: 1.0 }
+        Self { animation_idx: -1, controller: core::playback_controller::PlaybackController::new(), track: 0, weight: 1.0, event_threshold: NO_EVENT_THRESHOLD }
     }
 
     fn is_active(&self) -> bool {
@@ -1053,7 +1058,7 @@ impl SourceState {
         self.controller.reset_setup();
         self.animation_idx = -1;
         self.weight = 0.0;
-        self.event_threshold = 1.0;
+        self.event_threshold = NO_EVENT_THRESHOLD;
     }
 
     /// True for slots that carry a real animation (i.e. not inactive `-1` and
@@ -1562,9 +1567,9 @@ struct InstanceState<'a> {
     globals: GlobalBuffers,
     collected_event_indices: Vec<i32>,
     /// Parallel to `collected_event_indices`: source handle that fired each
-    /// collected event. With `event_threshold == 1.0` (default), every entry
-    /// equals `primary` — legacy "Primary fires events" semantics. When
-    /// secondaries opt-in (lower threshold), entries record the firing source.
+    /// collected event. At the default event threshold every entry equals
+    /// `primary` — "track 0's animation fires events". When other sources
+    /// opt in (lower threshold), entries record the firing source.
     collected_event_source_handles: Vec<u32>,
     coordinate_system: crate::core::SsCoordinateSystem,
     origin: crate::core::SsOrigin,
@@ -2241,10 +2246,10 @@ impl<'a> Context<'a> {
         (source.animation_idx >= 0).then(|| source.controller.get_frame_no())
     }
 
-    /// Per-source event firing threshold. Default `1.0` — a source fires events
-    /// only once its weight reaches the threshold, so by default only a track's
-    /// fully-weighted animation does. Track 0's main source always fires,
-    /// regardless of this setting. Distinguish sources with
+    /// Per-source event firing threshold. A source fires events once its weight
+    /// reaches the threshold. The default is `+∞`, so by default no source
+    /// fires but track 0's main source, which always does regardless of this
+    /// setting. Distinguish sources with
     /// [`Self::get_passed_event_source_handles`].
     pub fn set_source_event_threshold(&mut self, handle: u32, threshold: f32) -> Result<(), error::SSRuntimeError> {
         let source = self.instance.sources.get_mut(handle as usize).ok_or(error::SSRuntimeError::InvalidParameter)?;
@@ -3300,7 +3305,7 @@ impl<'a> Context<'a> {
 
     /// Parallel to [`Self::get_passed_event_indices`]: source handle that fired
     /// each collected event. With every source at the default event threshold
-    /// (`1.0`), entries are uniformly [`Self::get_track_main_source`] of track 0.
+    /// (`+∞`), entries are uniformly [`Self::get_track_main_source`] of track 0.
     /// Diverges once secondaries opt-in to event firing via
     /// [`Self::set_source_event_threshold`].
     pub fn get_passed_event_source_handles(&self) -> &[u32] {
@@ -5356,6 +5361,44 @@ mod tests {
         assert!(events.iter().any(|&e| e > 0), "Should have collected at least one event with index > 0");
     }
 
+    /// Only track 0's animation fires by default, even when another track holds
+    /// a single source at full weight; that source fires once it opts in.
+    /// The default threshold used to be `1.0`, which a lone overlay's weight
+    /// meets, so an overlay fired every event it passed.
+    #[test]
+    fn an_overlay_fires_events_only_once_it_opts_in() {
+        prepare();
+        let data = std::fs::read(get_test_base_path().join("tests/overall/overall/UserData.ssab")).expect("Failed to read UserData.ssab");
+        let ssab_data = SsabData::load_copy(&data).unwrap();
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.unwrap();
+        let anim_name = resource.get_animation_names().first().cloned().expect("No animations found in SSAB");
+
+        let run = |opt_in: bool| -> (u32, Vec<u32>) {
+            let mut ctx = Context::new();
+            ctx.bind_resource(&resource);
+            ctx.setup_animation(&anim_name).unwrap();
+            ctx.play();
+            ctx.set_track_animation(1, &anim_name).unwrap();
+            let overlay = ctx.get_track_main_source(1).unwrap();
+            if opt_in {
+                ctx.set_source_event_threshold(overlay, 1.0).unwrap();
+            }
+            let mut fired = Vec::new();
+            for _ in 0..120 {
+                ctx.update(1000.0 / 30.0);
+                fired.extend_from_slice(ctx.get_passed_event_source_handles());
+            }
+            (overlay, fired)
+        };
+
+        let (overlay, fired) = run(false);
+        assert!(!fired.is_empty(), "fixture sanity: track 0 fires events");
+        assert!(!fired.contains(&overlay), "the overlay fired without opting in");
+
+        let (overlay, fired) = run(true);
+        assert!(fired.contains(&overlay), "the overlay did not fire after opting in");
+    }
+
     #[test]
     fn test_ssab_resource_accessors() {
         prepare();
@@ -6255,8 +6298,8 @@ mod tests {
         assert_eq!(ctx.instance.primary, 0);
     }
 
-    /// Only a track's fully-weighted animation fires events by default; a source
-    /// opts in by lowering its threshold below its weight.
+    /// Only track 0's animation fires events by default; a source opts in by
+    /// lowering its threshold to its weight or below.
     #[test]
     fn source_event_threshold_round_trips() {
         let ssab = load_ringo_resource();
@@ -6264,7 +6307,7 @@ mod tests {
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
 
         let handle = ctx.add_track_source(0, "run", 1.0).unwrap();
-        assert_eq!(ctx.get_source_event_threshold(handle), Some(1.0), "default keeps secondaries quiet");
+        assert_eq!(ctx.get_source_event_threshold(handle), Some(f32::INFINITY), "default keeps secondaries quiet");
         ctx.set_source_event_threshold(handle, 0.5).unwrap();
         assert_eq!(ctx.get_source_event_threshold(handle), Some(0.5));
         assert!(matches!(ctx.set_source_event_threshold(99, 0.5), Err(error::SSRuntimeError::InvalidParameter)));

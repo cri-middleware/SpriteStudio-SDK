@@ -123,7 +123,7 @@ ss_runtime_set_source_frame(ctx, run, 0.0f);
 
 ## 6. Events
 
-By default, only the animation on track 0 fires events. To make another source fire too, lower its threshold to its `weight` or below. Events are reported from sources where `weight >= threshold`.
+By default, only the animation on track 0 fires events. To make another source fire too, lower its threshold to its `weight` or below. Events are reported from sources where `weight >= threshold`. The default threshold is `+∞`, which no weight reaches, so the lone source of another track does not fire at weight 1 either.
 
 ```cpp
 ss_runtime_set_source_event_threshold(ctx, run, 0.5f);   // fires when run's weight is 0.5 or more

@@ -123,7 +123,7 @@ ss_runtime_set_source_frame(ctx, run, 0.0f);
 
 ## 6. イベント
 
-既定では、track 0 のアニメーションだけがイベントを発火します。他のソースも発火させるには、そのソースの閾値を、その `weight` 以下に下げます。`weight >= 閾値` のソースのイベントが報告されます。
+既定では、track 0 のアニメーションだけがイベントを発火します。他のソースも発火させるには、そのソースの閾値を、その `weight` 以下に下げます。`weight >= 閾値` のソースのイベントが報告されます。閾値の既定値は `+∞` で、どの weight も届かないため、他のトラックに1つだけ載せたソースも weight 1 では発火しません。
 
 ```cpp
 ss_runtime_set_source_event_threshold(ctx, run, 0.5f);   // run の weight が 0.5 以上なら発火する
