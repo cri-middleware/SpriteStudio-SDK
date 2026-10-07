@@ -17,7 +17,7 @@
 ```cpp
 ss_runtime_update(ctx, delta_ms);
 
-// 現在のアニメーションのイベント表。アニメーションをセットアップしたときに控えておく
+// track 0 が再生しているアニメーションのイベント表。ミキシングを使う場合はイベントごとに引く（§4）
 const auto* events = current_animation->events();
 if (events != nullptr) {
     int count = ss_runtime_get_passed_event_count(ctx);
@@ -109,7 +109,9 @@ if (events != nullptr) {
 
 アニメーションミキシングでは、既定で track 0 のアニメーションのイベントだけが報告されます。他のソースのイベントも報告させるには、そのソースの閾値を下げます（[アニメーションミキシング §6](../50_features/10_animation_mixing.ja.md#6-イベント)）。
 
-その場合、`ss_runtime_get_passed_event_index` の値は**発火したソースのアニメーション**のイベント表の添字です。`ss_runtime_get_passed_event_source_handle(ctx, i)` で発火したソースのハンドルを取り、そのソースに載せたアニメーションの `events()` を引いてください。ミキシングを使わない Player は、ハンドルを読む必要はありません。
+`ss_runtime_get_passed_event_index` の値は、**発火したソースのアニメーション**のイベント表の添字です。`ss_runtime_get_passed_event_source_handle(ctx, i)` で発火したソースのハンドルを取り、`ss_runtime_get_source_animation_index(ctx, handle)` でそのソースが再生しているアニメーション（ssab の `animations()` の添字）を調べ、そのアニメーションの `events()` を引いてください。
+
+**track 0 も同じです。** track 0 をクロスフェードすると、トラックは入ってくるアニメーションに引き継がれます。そのため完了後は、`ss_runtime_setup_animation` のときに控えたイベント表では引けません。別のイベントとして報告されるか、範囲外として捨てられます。表を 1 つ控えておくだけで済むのは、クロスフェードもミキシングも使わない Player だけです。
 
 ---
 [目次に戻る](../README.ja.md)

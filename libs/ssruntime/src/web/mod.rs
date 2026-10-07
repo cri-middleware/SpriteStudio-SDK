@@ -815,6 +815,12 @@ impl SSRuntimeContext {
         self.inner.get_source_frame(handle)
     }
 
+    /// Which animation the source plays, as an index into the ssab's animations;
+    /// the table a passed event index addresses.
+    pub fn get_source_animation_index(&self, handle: u32) -> Option<u32> {
+        self.inner.get_source_animation_index(handle)
+    }
+
     pub fn set_source_event_threshold(&mut self, handle: u32, threshold: f32) -> Result<(), JsValue> {
         self.inner.set_source_event_threshold(handle, threshold).map_err(js_error)
     }

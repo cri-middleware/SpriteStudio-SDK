@@ -217,6 +217,7 @@ for (int i = 0; i < n; ++i) {
 | `ss_runtime_get_source_weight(ctx, handle)` | `float` | `NaN` |
 | `ss_runtime_set_source_frame(ctx, handle, frame)` | `bool` | `false` |
 | `ss_runtime_get_source_frame(ctx, handle)` | `float` | `NaN` |
+| `ss_runtime_get_source_animation_index(ctx, handle)` | `int32_t` | `-1` |
 | `ss_runtime_set_source_event_threshold(ctx, handle, threshold)` | `bool` | `false` |
 | `ss_runtime_get_source_event_threshold(ctx, handle)` | `float` | `NaN` |
 

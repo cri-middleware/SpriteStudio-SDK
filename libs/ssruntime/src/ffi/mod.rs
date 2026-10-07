@@ -1597,6 +1597,16 @@ pub extern "C" fn ss_runtime_set_source_frame(context: *mut c_void, handle: u32,
     report(ffi_context, |ctx| ctx.set_source_frame(handle, frame))
 }
 
+/// Which animation the source `handle` plays, as an index into the ssab's
+/// `animations()`; `-1` for a handle that names no source. An event index
+/// addresses the `events()` of the animation of the source that fired it
+/// (`ss_runtime_get_passed_event_source_handle`), track 0's included: after a
+/// crossfade on track 0 that is the incoming animation.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_source_animation_index(context: *mut c_void, handle: u32) -> i32 {
+    get_context(context).and_then(|c| c.ctx.get_source_animation_index(handle)).map(|i| i as i32).unwrap_or(-1)
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_source_frame(context: *mut c_void, handle: u32) -> c_float {
     get_context(context).and_then(|c| c.ctx.get_source_frame(handle)).unwrap_or(f32::NAN)

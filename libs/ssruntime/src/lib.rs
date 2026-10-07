@@ -2274,6 +2274,20 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
+    /// Which animation `handle` plays, as an index into the pack's animations:
+    /// the order of [`AnimationResource::get_animation_names`] and of the
+    /// ssab's `animations()`. `None` for a handle that names no source.
+    ///
+    /// An index from [`Self::get_passed_event_indices`] addresses the `events()`
+    /// of the animation of the source that fired it, so this is how a Player
+    /// decodes an event. Track 0's included: a crossfade on track 0 hands it to
+    /// another animation, and a table kept from `setup_animation` is then the
+    /// wrong one.
+    pub fn get_source_animation_index(&self, handle: u32) -> Option<u32> {
+        let source = self.instance.sources.get(handle as usize)?;
+        source.has_real_animation().then_some(source.animation_idx as u32)
+    }
+
     pub fn get_source_frame(&self, handle: u32) -> Option<f32> {
         let source = self.instance.sources.get(handle as usize)?;
         (source.animation_idx >= 0).then(|| source.controller.get_frame_no())
@@ -6415,6 +6429,10 @@ mod tests {
         assert!(!ss_runtime_set_track_sync(ctx, 1, 2), "an unknown sync is refused");
         assert_eq!(ss_runtime_get_track_sync(ctx, 1), SS_RUNTIME_TRACK_SYNC_START, "and leaves the setting alone");
         assert_eq!(ss_runtime_get_track_sync(ctx, 99), SS_RUNTIME_INVALID_HANDLE);
+
+        let walk = ss_runtime_get_track_main_source(ctx, 0);
+        assert!(ss_runtime_get_source_animation_index(ctx, walk) >= 0);
+        assert_eq!(ss_runtime_get_source_animation_index(ctx, 999), -1);
         ss_runtime_destroy(ctx);
     }
 
@@ -6622,6 +6640,28 @@ mod tests {
         ctx.resume();
         tick(&mut ctx, 100.0);
         assert_ne!(ctx.get_track_frame(1), overlay, "resume did not release the overlay");
+    }
+
+    /// An event's index addresses the firing source's animation, and a
+    /// crossfade on track 0 hands track 0 to another animation, so a Player
+    /// has to be able to ask which animation a source plays.
+    #[test]
+    fn a_source_reports_the_animation_it_plays() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let walk = resource.find_animation_index("walk").unwrap() as u32;
+        let run = resource.find_animation_index("run").unwrap() as u32;
+        let mut ctx = playing_ringo(&resource);
+        let main = ctx.get_track_main_source(0).unwrap();
+        assert_eq!(ctx.get_source_animation_index(main), Some(walk));
+
+        ctx.crossfade(0, "run", 100.0).unwrap();
+        tick(&mut ctx, 200.0);
+        let main = ctx.get_track_main_source(0).unwrap();
+        assert_eq!(ctx.get_source_animation_index(main), Some(run), "track 0 now plays run");
+        assert_eq!(resource.get_animation_names()[run as usize], "run", "the index is the pack's animation order");
+
+        assert_eq!(ctx.get_source_animation_index(999), None);
     }
 
     // --- Track sync ----------------------------------------------------------
