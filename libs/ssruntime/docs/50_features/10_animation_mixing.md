@@ -36,6 +36,20 @@ For an attribute that a track's animation has no keys for, the result from below
 
 Only animations inside one resource (one ssab) can be stacked.
 
+### 1-4. One clock for the whole character
+
+Every track runs on one clock, the character's. An animation laid on a track plays from the moment it is laid, and `ss_runtime_update` advances every track and every fade together. The playback operations act on that clock ([Playback Control §4](../30_core/20_playback_control.md#4-playback-state)):
+
+| Call | Effect on the stack |
+|---|---|
+| `ss_runtime_play` | Rewinds **track 0** to the start of its section and starts the clock. The other tracks keep their playheads |
+| `ss_runtime_pause` / `ss_runtime_resume` | Hold / release every track and every fade |
+| `ss_runtime_stop` | Stops every track and every fade where they stand. Only `play` starts them again |
+
+- **Track 0 finishing does not stop the clock.** When a finite loop count runs out on track 0, the other tracks and the fades carry on. `is_playing`, `is_pausing` and `is_finished` describe track 0, so all three report the finish as usual; a `pause` after it still holds the other tracks, and `resume` releases them.
+- Fades advance with the clock: while it is held or stopped, a fade does not progress.
+- Some settings act on **track 0's animation only**: speed (`ss_runtime_set_speed_scale`), the frame-rate override, frame skip, the playback direction, the loop count and the playback section. A track's own speed is `ss_runtime_set_track_speed`. Tracks other than track 0 loop indefinitely.
+
 ## 2. Playing a single animation
 
 If you do not use mixing, playback works as before.

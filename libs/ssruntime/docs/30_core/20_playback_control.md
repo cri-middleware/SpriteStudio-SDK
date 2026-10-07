@@ -91,10 +91,13 @@ Treat these as four operations. Do not fold `resume` into `play`.
 - **`play` is not resume.** It always starts from the start, so using it to release a pause sends the playhead back to the start.
 - **A pause is a "hold", not a "stop".** `ss_runtime_is_playing` is `true` while paused. `ss_runtime_is_pausing` is what tells the two apart.
 - **`stop` does not rewind.** To show a different position, seek.
+- **They act on the whole character.** With [animation mixing](../50_features/10_animation_mixing.md#1-4-one-clock-for-the-whole-character), `pause` / `resume` / `stop` hold, release and stop every track and every fade. `play` rewinds track 0 only; the other tracks keep their playheads.
 
 ### 4-2. State transitions
 
 The two flags represent **only three** states. If `is_pausing` is true, `is_playing` is also true, so `is_pausing` alone tells you whether playback is paused.
+
+Both flags describe track 0's animation. With animation mixing, once track 0 has finished both read `false` even though the other tracks keep playing, and a `pause` then still holds those tracks without `is_pausing` turning `true`; `resume` releases them ([Animation Mixing §1-4](../50_features/10_animation_mixing.md#1-4-one-clock-for-the-whole-character)).
 
 | State | `is_playing` | `is_pausing` | Advances on `update` |
 | :--- | :--- | :--- | :--- |

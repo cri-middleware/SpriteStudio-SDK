@@ -1240,7 +1240,8 @@ pub extern "C" fn ss_runtime_play_with_start_frame(context: *mut c_void, frame_n
     }
 }
 
-/// Holds playback where it stands, keeping the current frame.
+/// Holds playback where it stands, keeping the current frame. With animation
+/// mixing it holds every track and every fade, as `ss_runtime_stop` stops them.
 ///
 /// Idempotent: pausing an already-paused animation leaves it paused.
 /// `ss_runtime_is_playing` stays true while held — a pause is a hold, not a

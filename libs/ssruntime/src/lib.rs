@@ -3120,8 +3120,12 @@ impl<'a> Context<'a> {
         self.instance.primary_source().controller.is_playing_forward()
     }
 
+    /// `true` while a playing character is held. Implies [`Self::is_playing`],
+    /// so the pair reads as three states. Once track 0 has finished, a pause
+    /// still holds the other tracks and the fades, but this reads `false`
+    /// along with `is_playing`.
     pub fn is_pausing(&self) -> bool {
-        self.instance.clock.pausing
+        self.instance.clock.pausing && self.is_playing()
     }
 
     pub fn get_skip_frames(&self) -> bool {
@@ -6398,17 +6402,20 @@ mod tests {
     fn track_sync_round_trips_through_the_c_abi() {
         use crate::ffi::*;
         let ssab = load_ringo_resource();
-        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
-        let (ctx, _) = ringo_ctx(&resource, "walk");
+        let bytes = ssab.as_slice();
+        // The C functions take the context `ss_runtime_create` hands out, not a
+        // bare `Context`: they write the last error into it.
+        let ctx = ss_runtime_create();
+        assert!(unsafe { ss_runtime_load_ssab_copy(ctx, bytes.as_ptr(), bytes.len()) });
+        assert!(unsafe { ss_runtime_setup_animation_by_hash(ctx, fnv1a_hash_str("walk")) });
 
-        let boxed = Box::into_raw(Box::new(ctx)) as *mut ::core::ffi::c_void;
-        assert_eq!(ss_runtime_get_track_sync(boxed, 0), SS_RUNTIME_TRACK_SYNC_FREE);
-        assert!(ss_runtime_set_track_sync(boxed, 1, SS_RUNTIME_TRACK_SYNC_START));
-        assert_eq!(ss_runtime_get_track_sync(boxed, 1), SS_RUNTIME_TRACK_SYNC_START);
-        assert!(!ss_runtime_set_track_sync(boxed, 1, 2), "an unknown sync is refused");
-        assert_eq!(ss_runtime_get_track_sync(boxed, 1), SS_RUNTIME_TRACK_SYNC_START, "and leaves the setting alone");
-        assert_eq!(ss_runtime_get_track_sync(boxed, 99), SS_RUNTIME_INVALID_HANDLE);
-        drop(unsafe { Box::from_raw(boxed as *mut Context) });
+        assert_eq!(ss_runtime_get_track_sync(ctx, 0), SS_RUNTIME_TRACK_SYNC_FREE);
+        assert!(ss_runtime_set_track_sync(ctx, 1, SS_RUNTIME_TRACK_SYNC_START));
+        assert_eq!(ss_runtime_get_track_sync(ctx, 1), SS_RUNTIME_TRACK_SYNC_START);
+        assert!(!ss_runtime_set_track_sync(ctx, 1, 2), "an unknown sync is refused");
+        assert_eq!(ss_runtime_get_track_sync(ctx, 1), SS_RUNTIME_TRACK_SYNC_START, "and leaves the setting alone");
+        assert_eq!(ss_runtime_get_track_sync(ctx, 99), SS_RUNTIME_INVALID_HANDLE);
+        ss_runtime_destroy(ctx);
     }
 
     #[test]
@@ -6589,6 +6596,32 @@ mod tests {
         tick(&mut ctx, 100.0);
         assert_ne!(ctx.get_track_frame(1), overlay, "the overlay stopped with track 0");
         assert_ne!(ctx.get_track_alpha(1), alpha, "the fade stopped with track 0");
+    }
+
+    /// After track 0 finishes the clock still runs, so a pause still holds the
+    /// other tracks. It is not reported, though: `is_pausing` implies
+    /// `is_playing`, and the pair keeps reading as three states.
+    #[test]
+    fn a_pause_after_track_zero_finishes_holds_the_rest_without_reporting_a_hold() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "attack1");
+        ctx.set_loop_count(1);
+        ctx.play();
+        ctx.set_track_animation(1, "run").unwrap();
+        while !ctx.is_finished() {
+            tick(&mut ctx, 1000.0 / 60.0);
+        }
+
+        ctx.pause();
+        assert!(!ctx.is_playing() && !ctx.is_pausing(), "still the finished state, not a fourth one");
+        let overlay = ctx.get_track_frame(1);
+        tick(&mut ctx, 100.0);
+        assert_eq!(ctx.get_track_frame(1), overlay, "the pause did not hold the overlay");
+
+        ctx.resume();
+        tick(&mut ctx, 100.0);
+        assert_ne!(ctx.get_track_frame(1), overlay, "resume did not release the overlay");
     }
 
     // --- Track sync ----------------------------------------------------------
