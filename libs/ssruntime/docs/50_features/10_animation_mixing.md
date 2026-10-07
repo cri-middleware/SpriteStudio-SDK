@@ -119,7 +119,28 @@ ss_runtime_set_source_frame(ctx, run, 0.0f);
 
 `ss_runtime_get_track_main_source` returns the handle of the animation that `ss_runtime_set_track_animation` (or `ss_runtime_setup_animation`) put on the track. `weight` starts at 1.
 
-`weight` is a ratio, not an absolute value (`(0.7, 0.3)` and `(7, 3)` give the same result). Each source has its own playback clock, and `ss_runtime_update` advances them all. **Sources of different lengths do not stay in phase.** To align them, seek them in the Player.
+`weight` is a ratio, not an absolute value (`(0.7, 0.3)` and `(7, 3)` give the same result). Each source has its own playhead, and `ss_runtime_update` advances them all. **Sources of different lengths do not stay in phase.** To start one in phase with track 0, use track sync (§5-1); to keep them aligned, seek them in the Player.
+
+### 5-1. Starting in phase with track 0
+
+An animation laid on a track starts from the head of its section. When a run is laid over a walk that is half-way through its stride, the feet disagree. Set the track's sync to `SS_RUNTIME_TRACK_SYNC_START` and what is laid on it next starts at the **phase** track 0's animation stands at: how far through its section it is, as a fraction from `0.0` at the start towards `1.0` at the end. Animations of different lengths line up by proportion.
+
+```cpp
+ss_runtime_set_track_sync(ctx, 0, SS_RUNTIME_TRACK_SYNC_START);
+ss_runtime_crossfade(ctx, 0, "run", 300.0f);   // run starts at the walk's phase
+```
+
+| | `SS_RUNTIME_TRACK_SYNC_FREE` (default) | `SS_RUNTIME_TRACK_SYNC_START` |
+|---|---|---|
+| Where a laid animation starts | The head of its section | The same fraction of its section as track 0's animation |
+| Suited to | One-off motions: a blink, a mouth shape, an attack | Cyclic motions laid over one another: walk and run |
+
+- It applies to everything laid on the track afterwards: `ss_runtime_set_track_animation`, `ss_runtime_crossfade` (on track 0 too, where the incoming animation starts at the outgoing one's phase) and `ss_runtime_add_track_source`. **Set it before laying.** A track with nothing on it yet is created for it.
+- The reference is track 0's main animation. During a crossfade on track 0 that is still the outgoing one.
+- The phase is read by position in the section, not by direction: a backward or ping-pong return leg starts the other animation where it stands.
+- It aligns once, when the animation is laid. Both then run on the same clock, so animations of the same length and speed stay in phase; different lengths or speeds drift apart again.
+- Looping is unchanged. Tracks other than track 0 loop indefinitely, so an animation started part-way through wraps at its end as usual.
+- Like a track's alpha and blend, it belongs to the track: `ss_runtime_setup_animation` collapses the stack and every track starts over at `FREE`.
 
 ## 6. Events
 
@@ -153,6 +174,8 @@ Get the reason for a failure with `ss_runtime_get_last_error(ctx)`. Functions th
 | `ss_runtime_get_track_alpha(ctx, track)` | `float` | `NaN` |
 | `ss_runtime_set_track_blend(ctx, track, blend)` | `bool` | `false` |
 | `ss_runtime_get_track_blend(ctx, track)` | `uint32_t` (`0` = Mix / `1` = Additive) | `SS_RUNTIME_INVALID_HANDLE` |
+| `ss_runtime_set_track_sync(ctx, track, sync)` | `bool` | `false` |
+| `ss_runtime_get_track_sync(ctx, track)` | `uint32_t` (`0` = Free / `1` = Start) | `SS_RUNTIME_INVALID_HANDLE` |
 | `ss_runtime_get_track_count(ctx)` | `uint32_t` | `0` |
 | `ss_runtime_clear_track(ctx, track)` | `bool` | `false` (track 0 cannot be emptied) |
 | `ss_runtime_set_track_frame(ctx, track, frame)` | `bool` | `false` |
@@ -194,6 +217,7 @@ ctx.set_track_animation(1, "look_around");
 ctx.set_track_blend(1, 1);          // 1 = Additive
 ctx.set_track_alpha(1, 0.4);
 
+ctx.set_track_sync(0, 1);           // 1 = Start
 ctx.crossfade(0, "run", 300.0);
 const progress = ctx.get_track_fade_progress(0);   // number | undefined
 

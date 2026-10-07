@@ -1325,6 +1325,10 @@ pub const SS_RUNTIME_INVALID_HANDLE: u32 = u32::MAX;
 pub const SS_RUNTIME_TRACK_BLEND_MIX: u32 = 0;
 pub const SS_RUNTIME_TRACK_BLEND_ADDITIVE: u32 = 1;
 
+/// Where the animations laid on a track start, mirroring [`crate::TrackSync`].
+pub const SS_RUNTIME_TRACK_SYNC_FREE: u32 = 0;
+pub const SS_RUNTIME_TRACK_SYNC_START: u32 = 1;
+
 // Animation mixing — the track stack. Tracks fold onto the setup pose in
 // ascending order: `alpha` is a track's strength, `weight` only decides
 // proportions among several sources sharing one track. Track 0 carries the
@@ -1396,6 +1400,35 @@ pub extern "C" fn ss_runtime_get_track_blend(context: *mut c_void, track: u32) -
     match get_context(context).and_then(|c| c.ctx.get_track_blend(track)) {
         Some(crate::TrackBlend::Mix) => SS_RUNTIME_TRACK_BLEND_MIX,
         Some(crate::TrackBlend::Additive) => SS_RUNTIME_TRACK_BLEND_ADDITIVE,
+        None => SS_RUNTIME_INVALID_HANDLE,
+    }
+}
+
+/// `sync` is one of `SS_RUNTIME_TRACK_SYNC_*`. Set it before laying an
+/// animation on the track; a track with nothing on it yet is created for it.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_track_sync(context: *mut c_void, track: u32, sync: u32) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = None;
+    let sync = match sync {
+        SS_RUNTIME_TRACK_SYNC_FREE => crate::TrackSync::Free,
+        SS_RUNTIME_TRACK_SYNC_START => crate::TrackSync::Start,
+        _ => {
+            ffi_context.fail("ss_runtime_set_track_sync", crate::error::SSRuntimeError::InvalidParameter);
+            return false;
+        }
+    };
+    report(ffi_context, |ctx| ctx.set_track_sync(track, sync))
+}
+
+/// Returns `SS_RUNTIME_INVALID_HANDLE` for a track that does not exist.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_track_sync(context: *mut c_void, track: u32) -> u32 {
+    match get_context(context).and_then(|c| c.ctx.get_track_sync(track)) {
+        Some(crate::TrackSync::Free) => SS_RUNTIME_TRACK_SYNC_FREE,
+        Some(crate::TrackSync::Start) => SS_RUNTIME_TRACK_SYNC_START,
         None => SS_RUNTIME_INVALID_HANDLE,
     }
 }

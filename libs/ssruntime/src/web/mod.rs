@@ -729,6 +729,24 @@ impl SSRuntimeContext {
         })
     }
 
+    /// `sync`: 0 = free (start from the head), 1 = start (start at track 0's phase).
+    /// Set it before laying an animation on the track.
+    pub fn set_track_sync(&mut self, track: u32, sync: u32) -> Result<(), JsValue> {
+        let sync = match sync {
+            0 => crate::TrackSync::Free,
+            1 => crate::TrackSync::Start,
+            _ => return Err(JsValue::from_str("sync must be 0 (free) or 1 (start)")),
+        };
+        self.inner.set_track_sync(track, sync).map_err(js_error)
+    }
+
+    pub fn get_track_sync(&self, track: u32) -> Option<u32> {
+        self.inner.get_track_sync(track).map(|s| match s {
+            crate::TrackSync::Free => 0,
+            crate::TrackSync::Start => 1,
+        })
+    }
+
     pub fn get_track_count(&self) -> u32 {
         self.inner.get_track_count()
     }
