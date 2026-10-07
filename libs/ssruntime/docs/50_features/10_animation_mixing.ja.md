@@ -36,6 +36,20 @@ track 0 が **構造** を受け持ちます。離散的なアトリビュート
 
 1 つのリソース（1 つの ssab）の中のアニメーションだけを積めます。
 
+### 1-4. キャラクター全体で 1 つの時計
+
+すべてのトラックは、キャラクターの 1 つの時計で動きます。トラックに載せたアニメーションは載せた時点から再生され、`ss_runtime_update` がすべてのトラックとすべてのフェードをまとめて進めます。再生の操作はこの時計に対して働きます（[再生制御 §4](../30_core/20_playback_control.ja.md#4-再生の状態)）。
+
+| 呼び出し | スタックへの効果 |
+|---|---|
+| `ss_runtime_play` | **track 0** を再生区間の先頭へ戻し、時計を動かします。他のトラックは再生位置をそのまま保ちます |
+| `ss_runtime_pause` / `ss_runtime_resume` | すべてのトラックとすべてのフェードを止める／再開します |
+| `ss_runtime_stop` | すべてのトラックとすべてのフェードをその場で止めます。再開できるのは `play` だけです |
+
+- **track 0 が終わっても時計は止まりません。** track 0 で有限のループ回数を使い切っても、他のトラックとフェードは進み続けます。`is_playing`・`is_pausing`・`is_finished` は track 0 の状態を表すので、3 つとも通常どおり終了を報告します。終了後の `pause` は他のトラックを止め、`resume` で再開します。
+- フェードは時計と一緒に進みます。一時停止中や停止中は、フェードも進みません。
+- **track 0 のアニメーションにだけ**効く設定があります。速度（`ss_runtime_set_speed_scale`）、フレームレートの上書き、フレームスキップ、再生方向、ループ回数、再生区間です。トラックごとの速度は `ss_runtime_set_track_speed` で設定します。track 0 以外のトラックは無限にループします。
+
 ## 2. 1 本のアニメーションを再生する
 
 ミキシングを使わない場合は、これまでどおりです。
@@ -119,11 +133,32 @@ ss_runtime_set_source_frame(ctx, run, 0.0f);
 
 `ss_runtime_get_track_main_source` は、`ss_runtime_set_track_animation`（か `ss_runtime_setup_animation`）がそのトラックに載せたアニメーションのハンドルを返します。`weight` は 1 から始まります。
 
-`weight` は絶対値ではなく比率です（`(0.7, 0.3)` と `(7, 3)` は同じ結果）。ソースはそれぞれ自分の再生の時計を持ち、`ss_runtime_update` がすべてを進めます。**尺の違うソースの位相はそろいません。** そろえたい場合は、Player がシークしてください。
+`weight` は絶対値ではなく比率です（`(0.7, 0.3)` と `(7, 3)` は同じ結果）。ソースはそれぞれ自分の再生ヘッドを持ち、`ss_runtime_update` がすべてを進めます。**尺の違うソースの位相はそろいません。** track 0 と同じ位相から始めるにはトラックの同期（§5-1）を使います。そろえ続けたい場合は、Player がシークしてください。
+
+### 5-1. track 0 と同じ位相から始める
+
+トラックに載せたアニメーションは、再生区間の先頭から始まります。歩幅の途中にいる歩きの上に走りを載せると、足の運びが食い違います。トラックの同期を `SS_RUNTIME_TRACK_SYNC_START` にすると、そのあと載せたアニメーションは、track 0 のアニメーションがいる**位相**から始まります。位相とは、再生区間のどこまで進んだかを、区間の先頭を `0.0`、終端に向かって `1.0` とした割合で表したものです。尺の違うアニメーションも、割合でそろいます。
+
+```cpp
+ss_runtime_set_track_sync(ctx, 0, SS_RUNTIME_TRACK_SYNC_START);
+ss_runtime_crossfade(ctx, 0, "run", 300.0f);   // 走りは歩きと同じ位相から始まる
+```
+
+| | `SS_RUNTIME_TRACK_SYNC_FREE`（既定） | `SS_RUNTIME_TRACK_SYNC_START` |
+|---|---|---|
+| 載せたアニメーションの開始位置 | 再生区間の先頭 | track 0 のアニメーションと同じ、再生区間の中の割合の位置 |
+| 向いている使い方 | 一回きりの動き（まばたき、口の形、攻撃など） | 周期的な動きどうしを重ねる（歩きと走りなど） |
+
+- そのあとトラックに載せるすべての操作に効きます。`ss_runtime_set_track_animation`、`ss_runtime_crossfade`（track 0 でも効き、入ってくるアニメーションは出ていくアニメーションの位相から始まる）、`ss_runtime_add_track_source` です。**載せる前に設定してください。** まだ何も載っていないトラックは、このために作られます。
+- 基準は track 0 の主アニメーションです。track 0 がクロスフェード中なら、まだ出ていく側が主アニメーションです。
+- 位相は、進行方向ではなく再生区間の中の位置で読みます。逆再生や往復再生の戻りの途中でも、その位置から相手のアニメーションを始めます。
+- そろえるのは、アニメーションを載せたときの 1 回だけです。その後は両方が同じ時計で進むので、尺と速度が同じなら位相はそろったままです。尺や速度が違えば、またずれていきます。
+- ループの扱いは変わりません。track 0 以外のトラックは無限にループするので、途中から始めたアニメーションも、終端に達すれば通常どおり先頭に戻ります。
+- トラックの alpha や blend と同じく、トラックの設定です。`ss_runtime_setup_animation` がスタックをたたむと、どのトラックも `FREE` に戻ります。
 
 ## 6. イベント
 
-既定では、track 0 のアニメーションだけがイベントを発火します。他のソースも発火させるには、そのソースの閾値を、その `weight` 以下に下げます。`weight >= 閾値` のソースのイベントが報告されます。
+既定では、track 0 のアニメーションだけがイベントを発火します。他のソースも発火させるには、そのソースの閾値を、その `weight` 以下に下げます。`weight >= 閾値` のソースのイベントが報告されます。閾値の既定値は `+∞` で、どの weight も届かないため、他のトラックに1つだけ載せたソースも weight 1 では発火しません。
 
 ```cpp
 ss_runtime_set_source_event_threshold(ctx, run, 0.5f);   // run の weight が 0.5 以上なら発火する
@@ -153,6 +188,8 @@ for (int i = 0; i < n; ++i) {
 | `ss_runtime_get_track_alpha(ctx, track)` | `float` | `NaN` |
 | `ss_runtime_set_track_blend(ctx, track, blend)` | `bool` | `false` |
 | `ss_runtime_get_track_blend(ctx, track)` | `uint32_t`（`0` = Mix / `1` = Additive） | `SS_RUNTIME_INVALID_HANDLE` |
+| `ss_runtime_set_track_sync(ctx, track, sync)` | `bool` | `false` |
+| `ss_runtime_get_track_sync(ctx, track)` | `uint32_t`（`0` = Free / `1` = Start） | `SS_RUNTIME_INVALID_HANDLE` |
 | `ss_runtime_get_track_count(ctx)` | `uint32_t` | `0` |
 | `ss_runtime_clear_track(ctx, track)` | `bool` | `false`（track 0 は空にできない） |
 | `ss_runtime_set_track_frame(ctx, track, frame)` | `bool` | `false` |
@@ -180,6 +217,7 @@ for (int i = 0; i < n; ++i) {
 | `ss_runtime_get_source_weight(ctx, handle)` | `float` | `NaN` |
 | `ss_runtime_set_source_frame(ctx, handle, frame)` | `bool` | `false` |
 | `ss_runtime_get_source_frame(ctx, handle)` | `float` | `NaN` |
+| `ss_runtime_get_source_animation_index(ctx, handle)` | `int32_t` | `-1` |
 | `ss_runtime_set_source_event_threshold(ctx, handle, threshold)` | `bool` | `false` |
 | `ss_runtime_get_source_event_threshold(ctx, handle)` | `float` | `NaN` |
 
@@ -194,6 +232,7 @@ ctx.set_track_animation(1, "look_around");
 ctx.set_track_blend(1, 1);          // 1 = Additive
 ctx.set_track_alpha(1, 0.4);
 
+ctx.set_track_sync(0, 1);           // 1 = Start
 ctx.crossfade(0, "run", 300.0);
 const progress = ctx.get_track_fade_progress(0);   // number | undefined
 

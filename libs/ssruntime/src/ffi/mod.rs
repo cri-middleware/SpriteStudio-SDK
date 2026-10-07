@@ -1240,7 +1240,8 @@ pub extern "C" fn ss_runtime_play_with_start_frame(context: *mut c_void, frame_n
     }
 }
 
-/// Holds playback where it stands, keeping the current frame.
+/// Holds playback where it stands, keeping the current frame. With animation
+/// mixing it holds every track and every fade, as `ss_runtime_stop` stops them.
 ///
 /// Idempotent: pausing an already-paused animation leaves it paused.
 /// `ss_runtime_is_playing` stays true while held — a pause is a hold, not a
@@ -1325,6 +1326,10 @@ pub const SS_RUNTIME_INVALID_HANDLE: u32 = u32::MAX;
 pub const SS_RUNTIME_TRACK_BLEND_MIX: u32 = 0;
 pub const SS_RUNTIME_TRACK_BLEND_ADDITIVE: u32 = 1;
 
+/// Where the animations laid on a track start, mirroring [`crate::TrackSync`].
+pub const SS_RUNTIME_TRACK_SYNC_FREE: u32 = 0;
+pub const SS_RUNTIME_TRACK_SYNC_START: u32 = 1;
+
 // Animation mixing — the track stack. Tracks fold onto the setup pose in
 // ascending order: `alpha` is a track's strength, `weight` only decides
 // proportions among several sources sharing one track. Track 0 carries the
@@ -1396,6 +1401,35 @@ pub extern "C" fn ss_runtime_get_track_blend(context: *mut c_void, track: u32) -
     match get_context(context).and_then(|c| c.ctx.get_track_blend(track)) {
         Some(crate::TrackBlend::Mix) => SS_RUNTIME_TRACK_BLEND_MIX,
         Some(crate::TrackBlend::Additive) => SS_RUNTIME_TRACK_BLEND_ADDITIVE,
+        None => SS_RUNTIME_INVALID_HANDLE,
+    }
+}
+
+/// `sync` is one of `SS_RUNTIME_TRACK_SYNC_*`. Set it before laying an
+/// animation on the track; a track with nothing on it yet is created for it.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_track_sync(context: *mut c_void, track: u32, sync: u32) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = None;
+    let sync = match sync {
+        SS_RUNTIME_TRACK_SYNC_FREE => crate::TrackSync::Free,
+        SS_RUNTIME_TRACK_SYNC_START => crate::TrackSync::Start,
+        _ => {
+            ffi_context.fail("ss_runtime_set_track_sync", crate::error::SSRuntimeError::InvalidParameter);
+            return false;
+        }
+    };
+    report(ffi_context, |ctx| ctx.set_track_sync(track, sync))
+}
+
+/// Returns `SS_RUNTIME_INVALID_HANDLE` for a track that does not exist.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_track_sync(context: *mut c_void, track: u32) -> u32 {
+    match get_context(context).and_then(|c| c.ctx.get_track_sync(track)) {
+        Some(crate::TrackSync::Free) => SS_RUNTIME_TRACK_SYNC_FREE,
+        Some(crate::TrackSync::Start) => SS_RUNTIME_TRACK_SYNC_START,
         None => SS_RUNTIME_INVALID_HANDLE,
     }
 }
@@ -1561,6 +1595,16 @@ pub extern "C" fn ss_runtime_set_source_frame(context: *mut c_void, handle: u32,
     };
     ffi_context.last_error = None;
     report(ffi_context, |ctx| ctx.set_source_frame(handle, frame))
+}
+
+/// Which animation the source `handle` plays, as an index into the ssab's
+/// `animations()`; `-1` for a handle that names no source. An event index
+/// addresses the `events()` of the animation of the source that fired it
+/// (`ss_runtime_get_passed_event_source_handle`), track 0's included: after a
+/// crossfade on track 0 that is the incoming animation.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_source_animation_index(context: *mut c_void, handle: u32) -> i32 {
+    get_context(context).and_then(|c| c.ctx.get_source_animation_index(handle)).map(|i| i as i32).unwrap_or(-1)
 }
 
 #[unsafe(no_mangle)]
@@ -1860,7 +1904,7 @@ pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index:
 /// Which source fired the collected event at `index` — parallel to
 /// `ss_runtime_get_passed_event_index`, and read with the same index.
 ///
-/// With every source at the default event threshold (`1.0`) this is uniformly
+/// With every source at the default event threshold (`+∞`) this is uniformly
 /// `ss_runtime_get_track_main_source` of track 0, so a Player that does not use
 /// animation mixing can ignore it. It diverges once a secondary source opts in
 /// to firing events via `ss_runtime_set_source_event_threshold`, and that is

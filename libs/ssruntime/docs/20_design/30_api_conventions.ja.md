@@ -136,6 +136,7 @@ C-API は `ss_runtime_set_part_color_override(context, part, blend_op, rgba, pri
 | トラックを空にする | `clearTrack` |
 | 下のポーズにどれだけ重ねるか | `trackAlpha` |
 | どう重ねるか（`Mix` / `Additive`） | `trackBlend` |
+| トラックに載せたアニメーションをどこから始めるか（`Free` / `Start`） | `trackSync` |
 | トラックの再生ヘッド | `trackFrame` |
 | トラックの速度 | `trackSpeed` |
 | トラックのアニメーションを差し替えながらフェードする | `crossfade` |

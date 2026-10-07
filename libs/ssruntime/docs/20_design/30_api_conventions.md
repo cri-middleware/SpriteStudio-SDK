@@ -136,6 +136,7 @@ A **track** layers onto the pose the tracks below it produced. A **source** is o
 | Empty a track | `clearTrack` |
 | How strongly the track layers onto the pose below | `trackAlpha` |
 | How it layers (`Mix` / `Additive`) | `trackBlend` |
+| Where an animation laid on the track starts (`Free` / `Start`) | `trackSync` |
 | The track's playhead | `trackFrame` |
 | The track's speed | `trackSpeed` |
 | Fade while replacing the track's animation | `crossfade` |
