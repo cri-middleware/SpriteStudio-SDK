@@ -137,20 +137,10 @@ pub fn passed_reaches_key(passed_frames: &[i32], set_frame: i32, first_eval: boo
 }
 
 /// True when `run` (surviving keyframes, sorted ascending by frame) has a
-/// keyframe exactly at frame `f`. Binary search, `O(log n)`.
+/// keyframe exactly at frame `f`: the last key at or before `f` sits on it.
 fn run_has_key_at(keys: &KeyColumns, run: Option<crate::core::keyframes::KeyRun>, f: i32) -> bool {
     let Some(run) = run else { return false };
-    let first = run.first() as usize;
-    let (mut lo, mut hi) = (0usize, run.count() as usize);
-    while lo < hi {
-        let mid = lo + (hi - lo) / 2;
-        match (keys.key(first + mid).index() as i32).cmp(&f) {
-            core::cmp::Ordering::Equal => return true,
-            core::cmp::Ordering::Less => lo = mid + 1,
-            core::cmp::Ordering::Greater => hi = mid,
-        }
-    }
-    false
+    keys.frames(&run).locate(f as f32, &mut 0).is_some_and(|i| keys.key(run.first() as usize + i).index() as i32 == f)
 }
 
 /// Apply the override table on the resolved pose at the seam.
