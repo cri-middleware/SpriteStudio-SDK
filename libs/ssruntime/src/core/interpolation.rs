@@ -419,21 +419,20 @@ pub fn evaluate_vertex(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint:
 pub fn evaluate_skew(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<(f32, f32)> {
     search_prev_next(keys, run, frame_no, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
-            let prev_value = prev.skew();
+            let (prev_x, prev_y) = prev.skew();
             let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
-                return (prev_value.v1(), prev_value.v2());
+                return (prev_x, prev_y);
             }
 
             let next_index = next.index() as i32 as f32;
             let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
 
-            let next_value = next.skew();
-            (linear(prev_value.v1(), next_value.v1(), rate), linear(prev_value.v2(), next_value.v2(), rate))
+            let (next_x, next_y) = next.skew();
+            (linear(prev_x, next_x, rate), linear(prev_y, next_y, rate))
         } else {
-            let prev_value = prev.skew();
-            (prev_value.v1(), prev_value.v2())
+            prev.skew()
         }
     })
 }

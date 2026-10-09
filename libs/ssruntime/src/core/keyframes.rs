@@ -4,7 +4,7 @@
 use crate::core::framedata::ResolvedCellMeta;
 use crate::runtime;
 use flatbuffers::{ForwardsUOffset, Vector};
-use ssab::ssab::ss::format::{CellMap, InterpolationType, KeyCurve, Keyframes, PartAttributeCell, PartAttributeDeform, Vec2};
+use ssab::ssab::ss::format::{CellMap, InterpolationType, KeyCurve, Keyframes, PartAttributeCell, PartAttributeDeform};
 
 use ssab::{NO_CURVE, NO_KEYS};
 
@@ -40,9 +40,10 @@ pub struct CellValue {
 }
 
 /// The pack's keyframe columns, looked up once when the pack is loaded. The
-/// compound values its keys share are decoded then too, cells resolved against
-/// the cellmaps, so every animation reads a key's value by index instead of
-/// decoding it again.
+/// fixed-size compound values its keys share are decoded then too, cells
+/// resolved against the cellmaps, so every animation reads a key's value by
+/// index instead of decoding it again. Deforms vary in length and are read
+/// from the pack as they are.
 pub struct KeyColumns<'a> {
     runs: Vector<'a, u32>,
     frame: Vector<'a, u16>,
@@ -55,7 +56,8 @@ pub struct KeyColumns<'a> {
     part_colors: alloc::boxed::Box<[runtime::framedata::ss::runtime::PartAttributePartColor]>,
     shaders: alloc::boxed::Box<[runtime::framedata::ss::runtime::PartAttributeShader]>,
     vertices: alloc::boxed::Box<[runtime::framedata::ss::runtime::PartAttributeVertex]>,
-    skews: Vector<'a, ForwardsUOffset<Vec2<'a>>>,
+    /// `(x, y)`.
+    skews: alloc::boxed::Box<[(f32, f32)]>,
     deforms: Vector<'a, ForwardsUOffset<PartAttributeDeform<'a>>>,
 }
 
@@ -78,7 +80,7 @@ impl<'a> KeyColumns<'a> {
             part_colors: keyframes.part_colors().iter().map(|c| transfer_partcolor(&c)).collect(),
             shaders: keyframes.shaders().iter().map(|s| transfer_shader(&s)).collect(),
             vertices: keyframes.vertices().iter().map(|v| transfer_vertex(&v)).collect(),
-            skews: keyframes.skews(),
+            skews: keyframes.skews().iter().map(|s| (s.v1(), s.v2())).collect(),
             deforms: keyframes.deforms(),
         }
     }
@@ -200,8 +202,8 @@ impl<'c, 'a> Key<'c, 'a> {
     }
 
     #[inline]
-    pub fn skew(&self) -> Vec2<'a> {
-        self.columns.skews.get(self.bits() as usize)
+    pub fn skew(&self) -> (f32, f32) {
+        self.columns.skews[self.bits() as usize]
     }
 
     #[inline]
@@ -306,7 +308,7 @@ fn transfer_vertex(source: &ssab::ssab::ss::format::PartAttributeVertex) -> runt
 #[cfg(test)]
 pub(crate) fn create_empty_keyframes<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>) -> flatbuffers::WIPOffset<Keyframes<'a>> {
     use flatbuffers::WIPOffset;
-    use ssab::ssab::ss::format::{PartAttributePartColor, PartAttributeShader, PartAttributeVertex};
+    use ssab::ssab::ss::format::{PartAttributePartColor, PartAttributeShader, PartAttributeVertex, Vec2};
     let args = ssab::ssab::ss::format::KeyframesArgs {
         runs: Some(fb.create_vector::<u32>(&[0])),
         frame: Some(fb.create_vector::<u16>(&[])),
