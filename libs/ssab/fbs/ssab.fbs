@@ -675,18 +675,6 @@ table Label {
   time: int;
 }
 
-table PartAnimationDataInstance {
-  index: ushort (key);
-
-  value: PartAttributeInstance (required);
-}
-
-table PartAnimationDataEffect {
-  index: ushort (key);
-
-  value: PartAttributeEffect (required);
-}
-
 // One part's keyframes in one animation, an attribute at a time: the run in
 // `SsAnimeBinary.keyframes` that holds them, or the default, 0xFFFFFFFF, when
 // the animation has no keys for that attribute on this part.
