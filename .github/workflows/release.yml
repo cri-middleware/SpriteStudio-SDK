@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
     inputs:
       upload_release:
-        description: 'Create a draft GitHub Release (publish by hand afterwards). Requires dispatching from a v* tag.'
+        description: 'Draft the GitHub Release, to publish by hand. Only from a v* tag that has no Release yet; from a branch the run is a build.'
         required: false
-        default: false
+        default: true
         type: boolean
 
 env:
@@ -331,17 +331,30 @@ jobs:
         with:
           tool: cargo-about
 
-      # A release is a tag that was pushed first and dispatched from second, so
-      # asking to upload from anything else is an operator error, not a mode.
-      # Failing here beats the silent `if: startsWith(github.ref, …)` skip: a
-      # dispatch that was meant to cut a release should not report success and
-      # quietly produce no Release. Leave upload_release=false to build the
-      # artifacts off a branch.
-      - name: Refuse to release from a non-tag ref
-        if: inputs.upload_release && !startsWith(github.ref, 'refs/tags/v')
+      # The ref decides what the run is: a v* tag is a release, anything else is
+      # a build, kept on the run and drafting nothing. A tag that already has a
+      # Release, draft or published, keeps it as it is, so a run from an old tag
+      # rebuilds without touching the files people have downloaded and checked
+      # against its SHA256SUMS. To have a Release made again, delete it first.
+      - name: Decide on the GitHub Release
+        id: release
+        if: inputs.upload_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          echo "::error::upload_release=true needs a v* tag. Push the tag first, then dispatch this workflow from it (Use workflow from → the tag)."
-          exit 1
+          case "$GITHUB_REF" in
+            refs/tags/v*) ;;
+            *) echo "::notice::${GITHUB_REF_NAME} is not a v* tag — a build, no Release."; exit 0 ;;
+          esac
+          if out="$(gh release view "$GITHUB_REF_NAME" --json isDraft 2>&1)"; then
+            echo "::notice::${GITHUB_REF_NAME} already has a Release — left as it is. Delete it to have it made again."
+          elif [ "$out" = "release not found" ]; then
+            echo "draft=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "$out"
+            exit 1
+          fi
 
       # scripts/build-release.sh IS the release package: the third-party notices,
       # the static/ dynamic/ web/ layout every Player's download-sdk.sh reads, the
@@ -358,8 +371,8 @@ jobs:
         run: ./scripts/build-release.sh in=artifacts out=release-dist licenses=yes verify=yes clean=yes
 
       # Keep the assembled archives on the run even when nothing is uploaded to a
-      # Release, so a dispatch with upload_release=false is still useful — and so
-      # the zips a human reviews are the same bytes the Release would carry.
+      # Release, so a build from a branch is still useful — and so the zips a
+      # human reviews are the same bytes the Release would carry.
       - name: Upload final release package
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -369,13 +382,13 @@ jobs:
           retention-days: 7 # see the first upload step
 
       - name: Create GitHub Release
-        if: inputs.upload_release
+        if: steps.release.outputs.draft == 'true'
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: |
             release-dist/*.zip
             release-dist/SHA256SUMS
-          # The ref this was dispatched from, which the step above has already
+          # The ref this was dispatched from, which the decision above has
           # established is a v* tag — the same string build-release.sh stamped
           # into every archive's VERSION.
           tag_name: ${{ github.ref_name }}
