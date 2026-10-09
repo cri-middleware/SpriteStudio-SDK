@@ -320,7 +320,7 @@ impl NinesBuffers {
 pub struct CachedPartData {
     pub part_index: i16,
     pub parent_index: i16,
-    /// Which continuous attributes ([`MIXED_ATTRIBUTES`]) this animation actually
+    /// Which continuous attributes (`MIXED_ATTRIBUTES`) this animation actually
     /// keys on this part. Decided **per animation** (the run exists at all),
     /// never per frame — a per-frame signal would flip at the first key and
     /// make the part pop in and out of the mix mid-playback.
