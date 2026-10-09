@@ -315,7 +315,7 @@ pub fn apply_part_overrides(
             cell_texture_hashes[i] = m.texture_hash;
         }
         // (3) UV channel — compute_local_uvs samples the keyframe cell
-        // (resolved_cells[cursor]) which the seam cannot touch; record the
+        // (the layer's cell_ids) which the seam cannot touch; record the
         // resolved meta so the overridden cell's UV rect / rotation / tex size
         // is what actually gets sampled.
         if i < override_cell_uv_meta.len() {
@@ -373,7 +373,7 @@ mod tests {
         let mut uv_meta = vec![None; n];
         let mut ws = Vec::new();
         let keyframes = crate::core::keyframes::empty_keyframes();
-        let keys = KeyColumns::new(flatbuffers::root::<ssab::ssab::ss::format::Keyframes>(&keyframes).unwrap());
+        let keys = KeyColumns::new(flatbuffers::root::<ssab::ssab::ss::format::Keyframes>(&keyframes).unwrap(), None);
         apply_part_overrides(ovr, cached, &keys, parts, &mut color_vec, &mut cell_vec, &mut cell_meta, &mut tex_hashes, &mut uv_meta, &mut ws, passed_frames);
         (color_vec, cell_vec, cell_meta, tex_hashes, uv_meta)
     }
