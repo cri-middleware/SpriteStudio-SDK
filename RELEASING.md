@@ -63,7 +63,7 @@ git push -u origin "${BRANCH:?}"
 gh pr create -B main -H "${BRANCH:?}" --title "Release v$(scripts/release-version.sh)" --body ""
 ```
 
-Then dispatch the release workflow from the branch. With `upload_release` left false it builds, signs and assembles all seven platforms exactly as the release will, keeps the zips on the run (`spritestudio-sdk-release-dist`), and creates no Release. Fix anything on the branch and run this block again, until the run, the pull request's CI and the documentation build below all pass.
+Then dispatch the release workflow from the branch. A run from a branch builds, signs and assembles all seven platforms exactly as the release will, keeps the zips on the run (`spritestudio-sdk-release-dist`), and creates no Release. Fix anything on the branch and run this block again, until the run, the pull request's CI and the documentation build below all pass.
 
 ```bash
 BRANCH=$(git branch --show-current | grep '^release/')
@@ -121,7 +121,7 @@ gh run watch "${RUN:?}" --exit-status
 gh run view "${RUN:?}" --log | grep -E 'not set|Skipping' | grep -v 'echo '   # must print nothing
 ```
 
-Nothing passes the tag around: `build-release.sh` reads `GITHUB_REF_NAME`, or the tag `HEAD` is checked out at, and stamps it into every archive's `VERSION`. `upload_release=true` from anything but a `v*` tag fails the run rather than skipping the Release quietly.
+Nothing passes the tag around: `build-release.sh` reads `GITHUB_REF_NAME`, or the tag `HEAD` is checked out at, and stamps it into every archive's `VERSION`. A tag that already has a Release, draft or published, keeps it as it is: the run builds, says so in a notice and creates nothing, so delete a draft before dispatching again ([Undoing a release](#undoing-a-release)). With `-f upload_release=false` a run from the tag only builds, its files kept on the run.
 
 ### 6. Publish
 
@@ -252,7 +252,7 @@ git push -u origin "${BRANCH:?}"
 gh pr create -B main -H "${BRANCH:?}" --title "Release v$(scripts/release-version.sh)" --body ""
 ```
 
-続けて、ブランチからリリースワークフローを実行します。`upload_release` を false のままにすると、7 プラットフォームすべてをリリースと同じようにビルド・署名・組み立てし、zip を run に残し（`spritestudio-sdk-release-dist`）、Release は作りません。問題があればブランチで直し、このブロックをもう一度実行します。run、プルリクエストの CI、下のドキュメントのビルドがすべて通るまで繰り返します。
+続けて、ブランチからリリースワークフローを実行します。ブランチからの実行では、7 プラットフォームすべてをリリースと同じようにビルド・署名・組み立てし、zip を run に残し（`spritestudio-sdk-release-dist`）、Release は作りません。問題があればブランチで直し、このブロックをもう一度実行します。run、プルリクエストの CI、下のドキュメントのビルドがすべて通るまで繰り返します。
 
 ```bash
 BRANCH=$(git branch --show-current | grep '^release/')
@@ -310,7 +310,7 @@ gh run watch "${RUN:?}" --exit-status
 gh run view "${RUN:?}" --log | grep -E 'not set|Skipping' | grep -v 'echo '   # 何も出力されないこと
 ```
 
-タグは受け渡されません。`build-release.sh` が `GITHUB_REF_NAME`（ローカルでは `HEAD` のタグ）を読み、各アーカイブの `VERSION` に刻みます。`v*` タグ以外からの `upload_release=true` は、Release を黙って飛ばさずに実行を失敗させます。
+タグは受け渡されません。`build-release.sh` が `GITHUB_REF_NAME`（ローカルでは `HEAD` のタグ）を読み、各アーカイブの `VERSION` に刻みます。Release がすでにあるタグでは、下書きでも公開済みでも、その Release に触れません。run はビルドして notice を出すだけなので、もう一度実行するときは先に下書きを消します（[リリースの取り消し](#リリースの取り消し)）。`-f upload_release=false` を付けると、タグからの実行でもビルドだけを行い、成果物を run に残します。
 
 ### 6. 公開
 
