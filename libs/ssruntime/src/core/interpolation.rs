@@ -73,156 +73,30 @@ fn evaluate_curve_value_f32(interpolation: InterpolationType, frame_no: f32, pre
     }
 }
 
-// Optimized for both forward and reverse playback (O(1) fast path).
-// Long distance seeks will fallback to binary search (O(log N)).
-// `hint` counts keys from the start of `run`. A frame that sits on a key
-// returns that key alone, whichever path finds it: the result depends on
-// `frame_no` only, never on where the hint was left.
+/// The key at or before `frame_no` and, between two keys, the one after it. A
+/// frame on a key reads that key alone, and a frame before the first key reads
+/// the first key alone. `hint` is the run's cursor, as
+/// [`Frames::locate`](crate::core::keyframes::Frames::locate) keeps it.
 #[inline]
 pub fn search_prev_next<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<(Key<'c, 'a>, Option<Key<'c, 'a>>)> {
-    let first = run.first() as usize;
-    let len = run.count() as usize;
-    if len == 0 {
+    let frames = keys.frames(run);
+    if frames.is_empty() {
         return None;
     }
-    let get = |i: usize| keys.key(first + i);
-
-    let mut i = *hint as usize;
-    if i >= len {
-        i = len - 1;
-    }
-
-    let mut curr_val = get(i);
-    let curr_idx = curr_val.index() as i32;
-
-    if (curr_idx as f32) <= frame_no {
-        let mut checks = 0;
-        while i + 1 < len && checks < 4 {
-            let next_val = get(i + 1);
-            let next_idx = next_val.index() as i32;
-            if frame_no < next_idx as f32 {
-                *hint = i as u32;
-                let on_key = curr_val.index() as i32 as f32 == frame_no;
-                return Some((curr_val, (!on_key).then_some(next_val)));
-            }
-            i += 1;
-            curr_val = next_val;
-            checks += 1;
-        }
-        if i + 1 == len {
-            *hint = i as u32;
-            return Some((curr_val, None));
-        }
-    } else {
-        let mut checks = 0;
-        let mut local_i = i;
-        while local_i > 0 && checks < 4 {
-            local_i -= 1;
-            let prev_val = get(local_i);
-            let prev_idx = prev_val.index() as i32;
-            if (prev_idx as f32) <= frame_no {
-                *hint = local_i as u32;
-                let on_key = prev_idx as f32 == frame_no;
-                return Some((prev_val, (!on_key).then(|| get(local_i + 1))));
-            }
-            checks += 1;
-        }
-    }
-
-    let mut left = 0;
-    let mut right = len;
-    while left < right {
-        let mid = left + (right - left) / 2;
-        if (get(mid).index() as i32 as f32) <= frame_no {
-            left = mid + 1;
-        } else {
-            right = mid;
-        }
-    }
-
-    let res_idx = if left == 0 { 0 } else { left - 1 };
-    *hint = res_idx as u32;
-
-    if left == 0 {
-        return Some((get(0), None));
-    }
-
-    let prev = get(left - 1);
-    if (prev.index() as i32 as f32) == frame_no || left == len {
-        return Some((prev, None));
-    }
-
-    let next = get(left);
-    Some((prev, Some(next)))
+    let first = run.first() as usize;
+    let Some(i) = frames.locate(frame_no, hint) else {
+        return Some((keys.key(first), None));
+    };
+    let prev = keys.key(first + i);
+    let on_key = prev.index() as f32 == frame_no;
+    Some((prev, (i + 1 < frames.len() && !on_key).then(|| keys.key(first + i + 1))))
 }
 
-// Optimized for both forward and reverse playback (O(1) fast path).
-// Long distance seeks will fallback to binary search (O(log N)).
-// `hint` counts keys from the start of `run`.
+/// The key at or before `frame_no`, or `None` before the first. `hint` is as
+/// for [`search_prev_next`].
 #[inline]
 pub fn search_prev<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no: i32, hint: &mut u32) -> Option<Key<'c, 'a>> {
-    let first = run.first() as usize;
-    let len = run.count() as usize;
-    if len == 0 {
-        return None;
-    }
-    let get = |i: usize| keys.key(first + i);
-
-    let mut i = *hint as usize;
-    if i >= len {
-        i = len - 1;
-    }
-
-    let mut curr_val = get(i);
-    let curr_idx = curr_val.index() as i32;
-
-    if curr_idx <= frame_no {
-        let mut checks = 0;
-        while i + 1 < len && checks < 4 {
-            let next_val = get(i + 1);
-            let next_idx = next_val.index() as i32;
-            if frame_no < next_idx {
-                *hint = i as u32;
-                return Some(curr_val);
-            }
-            i += 1;
-            curr_val = next_val;
-            checks += 1;
-        }
-        if i + 1 == len {
-            *hint = i as u32;
-            return Some(curr_val);
-        }
-    } else {
-        let mut checks = 0;
-        let mut local_i = i;
-        while local_i > 0 && checks < 4 {
-            local_i -= 1;
-            let prev_val = get(local_i);
-            let prev_idx = prev_val.index() as i32;
-            if prev_idx <= frame_no {
-                *hint = local_i as u32;
-                return Some(prev_val);
-            }
-            checks += 1;
-        }
-    }
-
-    let mut left = 0;
-    let mut right = len;
-    while left < right {
-        let mid = left + (right - left) / 2;
-        if (get(mid).index() as i32) <= frame_no {
-            left = mid + 1;
-        } else {
-            right = mid;
-        }
-    }
-
-    let res_idx = if left == 0 { 0 } else { left - 1 };
-    *hint = res_idx as u32;
-
-    if left == 0 { None } else { Some(get(left - 1)) }
+    keys.frames(run).locate(frame_no as f32, hint).map(|i| keys.key(run.first() as usize + i))
 }
 
 #[inline]
@@ -833,6 +707,25 @@ mod tests {
         let val_3 = evaluate_float(&keys, &run, 3.0, &mut hint).unwrap();
         assert!(val_25 < val_3, "Hermite must be monotonically increasing on this segment");
         assert!(val_25 > 0.0 && val_25 < 1.0);
+    }
+
+    #[test]
+    fn locate_finds_the_last_key_at_or_before_a_frame_from_any_hint() {
+        // Two keys share frame 20, where the later one is the answer. The keys
+        // are far enough apart that some hints settle by walking and others
+        // fall back to the binary search, both ways, and the last hints are
+        // past the run's end.
+        let frames = [0u16, 10, 20, 20, 30, 40, 50, 60, 70, 80];
+        let buf = pack(&frames.map(|frame| key(frame, InterpolationType::None, 0)), &[], &[], |_, _| {});
+        let (keys, run) = (columns(&buf), run(frames.len()));
+        let expected = |frame_no: f32| frames.iter().rposition(|&k| k as f32 <= frame_no);
+        for start in 0..frames.len() as u32 + 2 {
+            for frame_no in [-1.0, 0.0, 5.0, 10.0, 19.5, 20.0, 25.0, 59.0, 80.0, 81.0] {
+                let mut hint = start;
+                assert_eq!(keys.frames(&run).locate(frame_no, &mut hint), expected(frame_no), "frame {frame_no}, hint {start}");
+                assert_eq!(hint, expected(frame_no).unwrap_or(0) as u32, "the hint is left on the key found");
+            }
+        }
     }
 
     #[test]

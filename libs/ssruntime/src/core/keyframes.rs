@@ -45,11 +45,14 @@ pub struct CellValue {
 /// index instead of decoding it again. Deforms vary in length and are read
 /// from the pack as they are.
 pub struct KeyColumns<'a> {
-    runs: Vector<'a, u32>,
-    frame: Vector<'a, u16>,
-    interpolation: Vector<'a, InterpolationType>,
-    curve: Vector<'a, u16>,
-    value: Vector<'a, u32>,
+    // The columns every frame reads, as the little-endian bytes FlatBuffers
+    // stores them as: indexing one is a slice access, where `Vector::get` reads
+    // the length back out of the buffer on every call.
+    runs: &'a [U32Bytes],
+    frame: &'a [U16Bytes],
+    interpolation: &'a [u8],
+    curve: &'a [U16Bytes],
+    value: &'a [U32Bytes],
     curves: Vector<'a, KeyCurve>,
     easing_rates: Vector<'a, f32>,
     cells: alloc::boxed::Box<[CellValue]>,
@@ -69,11 +72,11 @@ impl<'a> KeyColumns<'a> {
             meta: cellmaps.as_ref().and_then(|maps| crate::core::framedata::resolve_cell(maps, c.cellmap_name_hash(), c.name_hash())).unwrap_or_default(),
         };
         Self {
-            runs: keyframes.runs(),
-            frame: keyframes.frame(),
-            interpolation: keyframes.interpolation(),
-            curve: keyframes.curve(),
-            value: keyframes.value(),
+            runs: u32s(keyframes.runs()),
+            frame: u16s(keyframes.frame()),
+            interpolation: keyframes.interpolation().bytes(),
+            curve: u16s(keyframes.curve()),
+            value: u32s(keyframes.value()),
             curves: keyframes.curves(),
             easing_rates: keyframes.easing_rates(),
             cells: keyframes.cells().iter().map(cell).collect(),
@@ -92,8 +95,15 @@ impl<'a> KeyColumns<'a> {
         if r == NO_KEYS {
             return None;
         }
-        let first = self.runs.get(r as usize);
-        Some(KeyRun::new(first, self.runs.get(r as usize + 1) - first))
+        let at = |i: usize| u32::from_le_bytes(self.runs[i]);
+        let first = at(r as usize);
+        Some(KeyRun::new(first, at(r as usize + 1) - first))
+    }
+
+    /// The frames `run`'s keys sit on.
+    #[inline]
+    pub fn frames(&self, run: &KeyRun) -> Frames<'a> {
+        Frames(&self.frame[run.first() as usize..][..run.count() as usize])
     }
 
     /// Key `k` of the pack.
@@ -121,12 +131,12 @@ impl<'c, 'a> Key<'c, 'a> {
     /// The frame the key sits on.
     #[inline]
     pub fn index(&self) -> u16 {
-        self.columns.frame.get(self.k)
+        u16::from_le_bytes(self.columns.frame[self.k])
     }
 
     #[inline]
     pub fn interpolation(&self) -> InterpolationType {
-        self.columns.interpolation.get(self.k)
+        InterpolationType(self.columns.interpolation[self.k])
     }
 
     /// The control values of a Hermite or Bezier key; `None` for any other.
@@ -151,13 +161,13 @@ impl<'c, 'a> Key<'c, 'a> {
 
     #[inline]
     fn slot(&self) -> Option<usize> {
-        let slot = self.columns.curve.get(self.k);
+        let slot = u16::from_le_bytes(self.columns.curve[self.k]);
         (slot != NO_CURVE).then_some(slot as usize)
     }
 
     #[inline]
     fn bits(&self) -> u32 {
-        self.columns.value.get(self.k)
+        u32::from_le_bytes(self.columns.value[self.k])
     }
 
     #[inline]
@@ -210,6 +220,91 @@ impl<'c, 'a> Key<'c, 'a> {
     pub fn deform(&self) -> PartAttributeDeform<'a> {
         self.columns.deforms.get(self.bits() as usize)
     }
+}
+
+/// The frames a run's keys sit on, in order, as [`KeyColumns::frames`] gives
+/// them: what a key search looks through.
+#[derive(Clone, Copy)]
+pub struct Frames<'a>(&'a [U16Bytes]);
+
+impl Frames<'_> {
+    /// How many keys [`locate`](Self::locate) steps from the hint, either way,
+    /// before it searches instead.
+    const NEAR: usize = 4;
+
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    #[inline]
+    fn at(&self, i: usize) -> f32 {
+        u16::from_le_bytes(self.0[i]) as f32
+    }
+
+    /// Where `frame_no` falls: the position of the last key at or before it, or
+    /// `None` before the first. The answer depends on `frame_no` alone, never on
+    /// `hint`, which is only where to look first, counted from the run's first
+    /// key. It is left on the position found, so playback that moves a few keys
+    /// either way settles within a few steps of it, and a longer seek falls back
+    /// to a binary search.
+    #[inline]
+    pub fn locate(&self, frame_no: f32, hint: &mut u32) -> Option<usize> {
+        let found = self.near(frame_no, *hint as usize).unwrap_or_else(|| self.0.partition_point(|f| u16::from_le_bytes(*f) as f32 <= frame_no).checked_sub(1));
+        *hint = found.unwrap_or(0) as u32;
+        found
+    }
+
+    /// [`locate`](Self::locate)'s answer when it lies within a few keys of
+    /// `hint`, or `None` to search for it.
+    #[inline]
+    fn near(&self, frame_no: f32, hint: usize) -> Option<Option<usize>> {
+        let last = self.len().checked_sub(1)?;
+        let mut i = hint.min(last);
+        if self.at(i) <= frame_no {
+            // Forward playback: the key is the hint's or a few after it.
+            for _ in 0..=Self::NEAR {
+                if i == last || frame_no < self.at(i + 1) {
+                    return Some(Some(i));
+                }
+                i += 1;
+            }
+        } else {
+            // Reverse playback, or a loop back to the start.
+            for _ in 0..Self::NEAR {
+                if i == 0 {
+                    return Some(None);
+                }
+                i -= 1;
+                if self.at(i) <= frame_no {
+                    return Some(Some(i));
+                }
+            }
+        }
+        None
+    }
+}
+
+/// A `u16` as FlatBuffers stores it.
+type U16Bytes = [u8; size_of::<u16>()];
+
+/// A `u32` as FlatBuffers stores it.
+type U32Bytes = [u8; size_of::<u32>()];
+
+// A column's element type is spelled in each of these, so a schema change to it
+// stops the build here rather than misreading the bytes.
+
+fn u16s(column: Vector<'_, u16>) -> &[U16Bytes] {
+    column.bytes().as_chunks().0
+}
+
+fn u32s(column: Vector<'_, u32>) -> &[U32Bytes] {
+    column.bytes().as_chunks().0
 }
 
 // The runtime form of each compound value, which `KeyColumns::new` decodes the
