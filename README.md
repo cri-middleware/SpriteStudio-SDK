@@ -4,9 +4,9 @@
 A high-performance, engine-agnostic animation player SDK for **SpriteStudio**.
 This SDK allows you to easily implement and play **raster-based 2D animations** on any game engine or rendering framework.
 
-📚 How this SDK, the official players, and the conversion tools fit together is documented in [**SpriteStudio Docs**](https://cri-middleware.github.io/SpriteStudio-Docs/), the portal for the whole ecosystem — 🚧 live after the first release.
+📚 How this SDK, the official players, and the conversion tools fit together is documented in [**SpriteStudio Docs**](https://cri-middleware.github.io/SpriteStudio-Docs/), the portal for the whole ecosystem.
 
-🤖 For AI assistants, the Player Porting Guide is also served as Markdown: [`llms.txt`](https://cri-middleware.github.io/SpriteStudio-SDK/llms.txt) indexes the pages and `llms-full.txt` holds all of them in one file — 🚧 live after the first release.
+🤖 For AI assistants, the Player Porting Guide is also served as Markdown: [`llms.txt`](https://cri-middleware.github.io/SpriteStudio-SDK/llms.txt) indexes the pages and [`llms-full.txt`](https://cri-middleware.github.io/SpriteStudio-SDK/llms-full.txt) holds all of them in one file.
 
 ## 🎯 Compatibility
 

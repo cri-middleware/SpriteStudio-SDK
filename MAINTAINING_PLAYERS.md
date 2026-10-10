@@ -97,11 +97,6 @@ exists to prevent.** The moment a reader who wanted a package meets `git clone -
 have to decide whether they are still the intended audience — and the answer the page wanted to give
 them was yes.
 
-Where a checkout genuinely is the only way in today — the packages are not published yet, the SDK is
-private — that is not a violation, but it has to **look** like the exception it is: mark it 🚧, give
-it its own heading, and keep it out of the numbered install steps. An unmarked checkout inside the
-install path and a marked one beside it read completely differently, and only one of them is true.
-
 ### 4.2 The host axis sits underneath this one
 
 **Host** — Rust / C++ / browser — belongs inside the install step of a Player serving several, as

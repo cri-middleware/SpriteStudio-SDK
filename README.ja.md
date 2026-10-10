@@ -3,9 +3,9 @@
 
 **SpriteStudio** 向けの、ハイパフォーマンスでエンジン非依存なアニメーションプレイヤー SDK です。この SDK を使用することで、あらゆるゲームエンジンやレンダリングフレームワーク上で、**ラスターベースの 2D アニメーション**を簡単に実装・再生することができます。
 
-📚 この SDK・各公式 Player・変換ツールの関係は、エコシステム全体のポータル [**SpriteStudio Docs**](https://cri-middleware.github.io/SpriteStudio-Docs/ja/) にまとまっています — 🚧 初回リリース後に公開。
+📚 この SDK・各公式 Player・変換ツールの関係は、エコシステム全体のポータル [**SpriteStudio Docs**](https://cri-middleware.github.io/SpriteStudio-Docs/ja/) にまとまっています。
 
-🤖 AI アシスタント向けに、Player 移植ガイドは Markdown でも提供します。[`llms.txt`](https://cri-middleware.github.io/SpriteStudio-SDK/ja/llms.txt) はページの目次、`llms-full.txt` は全ページを 1 ファイルにまとめたものです — 🚧 初回リリース後に公開。
+🤖 AI アシスタント向けに、Player 移植ガイドは Markdown でも提供します。[`llms.txt`](https://cri-middleware.github.io/SpriteStudio-SDK/ja/llms.txt) はページの目次、[`llms-full.txt`](https://cri-middleware.github.io/SpriteStudio-SDK/ja/llms-full.txt) は全ページを 1 ファイルにまとめたものです。
 
 ## 🎯 対応バージョン
 
