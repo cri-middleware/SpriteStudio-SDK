@@ -10,7 +10,7 @@ A release is a tag on `main`, pushed first and built second. The version is writ
 
 Every block runs as written in a new shell: it works out what it needs from the checkout, git and GitHub. The one value set by hand is the version being released, written `<version>` in steps 1 and 2 — fill it in, as in `7.0.1`; left as it is, the line stops with a syntax error. A value that would not stop a command by itself when empty is read as `${VAR:?}`: an empty `OLD` in step 2 would match every `""` in the repository, and an empty `RUN` would let the signing check in step 3 print nothing and pass.
 
-An agent can run every block, but two steps are a person's to decide: the merge in step 4, which puts the release on `main`, and step 6, which publishes it for good.
+An agent can run every block, but a person sorts the scan's matches in step 3, and two steps are a person's to decide: the merge in step 4, which puts the release on `main`, and step 6, which publishes it for good.
 
 ### 1. Branch
 
@@ -79,6 +79,17 @@ Nothing builds the documentation site on a pull request, and `pages.yml` builds 
 
 ```bash
 scripts/build-pages.sh                            # both locales --strict, then rustdoc at /api/
+```
+
+Last, scan the branch for code copied from others. `provenance.yml` runs SCANOSS, which matches the tracked files against public open-source code by sending their fingerprints rather than the code, and ScanCode, which finds copyright and license notices. It keeps both reports and a summary of what they found on the run (`provenance`); the block downloads them into `qa/<run ID>` and prints the summary. **A person sorts the matches.** A match with the earlier SpriteStudio Players and SDK is our own code. Anything else is rewritten, unless its license, read at its source, is compatible with BSD-3-Clause and the code keeps the notice that license asks for. After any change on the branch, run the block again.
+
+```bash
+BRANCH=$(git branch --show-current | grep '^release/')
+git push origin "${BRANCH:?}" &&
+  RUN=$(gh workflow run provenance.yml --ref "${BRANCH:?}" | sed 's|.*/||')
+gh run watch "${RUN:?}" --exit-status &&
+  gh run download "${RUN:?}" -n provenance -D "qa/$RUN" &&
+  cat "qa/$RUN/summary.md"
 ```
 
 ### 4. Merge and tag
@@ -199,7 +210,7 @@ git checkout "$(gh run view "${RUN:?}" --json headSha -q .headSha)" &&
 
 どのブロックも、新しいシェルで書かれたとおりに実行できます。必要なものはチェックアウト・git・GitHub から求めます。手で設定する値はリリースするバージョンだけで、手順 1 と 2 に `<version>` と書いてあります。`7.0.1` のように埋めてください。埋めずに実行すると、その行は構文エラーで止まります。空でもそれだけでは止まらない値は `${VAR:?}` で読みます。手順 2 の `OLD` が空だとリポジトリ中の `""` すべてに一致し、`RUN` が空だと手順 3 の署名の確認が何も出力せずに通ってしまうためです。
 
-どのブロックもエージェントに実行させられますが、2 つの手順は人が判断します。リリースを `main` に入れる手順 4 のマージと、取り消せない公開を行う手順 6 です。
+どのブロックもエージェントに実行させられますが、手順 3 の照合の一致は人が仕分け、2 つの手順は人が判断します。リリースを `main` に入れる手順 4 のマージと、取り消せない公開を行う手順 6 です。
 
 ### 1. ブランチ
 
@@ -268,6 +279,17 @@ gh run view "${RUN:?}" --log | grep -E 'not set|Skipping' | grep -v 'echo '   # 
 
 ```bash
 scripts/build-pages.sh                            # 両ロケールを --strict でビルドし、/api/ に rustdoc を置く
+```
+
+最後に、他者のコードを写した箇所が無いかを、ブランチで照合します。`provenance.yml` は SCANOSS と ScanCode を実行します。SCANOSS は、追跡しているファイルを公開されているオープンソースのコードと照合します。送るのはコードではなく指紋です。ScanCode は、著作権表示とライセンスの記述を見つけます。2 つの報告と、見つかったものの一覧は run に残ります（`provenance`）。ブロックはそれを `qa/<run ID>` にダウンロードし、一覧を表示します。**一致は人が仕分けます。** 以前の SpriteStudio の Player・SDK との一致は、自社のコードです。それ以外は書き直します。残せるのは、出所で確かめたライセンスが BSD-3-Clause と両立し、そのライセンスが求める表示をコードに残すときだけです。ブランチを変えたら、このブロックをもう一度実行します。
+
+```bash
+BRANCH=$(git branch --show-current | grep '^release/')
+git push origin "${BRANCH:?}" &&
+  RUN=$(gh workflow run provenance.yml --ref "${BRANCH:?}" | sed 's|.*/||')
+gh run watch "${RUN:?}" --exit-status &&
+  gh run download "${RUN:?}" -n provenance -D "qa/$RUN" &&
+  cat "qa/$RUN/summary.md"
 ```
 
 ### 4. マージとタグ
