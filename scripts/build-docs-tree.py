@@ -47,6 +47,11 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SOURCE = REPO_ROOT / "libs" / "ssruntime" / "docs"
 DEST = REPO_ROOT / "build" / "docs"
 
+# Files the site needs beside the pages, such as the favicon `mkdocs.base.yml`
+# names. Zensical serves nothing from outside a locale's `docs_dir`, so each
+# locale gets its own copy.
+ASSETS = REPO_ROOT / "docs" / "assets"
+
 # One config per locale, each with its own `nav` -- see the note in mkdocs.yml.
 NAV_CONFIGS = {"en": REPO_ROOT / "mkdocs.yml", "ja": REPO_ROOT / "mkdocs.ja.yml"}
 
@@ -188,6 +193,9 @@ def main() -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text, encoding="utf-8")
         counts[locale] += 1
+
+    for locale in counts:
+        shutil.copytree(ASSETS, DEST / locale / "assets")
 
     print(f"generated {counts['en']} en + {counts['ja']} ja pages under {DEST.relative_to(REPO_ROOT)}")
 
