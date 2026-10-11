@@ -29,7 +29,8 @@ const ss_effect_step_result step = ss_effect_slot_step(
     fps,                   // the animation's frame rate (AnimationData.fps)
     parent_looped,         // the parent's ss_runtime_just_looped
     /*y_flip*/ true,       // §2
-    /*vert_stride*/ 2);    // §2
+    /*vert_stride*/ 2,     // §2
+    /*draw*/ part_drawn);  // §2: is the part in this frame's draw_order?
 
 if (step.visible) {
     auto plan = ss::runtime::GetEffectDrawPlan(step.draw_plan_buf);
@@ -38,7 +39,7 @@ if (step.visible) {
 ```
 
 - **The elapsed time is in seconds** (`ss_runtime_update` takes milliseconds).
-- **Do not advance the effect's clock from `draw_order`.** Hidden effect parts are not in `draw_order`, so if you `step` while walking `draw_order`, an independently played effect freezes in mid-air while hidden. **Enumerate every effect part from the ssab and `step` every one of them every frame.** Use `step.visible` only to decide whether to draw.
+- **Do not advance the effect's clock from `draw_order`.** Hidden effect parts are not in `draw_order`, so if you `step` while walking `draw_order`, an independently played effect freezes in mid-air while hidden. **Enumerate every effect part from the ssab and `step` every one of them every frame.** Use `step.visible` only to decide whether to draw. Step a hidden part with `draw = false` (§2): it keeps the clock moving and skips the particles nobody draws.
 - The returned `EffectDrawPlan` buffer stays valid until the next `step` call on the same slot.
 - When you replay the parent from the start with `play`, reset the slot to its initial state with `ss_effect_slot_reset` ([Instance Parts §6](./50_instance.md#6-restarting-playback)).
 - Independent playback is handled the same as for instance parts ([Instance Parts §3](./50_instance.md#3-independent-playback)).
@@ -49,6 +50,7 @@ if (step.visible) {
 | :--- | :--- |
 | `y_flip` | `true` for Y-down engines (Godot's 2D, PixiJS and so on), `false` for Y-up engines (Unity and so on). SpriteStudio is authored in Y-up, so with `true` the particles' Y coordinates and rotation direction are returned flipped |
 | `vert_stride` | The number of floats per vertex. `2` (XY) for 2D engines; `3` (XYZ, z = 0) for engines that require three-component vertices (Unity's Mesh, Unreal's FProcMeshVertex and so on) |
+| `draw` | Whether the part is in this frame's `draw_order`, that is whether you draw it. With `false` the step moves only the effect's clock and transitions, builds no particles and returns not visible; the next step with `true` returns the same plan it would have had every step drawn. Knowing it needs this frame's `ss_runtime_get_frame_data` first, so a Player that steps before that passes `true` |
 
 ## 3. Drawing the `EffectDrawPlan`
 
