@@ -21,6 +21,11 @@ runs:
 
     - name: Setup Rust cache
       uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      with:
+        # The key is the job id and the runner OS, which the jobs of one matrix
+        # share. Without the platform they would share one cache: only the first
+        # to finish could save it, and the others would restore its target dir.
+        key: ${{ inputs.platform }}
 
     - name: Setup Android dependencies
       if: inputs.platform == 'android'
