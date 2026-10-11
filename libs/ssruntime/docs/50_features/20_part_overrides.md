@@ -53,7 +53,7 @@ Parts color and cell conflict when the animation has keys on the same attribute.
 
 Think of `0` as a temporary overwrite that "the next keyframe takes back", `1` as "a setting for this animation", and `2` as "a setting for as long as this ssab plays".
 
-A keyframe "arrives" when playback passes through a frame on which the animation track 0 plays has a key for that attribute (Part Color or Cell) on that part. The frames `ss_runtime_update` passed through are checked when the next frame is built. Only frames the playhead actually visits count, so a play section, loops, reverse and ping-pong need no special handling, and a seek counts the frame it lands on. The frame the override was set on is skipped the first time, so an override set on a keyframe wins that keyframe's segment. `PartState.update_flag` plays no part in it.
+A keyframe "arrives" when playback passes through a frame on which the animation track 0 plays has a key for that attribute (Part Color or Cell) on that part. The frames `ss_runtime_update` passed through are checked when the next frame is built. Only frames the playhead actually visits count, so a play section, loops, reverse and ping-pong need no special handling, and a seek counts the frame it lands on. The frame the override was set on is not counted by the first frame built after setting it, nor by any other frame built before the next `ss_runtime_update`, so an override set on a keyframe wins that keyframe's segment however many times a frame is built. `PartState.update_flag` plays no part in it.
 
 ## 2. Usage
 

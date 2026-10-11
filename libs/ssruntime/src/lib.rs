@@ -1600,6 +1600,9 @@ struct InstanceState<'a> {
     /// applied, so `compute_local_uvs` samples the overridden cell (not just the
     /// geometry/texture channels). Empty when no override is active this frame.
     override_cell_uv_meta: Vec<Option<crate::core::framedata::ResolvedCellMeta>>,
+    /// How many times `Context::update` has run: the update an evaluation
+    /// belongs to, which a NON override's first evaluation records.
+    updates: u64,
 }
 
 impl<'a> InstanceState<'a> {
@@ -1621,6 +1624,7 @@ impl<'a> InstanceState<'a> {
             render_mode: crate::core::RenderMode::default(),
             part_overrides: Vec::new(),
             override_cell_uv_meta: Vec::new(),
+            updates: 0,
         }
     }
 
@@ -1802,8 +1806,8 @@ impl<'a> Context<'a> {
     }
 
     /// The integer frame the primary playhead is on right now — baked into a NON
-    /// override at set time so its own set-frame keyframe can be skipped on the
-    /// first handover evaluation (see `PriorityMode::OverwriteOnNextKeyframe`).
+    /// override at set time so its own set-frame keyframe can be skipped through
+    /// the update of its first evaluation (see `PriorityMode::OverwriteOnNextKeyframe`).
     fn override_set_frame(&self) -> i32 {
         crate::core::math::floorf(self.instance.primary_source().controller.get_frame_no()) as i32
     }
@@ -1885,10 +1889,11 @@ impl<'a> Context<'a> {
             return Err(error::SSRuntimeError::InvalidParameter);
         };
         // Anchor the NON one-shot to "from the moment of override": remember the
-        // set frame (its own keyframe is skipped on the first evaluation).
+        // set frame (its own keyframe is skipped through the update of the first
+        // evaluation).
         let set_frame = self.override_set_frame();
         let entry = self.override_slot(part)?.get_or_insert_with(Default::default);
-        entry.color = Some(crate::core::override_layer::ColorOverride { blend_op, corners_rgba, rate: 1.0, priority, set_frame, pending_first_eval: true });
+        entry.color = Some(crate::core::override_layer::ColorOverride { blend_op, corners_rgba, rate: 1.0, priority, set_frame, first_eval_update: None });
         Ok(())
     }
 
@@ -1922,7 +1927,7 @@ impl<'a> Context<'a> {
         };
         let set_frame = self.override_set_frame();
         let entry = self.override_slot(part)?.get_or_insert_with(Default::default);
-        entry.cell = Some(crate::core::override_layer::CellOverride { cellmap_name_hash, cell_name_hash, resolved, priority, set_frame, pending_first_eval: true });
+        entry.cell = Some(crate::core::override_layer::CellOverride { cellmap_name_hash, cell_name_hash, resolved, priority, set_frame, first_eval_update: None });
         Ok(())
     }
 
@@ -2583,6 +2588,7 @@ impl<'a> Context<'a> {
                 &mut self.instance.override_cell_uv_meta,
                 &mut self.eval.override_hide_workspace,
                 &self.eval.override_passed_frames_workspace,
+                self.instance.updates,
             );
         } else {
             // No overrides active: leave the buffer empty so compute_local_uvs
@@ -3260,6 +3266,7 @@ impl<'a> Context<'a> {
     /// included. The controllers are still updated with no elapsed time, which
     /// is what reports a frame a seek has just landed on.
     pub fn update(&mut self, delta: f32) -> f32 {
+        self.instance.updates += 1;
         let running = self.instance.clock.is_running();
         let elapsed = if running { delta } else { 0.0 };
         for source in self.instance.sources.iter_mut() {
@@ -4777,6 +4784,41 @@ mod tests {
         context.get_frame_data(f).expect("frame");
         let (r, g, b, _a) = part_color_lt(&context, idx).expect("override color present");
         assert_eq!((r, g, b), (0x01, 0x02, 0x03), "NOW must override the keyframe");
+    }
+
+    #[test]
+    fn override_non_reads_the_same_however_often_its_update_is_evaluated() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall/PartsColor.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("read PartsColor.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("load");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        let anim = resource.get_animation_names().first().expect("an animation").clone();
+        context.setup_animation(&anim).expect("setup");
+        let idx = context.find_part_index("MIX_Whole") as usize;
+        let (cm_hash, cell_hash, _, _) = first_cell(&context);
+        context.play();
+
+        // Both set on frame 0, which keys MIX_Whole's color and cell, so only the
+        // skip of the set frame keeps them. A Player may read a frame more than
+        // once in an update (a part follower, an instance child behind a mask):
+        // every read must keep them, as the first does.
+        context.set_part_color_override(idx as u32, 0, 0x0102_03FF, 0).expect("set NON color");
+        context.set_part_cell_override(idx as u32, cm_hash, cell_hash, 0).expect("set NON cell");
+        let f = context.update(0.0);
+        for read in 0..3 {
+            context.get_frame_data(f).expect("frame 0");
+            let (r, g, b, _a) = part_color_lt(&context, idx).expect("override color present");
+            assert_eq!((r, g, b), (0x01, 0x02, 0x03), "read {read}: the color override");
+            let rl = &context.instance.resolved_layer;
+            let cv = &rl.cell_vec[rl.parts_vec[idx].cell() as usize];
+            assert_eq!((cv.cellmap_name_hash(), cv.name_hash()), (cm_hash, cell_hash), "read {read}: the cell override");
+            // The cell keyed at frame 0 may be this very cell, so the slot tells a handover apart.
+            let slot = context.instance.part_overrides[idx].as_ref().expect("the part's overrides");
+            assert!(slot.color.is_some() && slot.cell.is_some(), "read {read}: both slots held");
+        }
     }
 
     #[test]
