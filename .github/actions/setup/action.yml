@@ -26,6 +26,10 @@ runs:
         # share. Without the platform they would share one cache: only the first
         # to finish could save it, and the others would restore its target dir.
         key: ${{ inputs.platform }}
+        # Only develop writes caches; ci.yml's schedule refreshes them. A PR's
+        # cache is visible to that PR alone, so saving one per PR would only fill
+        # the 10 GB quota and evict the develop caches every PR restores from.
+        save-if: ${{ github.ref == 'refs/heads/develop' }}
 
     - name: Setup Android dependencies
       if: inputs.platform == 'android'
