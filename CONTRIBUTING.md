@@ -70,7 +70,7 @@ cargo run -p ssconverter-cli -- <path_to_sspj>
 The `.fbs` schemas under `libs/ssab/fbs/` and `libs/ssruntime/fbs/` have generated Rust bindings: after changing one, run that library's `scripts/generate.sh` (or `.ps1`). `cbindgen` writes the C/C++ headers for `ssconverter` and `ssruntime`.
 
 ### Documentation site
-The Player Porting Guide under `libs/ssruntime/docs` is published as a site. If you edit a page there, build both locales before you finish: nothing builds the docs on a pull request, so that local build is the only gate. Set the toolchain up once with `scripts/prepare-docs.sh`, then:
+The Player Porting Guide under `libs/ssruntime/docs` is published as a site. If you edit a page there, build both locales before you finish: nothing builds the docs on a pull request, so that local build is the only gate before the merge (CI builds them weekly). Set the toolchain up once with `scripts/prepare-docs.sh`, then:
 
 ```bash
 scripts/build-docs.sh              # generate the locale trees, build en then ja, both --strict
@@ -182,7 +182,7 @@ cargo run -p ssconverter-cli -- <path_to_sspj>
 `libs/ssab/fbs/` と `libs/ssruntime/fbs/` の `.fbs` スキーマには生成された Rust バインディングがあります。変更したら、そのライブラリの `scripts/generate.sh`（または `.ps1`）を実行してください。`ssconverter` と `ssruntime` の C/C++ ヘッダーは `cbindgen` が生成します。
 
 ### ドキュメントサイト
-`libs/ssruntime/docs` の Player 移植ガイドはサイトとして公開されます。ページを編集したら、仕上げる前に両ロケールをビルドしてください。プルリクエストでは docs はビルドされないため、手元のビルドが唯一のゲートです。`scripts/prepare-docs.sh` で一度ツールチェーンを用意してから、以下を実行してください。
+`libs/ssruntime/docs` の Player 移植ガイドはサイトとして公開されます。ページを編集したら、仕上げる前に両ロケールをビルドしてください。プルリクエストでは docs はビルドされないため、マージ前のゲートは手元のビルドだけです（CI がビルドするのは週次です）。`scripts/prepare-docs.sh` で一度ツールチェーンを用意してから、以下を実行してください。
 
 ```bash
 scripts/build-docs.sh              # ロケール別ツリーを生成し、en → ja の順に --strict でビルド
