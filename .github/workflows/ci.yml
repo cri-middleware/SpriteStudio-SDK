@@ -229,10 +229,11 @@ jobs:
         shell: bash
 
   # The weekly tier. `github.base_ref == 'main'` is the release PR: under git-flow
-  # only release/X.Y is merged into main.
+  # only release/X.Y is merged into main. Not after lint, unlike the jobs above:
+  # the weekly run is where a new stable Rust's clippy lints first show up, and
+  # the platform builds and their caches should not skip that week for them.
   platforms:
     name: ${{ matrix.name }}
-    needs: lint
     if: github.event_name != 'pull_request' || github.base_ref == 'main'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
