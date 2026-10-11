@@ -1700,15 +1700,21 @@ pub extern "C" fn ss_effect_slot_reset(slot: *mut c_void) {
 /// `2` packs (x, y) pairs (Godot, pixi.js, wgpu); `3` packs (x, y, 0) triples
 /// (Unity Mesh, Unreal procedural mesh). Other values fall back to `2`.
 ///
+/// `draw` is whether the part is in this frame's `draw_order`. Step a hidden
+/// part's slot anyway, with `draw = false`: it keeps the effect's clock and
+/// transitions moving and builds no plan, and the next drawn step builds the
+/// plan an always-drawn slot would. A caller that steps before it has this
+/// frame's `draw_order` passes `true`.
+///
 /// Returns `EffectDrawPlan` FlatBuffer pointer + length when visible. Buffer
 /// is valid only until the next call on the same slot.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_slot_step(slot: *mut c_void, ev: ss_effect_event_info, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8) -> ss_effect_step_result {
+pub extern "C" fn ss_effect_slot_step(slot: *mut c_void, ev: ss_effect_event_info, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8, draw: bool) -> ss_effect_step_result {
     if slot.is_null() {
         return ss_effect_step_result::not_visible();
     }
     let slot = unsafe { &mut *(slot as *mut FfiEffectSlot) };
-    slot.inner.step(ev, parent_frame, delta_seconds, fps, parent_looped, y_flip, vert_stride)
+    slot.inner.step(ev, parent_frame, delta_seconds, fps, parent_looped, y_flip, vert_stride, draw)
 }
 
 #[unsafe(no_mangle)]

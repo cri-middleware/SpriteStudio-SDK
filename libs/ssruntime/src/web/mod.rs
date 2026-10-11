@@ -948,11 +948,14 @@ impl SSRuntimeEffectSlot {
     ///
     /// `y_flip = true` for Y-down rendering (pixi.js); `vert_stride = 2` packs
     /// (x,y) verts, `3` packs (x,y,0) for engines requiring 3-component verts.
+    /// `draw` is whether the part is in this frame's `draw_order`: a hidden
+    /// part steps with `false`, which moves its clock and builds no plan. Pass
+    /// `true` when stepping before this frame's `draw_order` is known.
     /// Returns `true` if visible; on `true` callers read the plan via
     /// `get_draw_plan_buf` / `get_draw_plan_len` before the next step.
     #[allow(clippy::too_many_arguments)]
-    pub fn step(&mut self, ev: &WebEffectEventInfo, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8) -> bool {
-        let r = self.inner.step((*ev).into(), parent_frame, delta_seconds, fps, parent_looped, y_flip, vert_stride);
+    pub fn step(&mut self, ev: &WebEffectEventInfo, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8, draw: bool) -> bool {
+        let r = self.inner.step((*ev).into(), parent_frame, delta_seconds, fps, parent_looped, y_flip, vert_stride, draw);
         self.last_draw_plan_ptr = r.draw_plan_buf;
         self.last_draw_plan_len = r.draw_plan_len;
         r.visible
