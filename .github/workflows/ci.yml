@@ -18,7 +18,10 @@ on:
   # the same toolchain, so a PR that changes dependencies rebuilds only what
   # changed.
   schedule:
-    - cron: '0 0 * * 0'
+    # Each repository of the family takes its own hour on Sunday, so their
+    # weekly runs do not queue for the organization's runners; :17 keeps clear
+    # of the top of the hour, when GitHub delays scheduled runs.
+    - cron: '17 0 * * 0'
   workflow_dispatch:
 
 env:
@@ -220,7 +223,7 @@ jobs:
           toolchain: stable
 
       - name: Install cargo-audit
-        uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.22
+        uses: taiki-e/install-action@e407f7bafb71fd004bc5c2da3032e5470cbb6ef0 # v2.87.24
         with:
           tool: cargo-audit
 
@@ -229,10 +232,11 @@ jobs:
         shell: bash
 
   # The weekly tier. `github.base_ref == 'main'` is the release PR: under git-flow
-  # only release/X.Y is merged into main.
+  # only release/X.Y is merged into main. Not after lint, unlike the jobs above:
+  # the weekly run is where a new stable Rust's clippy lints first show up, and
+  # the platform builds and their caches should not skip that week for them.
   platforms:
     name: ${{ matrix.name }}
-    needs: lint
     if: github.event_name != 'pull_request' || github.base_ref == 'main'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
