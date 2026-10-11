@@ -6,6 +6,12 @@ on:
       - '**/*.md'
       - '.gitignore'
       - 'LICENSE*'
+  # Writes the develop caches that PRs restore from, since PRs do not save
+  # (see save-if in .github/actions/setup). Weekly is enough: when Cargo.lock
+  # differs, rust-cache still restores the newest cache built by the same
+  # toolchain, so a PR that changes dependencies rebuilds only what changed.
+  schedule:
+    - cron: '0 0 * * 0'
   workflow_dispatch:
 
 env:
@@ -180,6 +186,9 @@ jobs:
 
       - name: Setup Rust cache (MSRV)
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          # Same rule as .github/actions/setup: only develop writes caches.
+          save-if: ${{ github.ref == 'refs/heads/develop' }}
 
       - name: cargo check (workspace, all targets, all features)
         run: cargo check --workspace --all-targets --all-features --locked
