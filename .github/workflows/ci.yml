@@ -148,7 +148,10 @@ jobs:
 
             # Emscripten deliverable (release.yml ships its .a). Needs no emsdk —
             # the nightly toolchain and wasm target installed above are enough.
-            ./scripts/release-emscripten.sh
+            # Debug, here and in the weekly run alike: a compile check needs no
+            # optimizer, the weekly run writes the cache PRs restore so both must
+            # build the same profile, and release.yml builds the release .a.
+            ./scripts/release-emscripten.sh debug
           else
             cargo build --verbose
             cargo build --verbose -p ssruntime-ffi --features "libc_alloc,panic-handler"
