@@ -25,8 +25,9 @@ pub enum PriorityMode {
     /// (`get_passed_frames`) for a key frame. This is section / loop / reverse /
     /// ping-pong correct for free: only frames the playhead really visits count,
     /// and the loop wraps to the section start, so keys outside the play range
-    /// never trigger it. The override's own set-frame keyframe is ignored on the
-    /// first evaluation, so setting on a keyframe wins that keyframe's segment.
+    /// never trigger it. The override's own set-frame keyframe is ignored through
+    /// the update of its first evaluation, so setting on a keyframe wins that
+    /// keyframe's segment, however many times that update's frame is evaluated.
     ///
     /// At handover the slot is dropped, so it does not reappear (only a re-set or
     /// a new animation reactivates it). If the play range decodes no key of that
@@ -69,13 +70,16 @@ pub struct ColorOverride {
     /// `OverwriteOnNextKeyframe` only: the integer frame the override was set on
     /// (floor of the playhead). Handover fires once playback *decodes* a
     /// surviving PartColor keyframe after this — but the override's own
-    /// `set_frame` keyframe is ignored on the first evaluation, so setting on a
-    /// keyframe wins that keyframe's segment. Unused for other modes.
+    /// `set_frame` keyframe is ignored through the update of its first
+    /// evaluation, so setting on a keyframe wins that keyframe's segment. Unused
+    /// for other modes.
     pub set_frame: i32,
-    /// `OverwriteOnNextKeyframe` only: `true` until the first handover
-    /// evaluation (during which `set_frame` is skipped). See [`super`] module
-    /// docs / `passed_reaches_key`.
-    pub pending_first_eval: bool,
+    /// `OverwriteOnNextKeyframe` only: the update the override was first
+    /// evaluated in (the context's `Context::update` count), or `None` before
+    /// that. Every evaluation in that update skips `set_frame`, so a frame
+    /// evaluated again gives the same answer. See [`super`] module docs /
+    /// `passed_reaches_key`.
+    pub first_eval_update: Option<u64>,
 }
 
 /// Per-part cell override (mirrors SS6 `CellChangeParts`). Applied to Normal and
@@ -92,9 +96,9 @@ pub struct CellOverride {
     /// `OverwriteOnNextKeyframe` only: the integer frame the override was set on.
     /// See [`ColorOverride::set_frame`].
     pub set_frame: i32,
-    /// `OverwriteOnNextKeyframe` only: first-evaluation latch. See
-    /// [`ColorOverride::pending_first_eval`].
-    pub pending_first_eval: bool,
+    /// `OverwriteOnNextKeyframe` only: the update of the first evaluation. See
+    /// [`ColorOverride::first_eval_update`].
+    pub first_eval_update: Option<u64>,
 }
 
 /// Force-hide a part, optionally cascading to its descendants (a faithful port
@@ -127,13 +131,22 @@ impl PartOverride {
 /// update, from the frames the controller actually traversed (`passed_frames`).
 ///
 /// Handover fires when any passed frame is a surviving keyframe of the
-/// attribute, except that on the first evaluation the override's own `set_frame`
-/// is skipped — setting on (or the first update sitting on) a keyframe wins that
-/// keyframe's segment rather than reclaiming immediately. Using the traversed
-/// frames makes this section / loop / reverse / ping-pong correct without any
-/// direction or wrap-point bookkeeping.
-pub fn passed_reaches_key(passed_frames: &[i32], set_frame: i32, first_eval: bool, is_key: impl Fn(i32) -> bool) -> bool {
-    passed_frames.iter().any(|&f| !(first_eval && f == set_frame) && is_key(f))
+/// attribute, except that through the update of the first evaluation
+/// (`skip_set_frame`) the override's own `set_frame` is skipped — setting on (or
+/// the first update sitting on) a keyframe wins that keyframe's segment rather
+/// than reclaiming immediately. Using the traversed frames makes this section /
+/// loop / reverse / ping-pong correct without any direction or wrap-point
+/// bookkeeping.
+pub fn passed_reaches_key(passed_frames: &[i32], set_frame: i32, skip_set_frame: bool, is_key: impl Fn(i32) -> bool) -> bool {
+    passed_frames.iter().any(|&f| !(skip_set_frame && f == set_frame) && is_key(f))
+}
+
+/// Whether a NON override evaluated in `update` skips its own `set_frame`: on its
+/// first evaluation, and on any other in the same update. The traversed frames
+/// change only with the next update, so every evaluation of one update sees
+/// what the first saw and must decide as it did.
+fn skips_set_frame(first_eval_update: Option<u64>, update: u64) -> bool {
+    first_eval_update.is_none_or(|u| u == update)
 }
 
 /// True when `run` (surviving keyframes, sorted ascending by frame) has a
@@ -152,7 +165,9 @@ fn run_has_key_at(keys: &KeyColumns, run: Option<crate::core::keyframes::KeyRun>
 /// side vecs are rebuilt from the primary every frame, so appends never
 /// accumulate across frames). A cell override likewise appends to `cell_vec`,
 /// overwrites the parallel `cell_meta_per_part` (6 floats/part) + the
-/// `cell_texture_hashes` slot, and repoints `PartState.cell`.
+/// `cell_texture_hashes` slot, and repoints `PartState.cell`. `update` is the
+/// context's `Context::update` count, which a NON override's first evaluation
+/// records.
 #[allow(clippy::too_many_arguments)]
 pub fn apply_part_overrides(
     part_overrides: &mut [Option<PartOverride>],
@@ -166,6 +181,7 @@ pub fn apply_part_overrides(
     override_cell_uv_meta: &mut [Option<ResolvedCellMeta>],
     override_hide_workspace: &mut Vec<bool>,
     passed_frames: &[i32],
+    update: u64,
 ) {
     let n = parts_vec.len();
 
@@ -225,12 +241,13 @@ pub fn apply_part_overrides(
         // the first evaluation). Dropping the slot makes it permanent: it
         // survives loops and only a re-set / new animation brings it back.
         if color.priority == PriorityMode::OverwriteOnNextKeyframe {
-            let handed_over = passed_reaches_key(passed_frames, color.set_frame, color.pending_first_eval, |f| run_has_key_at(keys, cached_parts[i].run(crate::core::framedata::IDX_ATTRIBUTEPARTCOLOR), f));
+            let skip = skips_set_frame(color.first_eval_update, update);
+            let handed_over = passed_reaches_key(passed_frames, color.set_frame, skip, |f| run_has_key_at(keys, cached_parts[i].run(crate::core::framedata::IDX_ATTRIBUTEPARTCOLOR), f));
             if let Some(o) = part_overrides.get_mut(i).and_then(|o| o.as_mut()) {
                 if handed_over {
                     o.color = None;
                 } else if let Some(c) = o.color.as_mut() {
-                    c.pending_first_eval = false;
+                    c.first_eval_update.get_or_insert(update);
                 }
             }
             if handed_over {
@@ -274,12 +291,13 @@ pub fn apply_part_overrides(
 
         // NON one-shot handover (see the color pass for the rationale).
         if cell.priority == PriorityMode::OverwriteOnNextKeyframe {
-            let handed_over = passed_reaches_key(passed_frames, cell.set_frame, cell.pending_first_eval, |f| run_has_key_at(keys, cp.run(crate::core::framedata::IDX_ATTRIBUTECELL), f));
+            let skip = skips_set_frame(cell.first_eval_update, update);
+            let handed_over = passed_reaches_key(passed_frames, cell.set_frame, skip, |f| run_has_key_at(keys, cp.run(crate::core::framedata::IDX_ATTRIBUTECELL), f));
             if let Some(o) = part_overrides.get_mut(i).and_then(|o| o.as_mut()) {
                 if handed_over {
                     o.cell = None;
                 } else if let Some(c) = o.cell.as_mut() {
-                    c.pending_first_eval = false;
+                    c.first_eval_update.get_or_insert(update);
                 }
             }
             if handed_over {
@@ -364,7 +382,8 @@ mod tests {
         let mut ws = Vec::new();
         let keyframes = crate::core::keyframes::empty_keyframes();
         let keys = KeyColumns::new(flatbuffers::root::<ssab::ssab::ss::format::Keyframes>(&keyframes).unwrap(), None);
-        apply_part_overrides(ovr, cached, &keys, parts, &mut color_vec, &mut cell_vec, &mut cell_meta, &mut tex_hashes, &mut uv_meta, &mut ws, passed_frames);
+        // Update 1: the helpers' NON overrides were first evaluated in update 0.
+        apply_part_overrides(ovr, cached, &keys, parts, &mut color_vec, &mut cell_vec, &mut cell_meta, &mut tex_hashes, &mut uv_meta, &mut ws, passed_frames, 1);
         (color_vec, cell_vec, cell_meta, tex_hashes, uv_meta)
     }
 
@@ -373,12 +392,12 @@ mod tests {
     }
 
     fn color(blend_op: u8, rgba: [u8; 4], priority: PriorityMode) -> PartOverride {
-        PartOverride { color: Some(ColorOverride { blend_op, corners_rgba: [rgba; 4], rate: 1.0, priority, set_frame: 0, pending_first_eval: false }), ..Default::default() }
+        PartOverride { color: Some(ColorOverride { blend_op, corners_rgba: [rgba; 4], rate: 1.0, priority, set_frame: 0, first_eval_update: Some(0) }), ..Default::default() }
     }
 
     fn cell(cellmap_name_hash: u32, cell_name_hash: u32, size: (f32, f32), texture_hash: u32, priority: PriorityMode) -> PartOverride {
         let resolved = ResolvedCellMeta { size_w: size.0, size_h: size.1, texture_hash, ..Default::default() };
-        PartOverride { cell: Some(CellOverride { cellmap_name_hash, cell_name_hash, resolved, priority, set_frame: 0, pending_first_eval: false }), ..Default::default() }
+        PartOverride { cell: Some(CellOverride { cellmap_name_hash, cell_name_hash, resolved, priority, set_frame: 0, first_eval_update: Some(0) }), ..Default::default() }
     }
 
     #[test]
