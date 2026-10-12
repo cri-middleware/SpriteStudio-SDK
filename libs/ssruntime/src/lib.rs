@@ -6997,6 +6997,48 @@ mod tests {
         ss_runtime_destroy(ctx);
     }
 
+    /// The C face of the track settings maps the direction and style both ways
+    /// and answers a sentinel no setting reads back as for a track that does
+    /// not exist or has no animation.
+    #[cfg(feature = "ffi")]
+    #[test]
+    fn track_settings_round_trip_through_the_c_abi() {
+        use crate::ffi::*;
+        let ssab = load_ringo_resource();
+        let bytes = ssab.as_slice();
+        let ctx = ss_runtime_create();
+        assert_eq!(ss_runtime_get_current_animation_index(ctx), -1, "nothing is set up yet");
+        assert!(unsafe { ss_runtime_load_ssab_copy(ctx, bytes.as_ptr(), bytes.len()) });
+        assert!(unsafe { ss_runtime_setup_animation_by_hash(ctx, fnv1a_hash_str("walk")) });
+        let walk = ss_runtime_get_source_animation_index(ctx, ss_runtime_get_track_main_source(ctx, 0));
+        assert_eq!(ss_runtime_get_current_animation_index(ctx), walk);
+
+        assert!(ss_runtime_set_track_speed(ctx, 1, 0.5));
+        assert_eq!(ss_runtime_get_track_speed(ctx, 1), 0.5);
+        assert!(ss_runtime_set_track_frame_rate(ctx, 1, 24));
+        assert_eq!(ss_runtime_get_track_frame_rate(ctx, 1), 24);
+        assert!(ss_runtime_set_track_skip_frames(ctx, 1, false));
+        assert!(!ss_runtime_get_track_skip_frames(ctx, 1));
+        assert!(ss_runtime_set_track_playback_direction(ctx, 1, 1, 1));
+        assert_eq!((ss_runtime_get_track_playback_direction(ctx, 1), ss_runtime_get_track_playback_style(ctx, 1)), (1, 1));
+        assert!(ss_runtime_set_track_outgoing_event_threshold(ctx, 1, 0.5));
+        assert_eq!(ss_runtime_get_track_outgoing_event_threshold(ctx, 1), 0.5);
+
+        assert!(!ss_runtime_set_track_loop_count(ctx, 1, 2), "no animation on track 1 to count the loops of");
+        assert_eq!(ss_runtime_get_track_loop_count(ctx, 1), 0);
+        assert!(!ss_runtime_is_track_finished(ctx, 1) && !ss_runtime_track_just_looped(ctx, 1));
+        assert!(ss_runtime_set_track_animation_by_hash(ctx, 1, fnv1a_hash_str("run")));
+        assert_eq!(ss_runtime_get_track_loop_count(ctx, 1), -1, "laid looping forever");
+        assert!(ss_runtime_set_track_loop_count(ctx, 1, 2));
+        assert_eq!(ss_runtime_get_track_loop_count(ctx, 1), 2);
+
+        assert!(ss_runtime_get_track_speed(ctx, 99).is_nan());
+        assert_eq!(ss_runtime_get_track_frame_rate(ctx, 99), -1);
+        assert_eq!((ss_runtime_get_track_playback_direction(ctx, 99), ss_runtime_get_track_playback_style(ctx, 99)), (-1, -1));
+        assert!(ss_runtime_get_track_outgoing_event_threshold(ctx, 99).is_nan());
+        ss_runtime_destroy(ctx);
+    }
+
     #[test]
     fn set_track_speed_and_frame_target_the_tracks_animation() {
         let ssab = load_ringo_resource();

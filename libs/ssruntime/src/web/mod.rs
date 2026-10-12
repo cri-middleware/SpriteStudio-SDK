@@ -787,6 +787,68 @@ impl SSRuntimeContext {
         self.inner.set_track_speed(track, speed).map_err(js_error)
     }
 
+    pub fn get_track_speed(&self, track: u32) -> Option<f32> {
+        self.inner.get_track_speed(track)
+    }
+
+    pub fn set_track_frame_rate(&mut self, track: u32, frame_rate: i32) -> Result<(), JsValue> {
+        self.inner.set_track_frame_rate(track, frame_rate).map_err(js_error)
+    }
+
+    pub fn get_track_frame_rate(&self, track: u32) -> Option<i32> {
+        self.inner.get_track_frame_rate(track)
+    }
+
+    pub fn set_track_skip_frames(&mut self, track: u32, skip: bool) -> Result<(), JsValue> {
+        self.inner.set_track_skip_frames(track, skip).map_err(js_error)
+    }
+
+    pub fn get_track_skip_frames(&self, track: u32) -> Option<bool> {
+        self.inner.get_track_skip_frames(track)
+    }
+
+    pub fn set_track_playback_direction(&mut self, track: u32, direction: WebPlaybackDirection, style: WebPlaybackStyle) -> Result<(), JsValue> {
+        self.inner.set_track_playback_direction(track, direction.into(), style.into()).map_err(js_error)
+    }
+
+    pub fn get_track_playback_direction(&self, track: u32) -> Option<WebPlaybackDirection> {
+        self.inner.get_track_playback_direction(track).map(Into::into)
+    }
+
+    pub fn get_track_playback_style(&self, track: u32) -> Option<WebPlaybackStyle> {
+        self.inner.get_track_playback_style(track).map(Into::into)
+    }
+
+    /// Belongs to the animation on the track: laying another one there starts
+    /// it looping forever again, so state the count after laying it.
+    pub fn set_track_loop_count(&mut self, track: u32, loop_count: i32) -> Result<(), JsValue> {
+        self.inner.set_track_loop_count(track, loop_count).map_err(js_error)
+    }
+
+    pub fn get_track_loop_count(&self, track: u32) -> Option<i32> {
+        self.inner.get_track_loop_count(track)
+    }
+
+    /// `is_finished` for one track; `false` for a track with no animation.
+    pub fn is_track_finished(&self, track: u32) -> bool {
+        self.inner.is_track_finished(track)
+    }
+
+    /// `just_looped` for one track.
+    pub fn track_just_looped(&self, track: u32) -> bool {
+        self.inner.track_just_looped(track)
+    }
+
+    /// The outgoing side of a crossfade on the track fires events while its
+    /// share, `1 - t`, is at least this. Silent from the start by default.
+    pub fn set_track_outgoing_event_threshold(&mut self, track: u32, threshold: f32) -> Result<(), JsValue> {
+        self.inner.set_track_outgoing_event_threshold(track, threshold).map_err(js_error)
+    }
+
+    pub fn get_track_outgoing_event_threshold(&self, track: u32) -> Option<f32> {
+        self.inner.get_track_outgoing_event_threshold(track)
+    }
+
     pub fn get_track_main_source(&self, track: u32) -> Option<u32> {
         self.inner.get_track_main_source(track)
     }
@@ -819,6 +881,12 @@ impl SSRuntimeContext {
     /// the table a passed event index addresses.
     pub fn get_source_animation_index(&self, handle: u32) -> Option<u32> {
         self.inner.get_source_animation_index(handle)
+    }
+
+    /// Which animation track 0's main source plays, as an index into the
+    /// ssab's animations; a crossfade on track 0 changes it from the call on.
+    pub fn get_current_animation_index(&self) -> Option<u32> {
+        self.inner.get_current_animation_index()
     }
 
     pub fn set_source_event_threshold(&mut self, handle: u32, threshold: f32) -> Result<(), JsValue> {
