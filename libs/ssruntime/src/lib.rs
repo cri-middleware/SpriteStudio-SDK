@@ -1035,6 +1035,12 @@ struct SourceState {
     /// "track 0's animation fires events; other sources never do" — the caller
     /// opts a source in by lowering the threshold to <= its current weight.
     event_threshold: f32,
+    /// This source's part of the outgoing side while its track crossfades: its
+    /// weight when the fade began, normalised against every source the track
+    /// carried then. The fade scales it by `1 - t`, so the outgoing side keeps
+    /// its proportions and the track's weights sum to 1 throughout. Only read
+    /// while the track's crossfade runs; the next crossfade overwrites it.
+    outgoing_share: f32,
 }
 
 /// The default event threshold: no weight reaches it, so a source fires only
@@ -1044,7 +1050,7 @@ const NO_EVENT_THRESHOLD: f32 = f32::INFINITY;
 
 impl SourceState {
     fn new() -> Self {
-        Self { animation_idx: -1, controller: core::playback_controller::PlaybackController::new(), track: 0, weight: 1.0, event_threshold: NO_EVENT_THRESHOLD }
+        Self { animation_idx: -1, controller: core::playback_controller::PlaybackController::new(), track: 0, weight: 1.0, event_threshold: NO_EVENT_THRESHOLD, outgoing_share: 0.0 }
     }
 
     fn is_active(&self) -> bool {
@@ -1058,6 +1064,7 @@ impl SourceState {
         self.animation_idx = -1;
         self.weight = 0.0;
         self.event_threshold = NO_EVENT_THRESHOLD;
+        self.outgoing_share = 0.0;
     }
 
     /// True for slots that carry a real animation (i.e. not inactive `-1` and
@@ -1126,8 +1133,9 @@ impl TrackState {
 /// A fade in flight on one track. Advanced by [`Context::update`].
 #[derive(Debug, Clone, Copy)]
 enum TrackFade {
-    /// Rebalance two sources' weights from `(1, 0)` to `(0, 1)`, then retire `from`.
-    Cross { from: u32, to: u32, elapsed: f32, duration: f32 },
+    /// Raise `to` from weight 0 to 1 while every other source the track carried
+    /// when the fade began sinks from its `outgoing_share` to 0, then retire them.
+    Cross { to: u32, elapsed: f32, duration: f32 },
     /// Drive the track's `alpha` from `start` to `target`.
     Alpha { start: f32, target: f32, elapsed: f32, duration: f32 },
 }
@@ -2143,13 +2151,18 @@ impl<'a> Context<'a> {
     /// [`Context::update`]'s `delta`). The fade starts from whatever the track is
     /// already playing, so there are no handles to pair up and nothing to clean up
     /// afterwards: on completion the incoming animation becomes the track's, and
-    /// the outgoing source is deactivated.
+    /// the outgoing sources are deactivated.
     ///
-    /// Starting a crossfade while one is running on the same track **completes the
-    /// old one first** (the incoming animation becomes current at its present
-    /// weight) and fades from there. That is deliberately simpler than keeping a
-    /// chain of half-finished fades: it can snap when fades are restarted faster
-    /// than they run, and it can never leave a source stuck at a stale weight.
+    /// **Everything the track carries fades out together**, in the proportions it
+    /// carries them: the main animation, any `add_track_source` sources, and
+    /// whatever a cancelled fade left behind. Their weights are normalised to sum
+    /// to 1 when the fade begins and scaled down by `1 - t` from there, so the
+    /// pose does not jump when the fade begins or when it completes.
+    ///
+    /// Starting a crossfade while one is running on the same track folds the one
+    /// in flight into the new outgoing side, at the weights it has reached. There
+    /// is never more than one outgoing side, so fades restarted faster than they
+    /// run do not pile up, and every outgoing source is released on completion.
     pub fn crossfade(&mut self, track: u32, name: &str, duration_ms: f32) -> Result<(), error::SSRuntimeError> {
         self.crossfade_by_hash(track, fnv1a_hash_str(name), duration_ms)
     }
@@ -2160,20 +2173,27 @@ impl<'a> Context<'a> {
         }
         let index = self.resolve_animation(hash)?;
         self.ensure_track(track)?;
-        self.settle_fade(track);
 
-        let from = self.instance.tracks[track as usize].main;
-        if from == NO_SOURCE {
-            // Nothing to fade from — this is just "start playing".
-            let handle = self.attach_source(track, index, 1.0)?;
-            self.replace_track_main(track, handle);
+        let to = self.attach_source(track, index, 0.0)?;
+        let outgoing: f32 = self.instance.sources.iter().enumerate().filter(|&(i, s)| i as u32 != to && s.track as u32 == track && s.has_real_animation()).map(|(_, s)| s.weight.max(0.0)).sum();
+        if outgoing <= 0.0 {
+            // Nothing audible to fade from — this is just "start playing".
+            self.instance.sources[to as usize].weight = 1.0;
+            self.replace_track_main(track, to);
             return Ok(());
         }
 
-        let to = self.attach_source(track, index, 0.0)?;
-        self.instance.sources[from as usize].weight = 1.0;
+        // Normalise the outgoing side once, here, so the fade only has to scale it.
+        // Left as they were, a cancelled fade's leftovers or a host's weights of 2
+        // would change their share of the pose the moment the incoming one rose.
+        for (i, source) in self.instance.sources.iter_mut().enumerate() {
+            if i as u32 != to && source.track as u32 == track && source.has_real_animation() {
+                source.outgoing_share = source.weight.max(0.0) / outgoing;
+                source.weight = source.outgoing_share;
+            }
+        }
         let t = &mut self.instance.tracks[track as usize];
-        t.fade = Some(TrackFade::Cross { from, to, elapsed: 0.0, duration: duration_ms });
+        t.fade = Some(TrackFade::Cross { to, elapsed: 0.0, duration: duration_ms });
         Ok(())
     }
 
@@ -2441,17 +2461,6 @@ impl<'a> Context<'a> {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
         Ok(t.main)
-    }
-
-    /// Finish a crossfade in flight on `track` immediately: the incoming
-    /// animation becomes the track's, the outgoing source is released.
-    fn settle_fade(&mut self, track: u32) {
-        let Some(TrackFade::Cross { from, to, .. }) = self.instance.tracks[track as usize].fade else {
-            return;
-        };
-        self.instance.sources[from as usize].deactivate();
-        self.instance.sources[to as usize].weight = 1.0;
-        self.replace_track_main(track, to);
     }
 
     pub fn get_frame_data(&mut self, frame_no: f32) -> Result<&[u8], error::SSRuntimeError> {
@@ -3286,31 +3295,37 @@ impl<'a> Context<'a> {
 
     /// Advance every track's fade by `delta`.
     ///
-    /// A crossfade rebalances its two sources' weights linearly and, on
-    /// completion, hands the track to the incoming animation and releases the
-    /// outgoing slot. An alpha fade drives the track's `alpha` to its target.
-    /// A fade whose sources were released elsewhere cancels itself.
+    /// A crossfade raises the incoming source's weight linearly while the
+    /// outgoing side sinks by the same amount, and on completion hands the track
+    /// to the incoming animation and releases every other source on it. An alpha
+    /// fade drives the track's `alpha` to its target. A crossfade whose incoming
+    /// source was released elsewhere cancels itself.
     fn advance_track_fades(&mut self, delta: f32) {
         for track in 0..self.instance.tracks.len() {
             let Some(fade) = self.instance.tracks[track].fade else {
                 continue;
             };
             match fade {
-                TrackFade::Cross { from, to, mut elapsed, duration } => {
-                    let released = self.instance.sources.get(from as usize).is_none_or(|s| !s.has_real_animation()) || self.instance.sources.get(to as usize).is_none_or(|s| !s.has_real_animation());
-                    if released {
+                TrackFade::Cross { to, mut elapsed, duration } => {
+                    if self.instance.sources.get(to as usize).is_none_or(|s| !s.has_real_animation()) {
                         self.instance.tracks[track].fade = None;
                         continue;
                     }
                     elapsed += delta;
                     let t = (elapsed / duration).clamp(0.0, 1.0);
-                    self.instance.sources[from as usize].weight = 1.0 - t;
+                    for (i, source) in self.instance.sources.iter_mut().enumerate() {
+                        // A source added to the track after the fade began has no
+                        // share, keeps the weight it was given, and is released with
+                        // the rest on completion.
+                        if i as u32 != to && source.track as usize == track && source.has_real_animation() && source.outgoing_share > 0.0 {
+                            source.weight = source.outgoing_share * (1.0 - t);
+                        }
+                    }
                     self.instance.sources[to as usize].weight = t;
                     if elapsed >= duration {
-                        self.instance.sources[from as usize].deactivate();
                         self.replace_track_main(track as u32, to);
                     } else {
-                        self.instance.tracks[track].fade = Some(TrackFade::Cross { from, to, elapsed, duration });
+                        self.instance.tracks[track].fade = Some(TrackFade::Cross { to, elapsed, duration });
                     }
                 }
                 TrackFade::Alpha { start, target, mut elapsed, duration } => {
@@ -6246,30 +6261,100 @@ mod tests {
         assert!(ctx.get_track_fade_progress(0).is_none(), "the crossfade should have completed");
     }
 
-    /// Restarting a crossfade completes the one in flight rather than layering a
-    /// second fade on top, so no source is left at a stale weight.
+    /// Weights of the live sources on `track`, keyed by handle.
+    fn track_weights(ctx: &Context<'_>, track: u16) -> Vec<(u32, f32)> {
+        ctx.instance.sources.iter().enumerate().filter(|(_, s)| s.animation_idx >= 0 && s.track == track).map(|(i, s)| (i as u32, s.weight)).collect()
+    }
+
+    fn weight_of(ctx: &Context<'_>, handle: u32) -> f32 {
+        ctx.get_source_weight(handle).unwrap_or_else(|| panic!("source {handle} was released"))
+    }
+
+    /// Restarting a crossfade folds the one in flight into the new outgoing side
+    /// at the weights it reached. Completing it instead snapped the pose the
+    /// moment the restart landed.
     #[test]
-    fn crossfade_restart_settles_the_previous_fade() {
+    fn crossfade_restart_folds_the_fade_in_flight() {
         let ssab = load_ringo_resource();
         let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
+        ctx.play();
         let walk = ctx.instance.tracks[0].main;
 
         ctx.crossfade(0, "run", 1000.0).unwrap();
+        let run = ctx.instance.sources.iter().enumerate().position(|(i, s)| i as u32 != walk && s.animation_idx >= 0).unwrap() as u32;
         ctx.update(300.0);
         ctx.crossfade(0, "dance", 1000.0).unwrap();
 
-        // `run` took over cleanly and now fades to `dance`; nothing is left at a
-        // weight from the abandoned fade.
-        let from = ctx.instance.tracks[0].main;
-        // The restart completed the fade in flight instead of abandoning it, so
-        // the track's main is `run` now. Still `walk` would mean the first
-        // crossfade never landed — the bug this test is named for.
-        assert_ne!(from, walk, "the track is still on the source it started from");
-        assert_eq!(ctx.get_source_weight(from), Some(1.0));
         assert_eq!(ctx.get_track_fade_progress(0), Some(0.0));
-        let active: Vec<f32> = ctx.instance.sources.iter().filter(|s| s.animation_idx >= 0).map(|s| s.weight).collect();
-        assert_eq!(active.len(), 2, "only the outgoing and incoming animations remain");
+        assert!((weight_of(&ctx, walk) - 0.7).abs() < 1e-3, "walk keeps what it had reached");
+        assert!((weight_of(&ctx, run) - 0.3).abs() < 1e-3, "run keeps what it had reached");
+        assert_eq!(track_weights(&ctx, 0).len(), 3, "both sides of the first fade are now outgoing");
+
+        ctx.update(500.0);
+        assert!((weight_of(&ctx, walk) - 0.35).abs() < 1e-3);
+        assert!((weight_of(&ctx, run) - 0.15).abs() < 1e-3);
+        let sum: f32 = track_weights(&ctx, 0).iter().map(|(_, w)| w).sum();
+        assert!((sum - 1.0).abs() < 1e-3, "the track's weights sum to {sum}");
+
+        ctx.update(600.0);
+        let left = track_weights(&ctx, 0);
+        assert_eq!(left.len(), 1, "every outgoing source is released on completion: {left:?}");
+        assert_eq!(left[0], (ctx.instance.tracks[0].main, 1.0));
+    }
+
+    /// What a cancelled fade leaves on the track fades out with the next one,
+    /// in the proportions it was left at. Fading out only the main source left
+    /// the other one mixing at its stale weight, which jumped the pose when the
+    /// fade began (the main source's share went from 0.75 to 0.8) and again when
+    /// it completed and the leftover was released.
+    #[test]
+    fn a_crossfade_after_a_cancel_carries_the_leftover_out() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+        ctx.play();
+        let walk = ctx.instance.tracks[0].main;
+
+        ctx.crossfade(0, "run", 1000.0).unwrap();
+        ctx.update(250.0);
+        ctx.cancel_track_fade(0).unwrap();
+        let before = track_weights(&ctx, 0);
+
+        ctx.crossfade(0, "dance", 1000.0).unwrap();
+        for (handle, weight) in &before {
+            assert!((weight_of(&ctx, *handle) - weight).abs() < 1e-3, "source {handle} jumped when the fade began");
+        }
+        assert!((weight_of(&ctx, walk) - 0.75).abs() < 1e-3);
+
+        ctx.update(1100.0);
+        let left = track_weights(&ctx, 0);
+        assert_eq!(left.len(), 1, "the leftover is released with the rest: {left:?}");
+    }
+
+    /// A track built from several sources fades out as a whole, keeping their
+    /// proportions, whatever scale the host gave the weights in.
+    #[test]
+    fn a_crossfade_from_a_mixed_track_fades_every_source_out() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+        ctx.play();
+        let walk = ctx.instance.tracks[0].main;
+        ctx.set_source_weight(walk, 3.0).unwrap();
+        let run = ctx.add_track_source(0, "run", 1.0).unwrap();
+
+        ctx.crossfade(0, "dance", 1000.0).unwrap();
+        assert!((weight_of(&ctx, walk) - 0.75).abs() < 1e-3, "3 : 1 normalises to 0.75 : 0.25");
+        assert!((weight_of(&ctx, run) - 0.25).abs() < 1e-3);
+
+        ctx.update(500.0);
+        assert!((weight_of(&ctx, walk) - 0.375).abs() < 1e-3);
+        assert!((weight_of(&ctx, run) - 0.125).abs() < 1e-3);
+
+        ctx.update(600.0);
+        assert!(ctx.get_source_weight(walk).is_none());
+        assert!(ctx.get_source_weight(run).is_none());
     }
 
     #[test]
