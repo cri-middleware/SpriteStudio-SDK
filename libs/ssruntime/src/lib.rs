@@ -2150,8 +2150,17 @@ impl<'a> Context<'a> {
     /// Fade `track` to `name` over `duration_ms` (the same time unit as
     /// [`Context::update`]'s `delta`). The fade starts from whatever the track is
     /// already playing, so there are no handles to pair up and nothing to clean up
-    /// afterwards: on completion the incoming animation becomes the track's, and
-    /// the outgoing sources are deactivated.
+    /// afterwards: on completion the outgoing sources are deactivated.
+    ///
+    /// **The incoming animation becomes the track's main one the moment the fade
+    /// begins**, at weight 0 — on track 0 that makes it the primary, so the
+    /// frame, `is_playing` / `is_finished` / `just_looped`, the playback settings,
+    /// the discrete attributes and the events all speak for it from the call on.
+    /// The host has said where the character is going, and the outgoing side is
+    /// only its pose fading away: it neither reports state nor fires events
+    /// (unless its event threshold is lowered). Handing over on completion
+    /// instead let an outgoing animation that ran out mid-fade report the
+    /// character finished, and then playing again once the fade completed.
     ///
     /// **Everything the track carries fades out together**, in the proportions it
     /// carries them: the main animation, any `add_track_source` sources, and
@@ -2193,7 +2202,11 @@ impl<'a> Context<'a> {
             }
         }
         let t = &mut self.instance.tracks[track as usize];
+        t.main = to;
         t.fade = Some(TrackFade::Cross { to, elapsed: 0.0, duration: duration_ms });
+        if track == 0 {
+            self.instance.primary = to;
+        }
         Ok(())
     }
 
@@ -2423,8 +2436,9 @@ impl<'a> Context<'a> {
     /// How far through its section track 0's main animation stands, in
     /// `[0.0, 1.0)`; `None` with nothing set up. Measured by position, not by
     /// progress, so a backward or ping-pong return leg reads where it stands.
-    /// During a crossfade on track 0 this is the outgoing animation, which is
-    /// still the main one.
+    /// During a crossfade on track 0 this is the incoming animation, which takes
+    /// the main role when the fade begins; the source a crossfade is laying
+    /// is attached before that, so it reads the outgoing one it is replacing.
     fn primary_phase(&self) -> Option<f32> {
         let source = self.instance.primary_source();
         if !source.has_real_animation() {
@@ -3296,8 +3310,9 @@ impl<'a> Context<'a> {
     /// Advance every track's fade by `delta`.
     ///
     /// A crossfade raises the incoming source's weight linearly while the
-    /// outgoing side sinks by the same amount, and on completion hands the track
-    /// to the incoming animation and releases every other source on it. An alpha
+    /// outgoing side sinks by the same amount, and on completion releases every
+    /// source on the track but the incoming one, which has been its main one
+    /// since the fade began. An alpha
     /// fade drives the track's `alpha` to its target. A crossfade whose incoming
     /// source was released elsewhere cancels itself.
     fn advance_track_fades(&mut self, delta: f32) {
@@ -6301,6 +6316,51 @@ mod tests {
         let left = track_weights(&ctx, 0);
         assert_eq!(left.len(), 1, "every outgoing source is released on completion: {left:?}");
         assert_eq!(left[0], (ctx.instance.tracks[0].main, 1.0));
+    }
+
+    /// The incoming animation takes the main role, and on track 0 the primary,
+    /// the moment the crossfade is called: the frame and the discrete attributes
+    /// are its own from the first frame of the fade, while its weight is still 0.
+    #[test]
+    fn a_crossfade_hands_the_main_role_over_when_it_begins() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "wait1");
+        ctx.play();
+        let wait = ctx.instance.tracks[0].main;
+
+        ctx.crossfade(0, "attack1", 1000.0).unwrap();
+        let attack = ctx.get_track_main_source(0).unwrap();
+        assert_ne!(attack, wait, "the incoming animation is the track's main one at once");
+        assert_eq!(ctx.instance.primary, attack, "and on track 0, the primary");
+        assert_eq!(ctx.get_source_animation_index(attack), Some(resource.find_animation_index("attack1").unwrap() as u32));
+        assert_eq!(ctx.get_source_weight(attack), Some(0.0), "while its pose has not started to show");
+        assert_eq!(ctx.get_source_weight(wait), Some(1.0));
+
+        let frame = ctx.update(1000.0 / 60.0);
+        ctx.get_frame_data(frame).expect("the frame update returns is the incoming animation's");
+        assert_eq!(ctx.instance.resolved_layer.cell_ids, ctx.instance.layers[attack as usize].cell_ids, "the discrete attributes are the incoming animation's");
+    }
+
+    /// An outgoing animation that runs out mid-fade does not finish the
+    /// character. Reporting from it until the fade completed said finished, then
+    /// playing again once the incoming one took over — with nothing to say it
+    /// had started again.
+    #[test]
+    fn an_outgoing_animation_running_out_does_not_finish_the_character() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "attack1");
+        ctx.set_loop_count(1);
+        ctx.play();
+
+        ctx.crossfade(0, "wait1", 5000.0).unwrap();
+        for _ in 0..120 {
+            ctx.update(1000.0 / 60.0);
+            assert!(!ctx.is_finished(), "the character finished with the outgoing animation");
+            assert!(ctx.is_playing());
+        }
+        assert!(ctx.get_track_fade_progress(0).is_some(), "the fade is still running, outlasting attack1");
     }
 
     /// What a cancelled fade leaves on the track fades out with the next one,
