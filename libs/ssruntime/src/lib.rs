@@ -1114,6 +1114,10 @@ struct TrackState {
     /// laid on the track takes it, and changing it reaches the sources already
     /// there, so it survives a crossfade or a `set_track_animation`.
     policy: core::playback_controller::PlaybackPolicy,
+    /// How far into a crossfade the outgoing side keeps firing events: it fires
+    /// while its share of the track, `1 - t`, is at least this. The default,
+    /// [`NO_EVENT_THRESHOLD`], keeps it silent from the moment the fade begins.
+    outgoing_event_threshold: f32,
     /// Handle of the source carrying this track's animation, or [`NO_SOURCE`].
     /// Extra sources added for weighted blending sit alongside it.
     main: u32,
@@ -1125,7 +1129,7 @@ const NO_SOURCE: u32 = u32::MAX;
 
 impl TrackState {
     fn new() -> Self {
-        Self { alpha: 1.0, blend: TrackBlend::Mix, sync: TrackSync::Free, policy: core::playback_controller::PlaybackPolicy::DEFAULT, main: NO_SOURCE, fade: None }
+        Self { alpha: 1.0, blend: TrackBlend::Mix, sync: TrackSync::Free, policy: core::playback_controller::PlaybackPolicy::DEFAULT, outgoing_event_threshold: NO_EVENT_THRESHOLD, main: NO_SOURCE, fade: None }
     }
 
     /// A track contributes nothing at alpha 0 — `Mix` returns the pose below and
@@ -1704,11 +1708,13 @@ impl<'a> InstanceState<'a> {
         // may be a released source at the defaults. `Context::reset` clears
         // them explicitly afterwards, because that one really is a teardown.
         let policy = self.tracks[0].policy;
+        let outgoing_event_threshold = self.tracks[0].outgoing_event_threshold;
         self.sources[0] = SourceState::new();
         self.sources[0].controller.adopt_policy(&policy);
         self.tracks.truncate(1);
         self.tracks[0] = TrackState::new();
         self.tracks[0].policy = policy;
+        self.tracks[0].outgoing_event_threshold = outgoing_event_threshold;
         self.tracks[0].main = 0;
         self.primary = 0;
     }
@@ -1756,6 +1762,23 @@ impl<'a> InstanceState<'a> {
         }
     }
 
+    /// Whether source `i`, which is not the primary, fires the events it passes.
+    /// On the outgoing side of a crossfade it is the side's share of the track
+    /// that is measured, against the track's threshold, so a side of several
+    /// sources goes quiet at once; anywhere else, its own weight against its own
+    /// threshold.
+    fn source_fires_events(&self, i: usize) -> bool {
+        let source = &self.sources[i];
+        let track = &self.tracks[source.track as usize];
+        if let Some(fade @ TrackFade::Cross { to, .. }) = track.fade
+            && to as usize != i
+            && source.outgoing_share > 0.0
+        {
+            return 1.0 - fade.progress() >= track.outgoing_event_threshold;
+        }
+        source.weight >= source.event_threshold
+    }
+
     /// The controller of the source carrying `track`'s animation.
     fn track_main_controller(&self, track: u32) -> Option<&core::playback_controller::PlaybackController> {
         let main = self.tracks.get(track as usize)?.main;
@@ -1788,6 +1811,7 @@ impl<'a> Context<'a> {
         // A teardown, not an animation change: the host's playback policy goes
         // with it, which `collapse_to_track_zero` alone would have carried over.
         self.instance.tracks[0].policy = core::playback_controller::PlaybackPolicy::DEFAULT;
+        self.instance.tracks[0].outgoing_event_threshold = NO_EVENT_THRESHOLD;
         self.instance.primary_source_mut().controller.reset_setup();
         self.instance.layers[0].cursors.clear();
         self.instance.resolved_layer.cursors.clear();
@@ -2468,6 +2492,27 @@ impl<'a> Context<'a> {
     pub fn get_source_event_threshold(&self, handle: u32) -> Option<f32> {
         let source = self.instance.sources.get(handle as usize)?;
         source.has_real_animation().then_some(source.event_threshold)
+    }
+
+    /// How far into a crossfade on `track` the outgoing side keeps firing
+    /// events. It fires while its share of the track, `1 - t`, is at least
+    /// `threshold`, however many sources it holds: `0.5` keeps it firing for the
+    /// first half of the fade. The default, `+∞`, keeps it silent from the moment
+    /// the fade begins, which is where the incoming animation starts firing.
+    /// The outgoing sources' own thresholds are not consulted while they fade.
+    ///
+    /// A setting of the track rather than of a source, since the outgoing side
+    /// can be several sources, released when the fade completes; it applies to
+    /// every crossfade on the track until it is changed. Track 0 keeps it
+    /// across `setup_animation`, as it keeps its playback settings.
+    pub fn set_track_outgoing_event_threshold(&mut self, track: u32, threshold: f32) -> Result<(), error::SSRuntimeError> {
+        self.ensure_track(track)?;
+        self.instance.tracks[track as usize].outgoing_event_threshold = threshold;
+        Ok(())
+    }
+
+    pub fn get_track_outgoing_event_threshold(&self, track: u32) -> Option<f32> {
+        Some(self.instance.tracks.get(track as usize)?.outgoing_event_threshold)
     }
 
     // ---- internals shared by the track API ---------------------------------
@@ -3509,7 +3554,7 @@ impl<'a> Context<'a> {
                 continue;
             }
             let is_primary = i == primary_idx;
-            if !is_primary && source.weight < source.event_threshold {
+            if !is_primary && !self.instance.source_fires_events(i) {
                 continue;
             }
             let metadata = &resource.animations[source.animation_idx as usize];
@@ -5671,6 +5716,63 @@ mod tests {
 
         let (overlay, fired) = run(true);
         assert!(fired.contains(&overlay), "the overlay did not fire after opting in");
+    }
+
+    /// The outgoing side of a crossfade is silent by default from the moment
+    /// the fade begins, and with the track's outgoing threshold at 0.5 it fires
+    /// through the first half of the fade and no further.
+    #[test]
+    fn the_outgoing_side_fires_by_its_track_s_threshold() {
+        prepare();
+        let data = std::fs::read(get_test_base_path().join("tests/overall/overall/UserData.ssab")).expect("Failed to read UserData.ssab");
+        let ssab_data = SsabData::load_copy(&data).unwrap();
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.unwrap();
+        let anim_name = resource.get_animation_names().first().cloned().expect("No animations found in SSAB");
+
+        // The progress at each tick the outgoing source fired, and whether the
+        // incoming one fired at all.
+        let run = |threshold: Option<f32>| -> (Vec<f32>, bool) {
+            let mut ctx = Context::new();
+            ctx.bind_resource(&resource);
+            ctx.setup_animation(&anim_name).unwrap();
+            if let Some(t) = threshold {
+                ctx.set_track_outgoing_event_threshold(0, t).unwrap();
+            }
+            ctx.play();
+            let outgoing = ctx.get_track_main_source(0).unwrap();
+            ctx.crossfade(0, &anim_name, 4000.0).unwrap();
+            let incoming = ctx.get_track_main_source(0).unwrap();
+            let (mut out_at, mut incoming_fired) = (Vec::new(), false);
+            for _ in 0..119 {
+                ctx.update(1000.0 / 30.0);
+                let progress = ctx.get_track_fade_progress(0).unwrap();
+                if ctx.get_passed_event_source_handles().contains(&outgoing) {
+                    out_at.push(progress);
+                }
+                incoming_fired |= ctx.get_passed_event_source_handles().contains(&incoming);
+            }
+            (out_at, incoming_fired)
+        };
+
+        let (out_at, incoming_fired) = run(None);
+        assert!(incoming_fired, "fixture sanity: the incoming animation fires");
+        assert!(out_at.is_empty(), "the outgoing side fired by default, at {out_at:?}");
+
+        let (out_at, _) = run(Some(0.5));
+        assert!(!out_at.is_empty(), "the outgoing side never fired at 0.5");
+        assert!(out_at.iter().all(|&p| p <= 0.5 + 1e-4), "it fired past half way: {out_at:?}");
+    }
+
+    #[test]
+    fn track_outgoing_event_threshold_round_trips() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+        assert_eq!(ctx.get_track_outgoing_event_threshold(0), Some(f32::INFINITY), "silent by default");
+        ctx.set_track_outgoing_event_threshold(0, 0.5).unwrap();
+        ctx.setup_animation("run").unwrap();
+        assert_eq!(ctx.get_track_outgoing_event_threshold(0), Some(0.5), "track 0 keeps it across a setup");
+        assert_eq!(ctx.get_track_outgoing_event_threshold(3), None);
     }
 
     #[test]
