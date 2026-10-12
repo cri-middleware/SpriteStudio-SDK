@@ -139,6 +139,12 @@ A **track** layers onto the pose the tracks below it produced. A **source** is o
 | Where an animation laid on the track starts (`Free` / `Start`) | `trackSync` |
 | The track's playhead | `trackFrame` |
 | The track's speed | `trackSpeed` |
+| The track's frame-rate override | `trackFrameRate` |
+| The track's frame skip on or off | `trackFrameSkipEnabled` |
+| The track's playback direction / round-trip style | `trackPlaybackDirection` / `trackPlaybackStyle` |
+| The loop count of the track's animation | `trackLoopCount` |
+| Whether the track's animation has played its loops (state) | `isTrackFinished` |
+| Whether the last update wrapped the track's animation (pulse) | `trackJustLooped` |
 | Fade while replacing the track's animation | `crossfade` |
 | Fade the track's own alpha | `fadeTrack` |
 | How far the fade in flight has got | `trackFadeProgress` |
@@ -147,8 +153,11 @@ A **track** layers onto the pose the tracks below it produced. A **source** is o
 | A source's weight within its track | `sourceWeight` |
 | A source's playhead | `sourceFrame` |
 | The minimum weight at which a source fires events | `sourceEventThreshold` |
+| The minimum share at which the outgoing side of a crossfade fires events | `trackOutgoingEventThreshold` |
 
 **`crossfade` and `fadeTrack` are different things.** The first replaces what a track plays; the second changes how much the track takes effect.
+
+The track forms of the playback settings take §3-1's stems with `track` in front, and track 0's keep §3-1's stems: `speedScale` is track 0's `trackSpeed`. On track 0, `crossfade` and `setTrackAnimation` change `currentAnimation` from the call on, as `setAnimation` does.
 
 A read and its write share the stem, as in §3 (`trackAlpha` is used for both, and the form of the write follows the host). `setTrackAnimation` keeps its verb because there is no matching read. What comes back is a source handle, and you can read that with `trackMainSource`.
 
