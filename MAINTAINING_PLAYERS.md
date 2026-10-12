@@ -130,4 +130,4 @@ Link the SDK's roadmap as `https://github.com/cri-middleware/SpriteStudio-SDK/bl
 
 ## 7. Departing from this document
 
-The same as [Player API conventions §9](./libs/ssruntime/docs/20_design/30_api_conventions.md#9-departing-from-this-document). Depart when the host's conventions genuinely collide with this one. **Write the reason where the departure is.**
+The same as [Player API conventions §10](./libs/ssruntime/docs/20_design/30_api_conventions.md#10-departing-from-this-document). Depart when the host's conventions genuinely collide with this one. **Write the reason where the departure is.**
