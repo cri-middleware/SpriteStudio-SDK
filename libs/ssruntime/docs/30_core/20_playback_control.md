@@ -74,6 +74,8 @@ What is kept is the playback direction setting, not **the heading partway throug
 
 Setup also returns the playback state to **Stopped** and releases any pause hold (§4).
 
+The other two ways to change track 0's animation, `ss_runtime_crossfade` and `ss_runtime_set_track_animation` on track 0, follow the same table: the kept settings belong to track 0 and reach the animation laid there, and the section and the loop count start over. Unlike setup, they leave the playback state as it is — a crossfade carries on playing. See [Animation Mixing §1-5](../50_features/10_animation_mixing.md).
+
 ## 4. Playback state
 
 ### 4-1. What each operation means
