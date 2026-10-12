@@ -1109,6 +1109,11 @@ struct TrackState {
     blend: TrackBlend,
     /// Where the animations laid on this track start.
     sync: TrackSync,
+    /// How the animations laid on this track are played: the speed, the
+    /// frame-rate override, the frame skip, the direction and style. Every source
+    /// laid on the track takes it, and changing it reaches the sources already
+    /// there, so it survives a crossfade or a `set_track_animation`.
+    policy: core::playback_controller::PlaybackPolicy,
     /// Handle of the source carrying this track's animation, or [`NO_SOURCE`].
     /// Extra sources added for weighted blending sit alongside it.
     main: u32,
@@ -1120,7 +1125,7 @@ const NO_SOURCE: u32 = u32::MAX;
 
 impl TrackState {
     fn new() -> Self {
-        Self { alpha: 1.0, blend: TrackBlend::Mix, sync: TrackSync::Free, main: NO_SOURCE, fade: None }
+        Self { alpha: 1.0, blend: TrackBlend::Mix, sync: TrackSync::Free, policy: core::playback_controller::PlaybackPolicy::DEFAULT, main: NO_SOURCE, fade: None }
     }
 
     /// A track contributes nothing at alpha 0 — `Mix` returns the pose below and
@@ -1695,13 +1700,15 @@ impl<'a> InstanceState<'a> {
         // Rebuilding the slot must not read as a reset of the host's playback
         // policy: this runs inside every `setup_animation`, and the speed /
         // frame-skip / frame-rate override deliberately outlive an animation
-        // change. `Context::reset` clears them explicitly afterwards, because
-        // that one really is a teardown.
-        // `::core` spelled out: this crate has its own `core` module.
-        let previous = ::core::mem::replace(&mut self.sources[0], SourceState::new());
-        self.sources[0].controller.adopt_host_policy(&previous.controller);
+        // change. They are track 0's, not slot 0's: after a crossfade slot 0
+        // may be a released source at the defaults. `Context::reset` clears
+        // them explicitly afterwards, because that one really is a teardown.
+        let policy = self.tracks[0].policy;
+        self.sources[0] = SourceState::new();
+        self.sources[0].controller.adopt_policy(&policy);
         self.tracks.truncate(1);
         self.tracks[0] = TrackState::new();
+        self.tracks[0].policy = policy;
         self.tracks[0].main = 0;
         self.primary = 0;
     }
@@ -1735,6 +1742,26 @@ impl<'a> InstanceState<'a> {
         }
         !self.sources.iter().enumerate().any(|(i, s)| i != primary_idx && s.is_active() && self.tracks[s.track as usize].is_audible())
     }
+
+    /// Change one setting of `track`'s playback policy, and the same setting on
+    /// every source the track carries now (both sides of a crossfade included),
+    /// so the policy and what is playing never disagree. The caller has made
+    /// sure the track exists.
+    fn set_track_policy(&mut self, track: u32, policy: impl FnOnce(&mut core::playback_controller::PlaybackPolicy), controller: impl Fn(&mut core::playback_controller::PlaybackController)) {
+        policy(&mut self.tracks[track as usize].policy);
+        for source in self.sources.iter_mut() {
+            if source.track as u32 == track && source.has_real_animation() {
+                controller(&mut source.controller);
+            }
+        }
+    }
+
+    /// The controller of the source carrying `track`'s animation.
+    fn track_main_controller(&self, track: u32) -> Option<&core::playback_controller::PlaybackController> {
+        let main = self.tracks.get(track as usize)?.main;
+        let source = self.sources.get(main as usize)?;
+        source.has_real_animation().then_some(&source.controller)
+    }
 }
 
 pub struct Context<'a> {
@@ -1760,6 +1787,7 @@ impl<'a> Context<'a> {
         self.instance.collapse_to_track_zero();
         // A teardown, not an animation change: the host's playback policy goes
         // with it, which `collapse_to_track_zero` alone would have carried over.
+        self.instance.tracks[0].policy = core::playback_controller::PlaybackPolicy::DEFAULT;
         self.instance.primary_source_mut().controller.reset_setup();
         self.instance.layers[0].cursors.clear();
         self.instance.resolved_layer.cursors.clear();
@@ -2250,10 +2278,103 @@ impl<'a> Context<'a> {
         (source.animation_idx >= 0).then(|| source.controller.get_frame_no())
     }
 
+    /// The speed of `track`, as a multiple of each animation's frame rate. Kept
+    /// by the track: it reaches every source on it now and every one laid on it
+    /// later, so a crossfade or a `set_track_animation` does not reset it.
+    /// Track 0's is [`Self::set_speed_scale`]. Like every track setting it goes
+    /// with the track when `setup_animation` collapses the stack, except on
+    /// track 0.
     pub fn set_track_speed(&mut self, track: u32, speed: f32) -> Result<(), error::SSRuntimeError> {
-        let handle = self.track_main(track)?;
-        self.instance.sources[handle as usize].controller.set_speed_scale(speed);
+        self.ensure_track(track)?;
+        self.instance.set_track_policy(track, |p| p.set_speed_scale(speed), |c| c.set_speed_scale(speed));
         Ok(())
+    }
+
+    /// What [`Self::set_track_speed`] stored: a negative speed reads back as 0.
+    pub fn get_track_speed(&self, track: u32) -> Option<f32> {
+        Some(self.instance.tracks.get(track as usize)?.policy.speed_scale)
+    }
+
+    /// The frame rate `track` plays its animations at instead of the rate they
+    /// were authored at; `0` or a negative rate clears it. Kept by the track,
+    /// as [`Self::set_track_speed`] is.
+    pub fn set_track_frame_rate(&mut self, track: u32, frame_rate: i32) -> Result<(), error::SSRuntimeError> {
+        self.ensure_track(track)?;
+        self.instance.set_track_policy(track, |p| p.set_frame_rate(frame_rate), |c| c.set_frame_rate(frame_rate));
+        Ok(())
+    }
+
+    /// The rate `track`'s animation plays at: the override when one is set,
+    /// otherwise the rate it was authored at. `None` for a track that does not
+    /// exist; `0` for one with no animation and no override.
+    pub fn get_track_frame_rate(&self, track: u32) -> Option<i32> {
+        let policy = self.instance.tracks.get(track as usize)?.policy;
+        Some(self.instance.track_main_controller(track).map_or(policy.frame_rate_override.unwrap_or(0), |c| c.get_frame_rate()))
+    }
+
+    /// Whether `track` skips frames to keep up. Kept by the track, as
+    /// [`Self::set_track_speed`] is.
+    pub fn set_track_skip_frames(&mut self, track: u32, skip: bool) -> Result<(), error::SSRuntimeError> {
+        self.ensure_track(track)?;
+        self.instance.set_track_policy(track, |p| p.is_skip_frames = skip, |c| c.set_skip_frames(skip));
+        Ok(())
+    }
+
+    pub fn get_track_skip_frames(&self, track: u32) -> Option<bool> {
+        Some(self.instance.tracks.get(track as usize)?.policy.is_skip_frames)
+    }
+
+    /// The direction and style `track` plays its animations in. Kept by the
+    /// track, as [`Self::set_track_speed`] is.
+    pub fn set_track_playback_direction(&mut self, track: u32, direction: core::playback_controller::PlaybackDirection, style: core::playback_controller::PlaybackStyle) -> Result<(), error::SSRuntimeError> {
+        self.ensure_track(track)?;
+        self.instance.set_track_policy(
+            track,
+            |p| {
+                p.playback_direction = direction;
+                p.playback_style = style;
+            },
+            |c| c.set_playback_direction(direction, style),
+        );
+        Ok(())
+    }
+
+    pub fn get_track_playback_direction(&self, track: u32) -> Option<core::playback_controller::PlaybackDirection> {
+        Some(self.instance.tracks.get(track as usize)?.policy.playback_direction)
+    }
+
+    pub fn get_track_playback_style(&self, track: u32) -> Option<core::playback_controller::PlaybackStyle> {
+        Some(self.instance.tracks.get(track as usize)?.policy.playback_style)
+    }
+
+    /// How many times `track`'s animation plays before it holds its last frame;
+    /// `0` or a negative count loops forever. Unlike the speed this belongs to
+    /// the animation on the track, not the track: laying another animation
+    /// there starts it looping forever again, so state the count after laying
+    /// it. Track 0's is [`Self::set_loop_count`].
+    pub fn set_track_loop_count(&mut self, track: u32, loop_count: i32) -> Result<(), error::SSRuntimeError> {
+        let handle = self.track_main(track)?;
+        self.instance.sources[handle as usize].controller.set_loop_count(loop_count);
+        Ok(())
+    }
+
+    /// `-1` for a track that loops forever; `None` for one with no animation.
+    pub fn get_track_loop_count(&self, track: u32) -> Option<i32> {
+        Some(self.instance.track_main_controller(track)?.get_loop_count())
+    }
+
+    /// `true` once `track`'s animation has played its loop count out and holds
+    /// its last frame, as [`Self::is_finished`] is for track 0. A finished track
+    /// keeps mixing that frame in until the host fades or clears it. `false` for
+    /// a track with no animation.
+    pub fn is_track_finished(&self, track: u32) -> bool {
+        self.instance.track_main_controller(track).is_some_and(|c| c.is_finished())
+    }
+
+    /// `true` for the update in which `track`'s animation wrapped back to its
+    /// start, as [`Self::just_looped`] is for track 0.
+    pub fn track_just_looped(&self, track: u32) -> bool {
+        self.instance.track_main_controller(track).is_some_and(|c| c.just_looped())
     }
 
     /// Handle of the source carrying `track`'s animation. Needed to give that
@@ -2398,6 +2519,10 @@ impl<'a> Context<'a> {
 
         metadata.part_bases(self.instance.coordinate_system, self.instance.origin, self.instance.unit);
         let mut source = SourceState::new();
+        // The track's policy, not the defaults: a laid animation is played the
+        // way the host plays that track. Before `setup`, which derives the
+        // heading and the frame interval from it.
+        source.controller.adopt_policy(&self.instance.tracks[track as usize].policy);
         source.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
         // A source laid on a track plays from the moment it is attached; the
         // character's clock decides whether it actually moves. Left stopped, an
@@ -3218,24 +3343,35 @@ impl<'a> Context<'a> {
 
     // Playback setup
 
+    /// Track 0's [`Self::set_track_skip_frames`].
     pub fn set_skip_frames(&mut self, skip: bool) {
-        self.instance.primary_source_mut().controller.set_skip_frames(skip);
+        self.instance.set_track_policy(0, |p| p.is_skip_frames = skip, |c| c.set_skip_frames(skip));
     }
 
     pub fn set_loop_count(&mut self, loop_count: i32) {
         self.instance.primary_source_mut().controller.set_loop_count(loop_count);
     }
 
+    /// Track 0's [`Self::set_track_frame_rate`].
     pub fn set_frame_rate(&mut self, frame_rate: i32) {
-        self.instance.primary_source_mut().controller.set_frame_rate(frame_rate);
+        self.instance.set_track_policy(0, |p| p.set_frame_rate(frame_rate), |c| c.set_frame_rate(frame_rate));
     }
 
+    /// Track 0's [`Self::set_track_playback_direction`].
     pub fn set_playback_direction(&mut self, direction: core::playback_controller::PlaybackDirection, style: core::playback_controller::PlaybackStyle) {
-        self.instance.primary_source_mut().controller.set_playback_direction(direction, style);
+        self.instance.set_track_policy(
+            0,
+            |p| {
+                p.playback_direction = direction;
+                p.playback_style = style;
+            },
+            |c| c.set_playback_direction(direction, style),
+        );
     }
 
+    /// Track 0's [`Self::set_track_speed`].
     pub fn set_speed_scale(&mut self, speed_scale: f32) {
-        self.instance.primary_source_mut().controller.set_speed_scale(speed_scale);
+        self.instance.set_track_policy(0, |p| p.set_speed_scale(speed_scale), |c| c.set_speed_scale(speed_scale));
     }
 
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
@@ -6361,6 +6497,133 @@ mod tests {
             assert!(ctx.is_playing());
         }
         assert!(ctx.get_track_fade_progress(0).is_some(), "the fade is still running, outlasting attack1");
+    }
+
+    /// A crossfade's incoming animation is played the way the host plays track
+    /// 0, as `setup_animation` keeps it: the speed, the rate, the frame skip and
+    /// the direction carry over; the loop count is the animation's, and starts
+    /// over. Laid at the defaults instead, it reset the host's speed the moment
+    /// the fade began.
+    #[test]
+    fn a_crossfade_plays_the_incoming_animation_the_way_track_zero_is_played() {
+        use crate::core::playback_controller::{PlaybackDirection, PlaybackStyle};
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+        ctx.set_speed_scale(2.0);
+        ctx.set_frame_rate(30);
+        ctx.set_skip_frames(false);
+        ctx.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
+        ctx.set_loop_count(3);
+        ctx.play();
+
+        ctx.crossfade(0, "run", 1000.0).unwrap();
+        let run = &ctx.instance.sources[ctx.get_track_main_source(0).unwrap() as usize].controller;
+        assert_eq!(run.get_speed_scale(), 2.0);
+        assert_eq!(run.get_frame_rate(), 30);
+        assert!(!run.get_skip_frames());
+        assert_eq!(run.get_playback_direction(), PlaybackDirection::Backward);
+        assert_eq!(run.get_playback_style(), PlaybackStyle::PingPong);
+        assert_eq!(run.get_loop_count(), -1, "the loop count is restated per animation");
+        assert_eq!(ctx.get_speed_scale(), 2.0, "track 0 reports what it plays at");
+        assert_eq!(ctx.get_track_speed(0), Some(2.0));
+    }
+
+    /// A track's settings reach every source on it, both sides of a fade
+    /// included, and outlive the animation on it.
+    #[test]
+    fn a_track_keeps_its_speed_across_the_animations_laid_on_it() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+        ctx.play();
+
+        // Set before anything is laid there: the track keeps it until something is.
+        ctx.set_track_speed(1, 0.5).unwrap();
+        ctx.set_track_animation(1, "run").unwrap();
+        let speed_of = |ctx: &Context<'_>, track: u32| ctx.instance.sources[ctx.get_track_main_source(track).unwrap() as usize].controller.get_speed_scale();
+        assert_eq!(speed_of(&ctx, 1), 0.5);
+
+        ctx.set_track_animation(1, "dance").unwrap();
+        assert_eq!(speed_of(&ctx, 1), 0.5, "a new animation on the track keeps the track's speed");
+
+        ctx.crossfade(1, "walk", 1000.0).unwrap();
+        ctx.set_track_speed(1, 0.25).unwrap();
+        for (handle, _) in track_weights(&ctx, 1) {
+            assert_eq!(ctx.instance.sources[handle as usize].controller.get_speed_scale(), 0.25, "source {handle} missed the change");
+        }
+        assert_eq!(ctx.get_track_speed(1), Some(0.25));
+        assert_eq!(ctx.get_speed_scale(), 1.0, "track 0 is untouched");
+
+        ctx.set_track_speed(1, -1.0).unwrap();
+        assert_eq!(ctx.get_track_speed(1), Some(0.0), "a negative speed is stored as a stop");
+    }
+
+    /// A track above 0 can be told how many times to play, and says when it is
+    /// done, while track 0 plays on. The track then holds its last frame.
+    #[test]
+    fn an_overlay_track_finishes_on_its_own_loop_count() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "wait1");
+        ctx.play();
+        ctx.set_track_animation(1, "attack1").unwrap();
+        assert_eq!(ctx.get_track_loop_count(1), Some(-1), "an animation laid on a track loops forever");
+        ctx.set_track_loop_count(1, 1).unwrap();
+        assert_eq!(ctx.get_track_loop_count(1), Some(1));
+
+        let mut finished_at = None;
+        for tick in 0..120 {
+            ctx.update(1000.0 / 60.0);
+            if ctx.is_track_finished(1) {
+                finished_at = Some(tick);
+                break;
+            }
+        }
+        assert!(finished_at.is_some(), "attack1 never finished on track 1");
+        let held = ctx.get_track_frame(1);
+        ctx.update(100.0);
+        assert!(ctx.is_track_finished(1), "a finished track stays finished");
+        assert_eq!(ctx.get_track_frame(1), held, "and holds its last frame");
+        assert!(!ctx.is_finished() && ctx.is_playing(), "track 0 plays on");
+        assert!(!ctx.is_track_finished(2), "a track with nothing on it has not finished");
+        assert!(ctx.set_track_loop_count(2, 1).is_err(), "nor can it be given a loop count");
+    }
+
+    /// An overlay that loops reports the wrap on the update it happens, as
+    /// `just_looped` does for track 0.
+    #[test]
+    fn an_overlay_track_reports_its_own_loop() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "wait1");
+        ctx.play();
+        ctx.set_track_animation(1, "attack1").unwrap();
+
+        let looped = (0..120).filter(|_| {
+            ctx.update(1000.0 / 60.0);
+            ctx.track_just_looped(1)
+        });
+        assert!(looped.count() > 0, "attack1 never wrapped on track 1");
+    }
+
+    /// `setup_animation` keeps track 0's settings even once a crossfade has
+    /// moved the primary off slot 0. Carried from slot 0, they came from a
+    /// released source at the defaults.
+    #[test]
+    fn setup_keeps_track_zero_s_settings_after_a_crossfade() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+        ctx.set_speed_scale(2.0);
+        ctx.play();
+        ctx.crossfade(0, "run", 100.0).unwrap();
+        ctx.update(200.0);
+        assert_ne!(ctx.instance.primary, 0, "the crossfade moved the primary off slot 0");
+
+        ctx.setup_animation("dance").unwrap();
+        assert_eq!(ctx.get_speed_scale(), 2.0);
+        assert_eq!(ctx.instance.primary_source().controller.get_speed_scale(), 2.0);
     }
 
     /// What a cancelled fade leaves on the track fades out with the next one,
