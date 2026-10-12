@@ -139,6 +139,12 @@ C-API は `ss_runtime_set_part_color_override(context, part, blend_op, rgba, pri
 | トラックに載せたアニメーションをどこから始めるか（`Free` / `Start`） | `trackSync` |
 | トラックの再生ヘッド | `trackFrame` |
 | トラックの速度 | `trackSpeed` |
+| トラックのフレームレートの上書き | `trackFrameRate` |
+| トラックのフレームスキップのオン・オフ | `trackFrameSkipEnabled` |
+| トラックの再生方向 / 往復のスタイル | `trackPlaybackDirection` / `trackPlaybackStyle` |
+| トラックのアニメーションのループ回数 | `trackLoopCount` |
+| トラックのアニメーションが規定回数を再生し終えたか（状態） | `isTrackFinished` |
+| 直前の update でトラックのアニメーションがループしたか（パルス） | `trackJustLooped` |
 | トラックのアニメーションを差し替えながらフェードする | `crossfade` |
 | トラック自身のアルファをフェードする | `fadeTrack` |
 | 進行中のフェードの進み具合 | `trackFadeProgress` |
@@ -147,8 +153,11 @@ C-API は `ss_runtime_set_part_color_override(context, part, blend_op, rgba, pri
 | トラックの中でのソースの重み | `sourceWeight` |
 | ソースの再生ヘッド | `sourceFrame` |
 | ソースがイベントを発火する重みの下限 | `sourceEventThreshold` |
+| クロスフェードの出ていく側がイベントを発火する割合の下限 | `trackOutgoingEventThreshold` |
 
 **`crossfade` と `fadeTrack` は別物です。** 前者はトラックが再生する内容を差し替え、後者はトラックがどれだけ効くかを変えます。
+
+再生設定のトラック版は、§3-1 の語幹の前に `track` を付けます。track 0 の設定は §3-1 の語幹のままです（`speedScale` は track 0 の `trackSpeed`）。track 0 への `crossfade` と `setTrackAnimation` は、`setAnimation` と同じく、呼んだ時点から `currentAnimation` を替えます。
 
 読みと書きは §3 のとおり語幹を共有します（`trackAlpha` は両方に使い、書き込みの形はホストに従います）。`setTrackAnimation` が動詞のままなのは、対になる読みが無いからです。返るのはソースのハンドルで、それは `trackMainSource` で読めます。
 

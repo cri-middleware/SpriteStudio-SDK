@@ -1524,6 +1524,124 @@ pub extern "C" fn ss_runtime_set_track_speed(context: *mut c_void, track: u32, s
     report(ffi_context, |ctx| ctx.set_track_speed(track, speed))
 }
 
+/// What `ss_runtime_set_track_speed` stored (a negative speed reads back as
+/// `0.0`); `NaN` for a track that does not exist.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_track_speed(context: *mut c_void, track: u32) -> c_float {
+    get_context(context).and_then(|c| c.ctx.get_track_speed(track)).unwrap_or(f32::NAN)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_track_frame_rate(context: *mut c_void, track: u32, frame_rate: c_int) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = None;
+    report(ffi_context, |ctx| ctx.set_track_frame_rate(track, frame_rate))
+}
+
+/// The rate the track's animation plays at; `0` for a track with no animation
+/// and no override, `-1` for a track that does not exist.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_track_frame_rate(context: *mut c_void, track: u32) -> i32 {
+    get_context(context).and_then(|c| c.ctx.get_track_frame_rate(track)).unwrap_or(-1)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_track_skip_frames(context: *mut c_void, track: u32, skip: bool) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = None;
+    report(ffi_context, |ctx| ctx.set_track_skip_frames(track, skip))
+}
+
+/// `false` for a track that does not exist.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_track_skip_frames(context: *mut c_void, track: u32) -> bool {
+    get_context(context).and_then(|c| c.ctx.get_track_skip_frames(track)).unwrap_or(false)
+}
+
+/// `direction`: 0 = forward, otherwise backward. `style`: 0 = normal,
+/// otherwise ping-pong; as `ss_runtime_set_playback_direction`.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_track_playback_direction(context: *mut c_void, track: u32, direction: c_int, style: c_int) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = None;
+    let d = if direction == 0 { crate::core::playback_controller::PlaybackDirection::Forward } else { crate::core::playback_controller::PlaybackDirection::Backward };
+    let s = if style == 0 { crate::core::playback_controller::PlaybackStyle::Normal } else { crate::core::playback_controller::PlaybackStyle::PingPong };
+    report(ffi_context, |ctx| ctx.set_track_playback_direction(track, d, s))
+}
+
+/// 0 = forward, 1 = backward; `-1` for a track that does not exist.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_track_playback_direction(context: *mut c_void, track: u32) -> i32 {
+    match get_context(context).and_then(|c| c.ctx.get_track_playback_direction(track)) {
+        Some(crate::core::playback_controller::PlaybackDirection::Forward) => 0,
+        Some(crate::core::playback_controller::PlaybackDirection::Backward) => 1,
+        None => -1,
+    }
+}
+
+/// 0 = normal, 1 = ping-pong; `-1` for a track that does not exist.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_track_playback_style(context: *mut c_void, track: u32) -> i32 {
+    get_context(context).and_then(|c| c.ctx.get_track_playback_style(track)).map(|s| s as i32).unwrap_or(-1)
+}
+
+/// How many times the track's animation plays before it holds its last frame;
+/// `0` or a negative count loops forever. It belongs to the animation on the
+/// track: laying another one there starts it looping forever again.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_track_loop_count(context: *mut c_void, track: u32, loop_count: c_int) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = None;
+    report(ffi_context, |ctx| ctx.set_track_loop_count(track, loop_count))
+}
+
+/// `-1` for a track that loops forever; `0` for a track with no animation.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_track_loop_count(context: *mut c_void, track: u32) -> i32 {
+    get_context(context).and_then(|c| c.ctx.get_track_loop_count(track)).unwrap_or(0)
+}
+
+/// `true` once the track's animation has played its loop count out and holds
+/// its last frame, as `ss_runtime_is_finished` is for track 0. `false` for a
+/// track with no animation.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_is_track_finished(context: *mut c_void, track: u32) -> bool {
+    get_context(context).is_some_and(|c| c.ctx.is_track_finished(track))
+}
+
+/// `true` for the update in which the track's animation wrapped back to its
+/// start, as `ss_runtime_just_looped` is for track 0.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_track_just_looped(context: *mut c_void, track: u32) -> bool {
+    get_context(context).is_some_and(|c| c.ctx.track_just_looped(track))
+}
+
+/// How far into a crossfade on `track` the outgoing side keeps firing events:
+/// it fires while its share of the track, `1 - t`, is at least `threshold`.
+/// The default, `+inf`, keeps it silent from the moment the fade begins.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_track_outgoing_event_threshold(context: *mut c_void, track: u32, threshold: c_float) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = None;
+    report(ffi_context, |ctx| ctx.set_track_outgoing_event_threshold(track, threshold))
+}
+
+/// `NaN` for a track that does not exist.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_track_outgoing_event_threshold(context: *mut c_void, track: u32) -> c_float {
+    get_context(context).and_then(|c| c.ctx.get_track_outgoing_event_threshold(track)).unwrap_or(f32::NAN)
+}
+
 /// Handle of the source carrying the track's animation, so it can be given a
 /// weight once the track holds several. `SS_RUNTIME_INVALID_HANDLE` when the
 /// track has no animation.
@@ -1605,6 +1723,14 @@ pub extern "C" fn ss_runtime_set_source_frame(context: *mut c_void, handle: u32,
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_source_animation_index(context: *mut c_void, handle: u32) -> i32 {
     get_context(context).and_then(|c| c.ctx.get_source_animation_index(handle)).map(|i| i as i32).unwrap_or(-1)
+}
+
+/// Which animation track 0's main source plays, as an index into the ssab's
+/// `animations()`: a crossfade or a track animation on track 0 changes it from
+/// the call on. `-1` before anything is set up.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_current_animation_index(context: *mut c_void) -> i32 {
+    get_context(context).and_then(|c| c.ctx.get_current_animation_index()).map(|i| i as i32).unwrap_or(-1)
 }
 
 #[unsafe(no_mangle)]

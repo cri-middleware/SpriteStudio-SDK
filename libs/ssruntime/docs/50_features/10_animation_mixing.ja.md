@@ -26,7 +26,9 @@ track 2  →  重ねる   （さらにもう 1 つ）
 
 ### 1-1. track 0 は特別
 
-track 0 が **構造** を受け持ちます。離散的なアトリビュート（セル・パーツカラー・シェーダ・反転・非表示・描画優先度・テクスチャ）と、既定のイベントの発火は、すべて track 0 から来ます。`ss_runtime_setup_animation` は「このアニメーションを track 0 に載せる」操作です。track 0 は空にできないので、消したいときは `alpha` をフェードしてください。
+track 0 が **構造** を受け持ちます。離散的なアトリビュート（セル・パーツカラー・シェーダ・反転・非表示・描画優先度・テクスチャ）、既定のイベントの発火、再生の状態（`is_playing`・`is_finished`・フレーム）は、すべて track 0 の主アニメーション（**主役**）から来ます。`ss_runtime_setup_animation` は「このアニメーションを track 0 に載せる」操作です。track 0 は空にできないので、消したいときは `alpha` をフェードしてください。
+
+主役が替わるのは、track 0 のアニメーションを替えたときだけです。`ss_runtime_setup_animation`、track 0 への `ss_runtime_set_track_animation`、track 0 への `ss_runtime_crossfade` の 3 つで、`ss_runtime_crossfade` は**フェードの開始時に**主役を渡します（§4）。主役が再生しているアニメーションは、`ss_runtime_get_current_animation_index` で取れます（ssab の `animations()` の添字）。
 
 ### 1-2. トラックは自分がキーを打ったアトリビュートにだけ効く
 
@@ -48,7 +50,23 @@ track 0 が **構造** を受け持ちます。離散的なアトリビュート
 
 - **track 0 が終わっても時計は止まりません。** track 0 で有限のループ回数を使い切っても、他のトラックとフェードは進み続けます。`is_playing`・`is_pausing`・`is_finished` は track 0 の状態を表すので、3 つとも通常どおり終了を報告します。終了後の `pause` は他のトラックを止め、`resume` で再開します。
 - フェードは時計と一緒に進みます。一時停止中や停止中は、フェードも進みません。
-- **track 0 のアニメーションにだけ**効く設定があります。速度（`ss_runtime_set_speed_scale`）、フレームレートの上書き、フレームスキップ、再生方向、ループ回数、再生区間です。トラックごとの速度は `ss_runtime_set_track_speed` で設定します。track 0 以外のトラックは無限にループします。
+
+### 1-5. トラックの再生設定
+
+速度・フレームレートの上書き・フレームスキップ・再生方向は、そこに載っているアニメーションではなく、**トラック**の設定です。設定は、そのトラックにいま載っているすべてのアニメーション（クロスフェード中なら両側）と、あとから載せるすべてのアニメーションに効きます。クロスフェードや `ss_runtime_set_track_animation` で元に戻ることはありません。
+
+| 設定 | 任意のトラック | track 0（従来の名前） |
+|---|---|---|
+| 速度 | `ss_runtime_set_track_speed` | `ss_runtime_set_speed_scale` |
+| フレームレートの上書き | `ss_runtime_set_track_frame_rate` | `ss_runtime_set_frame_rate` |
+| フレームスキップ | `ss_runtime_set_track_skip_frames` | `ss_runtime_set_skip_frames` |
+| 再生方向とスタイル | `ss_runtime_set_track_playback_direction` | `ss_runtime_set_playback_direction` |
+| ループ回数 | `ss_runtime_set_track_loop_count` | `ss_runtime_set_loop_count` |
+
+- **ループ回数**と**再生区間**は例外で、アニメーションの設定です。そのアニメーションのフレームを数えたり番号で指したりするものだからです。アニメーションを載せると、区間は全体に、ループは無限に戻るので、回数は載せた後で指定してください。ホストのループ回数を覚えている Player は、`ss_runtime_setup_animation` の後と同じく、クロスフェードを含めて track 0 のアニメーションが替わるたびに、それをかけ直します。
+- track 0 の設定は `ss_runtime_setup_animation` を越えて残り、`ss_runtime_reset` で消えます。他のトラックの設定は、`ss_runtime_setup_animation` がスタックをたたむときに、トラックごと消えます。
+- まだ何も載っていないトラックにも設定できます。そのトラックはこのために作られます。ループ回数だけは、トラックにアニメーションが載っている必要があります。
+- track 1 以降も、自分の終了とループを報告します。`ss_runtime_is_track_finished` と `ss_runtime_track_just_looped` で、track 0 の `is_finished` と `just_looped` にあたります。終わったトラックは**最後のフレームで止まり**、そのポーズを混ぜ続けます。フェードやクリアをいつするかはホストが決めます。キャラクターの再生を終わらせるのは、track 0 の終了だけです。
 
 ## 2. 1 本のアニメーションを再生する
 
@@ -99,14 +117,17 @@ ss_runtime_update(ctx, delta_ms);
 float progress = ss_runtime_get_track_fade_progress(ctx, 0);   // 0〜1。フェード中でなければ NaN
 ```
 
-フェードが終わると、入ってきたアニメーションがそのトラックのものになり、出ていったソースは解放されます。
+入ってくるアニメーションは、**呼んだ時点から**そのトラックの主アニメーションになります。呼んだ直後の `ss_runtime_get_track_main_source` は、入ってくる側を返します。track 0 ではその時点から主役になる（§1-1）ので、セルなどの離散的なアトリビュートはフェードの最初のフレームから入ってくる側のものになり、再生の状態とフレームも入ってくる側のものになります。フェード中に出ていく側が終わっても、キャラクターは終了になりません。入ってくるアニメーションは、トラックの設定（§1-5）で再生されます。
+
+トラックにすでに載っていたものは、すべてまとめて**出ていく側**としてフェードアウトします。ソースどうしの比率は保ったまま、トラックの `1 - t` の割合に縮み、入ってくる側が `t` を受け持ちます。フェードが終わると、出ていく側のソースはすべて解放されます。
 
 | 状況 | 挙動 |
 |---|---|
 | `duration_ms <= 0` / `NaN` / 無いアニメーション名 | `false` を返す。理由は `ss_runtime_get_last_error` |
 | 何も再生していないトラックへの `crossfade` | フェードせず、すぐに再生を始める |
-| フェード中のトラックへもう一度 `crossfade` | **進行中のフェードを先に終わらせてから**、そこから新しいフェードを始める |
-| フェードを止めたい | `ss_runtime_cancel_track_fade`。`alpha` と `weight` はその時点の値で止まる |
+| フェード中のトラックへもう一度 `crossfade` | 進行中のフェードを**その時点の状態のまま**引き取る。両側ともその時点の weight で新しい出ていく側に入るので、姿勢は飛ばない |
+| 複数のソースが載ったトラックへの `crossfade` | すべてまとめてフェードアウトする |
+| フェードを止めたい | `ss_runtime_cancel_track_fade`。`alpha` と `weight` はその時点の値で止まる。残ったものは次の `crossfade` で一緒にフェードアウトする |
 
 ### 4-1. セットアップポーズへ戻す
 
@@ -131,7 +152,7 @@ ss_runtime_set_source_weight(ctx, run, 0.3f);
 ss_runtime_set_source_frame(ctx, run, 0.0f);
 ```
 
-`ss_runtime_get_track_main_source` は、`ss_runtime_set_track_animation`（か `ss_runtime_setup_animation`）がそのトラックに載せたアニメーションのハンドルを返します。`weight` は 1 から始まります。
+`ss_runtime_get_track_main_source` は、`ss_runtime_set_track_animation`・`ss_runtime_crossfade`（か `ss_runtime_setup_animation`）がそのトラックに載せたアニメーションのハンドルを返します。`weight` は 1 から始まります。
 
 `weight` は絶対値ではなく比率です（`(0.7, 0.3)` と `(7, 3)` は同じ結果）。ソースはそれぞれ自分の再生ヘッドを持ち、`ss_runtime_update` がすべてを進めます。**尺の違うソースの位相はそろいません。** track 0 と同じ位相から始めるにはトラックの同期（§5-1）を使います。そろえ続けたい場合は、Player がシークしてください。
 
@@ -150,10 +171,10 @@ ss_runtime_crossfade(ctx, 0, "run", 300.0f);   // 走りは歩きと同じ位相
 | 向いている使い方 | 一回きりの動き（まばたき、口の形、攻撃など） | 周期的な動きどうしを重ねる（歩きと走りなど） |
 
 - そのあとトラックに載せるすべての操作に効きます。`ss_runtime_set_track_animation`、`ss_runtime_crossfade`（track 0 でも効き、入ってくるアニメーションは出ていくアニメーションの位相から始まる）、`ss_runtime_add_track_source` です。**載せる前に設定してください。** まだ何も載っていないトラックは、このために作られます。
-- 基準は track 0 の主アニメーションです。track 0 がクロスフェード中なら、まだ出ていく側が主アニメーションです。
+- 基準は track 0 の主アニメーションで、track 0 のクロスフェードは開始時にそれを渡します。入ってくるアニメーションは渡す前に載せるので、出ていくアニメーションの位相から始まります。
 - 位相は、進行方向ではなく再生区間の中の位置で読みます。逆再生や往復再生の戻りの途中でも、その位置から相手のアニメーションを始めます。
 - そろえるのは、アニメーションを載せたときの 1 回だけです。その後は両方が同じ時計で進むので、尺と速度が同じなら位相はそろったままです。尺や速度が違えば、またずれていきます。
-- ループの扱いは変わりません。track 0 以外のトラックは無限にループするので、途中から始めたアニメーションも、終端に達すれば通常どおり先頭に戻ります。
+- ループの扱いは変わりません。途中から始めたアニメーションも、終端に達すれば通常どおり先頭に戻ります。
 - トラックの alpha や blend と同じく、トラックの設定です。`ss_runtime_setup_animation` がスタックをたたむと、どのトラックも `FREE` に戻ります。
 
 ## 6. イベント
@@ -162,6 +183,12 @@ ss_runtime_crossfade(ctx, 0, "run", 300.0f);   // 走りは歩きと同じ位相
 
 ```cpp
 ss_runtime_set_source_event_threshold(ctx, run, 0.5f);   // run の weight が 0.5 以上なら発火する
+```
+
+クロスフェードの出ていく側は例外です。出ていく側のソースは、その側がトラックに占める割合 `1 - t` が**トラックの**出ていく側の閾値以上のあいだ発火します。ソースが何本あっても同じで、フェード中は各ソース自身の閾値は見ません。既定は `+∞` なので、出ていく側はフェードの開始と同時に発火しなくなります。track 0 では、ちょうど入ってくる側が発火を始める時点です。`0.5` にすると、フェードの前半のあいだ発火します。トラックの設定なので、そのトラックのすべてのクロスフェードに効きます。track 0 の値は `ss_runtime_setup_animation` を越えて残ります。
+
+```cpp
+ss_runtime_set_track_outgoing_event_threshold(ctx, 0, 0.5f);   // 出ていく側はフェードの前半だけ発火する
 ```
 
 イベントには、発火したソースのハンドルが付くので、どのソースのイベントかを区別できます。イベントの読み方は [イベント §4](../30_core/30_events.ja.md#4-複数のアニメーションを重ねているとき) にあります。
@@ -176,7 +203,7 @@ for (int i = 0; i < n; ++i) {
 
 ## 7. C-API の一覧
 
-失敗の理由は `ss_runtime_get_last_error(ctx)` で取れます。`float` を返す関数が失敗のしるしに `NaN` を使うのは、正しい値の `0.0` と「そのトラックやソースは無い」を区別するためです。C では `isnan`、JavaScript では `Number.isNaN` で判定してください。
+失敗の理由は `ss_runtime_get_last_error(ctx)` で取れます。`float` を返す関数が失敗のしるしに `NaN` を使うのは、正しい値の `0.0` と「そのトラックやソースは無い」を区別するためです。C では `isnan`、JavaScript では `Number.isNaN` で判定してください。整数を返す関数は、設定として読み戻されることのない値を失敗のしるしに使います。
 
 ### 7-1. トラック
 
@@ -195,6 +222,21 @@ for (int i = 0; i < n; ++i) {
 | `ss_runtime_set_track_frame(ctx, track, frame)` | `bool` | `false` |
 | `ss_runtime_get_track_frame(ctx, track)` | `float` | `NaN` |
 | `ss_runtime_set_track_speed(ctx, track, speed)` | `bool` | `false` |
+| `ss_runtime_get_track_speed(ctx, track)` | `float` | `NaN` |
+| `ss_runtime_set_track_frame_rate(ctx, track, fps)` | `bool` | `false` |
+| `ss_runtime_get_track_frame_rate(ctx, track)` | `int32_t`（アニメーションも上書きも無ければ `0`） | `-1` |
+| `ss_runtime_set_track_skip_frames(ctx, track, skip)` | `bool` | `false` |
+| `ss_runtime_get_track_skip_frames(ctx, track)` | `bool` | `false` |
+| `ss_runtime_set_track_playback_direction(ctx, track, direction, style)` | `bool` | `false` |
+| `ss_runtime_get_track_playback_direction(ctx, track)` | `int32_t`（`0` = 順方向 / `1` = 逆方向） | `-1` |
+| `ss_runtime_get_track_playback_style(ctx, track)` | `int32_t`（`0` = 通常 / `1` = 往復） | `-1` |
+| `ss_runtime_set_track_loop_count(ctx, track, count)` | `bool` | `false`（トラックにアニメーションが無い） |
+| `ss_runtime_get_track_loop_count(ctx, track)` | `int32_t`（`-1` = 無限） | `0` |
+| `ss_runtime_is_track_finished(ctx, track)` | `bool` | `false` |
+| `ss_runtime_track_just_looped(ctx, track)` | `bool` | `false` |
+| `ss_runtime_set_track_outgoing_event_threshold(ctx, track, threshold)` | `bool` | `false` |
+| `ss_runtime_get_track_outgoing_event_threshold(ctx, track)` | `float` | `NaN` |
+| `ss_runtime_get_current_animation_index(ctx)` | `int32_t`（track 0 の主アニメーション） | `-1`（何もセットアップしていない） |
 
 ### 7-2. 切り替え
 
@@ -238,11 +280,15 @@ const progress = ctx.get_track_fade_progress(0);   // number | undefined
 
 const run = ctx.add_track_source(0, "run", 0.3);
 ctx.set_source_weight(run, 0.5);
+
+ctx.set_track_animation(2, "attack");
+ctx.set_track_loop_count(2, 1);     // 1 回再生して、最後のフレームで止まる
+const done = ctx.is_track_finished(2);
 ```
 
 ## 9. 制約
 
-- **離散的なアトリビュートは track 0 から来ます。** セル・パーツカラー・シェーダ・反転・非表示・描画優先度・テクスチャは混ぜられないので、重ねたトラックからセルを差し替えることはできません。セルを差し替えるには [パーツオーバーライド](./20_part_overrides.ja.md) を使ってください。
+- **離散的なアトリビュートは track 0 の主アニメーションから来ます。** track 0 のクロスフェードが始まると、入ってくる側のものに替わります。セル・パーツカラー・シェーダ・反転・非表示・描画優先度・テクスチャは混ぜられないので、重ねたトラックからセルを差し替えることはできません。セルを差し替えるには [パーツオーバーライド](./20_part_overrides.ja.md) を使ってください。
 - **積む全アニメーションで、同じパーツに同じセルを割り当ててください。** セルの大きさと原点は track 0 から取るので、セルが違うと大きさや原点がずれて姿勢が崩れます。同じ ssae の中のアニメーションなら、ふつうは問題になりません。
 - **パーツカラーは track 0 に従います。** パーツカラーを持つパーツでは、その色とアルファが優先されます。混ぜた不透明度が頂点の色に届くのは、パーツカラーを持たないパーツだけです。同じキャラクターのアニメーションどうしを混ぜるふつうの用途では、問題になりません。
 - **位相はそろいません。** 尺の違うソースは、それぞれの時計で進みます。関係のない周期（呼吸とまばたき）ではそれが正しい挙動です。30 フレームの歩きと 60 フレームの走りをそろえたい場合は、Player がシークしてください。
@@ -253,7 +299,7 @@ ctx.set_source_weight(run, 0.5);
 
 - **アニメーションを 1 本だけ再生するときの追加のコストはありません。** `alpha` が 1 のトラック 1 つにアニメーション 1 本、という状態では、合成はポインタの入れ替えだけになります。
 - **コストはソースの数ではなく、パーツの数に比例します。** 有効なソースはそれぞれ 1 回計算され、重ねる処理はパーツの数に比例します。
-- **重みが 0 のソースは計算しません**（クロスフェードの後に残ったものを含む）。
+- **重みが 0 のソースは計算しません**（フェードをキャンセルした後に残ったものを含む）。
 - 複数のソースを混ぜているときは、描画に使わないソースの頂点変形のデータも FrameData に入るので、FrameData が大きくなります。結果には影響しません。
 
 ---

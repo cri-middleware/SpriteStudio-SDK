@@ -107,11 +107,11 @@ If you seek during playback, the next `update` reports the events of the destina
 
 ## 4. When several animations are layered
 
-With animation mixing, by default only the events of the animation on track 0 are reported. To have the events of other sources reported too, lower that source's threshold ([Animation Mixing §6](../50_features/10_animation_mixing.md#6-events)).
+With animation mixing, by default only the events of the animation on track 0 are reported. To have the events of other sources reported too, lower that source's threshold; for the outgoing side of a crossfade, lower the track's outgoing threshold ([Animation Mixing §6](../50_features/10_animation_mixing.md#6-events)).
 
 The value of `ss_runtime_get_passed_event_index` is an index into the event table of **the animation of the source that fired**. Get the handle of the source that fired with `ss_runtime_get_passed_event_source_handle(ctx, i)`, ask which animation it plays with `ss_runtime_get_source_animation_index(ctx, handle)` (an index into the ssab's `animations()`), and look the index up in that animation's `events()`.
 
-**This applies to track 0 as well.** A crossfade on track 0 hands the track to the incoming animation, so once it completes, an event table kept from `ss_runtime_setup_animation` is the wrong one: events come back as other events, or are dropped as out of range. Only a Player that neither crossfades nor mixes can keep one table.
+**This applies to track 0 as well.** A crossfade on track 0 hands the track to the incoming animation when it begins, so from then on an event table kept from `ss_runtime_setup_animation` is the wrong one: events come back as other events, or are dropped as out of range. Only a Player that neither crossfades nor mixes can keep one table.
 
 ---
 [Back to contents](../README.md)

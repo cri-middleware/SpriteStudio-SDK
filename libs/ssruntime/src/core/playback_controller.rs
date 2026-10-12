@@ -1,13 +1,13 @@
 use crate::core::math::*;
 use alloc::vec::Vec;
 
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum PlaybackStyle {
     Normal = 0,
     PingPong = 1,
 }
 
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum PlaybackDirection {
     Forward = 1,
     Backward = -1,
@@ -86,6 +86,47 @@ pub fn resolve_frame(diff: f32, start: i32, end: i32, loops: i32, style: Playbac
     let frame = if frame < start as f32 { start as f32 } else { frame };
 
     (frame, false)
+}
+
+/// The settings that describe how a host plays an animation rather than the
+/// animation itself, so they outlive a change of animation: the speed, the
+/// frame-rate override, the frame skip, and the direction and style. A track
+/// keeps one and hands it to every source laid on it.
+///
+/// The section and the loop count are not here: a section is frame numbers of
+/// one animation, and a loop count is restated with each animation.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct PlaybackPolicy {
+    pub(crate) speed_scale: f32,
+    pub(crate) frame_rate_override: Option<i32>,
+    pub(crate) is_skip_frames: bool,
+    pub(crate) playback_direction: PlaybackDirection,
+    pub(crate) playback_style: PlaybackStyle,
+}
+
+impl PlaybackPolicy {
+    /// What a controller starts with before a host sets anything.
+    pub(crate) const DEFAULT: Self = Self { speed_scale: 1.0, frame_rate_override: None, is_skip_frames: true, playback_direction: PlaybackDirection::Forward, playback_style: PlaybackStyle::Normal };
+
+    /// Stores a speed the way [`PlaybackController::set_speed_scale`] does.
+    pub(crate) fn set_speed_scale(&mut self, speed_scale: f32) {
+        self.speed_scale = normalise_speed_scale(speed_scale);
+    }
+
+    /// Stores a rate the way [`PlaybackController::set_frame_rate`] does.
+    pub(crate) fn set_frame_rate(&mut self, frame_rate: i32) {
+        self.frame_rate_override = normalise_frame_rate(frame_rate);
+    }
+}
+
+/// A negative speed clamps to `0.0`, which stops the playhead.
+fn normalise_speed_scale(speed_scale: f32) -> f32 {
+    if speed_scale > 0.0 { speed_scale } else { 0.0 }
+}
+
+/// `0` or a negative rate is no override at all.
+fn normalise_frame_rate(frame_rate: i32) -> Option<i32> {
+    if frame_rate > 0 { Some(frame_rate) } else { None }
 }
 
 pub struct PlaybackController {
@@ -370,26 +411,19 @@ impl PlaybackController {
         self.update_interval = if rate > 0.0 { 1000.0 / rate } else { 0.0 };
     }
 
-    /// Carries the host's playback policy onto a controller that has just been
-    /// rebuilt, so a rebuild of the slot's internals is not observable as a
-    /// reset of settings the host owns.
+    /// Puts the host's playback policy on a controller that is about to be set
+    /// up, so neither a rebuilt slot nor a freshly laid source reads as a reset
+    /// of settings the host owns.
     ///
-    /// The track stack rebuilds the primary source wholesale when it collapses
-    /// to a single track, which every `setup_animation` does. Without this, the
-    /// speed / frame-skip / frame-rate override that `setup` is careful to keep
-    /// would be discarded a moment earlier by the rebuild — the settings live on
-    /// the controller, and the controller is what gets replaced.
-    ///
-    /// `update_interval` is left alone: the `setup` that follows computes it
-    /// from the new animation's frame rate, and until then there is no animation
-    /// to advance.
-    pub(crate) fn adopt_host_policy(&mut self, from: &PlaybackController) {
-        self.speed_scale = from.speed_scale;
-        self.frame_rate_override = from.frame_rate_override;
-        self.is_skip_frames = from.is_skip_frames;
-        self.playback_direction = from.playback_direction;
-        self.playback_style = from.playback_style;
-        self.playback_forward = from.playback_forward;
+    /// Call it before `setup`, which derives the heading from the direction and
+    /// the frame interval from the rate; until then there is no animation to
+    /// advance.
+    pub(crate) fn adopt_policy(&mut self, policy: &PlaybackPolicy) {
+        self.speed_scale = policy.speed_scale;
+        self.frame_rate_override = policy.frame_rate_override;
+        self.is_skip_frames = policy.is_skip_frames;
+        self.playback_direction = policy.playback_direction;
+        self.playback_style = policy.playback_style;
     }
 
     /**
@@ -413,7 +447,7 @@ impl PlaybackController {
     /// [`Self::set_speed_scale`] is a multiple of whatever the clip was
     /// authored at. Both are the host's, so both survive `setup`.
     pub fn set_frame_rate(&mut self, frame_rate: i32) {
-        self.frame_rate_override = if frame_rate > 0 { Some(frame_rate) } else { None };
+        self.frame_rate_override = normalise_frame_rate(frame_rate);
         self.recompute_update_interval();
     }
 
@@ -449,7 +483,7 @@ impl PlaybackController {
     /// rather than silently running forward at full speed, which is what
     /// normalizing it to `1.0` used to do.
     pub fn set_speed_scale(&mut self, speed_scale: f32) {
-        self.speed_scale = if speed_scale > 0.0 { speed_scale } else { 0.0 };
+        self.speed_scale = normalise_speed_scale(speed_scale);
         self.recompute_update_interval();
     }
 

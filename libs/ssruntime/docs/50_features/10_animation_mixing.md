@@ -26,7 +26,9 @@ A track's `alpha` always works as you expect. A source's `weight`, on its own, d
 
 ### 1-1. Track 0 is special
 
-Track 0 carries the **structure**. The discrete attributes (cell, parts color, shader, flip, hide, draw priority, texture) and the default event firing all come from track 0. `ss_runtime_setup_animation` is the operation "put this animation on track 0". Track 0 cannot be emptied; to remove it, fade its `alpha`.
+Track 0 carries the **structure**. The discrete attributes (cell, parts color, shader, flip, hide, draw priority, texture), the default event firing and the playback state (`is_playing`, `is_finished`, the frame) all come from track 0's main animation, the **primary**. `ss_runtime_setup_animation` is the operation "put this animation on track 0". Track 0 cannot be emptied; to remove it, fade its `alpha`.
+
+Only a change of track 0's animation changes the primary: `ss_runtime_setup_animation`, `ss_runtime_set_track_animation` on track 0, and `ss_runtime_crossfade` on track 0, which hands the primary over **when the fade begins** (§4). `ss_runtime_get_current_animation_index` returns which animation it plays, as an index into the ssab's `animations()`.
 
 ### 1-2. A track affects only the attributes it keys
 
@@ -48,7 +50,23 @@ Every track runs on one clock, the character's. An animation laid on a track pla
 
 - **Track 0 finishing does not stop the clock.** When a finite loop count runs out on track 0, the other tracks and the fades carry on. `is_playing`, `is_pausing` and `is_finished` describe track 0, so all three report the finish as usual; a `pause` after it still holds the other tracks, and `resume` releases them.
 - Fades advance with the clock: while it is held or stopped, a fade does not progress.
-- Some settings act on **track 0's animation only**: speed (`ss_runtime_set_speed_scale`), the frame-rate override, frame skip, the playback direction, the loop count and the playback section. A track's own speed is `ss_runtime_set_track_speed`. Tracks other than track 0 loop indefinitely.
+
+### 1-5. A track's playback settings
+
+The speed, the frame-rate override, frame skip and the playback direction belong to the **track**, not to the animation on it. A setting reaches every animation on the track now, both sides of a crossfade included, and every animation laid on it later, so a crossfade or `ss_runtime_set_track_animation` does not reset it.
+
+| Setting | Any track | Track 0's, by its older name |
+|---|---|---|
+| Speed | `ss_runtime_set_track_speed` | `ss_runtime_set_speed_scale` |
+| Frame-rate override | `ss_runtime_set_track_frame_rate` | `ss_runtime_set_frame_rate` |
+| Frame skip | `ss_runtime_set_track_skip_frames` | `ss_runtime_set_skip_frames` |
+| Direction and style | `ss_runtime_set_track_playback_direction` | `ss_runtime_set_playback_direction` |
+| Loop count | `ss_runtime_set_track_loop_count` | `ss_runtime_set_loop_count` |
+
+- The **loop count** and the **playback section** are the exception: they belong to the animation, because they count and number its frames. Laying an animation starts it over at the whole section, looping indefinitely, so state the count after laying it. A Player that keeps the host's loop count re-applies it after every change of track 0's animation, a crossfade included, as it does after `ss_runtime_setup_animation`.
+- Track 0 keeps its settings across `ss_runtime_setup_animation`; `ss_runtime_reset` clears them. The other tracks lose theirs with the rest of the stack when `ss_runtime_setup_animation` collapses it.
+- A setting may be given to a track with nothing on it yet; the track is created for it. A loop count needs an animation on the track.
+- A track above 0 reports its own end and loop: `ss_runtime_is_track_finished` and `ss_runtime_track_just_looped`, as `is_finished` and `just_looped` do for track 0. A finished track **holds its last frame** and keeps mixing it in; the host decides when to fade or clear it. Only track 0 finishing ends the character's playback.
 
 ## 2. Playing a single animation
 
@@ -99,14 +117,17 @@ ss_runtime_update(ctx, delta_ms);
 float progress = ss_runtime_get_track_fade_progress(ctx, 0);   // 0 to 1; NaN when not fading
 ```
 
-When the fade ends, the incoming animation becomes the track's animation, and the outgoing source is released.
+The incoming animation becomes the track's main animation **from the call on**: `ss_runtime_get_track_main_source` returns it straight after the call. On track 0 it is the primary from then on (§1-1), so its cell and other discrete attributes show from the first frame of the fade, and the playback state and the frame are its own. An outgoing animation running out during the fade does not finish the character. The incoming animation plays with the track's settings (§1-5).
+
+Everything already on the track fades out together as the **outgoing side**: the sources keep their proportions to one another, scaled to a share of `1 - t` of the track while the incoming animation has `t`. When the fade ends, every outgoing source is released.
 
 | Situation | Behavior |
 |---|---|
 | `duration_ms <= 0` / `NaN` / an animation name that does not exist | Returns `false`. The reason is in `ss_runtime_get_last_error` |
 | `crossfade` on a track that is playing nothing | Starts playing at once, without a fade |
-| `crossfade` again on a track that is fading | **Finishes the running fade first**, then starts the new fade from there |
-| You want to stop a fade | `ss_runtime_cancel_track_fade`. `alpha` and `weight` stop at their current values |
+| `crossfade` again on a track that is fading | The running fade is taken over **as it stands**: both its sides join the new outgoing side at their current weights, so the pose does not jump |
+| `crossfade` on a track carrying several sources | All of them fade out together |
+| You want to stop a fade | `ss_runtime_cancel_track_fade`. `alpha` and `weight` stop at their current values; what is left fades out with the next `crossfade` |
 
 ### 4-1. Returning to the setup pose
 
@@ -131,7 +152,7 @@ ss_runtime_set_source_weight(ctx, run, 0.3f);
 ss_runtime_set_source_frame(ctx, run, 0.0f);
 ```
 
-`ss_runtime_get_track_main_source` returns the handle of the animation that `ss_runtime_set_track_animation` (or `ss_runtime_setup_animation`) put on the track. `weight` starts at 1.
+`ss_runtime_get_track_main_source` returns the handle of the animation that `ss_runtime_set_track_animation`, `ss_runtime_crossfade` (or `ss_runtime_setup_animation`) put on the track. `weight` starts at 1.
 
 `weight` is a ratio, not an absolute value (`(0.7, 0.3)` and `(7, 3)` give the same result). Each source has its own playhead, and `ss_runtime_update` advances them all. **Sources of different lengths do not stay in phase.** To start one in phase with track 0, use track sync (§5-1); to keep them aligned, seek them in the Player.
 
@@ -150,10 +171,10 @@ ss_runtime_crossfade(ctx, 0, "run", 300.0f);   // run starts at the walk's phase
 | Suited to | One-off motions: a blink, a mouth shape, an attack | Cyclic motions laid over one another: walk and run |
 
 - It applies to everything laid on the track afterwards: `ss_runtime_set_track_animation`, `ss_runtime_crossfade` (on track 0 too, where the incoming animation starts at the outgoing one's phase) and `ss_runtime_add_track_source`. **Set it before laying.** A track with nothing on it yet is created for it.
-- The reference is track 0's main animation. During a crossfade on track 0 that is still the outgoing one.
+- The reference is track 0's main animation, which a crossfade on track 0 hands over when it begins. The incoming animation is laid before the handover, so it starts at the outgoing one's phase.
 - The phase is read by position in the section, not by direction: a backward or ping-pong return leg starts the other animation where it stands.
 - It aligns once, when the animation is laid. Both then run on the same clock, so animations of the same length and speed stay in phase; different lengths or speeds drift apart again.
-- Looping is unchanged. Tracks other than track 0 loop indefinitely, so an animation started part-way through wraps at its end as usual.
+- Looping is unchanged: an animation started part-way through wraps at its end as usual.
 - Like a track's alpha and blend, it belongs to the track: `ss_runtime_setup_animation` collapses the stack and every track starts over at `FREE`.
 
 ## 6. Events
@@ -162,6 +183,12 @@ By default, only the animation on track 0 fires events. To make another source f
 
 ```cpp
 ss_runtime_set_source_event_threshold(ctx, run, 0.5f);   // fires when run's weight is 0.5 or more
+```
+
+The outgoing side of a crossfade is the exception: its sources fire while the side's share of the track, `1 - t`, is at least the **track's** outgoing threshold, however many sources it holds, and their own thresholds are not consulted while they fade. The default is `+∞`, so the outgoing side falls silent the moment the fade begins, which is when the incoming animation starts firing on track 0. At `0.5` it fires through the first half of the fade. It belongs to the track and holds for every crossfade on it; track 0 keeps it across `ss_runtime_setup_animation`.
+
+```cpp
+ss_runtime_set_track_outgoing_event_threshold(ctx, 0, 0.5f);   // the outgoing side fires for the first half
 ```
 
 Each event carries the handle of the source that fired it, so you can tell which source an event came from. How to read events is in [Events §4](../30_core/30_events.md#4-when-several-animations-are-layered).
@@ -176,7 +203,7 @@ for (int i = 0; i < n; ++i) {
 
 ## 7. C-API reference
 
-Get the reason for a failure with `ss_runtime_get_last_error(ctx)`. Functions that return `float` use `NaN` to signal failure so that a valid `0.0` can be told apart from "that track or source does not exist". Test with `isnan` in C and `Number.isNaN` in JavaScript.
+Get the reason for a failure with `ss_runtime_get_last_error(ctx)`. Functions that return `float` use `NaN` to signal failure so that a valid `0.0` can be told apart from "that track or source does not exist". Test with `isnan` in C and `Number.isNaN` in JavaScript. The integer reads use a value the setting never reads back as.
 
 ### 7-1. Tracks
 
@@ -195,6 +222,21 @@ Get the reason for a failure with `ss_runtime_get_last_error(ctx)`. Functions th
 | `ss_runtime_set_track_frame(ctx, track, frame)` | `bool` | `false` |
 | `ss_runtime_get_track_frame(ctx, track)` | `float` | `NaN` |
 | `ss_runtime_set_track_speed(ctx, track, speed)` | `bool` | `false` |
+| `ss_runtime_get_track_speed(ctx, track)` | `float` | `NaN` |
+| `ss_runtime_set_track_frame_rate(ctx, track, fps)` | `bool` | `false` |
+| `ss_runtime_get_track_frame_rate(ctx, track)` | `int32_t` (`0` with no animation and no override) | `-1` |
+| `ss_runtime_set_track_skip_frames(ctx, track, skip)` | `bool` | `false` |
+| `ss_runtime_get_track_skip_frames(ctx, track)` | `bool` | `false` |
+| `ss_runtime_set_track_playback_direction(ctx, track, direction, style)` | `bool` | `false` |
+| `ss_runtime_get_track_playback_direction(ctx, track)` | `int32_t` (`0` = forward / `1` = backward) | `-1` |
+| `ss_runtime_get_track_playback_style(ctx, track)` | `int32_t` (`0` = normal / `1` = ping-pong) | `-1` |
+| `ss_runtime_set_track_loop_count(ctx, track, count)` | `bool` | `false` (no animation on the track) |
+| `ss_runtime_get_track_loop_count(ctx, track)` | `int32_t` (`-1` = indefinitely) | `0` |
+| `ss_runtime_is_track_finished(ctx, track)` | `bool` | `false` |
+| `ss_runtime_track_just_looped(ctx, track)` | `bool` | `false` |
+| `ss_runtime_set_track_outgoing_event_threshold(ctx, track, threshold)` | `bool` | `false` |
+| `ss_runtime_get_track_outgoing_event_threshold(ctx, track)` | `float` | `NaN` |
+| `ss_runtime_get_current_animation_index(ctx)` | `int32_t` (track 0's main animation) | `-1` (nothing set up) |
 
 ### 7-2. Switching
 
@@ -238,11 +280,15 @@ const progress = ctx.get_track_fade_progress(0);   // number | undefined
 
 const run = ctx.add_track_source(0, "run", 0.3);
 ctx.set_source_weight(run, 0.5);
+
+ctx.set_track_animation(2, "attack");
+ctx.set_track_loop_count(2, 1);     // once, then hold the last frame
+const done = ctx.is_track_finished(2);
 ```
 
 ## 9. Constraints
 
-- **Discrete attributes come from track 0.** Cell, parts color, shader, flip, hide, draw priority and texture cannot be mixed, so a layered track cannot swap a cell. To swap a cell, use [Part Overrides](./20_part_overrides.md).
+- **Discrete attributes come from track 0's main animation**, and switch to the incoming one when a crossfade on track 0 begins. Cell, parts color, shader, flip, hide, draw priority and texture cannot be mixed, so a layered track cannot swap a cell. To swap a cell, use [Part Overrides](./20_part_overrides.md).
 - **Assign the same cell to the same part in every animation you stack.** The cell's size and origin come from track 0, so a different cell shifts the size and origin and breaks the pose. Animations within the same ssae normally do not have this problem.
 - **Parts color follows track 0.** For a part with parts color, that color and its alpha take precedence. The mixed opacity reaches the vertex color only for parts without parts color. This is not a problem in the usual case of mixing animations of the same character.
 - **Phases are not aligned.** Sources of different lengths advance on their own clocks. For unrelated cycles (breathing and blinking) that is the correct behavior. To keep a 30-frame walk and a 60-frame run in step, seek them in the Player.
@@ -253,7 +299,7 @@ ctx.set_source_weight(run, 0.5);
 
 - **Playing a single animation costs nothing extra.** With one track at `alpha` 1 carrying one animation, the mix is only a pointer swap.
 - **The cost scales with the number of parts, not the number of sources.** Each active source is computed once, and the layering is proportional to the number of parts.
-- **Sources with a weight of 0 are not computed** (including one left over after a crossfade).
+- **Sources with a weight of 0 are not computed** (including one left over after a cancelled fade).
 - While several sources are mixed, FrameData also carries the vertex deformation data of sources not used for drawing, so FrameData grows. The result is not affected.
 
 ---

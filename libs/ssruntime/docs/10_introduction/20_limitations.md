@@ -65,7 +65,7 @@ The mode that embeds assets in the ssab has these constraints:
 ## 8. Animation mixing
 
 - Only animations within the same ssab can be stacked.
-- Discrete attributes such as cell, parts color and hide follow track 0.
+- Discrete attributes such as cell, parts color and hide follow track 0's main animation, and switch to the incoming one when a crossfade on track 0 begins.
 - The phases of sources with different lengths are not synchronized.
 - There is no per-part mask. The range a track affects is the range its animation has keys on.
 
