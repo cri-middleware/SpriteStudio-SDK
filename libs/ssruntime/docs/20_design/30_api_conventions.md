@@ -340,7 +340,23 @@ All seven official Players behave this way. The internal layer that wraps the C-
 
 ---
 
-## 9. Departing from this document
+## 9. Reading a part
+
+`partTransform`, `isPartHidden` and every other read of one part answer from **the frame the last tick built**: the world matrices and the FrameData that tick's `ss_runtime_get_frame_data` returned, which stay valid until the next call ([Render Loop §1](../30_core/40_render_loop.md#1-soa-buffers)). **A read does not build a frame.**
+
+| When the host reads | What it gets |
+|---|---|
+| After a tick | That tick's frame, the one being drawn |
+| After setting or clearing an override, before the next tick | The last tick's frame. The override shows from the next tick |
+| Again, with no tick in between | The same answer |
+| After a tick that built no frame, such as one a Player skips for an off-screen character | The last frame built, so a part's pose and its hide flag stay a pair |
+| Before the first tick | `isPartHidden` answers "not hidden" for a part that exists. "Hidden" would send the caller down its hidden branch before anything has been drawn |
+
+A read that built a frame would cost a frame per call, and part following reads every tick, once per follower. It would also change what the next tick builds. An `OverwriteOnNextKeyframe` override skips the key on the frame it was set on only in the update in which it is first evaluated ([Part Overrides §1-3](../50_features/20_part_overrides.md#1-3-priority-modes)). After `play` or a seek, the next update passes the frame it starts on, so an override set there needs that update to evaluate it first. A read that built a frame before the update would take the first evaluation, and the update would hand the override back to the animation.
+
+---
+
+## 10. Departing from this document
 
 Where the convention collides head-on with the host language's or engine's conventions, you may depart from it. When you do, **write the reason next to the code.** A departure with no stated reason is indistinguishable from a violation to whoever reads it next.
 
