@@ -2470,6 +2470,14 @@ impl<'a> Context<'a> {
         source.has_real_animation().then_some(source.animation_idx as u32)
     }
 
+    /// Which animation track 0's main source plays, as an index into the pack's
+    /// animations: the one `setup_animation` set up, until a `crossfade` or a
+    /// `set_track_animation` on track 0 hands the track to another, from the
+    /// call on. `None` before anything is set up.
+    pub fn get_current_animation_index(&self) -> Option<u32> {
+        self.get_source_animation_index(self.instance.primary)
+    }
+
     pub fn get_source_frame(&self, handle: u32) -> Option<f32> {
         let source = self.instance.sources.get(handle as usize)?;
         (source.animation_idx >= 0).then(|| source.controller.get_frame_no())
@@ -7215,6 +7223,32 @@ mod tests {
         assert_eq!(resource.get_animation_names()[run as usize], "run", "the index is the pack's animation order");
 
         assert_eq!(ctx.get_source_animation_index(999), None);
+    }
+
+    /// The current animation is track 0's main one, and a crossfade or a
+    /// `set_track_animation` on track 0 changes it from the call on, while
+    /// another track's leaves it alone.
+    #[test]
+    fn the_current_animation_follows_track_zero_from_the_call_on() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let index = |name: &str| resource.find_animation_index(name).map(|i| i as u32);
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        assert_eq!(ctx.get_current_animation_index(), None, "nothing is set up yet");
+
+        ctx.setup_animation("walk").unwrap();
+        ctx.play();
+        assert_eq!(ctx.get_current_animation_index(), index("walk"));
+
+        ctx.crossfade(0, "run", 1000.0).unwrap();
+        assert_eq!(ctx.get_current_animation_index(), index("run"), "from the moment the fade begins");
+
+        ctx.set_track_animation(1, "attack1").unwrap();
+        assert_eq!(ctx.get_current_animation_index(), index("run"), "another track's animation is not the current one");
+
+        ctx.set_track_animation(0, "dance").unwrap();
+        assert_eq!(ctx.get_current_animation_index(), index("dance"));
     }
 
     // --- Track sync ----------------------------------------------------------
