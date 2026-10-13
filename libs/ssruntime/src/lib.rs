@@ -3350,16 +3350,22 @@ impl<'a> Context<'a> {
         self.instance.clock.pausing && self.is_playing()
     }
 
+    // The track 0 settings below read the track, which their setters write:
+    // set before an animation is laid, there is no controller holding them yet.
+
+    /// Track 0's [`Self::get_track_skip_frames`].
     pub fn get_skip_frames(&self) -> bool {
-        self.instance.primary_source().controller.get_skip_frames()
+        self.instance.tracks[0].policy.is_skip_frames
     }
 
+    /// Track 0's [`Self::get_track_playback_direction`].
     pub fn get_playback_direction(&self) -> core::playback_controller::PlaybackDirection {
-        self.instance.primary_source().controller.get_playback_direction()
+        self.instance.tracks[0].policy.playback_direction
     }
 
+    /// Track 0's [`Self::get_track_playback_style`].
     pub fn get_playback_style(&self) -> core::playback_controller::PlaybackStyle {
-        self.instance.primary_source().controller.get_playback_style()
+        self.instance.tracks[0].policy.playback_style
     }
 
     pub fn get_loop_count(&self) -> i32 {
@@ -3386,12 +3392,15 @@ impl<'a> Context<'a> {
         self.instance.primary_source().controller.get_anime_data_end_frame()
     }
 
+    /// Track 0's [`Self::get_track_frame_rate`].
     pub fn get_frame_rate(&self) -> i32 {
-        self.instance.primary_source().controller.get_frame_rate()
+        let policy = &self.instance.tracks[0].policy;
+        self.instance.track_main_controller(0).map_or(policy.frame_rate_override.unwrap_or(0), |c| c.get_frame_rate())
     }
 
+    /// Track 0's [`Self::get_track_speed`].
     pub fn get_speed_scale(&self) -> f32 {
-        self.instance.primary_source().controller.get_speed_scale()
+        self.instance.tracks[0].policy.speed_scale
     }
 
     // Playback setup
@@ -5267,6 +5276,40 @@ mod tests {
         context.set_part_cell_override(idx, cm_hash, cell_hash, 1).expect("set now");
         context.setup_animation("anime_1").expect("re-setup");
         assert!(!context.instance.has_any_override(), "NOW cell must clear on setup_animation");
+    }
+
+    #[test]
+    fn track_zero_settings_read_back_before_an_animation_is_laid() {
+        // A Player applies its transport when the pack is bound, before it
+        // selects an animation; the setters keep it on track 0 alone then, and
+        // the getters must not read the default of a controller that has none.
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
+
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.set_speed_scale(2.0);
+        context.set_skip_frames(false);
+        context.set_playback_direction(core::playback_controller::PlaybackDirection::Backward, core::playback_controller::PlaybackStyle::PingPong);
+        context.set_frame_rate(24);
+
+        assert_eq!(context.get_speed_scale(), 2.0);
+        assert!(!context.get_skip_frames());
+        assert!(context.get_playback_direction() == core::playback_controller::PlaybackDirection::Backward);
+        assert!(context.get_playback_style() == core::playback_controller::PlaybackStyle::PingPong);
+        assert_eq!(context.get_frame_rate(), 24);
+
+        // And the animation laid afterwards plays by them, reading the same.
+        let names = resource.get_animation_names();
+        context.setup_animation(&names[0]).expect("Failed to setup animation");
+        assert_eq!(context.get_speed_scale(), 2.0);
+        assert!(!context.get_skip_frames());
+        assert!(context.get_playback_direction() == core::playback_controller::PlaybackDirection::Backward);
+        assert!(context.get_playback_style() == core::playback_controller::PlaybackStyle::PingPong);
+        assert_eq!(context.get_frame_rate(), 24);
     }
 
     // Regression for the subframe-end-frame fix: `get_frame_data` accepts the
