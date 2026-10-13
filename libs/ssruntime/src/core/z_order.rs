@@ -38,7 +38,7 @@ impl ZOrderTable {
         // converter writes one for every part from the setup pose.
         self.is_static = !cached_parts.iter().any(|p| p.run(crate::core::framedata::IDX_ATTRIBUTEPRIO).is_some_and(|run| run.count() > 1));
         if self.is_static && !cached_parts.iter().any(|p| p.run(crate::core::framedata::IDX_ATTRIBUTEPRIO).is_some()) {
-            // Without priority keys, priority() is uniformly 0.0 — sort reduces to part_index ascending.
+            // Without priority keys, priority() is uniformly 0 — sort reduces to part_index ascending.
             self.indices.sort_by_key(|&i| cached_parts[i].part_index);
             self.computed = true;
         } else {
@@ -72,7 +72,7 @@ impl ZOrderTable {
         self.indices.sort_by(|&a, &b| {
             let pa = &parts[a];
             let pb = &parts[b];
-            if pa.priority() == pb.priority() { pa.part_index().cmp(&pb.part_index()) } else { pa.priority().partial_cmp(&pb.priority()).unwrap_or(::core::cmp::Ordering::Equal) }
+            pa.priority().cmp(&pb.priority()).then_with(|| pa.part_index().cmp(&pb.part_index()))
         });
 
         self.computed = true;
@@ -105,7 +105,7 @@ mod tests {
             .collect()
     }
 
-    fn states(priorities: &[f32]) -> Vec<PartState> {
+    fn states(priorities: &[i32]) -> Vec<PartState> {
         priorities
             .iter()
             .enumerate()
@@ -123,10 +123,10 @@ mod tests {
         let one = Some(KeyRun::new(0, 1));
         let mut table = ZOrderTable::new();
         table.setup(0, &parts(&[one, one, one]));
-        table.update(&states(&[2.0, 0.0, 1.0]));
+        table.update(&states(&[2, 0, 1]));
         assert_eq!(table.indices(), &[1, 2, 0]);
         // One key a part means the priority cannot change, so later frames keep the order.
-        table.update(&states(&[0.0, 1.0, 2.0]));
+        table.update(&states(&[0, 1, 2]));
         assert_eq!(table.indices(), &[1, 2, 0]);
     }
 
@@ -135,9 +135,9 @@ mod tests {
         let one = Some(KeyRun::new(0, 1));
         let mut table = ZOrderTable::new();
         table.setup(0, &parts(&[one, Some(KeyRun::new(1, 2)), one]));
-        table.update(&states(&[2.0, 0.0, 1.0]));
+        table.update(&states(&[2, 0, 1]));
         assert_eq!(table.indices(), &[1, 2, 0]);
-        table.update(&states(&[0.0, 3.0, 1.0]));
+        table.update(&states(&[0, 3, 1]));
         assert_eq!(table.indices(), &[0, 2, 1]);
     }
 
@@ -147,12 +147,12 @@ mod tests {
         let p = parts(&[one, one, one]);
         let mut table = ZOrderTable::new();
         table.setup(0, &p);
-        table.update(&states(&[2.0, 0.0, 1.0]));
+        table.update(&states(&[2, 0, 1]));
         table.fit(0, &p);
-        table.update(&states(&[0.0, 1.0, 2.0]));
+        table.update(&states(&[0, 1, 2]));
         assert_eq!(table.indices(), &[1, 2, 0], "same animation: the order stands");
         table.fit(1, &p);
-        table.update(&states(&[0.0, 1.0, 2.0]));
+        table.update(&states(&[0, 1, 2]));
         assert_eq!(table.indices(), &[0, 1, 2], "another animation: sorted again");
     }
 }

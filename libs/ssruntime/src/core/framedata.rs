@@ -805,7 +805,7 @@ pub(crate) fn evaluate_part(
         }
     }
     if let Some(value) = evaluated(cached_part, evaluate, part_cursors, IDX_ATTRIBUTEPRIO).and_then(|(run, cursor)| evaluate_int(keys, &run, frame_no, cursor)) {
-        part_state.set_priority(value as f32);
+        part_state.set_priority(value);
         update_flag |= F::AttributePrio;
     }
     for b in &BOOL_ATTRIBUTES {

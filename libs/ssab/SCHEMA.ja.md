@@ -371,7 +371,7 @@ Bit 37: AttributeTexture
 | `local_scale_x/y` | 1.0 |
 | `alpha` | 1.0 |
 | `local_alpha` | 1.0 |
-| `priority` | 0.0 |
+| `priority` | 0 |
 | `flip_h/v` | false |
 | `hide` | false |
 | `pivot_x/y` | 0.0 |

@@ -1768,7 +1768,7 @@ impl<'a> PartState {
     local_scale_y: f32,
     alpha: f32,
     local_alpha: f32,
-    priority: f32,
+    priority: i32,
     pivot_x: f32,
     pivot_y: f32,
     anchor_x: f32,
@@ -2219,8 +2219,8 @@ impl<'a> PartState {
     }
   }
 
-  pub fn priority(&self) -> f32 {
-    let mut mem = ::core::mem::MaybeUninit::<<f32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+  pub fn priority(&self) -> i32 {
+    let mut mem = ::core::mem::MaybeUninit::<<i32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
     // Safety:
     // Created from a valid Table for this object
     // Which contains a valid value in this slot
@@ -2228,13 +2228,13 @@ impl<'a> PartState {
       ::core::ptr::copy_nonoverlapping(
         self.0[56..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
-        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
       mem.assume_init()
     })
   }
 
-  pub fn set_priority(&mut self, x: f32) {
+  pub fn set_priority(&mut self, x: i32) {
     let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
     // Safety:
     // Created from a valid Table for this object
@@ -2243,7 +2243,7 @@ impl<'a> PartState {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
         self.0[56..].as_mut_ptr(),
-        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
   }

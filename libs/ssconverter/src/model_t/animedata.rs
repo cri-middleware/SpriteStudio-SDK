@@ -424,7 +424,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             sspj::ssattribute::SsAttributeKind::Prio(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     // TODO: when Z-sorting, priority should be based on spatially transformed Z-values.
-                    p_args.priority = _key.value as f32;
+                    p_args.priority = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePrio;
                 }
             }

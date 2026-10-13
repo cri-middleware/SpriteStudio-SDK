@@ -6003,13 +6003,13 @@ mod tests {
         use runtime::framedata::ss::runtime::UpdateAttributeFlags;
 
         let mut primary_part = fully_attributed_part_state(0.0);
-        primary_part.set_priority(13.0);
+        primary_part.set_priority(13);
         primary_part.set_part_index(7);
         primary_part.set_cell(3);
         primary_part.set_update_flag(UpdateAttributeFlags::AttributePosX);
 
         let mut secondary_part = fully_attributed_part_state(100.0);
-        secondary_part.set_priority(999.0);
+        secondary_part.set_priority(999);
         secondary_part.set_part_index(-1);
         secondary_part.set_cell(-1);
         secondary_part.set_update_flag(UpdateAttributeFlags::AttributeAlpha);
@@ -6057,7 +6057,7 @@ mod tests {
         assert_eq!(r.skew_y(), 78.0);
 
         // Discrete attributes: primary's values, never blended.
-        assert_eq!(r.priority(), 13.0);
+        assert_eq!(r.priority(), 13);
         assert_eq!(r.part_index(), 7);
         assert_eq!(r.cell(), 3);
         assert_eq!(r.update_flag(), UpdateAttributeFlags::AttributePosX | UpdateAttributeFlags::AttributeAlpha);
