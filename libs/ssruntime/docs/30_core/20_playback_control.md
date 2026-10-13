@@ -99,7 +99,7 @@ Treat these as four operations. Do not fold `resume` into `play`.
 
 The two flags represent **only three** states. If `is_pausing` is true, `is_playing` is also true, so `is_pausing` alone tells you whether playback is paused.
 
-Both flags describe track 0's animation. With animation mixing, once track 0 has finished both read `false` even though the other tracks keep playing, and a `pause` then still holds those tracks without `is_pausing` turning `true`; `resume` releases them ([Animation Mixing §1-4](../50_features/10_animation_mixing.md#1-4-one-clock-for-the-whole-character)).
+Both flags describe track 0's animation. With animation mixing, once track 0 has finished both read `false` even though the other tracks keep playing, and a `pause` then still holds those tracks without `is_pausing` turning `true`; `resume` releases them ([Animation Mixing §1-4](../50_features/10_animation_mixing.md#1-4-one-clock-for-the-whole-character)). `ss_runtime_is_clock_playing` and `ss_runtime_is_clock_pausing` read the same three states from the clock itself, which track 0 finishing does not change.
 
 | State | `is_playing` | `is_pausing` | Advances on `update` |
 | :--- | :--- | :--- | :--- |

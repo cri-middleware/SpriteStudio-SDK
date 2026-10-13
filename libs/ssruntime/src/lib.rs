@@ -3350,6 +3350,23 @@ impl<'a> Context<'a> {
         self.instance.clock.pausing && self.is_playing()
     }
 
+    /// `true` from `play` until `stop` or the next setup: the character's
+    /// clock, which [`Self::is_playing`] reads only while track 0 has not
+    /// finished. A host that stops ticking a character with nothing to move
+    /// reads this, since the other tracks and the fades run on after track 0
+    /// ends. A held clock is still playing.
+    pub fn is_clock_playing(&self) -> bool {
+        self.instance.clock.playing
+    }
+
+    /// `true` while [`Self::pause`] holds a playing clock. Implies
+    /// [`Self::is_clock_playing`], so the pair reads as three states, as
+    /// [`Self::is_playing`] and [`Self::is_pausing`] do; unlike `is_pausing`,
+    /// it still reads the hold after track 0 has finished.
+    pub fn is_clock_pausing(&self) -> bool {
+        self.instance.clock.pausing
+    }
+
     // The track 0 settings below read the track, which their setters write:
     // set before an animation is laid, there is no controller holding them yet.
 
@@ -7286,6 +7303,45 @@ mod tests {
         ctx.resume();
         tick(&mut ctx, 100.0);
         assert_ne!(ctx.get_track_frame(1), overlay, "resume did not release the overlay");
+    }
+
+    /// The clock's own state reads on where `is_playing` / `is_pausing` stop
+    /// at track 0's end, so a host gating its tick needs no copy of it.
+    #[test]
+    fn the_clock_state_reads_through_track_zero_finishing() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "attack1");
+        let clock = |ctx: &Context<'_>| (ctx.is_clock_playing(), ctx.is_clock_pausing());
+        assert_eq!(clock(&ctx), (false, false), "a setup leaves the clock stopped");
+
+        ctx.pause();
+        assert_eq!(clock(&ctx), (false, false), "a pause on a stopped clock held it");
+
+        ctx.set_loop_count(1);
+        ctx.play();
+        assert_eq!(clock(&ctx), (true, false));
+        ctx.set_track_animation(1, "run").unwrap();
+        while !ctx.is_finished() {
+            tick(&mut ctx, 1000.0 / 60.0);
+        }
+        assert!(!ctx.is_playing(), "fixture sanity: track 0 reports its end");
+        assert_eq!(clock(&ctx), (true, false), "the clock read as stopped with track 0");
+
+        ctx.pause();
+        assert_eq!(clock(&ctx), (true, true), "the hold after track 0's end went unread");
+        ctx.resume();
+        assert_eq!(clock(&ctx), (true, false));
+
+        ctx.stop();
+        assert_eq!(clock(&ctx), (false, false));
+
+        ctx.play_with_start_frame(0.0);
+        assert_eq!(clock(&ctx), (true, false));
+        assert!(ctx.setup_animation("no such animation").is_err());
+        assert_eq!(clock(&ctx), (true, false), "a failed setup stopped the clock");
+        ctx.setup_animation("walk").unwrap();
+        assert_eq!(clock(&ctx), (false, false), "a setup left the clock running");
     }
 
     /// An event's index addresses the firing source's animation, and a
