@@ -134,7 +134,7 @@ struct PartState {
 
   alpha: float;
   local_alpha: float;
-  priority: float;
+  priority: int;
 
   pivot_x: float;
   pivot_y: float;
