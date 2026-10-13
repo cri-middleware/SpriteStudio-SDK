@@ -567,6 +567,18 @@ impl SSRuntimeContext {
         self.inner.is_pausing()
     }
 
+    /// The character's clock: `true` from `play` until `stop` or the next
+    /// setup, after track 0 has finished as well.
+    pub fn is_clock_playing(&self) -> bool {
+        self.inner.is_clock_playing()
+    }
+
+    /// `true` while `pause` holds a playing clock, after track 0 has finished
+    /// as well. Implies `is_clock_playing`.
+    pub fn is_clock_pausing(&self) -> bool {
+        self.inner.is_clock_pausing()
+    }
+
     pub fn get_skip_frames(&self) -> bool {
         self.inner.get_skip_frames()
     }

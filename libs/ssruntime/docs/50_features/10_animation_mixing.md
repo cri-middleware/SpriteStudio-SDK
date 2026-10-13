@@ -50,6 +50,7 @@ Every track runs on one clock, the character's. An animation laid on a track pla
 
 - **Track 0 finishing does not stop the clock.** When a finite loop count runs out on track 0, the other tracks and the fades carry on. `is_playing`, `is_pausing` and `is_finished` describe track 0, so all three report the finish as usual; a `pause` after it still holds the other tracks, and `resume` releases them.
 - Fades advance with the clock: while it is held or stopped, a fade does not progress.
+- **The clock has its own pair of flags.** `ss_runtime_is_clock_playing` is `true` from `play` until `stop` or the next setup, and `ss_runtime_is_clock_pausing` while `pause` holds it; unlike `is_playing` and `is_pausing`, both read on after track 0 finishes. A Player that stops ticking a character with nothing left to move reads these rather than keeping its own copy of the transport calls, which goes wrong the moment it misses one: a setup stops the clock too.
 
 ### 1-5. A track's playback settings
 

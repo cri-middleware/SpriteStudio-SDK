@@ -1098,6 +1098,22 @@ pub extern "C" fn ss_runtime_is_pausing(context: *mut c_void) -> bool {
     false
 }
 
+/// `true` from `ss_runtime_play` until `ss_runtime_stop` or the next setup:
+/// the character's clock, which stays `true` after track 0 finishes while
+/// the other tracks and the fades run on. `ss_runtime_is_playing` reads
+/// track 0's state instead.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_is_clock_playing(context: *mut c_void) -> bool {
+    get_context(context).is_some_and(|c| c.ctx.is_clock_playing())
+}
+
+/// `true` while `ss_runtime_pause` holds a playing clock, after track 0 has
+/// finished as well. Implies `ss_runtime_is_clock_playing`.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_is_clock_pausing(context: *mut c_void) -> bool {
+    get_context(context).is_some_and(|c| c.ctx.is_clock_pausing())
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_skip_frames(context: *mut c_void) -> bool {
     if let Some(ffi_context) = get_context(context) {

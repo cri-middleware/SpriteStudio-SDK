@@ -99,7 +99,7 @@ track 0 のアニメーションを替える残りの 2 つの方法、track 0 �
 
 2 つのフラグが表す状態は **3 つだけ**です。`is_pausing` が真なら `is_playing` も真なので、`is_pausing` だけで一時停止中かを判定できます。
 
-どちらのフラグも track 0 のアニメーションの状態を表します。アニメーションミキシングを使っている場合、track 0 が終わると、他のトラックが再生を続けていても両方とも `false` になります。そのあとの `pause` は他のトラックを止めますが、`is_pausing` は `true` になりません。`resume` で再開します（[アニメーションミキシング §1-4](../50_features/10_animation_mixing.ja.md#1-4-キャラクター全体で-1-つの時計)）。
+どちらのフラグも track 0 のアニメーションの状態を表します。アニメーションミキシングを使っている場合、track 0 が終わると、他のトラックが再生を続けていても両方とも `false` になります。そのあとの `pause` は他のトラックを止めますが、`is_pausing` は `true` になりません。`resume` で再開します（[アニメーションミキシング §1-4](../50_features/10_animation_mixing.ja.md#1-4-キャラクター全体で-1-つの時計)）。`ss_runtime_is_clock_playing` と `ss_runtime_is_clock_pausing` は、同じ 3 つの状態を時計そのものから返します。track 0 が終わっても値は変わりません。
 
 | 状態 | `is_playing` | `is_pausing` | `update` で進むか |
 | :--- | :--- | :--- | :--- |
