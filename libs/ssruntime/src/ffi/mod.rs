@@ -1114,6 +1114,16 @@ pub extern "C" fn ss_runtime_is_clock_pausing(context: *mut c_void) -> bool {
     get_context(context).is_some_and(|c| c.ctx.is_clock_pausing())
 }
 
+/// `true` while the track stack would move the pose on a running clock for a
+/// reason other than track 0's own animation stepping: a fade on any track, or
+/// another source still playing on a track that is heard. Independent of the
+/// clock; read it with `ss_runtime_is_clock_playing` and
+/// `ss_runtime_is_clock_pausing`.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_is_stack_in_motion(context: *mut c_void) -> bool {
+    get_context(context).is_some_and(|c| c.ctx.is_stack_in_motion())
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_skip_frames(context: *mut c_void) -> bool {
     if let Some(ffi_context) = get_context(context) {

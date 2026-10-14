@@ -3367,6 +3367,31 @@ impl<'a> Context<'a> {
         self.instance.clock.pausing
     }
 
+    /// `true` while the track stack would move the pose on a running clock for a
+    /// reason other than track 0's own animation stepping: a fade on any track,
+    /// or a source — other than track 0's main one — that plays, at a speed above
+    /// 0 and a weight above 0, on a track that is heard. A cleared, finished,
+    /// silenced or scrubbed track does not count, nor does a source a crossfade
+    /// has retired; one a cancelled crossfade left behind does.
+    ///
+    /// It does not read the clock: a Player gating its redraw combines it with
+    /// [`Self::is_clock_playing`] and [`Self::is_clock_pausing`], and compares
+    /// track 0's frame itself. With this, a Player keeps no copy of which tracks
+    /// and sources it has laid, which goes wrong the moment one is released
+    /// inside the runtime.
+    pub fn is_stack_in_motion(&self) -> bool {
+        let instance = &self.instance;
+        if instance.tracks.iter().any(|t| t.fade.is_some()) {
+            return true;
+        }
+        let primary = instance.primary_idx();
+        instance
+            .sources
+            .iter()
+            .enumerate()
+            .any(|(i, source)| i != primary && source.has_real_animation() && source.weight > 0.0 && source.controller.is_playing() && instance.tracks.get(source.track as usize).is_some_and(|t| t.is_audible() && t.policy.speed_scale > 0.0))
+    }
+
     // The track 0 settings below read the track, which their setters write:
     // set before an animation is laid, there is no controller holding them yet.
 
@@ -7342,6 +7367,61 @@ mod tests {
         assert_eq!(clock(&ctx), (true, false), "a failed setup stopped the clock");
         ctx.setup_animation("walk").unwrap();
         assert_eq!(clock(&ctx), (false, false), "a setup left the clock running");
+    }
+
+    /// What a Player gating its redraw needs beyond track 0's frame: whether
+    /// anything else in the stack still moves the pose, read from the stack
+    /// itself rather than from the calls that built it.
+    #[test]
+    fn the_stack_is_in_motion_only_while_something_beyond_track_zero_moves() {
+        let ssab = load_ringo_resource();
+        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+        let mut ctx = playing_ringo(&resource);
+        assert!(!ctx.is_stack_in_motion(), "track 0 alone");
+
+        ctx.set_track_animation(1, "run").unwrap();
+        assert!(ctx.is_stack_in_motion(), "an overlay plays");
+        ctx.pause();
+        assert!(ctx.is_stack_in_motion(), "the clock was read");
+        ctx.resume();
+        ctx.set_track_alpha(1, 0.0).unwrap();
+        assert!(!ctx.is_stack_in_motion(), "a silenced overlay");
+        ctx.set_track_alpha(1, 1.0).unwrap();
+        ctx.set_track_speed(1, 0.0).unwrap();
+        assert!(!ctx.is_stack_in_motion(), "a scrubbed overlay");
+        ctx.set_track_speed(1, 1.0).unwrap();
+        ctx.clear_track(1).unwrap();
+        assert_eq!(ctx.get_track_count(), 2, "fixture sanity: a cleared track keeps its slot");
+        assert!(!ctx.is_stack_in_motion(), "a cleared overlay");
+
+        ctx.set_track_animation(1, "run").unwrap();
+        ctx.set_track_loop_count(1, 1).unwrap();
+        for _ in 0..2000 {
+            if ctx.is_track_finished(1) {
+                break;
+            }
+            tick(&mut ctx, 1000.0 / 60.0);
+        }
+        assert!(ctx.is_track_finished(1), "fixture sanity: the overlay runs out");
+        assert!(!ctx.is_stack_in_motion(), "a finished overlay holds its last frame");
+        ctx.clear_track(1).unwrap();
+
+        ctx.crossfade(0, "run", 100.0).unwrap();
+        assert!(ctx.is_stack_in_motion(), "a crossfade on track 0");
+        tick(&mut ctx, 200.0);
+        assert!(!ctx.is_stack_in_motion(), "the completed crossfade retired the outgoing side");
+
+        ctx.crossfade(0, "walk", 100.0).unwrap();
+        tick(&mut ctx, 50.0);
+        ctx.cancel_track_fade(0).unwrap();
+        assert!(ctx.get_track_fade_progress(0).is_none(), "fixture sanity: the fade is cancelled");
+        assert!(ctx.is_stack_in_motion(), "the outgoing side a cancelled crossfade left plays on");
+
+        ctx.setup_animation("walk").unwrap();
+        ctx.play();
+        assert!(!ctx.is_stack_in_motion(), "a setup folds the stack back");
+        ctx.add_track_source(0, "run", 0.5).unwrap();
+        assert!(ctx.is_stack_in_motion(), "a source beside track 0's main one");
     }
 
     /// An event's index addresses the firing source's animation, and a
