@@ -65,7 +65,7 @@ A separated project's file stays clean on its own.
 
 **No Player commits its samples' converted assets** — the `.ssab` and the textures copied beside it. They are build outputs of the SDK's `tests/`, and a committed copy goes stale the moment those projects or the schema change. The reader still brings nothing of their own: the source is the `.sspj` in the SDK submodule, and what stands between a clone and the first frame is converting it.
 
-- **The host's own import, where it has one** — Godot's SS Import dock, Unity's Importer window — converts with the `libssconverter` the Player already carries, so it needs nothing the Player did not.
+- **The host's own import, where it has one** — Godot's SS Importer dock, Unity's SS Importer window — converts with the `libssconverter` the Player already carries, so it needs nothing the Player did not.
 - **A `deploy-examples` script, in every Player,** converts every sample without the editor: for a test suite, for CI, for a reader without the host's editor at hand.
 
 The steps that open a sample — a code-first README's, an editor-first CONTRIBUTING.md's — name the route and what it needs. Where the sample's scenes hold references an import cannot restore — Unity's, by the GUID in a committed `.meta` — they also say when it has to run.
