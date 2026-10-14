@@ -579,6 +579,15 @@ impl SSRuntimeContext {
         self.inner.is_clock_pausing()
     }
 
+    /// `true` while the track stack would move the pose on a running clock for
+    /// a reason other than track 0's own animation stepping: a fade on any
+    /// track, or another source still playing on a track that is heard.
+    /// Independent of the clock; read it with `is_clock_playing` and
+    /// `is_clock_pausing`.
+    pub fn is_stack_in_motion(&self) -> bool {
+        self.inner.is_stack_in_motion()
+    }
+
     pub fn get_skip_frames(&self) -> bool {
         self.inner.get_skip_frames()
     }
