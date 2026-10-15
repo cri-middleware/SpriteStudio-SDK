@@ -11,7 +11,7 @@
 
 - **SpriteStudio の全機能対応**: ボーン階層、メッシュウェイトと頂点変形、パーティクルエフェクト、サブアニメーションのインスタンス、ステンシルマスク、フレーム単位で正確なイベント / ユーザーデータ。
 - **サブフレーム補間**: ソースのフレームレートを超えた滑らかな再生 — Hermite、Bezier、Linear、各種イージング曲線をサポート。
-- **`DrawBatch` プランの出力**: フレーム毎の出力にエンジン非依存のバッチプラン（頂点、マスク列、パーティクル quad スロット、インスタンス / エフェクトスロット）を含みます。詳細は [Batched Rendering Contract](./docs/30_core/40_render_loop.ja.md) を参照してください。
+- **`DrawBatch` プランの出力**: フレーム毎の出力にエンジン非依存のバッチプラン（頂点、マスク列、パーティクル quad スロット、インスタンス / エフェクトスロット）を含みます。詳細は [描画ループ](./docs/30_core/40_render_loop.ja.md) を参照してください。
 - **決定論的な再生**: パーティクル等の再現性のための明示的な乱数シード制御。
 - **詳細な再生制御** (`PlaybackController`): 再生 / 一時停止 / 停止、1 フレーム単位のステップ（前進 / 後退）、任意フレームへのサブフレーム精度シーク、再生範囲と FPS のカスタマイズ、ループ回数 (`-1` で無限)、`Normal` / `PingPong` スタイル、`Forward` / `Reverse` 方向、リアルタイム / 固定ステップの時間進行モード。
 - **アニメーションミキシング**: 複数のアニメーションを **トラック** に積んで合成します（クロスフェード、オーバーレイ、加算）。強度はトラックごとの `alpha`、離散属性とイベントの発火は track 0 が担当します。詳細は [アニメーションミキシング](./docs/50_features/10_animation_mixing.ja.md) を参照してください。
@@ -121,12 +121,12 @@ void play_animation(const uint8_t* ssab_data, size_t size) {
     ss_runtime_play(ctx);
 
     // 5. 更新ループ
-    float dt = 1.0f / 60.0f;
+    float dt_ms = 1000.0f / 60.0f; // ss_runtime_update はミリ秒を受け取ります
     while (ss_runtime_is_playing(ctx)) {
-        float frame = ss_runtime_update(ctx, dt);
+        float frame = ss_runtime_update(ctx, dt_ms);
         
         // 6. 描画情報の取得
-        uint8_t* data;
+        const uint8_t* data;
         size_t len;
         // フレーム番号は浮動小数で管理・取得されます（サブフレーム対応）
         ss_runtime_get_frame_data(ctx, frame, &data, &len);

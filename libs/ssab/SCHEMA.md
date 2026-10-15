@@ -282,9 +282,9 @@ The value column says how a key's `Keyframes.value` is read for that attribute.
 | `UVSY` | `uv_scale_y_keys` | `float` |
 | `BNDR` | `bounding_radius_keys` | `float` |
 | `MASK` | `mask_keys` | `float` |
-| `VERT` (skew) | `skew_keys` | index into `skews` (Vec2) | *Note: ssae's `VERT` tag contains both vertex offsets and skew data in a single `SsAttributeVertexKeyValue`. In ssab, these are split into separate `vertex_keys` and `skew_keys`.* |
+| `VERT` (skew) | `skew_keys` | index into `skews` (Vec2). *Note: ssae's `VERT` tag contains both vertex offsets and skew data in a single `SsAttributeVertexKeyValue`. In ssab, these are split into separate `vertex_keys` and `skew_keys`.* |
 | `DEFM` | `deform_keys` | index into `deforms` (PartAttributeDeform) |
-| `TCHG` | `texture_keys` | `uint32` | *Value is `fnv1a(TextureName)`, resolvable via `external_textures`. An empty `TextureName` (authored "no override") is normalised to `0` rather than hashed, so it stays distinguishable from a real texture and matches the `texture` default; step-evaluated, never interpolated.* |
+| `TCHG` | `texture_keys` | `uint32`. *Value is `fnv1a(TextureName)`, resolvable via `external_textures`. An empty `TextureName` (authored "no override") is normalised to `0` rather than hashed, so it stays distinguishable from a real texture and matches the `texture` default; step-evaluated, never interpolated.* |
 
 ### Event Attributes (special handling)
 
@@ -502,7 +502,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 
 | ssab field | fnt field | Notes |
 |-----------|----------|-------|
-| `id` | `id` | Character ID (Unicode code point) |
+| `id` | `id` | Character ID (a UTF-16 code unit) |
 | `atlas` | `x` / `y` / `width` / `height` | The glyph's region in the page image |
 | `offset` | `offset` | Glyph rendering offset |
 | `width_advance` | `xadvance` | Horizontal advance width |
@@ -539,8 +539,8 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 |-----------|-----------|-------|
 | `ref_anime_pack` | `ref_anime_pack` | Referenced animation pack name |
 | `ref_anime_pack_hash` | — | Hash for fast lookup |
-| `ref_anime` | `ref_anime` | Referenced animation name |
-| `ref_anime_hash` | — | Hash for fast lookup |
+| `ref_anime_name` | `ref_anime` | Referenced animation name |
+| `ref_anime_name_hash` | — | Hash for fast lookup |
 | `repeat_count` | `repeat_count` | Number of repeats |
 
 The sequence format is largely identical between ssqe and ssqb, with minimal transformation.

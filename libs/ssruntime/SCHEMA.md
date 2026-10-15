@@ -92,7 +92,7 @@ Complex attributes are stored in pools within `FrameData` to avoid duplicating l
 
 ## Draw Plan: Order, Batches, Mask Slice
 
-`FrameData` carries not just per-part state but also a **cross-engine draw plan**: a stable, pre-sorted ordering of parts plus a contiguous batch list that the Player walks once per frame. This is the "DrawBatch contract"; the [Batched Rendering Contract](./docs/30_core/40_render_loop.md) is the reference for consuming it.
+`FrameData` carries not just per-part state but also a **cross-engine draw plan**: a stable, pre-sorted ordering of parts plus a contiguous batch list that the Player walks once per frame. This is the "DrawBatch contract"; [Render Loop](./docs/30_core/40_render_loop.md) is the reference for consuming it.
 
 | FrameData Field | Type | Description |
 |:---|:---|:---|
@@ -113,7 +113,7 @@ Inline `struct` (fixed-size, no vtable) keyed by position in `draw_batches`:
 | `index_count` | ushort | Total index count contributed by all parts in this batch. |
 | `blend_type` | BlendType | Shared framebuffer blend mode for the slice, from the ssab's `PartData.blend_type`. Not the parts color `blend_type`, which blends with the texture. |
 | `kind` | DrawBatchKind | Renderable category (see below). Determines which geometry / data the Player should fetch for parts in the slice. |
-| `flags` | ubyte | Per-batch flag bits. Currently defined: bit `0x01` = `MASK_INFLUENCE` (parts in this slice are masked by the active mask slice). Remaining bits are reserved — unrecognised bits should be ignored. See the [Batched Rendering Contract](./docs/30_core/40_render_loop.md) for the full contract. |
+| `flags` | ubyte | Per-batch flag bits. Defined: bit `0x01` = `MASK_INFLUENCE` (parts in this slice are masked by the active mask slice). Remaining bits are reserved — unrecognised bits should be ignored. See [Render Loop](./docs/30_core/40_render_loop.md) for the full contract. |
 
 ### `DrawBatchKind`
 
@@ -121,7 +121,7 @@ Inline `struct` (fixed-size, no vtable) keyed by position in `draw_batches`:
 |:---|:---|
 | `Normal` | Standard sprite quad — driven by `vertex` pool + `cell` pool (texture from `texture_hash`: `cellmap_name_hash`, or the TCHG texture name when overridden). |
 | `Shape` | Procedural shape from `PartTypeShape` (no texture). |
-| `Instance` | Sub-anime instance slot — see [Player Guide](./docs/README.md) for slot pulling. |
+| `Instance` | Sub-anime instance slot — see [Player Porting Guide](./docs/README.md) for slot pulling. |
 | `Effect` | Particle quads from the matching `EffectSlot` (see `effect_draw_plan.fbs`). |
 | `Mesh` | Indexed mesh with bone-skinned vertices using `PartMeshBinding`. |
 | `Text` | A text part's slot in the draw order — one part per batch, with no geometry (`vertex_count` / `index_count` are `0`) and no `texture_hash`. Glyph layout, rasterisation and font resolution are the Player's (see [Limitations](./docs/10_introduction/20_limitations.md)); text parts authored as masks are omitted from the plan. |

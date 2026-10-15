@@ -59,7 +59,7 @@ graph LR
 * **Sub-frame Interpolation:** Smooth, continuous playback beyond the base framerate. Perfect for high-refresh-rate displays (144Hz+) and slow-motion effects.
 * **Mesh & Deform:** Fully supported mesh weights and vertex deformations for raster images.
 * **Particle Effects:** High-performance particle simulation matching the SpriteStudio editor.
-* **Sequences (`.ssqe`):** Playback of sequence packs. *(planned — roadmap Phase 3; see [ROADMAP.md](./ROADMAP.md))*
+* **Sequences (`.ssqe`):** Converted to `.ssqb`; the Player plays the items in order ([Sequence](./libs/ssruntime/docs/50_features/40_sequence.md)).
 * **Instance & Masks:** Sub-animation instancing and stencil mask clipping.
 * **Events & User Data:** Frame-accurate callbacks for audio, signals, and user data.
 
@@ -92,7 +92,7 @@ Download the latest version of the tools for your platform from the [GitHub Rele
 - **Web (WASM)**: A pre-built package for direct JavaScript/TypeScript usage is available as `spritestudio-sdk-web-libs.zip`.
 
 ### 2. Convert a Sample Project
-Run the downloaded tool to convert one of the bundled test projects into the binary `.ssab` format:
+Run the downloaded tool to convert one of the sample projects in this repository's `tests/` folder (clone the repository, or download the Release's *Source code* zip) into the binary `.ssab` format:
 
 **Windows:**
 ```powershell

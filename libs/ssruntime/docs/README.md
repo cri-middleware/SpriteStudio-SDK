@@ -4,7 +4,7 @@
 
 This guide explains how to implement a SpriteStudio Player for any game engine or platform using `libssruntime` (the Brain). The Brain computes the animation state, and the Player loads the ssab, draws, notifies events and plays sounds ([Overview](./10_introduction/10_overview.md)).
 
-> Every page of this guide is available in English, and each page links to its Japanese source at the top. The Japanese version is the source of truth. If the two disagree, follow the Japanese page and report the discrepancy.
+> Every page of this guide is available in English, and each page has a Japanese source: the language selector in the site's header switches to it, and on GitHub each page links to it at the top. The Japanese version is the source of truth. If the two disagree, follow the Japanese page and report the discrepancy.
 
 - **Read first**: [Limitations](./10_introduction/20_limitations.md) and [Player API Conventions](./20_design/30_api_conventions.md). Both shape the design of your Player.
 - **How the pages are written**: Each page begins by stating what the Player does on that page. "Do …" and "Do not …" mark what you must follow; "We recommend …" marks what you may choose. Terms are used in the sense given in the [Glossary](./10_introduction/30_glossary.md).

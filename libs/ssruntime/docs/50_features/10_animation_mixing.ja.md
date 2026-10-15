@@ -57,7 +57,7 @@ track 0 が **構造** を受け持ちます。離散的なアトリビュート
 
 速度・フレームレートの上書き・フレームスキップ・再生方向は、そこに載っているアニメーションではなく、**トラック**の設定です。設定は、そのトラックにいま載っているすべてのアニメーション（クロスフェード中なら両側）と、あとから載せるすべてのアニメーションに効きます。クロスフェードや `ss_runtime_set_track_animation` で元に戻ることはありません。
 
-| 設定 | 任意のトラック | track 0（従来の名前） |
+| 設定 | 任意のトラック | track 0 専用 |
 |---|---|---|
 | 速度 | `ss_runtime_set_track_speed` | `ss_runtime_set_speed_scale` |
 | フレームレートの上書き | `ss_runtime_set_track_frame_rate` | `ss_runtime_set_frame_rate` |
@@ -72,7 +72,7 @@ track 0 が **構造** を受け持ちます。離散的なアトリビュート
 
 ## 2. 1 本のアニメーションを再生する
 
-ミキシングを使わない場合は、これまでどおりです。
+ミキシングを使わない場合、Context は track 0 で 1 つのアニメーションを再生します（[再生制御](../30_core/20_playback_control.ja.md)のとおり）。
 
 ```cpp
 ss_runtime_setup_animation(ctx, "walk");   // = track 0 に載せる

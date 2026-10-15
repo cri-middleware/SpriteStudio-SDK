@@ -62,13 +62,16 @@ $ cargo install --path cli
 # 使用例
 
 **1. 基本的な変換**
+
 `project.sspj` と同じ階層に `project/` フォルダが生成されます。
 
 ```bash
 $ ssconverter-cli my_game/project.sspj
 ```
 
-**2. アセット埋め込み**テクスチャなどの依存ファイルをすべて含んだ単一のバイナリを生成します。配布や管理を単純化したい場合に便利です。
+**2. アセット埋め込み**
+
+テクスチャなどの依存ファイルをすべて含んだ単一のバイナリを生成します。配布や管理を単純化したい場合に便利です。
 
 ```bash
 $ ssconverter-cli my_game/project.sspj --embedded

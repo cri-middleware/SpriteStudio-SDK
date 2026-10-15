@@ -40,7 +40,7 @@ Player を作っているときによく起きる問題と、その原因です�
 
 ### 3-1. LNK2019 / LNK2001: 未解決の外部シンボル
 
-**症状**: `libssconverter.lib` や `libssruntime.lib` を Windows の C++ プロジェクトで使うと、リンクで `LNK2019` / `LNK2001` が出る。
+**症状**: `ssconverter.lib` や `ssruntime.lib` を Windows の C++ プロジェクトで使うと、リンクで `LNK2019` / `LNK2001` が出る。
 
 **原因**: Rust の標準ライブラリが使う Windows API のシンボルが、最終的なバイナリのリンクで解決されていない。
 

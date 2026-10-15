@@ -146,7 +146,7 @@ void my_log_callback(int level, const char* message) {
 ss_runtime_set_log_callback(my_log_callback);
 ```
 
-`level` is one of `SS_RUNTIME_LOG_ERROR` (1) / `SS_RUNTIME_LOG_WARN` (2) / `SS_RUNTIME_LOG_INFO` (3). Only `ERROR` is emitted today. The other two are reserved so that your `switch` does not go stale if they come into use later.
+`level` is one of `SS_RUNTIME_LOG_ERROR` (1) / `SS_RUNTIME_LOG_WARN` (2) / `SS_RUNTIME_LOG_INFO` (3). Only `ERROR` is emitted; `WARN` and `INFO` are reserved. Handle all three in your `switch`.
 
 A failed C-API call emits one `ERROR` line, prefixed with the function that failed (`ss_runtime_setup_animation: Animation not found`). If no callback is registered, the string is never built, so this costs nothing.
 

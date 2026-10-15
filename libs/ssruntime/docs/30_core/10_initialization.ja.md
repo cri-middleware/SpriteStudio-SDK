@@ -146,7 +146,7 @@ void my_log_callback(int level, const char* message) {
 ss_runtime_set_log_callback(my_log_callback);
 ```
 
-`level` は `SS_RUNTIME_LOG_ERROR`（1）/ `SS_RUNTIME_LOG_WARN`（2）/ `SS_RUNTIME_LOG_INFO`（3）のどれかです。いま発行されるのは `ERROR` だけですが、後から使われても `switch` の分岐が古くならないよう、残りの 2 つを予約しています。
+`level` は `SS_RUNTIME_LOG_ERROR`（1）/ `SS_RUNTIME_LOG_WARN`（2）/ `SS_RUNTIME_LOG_INFO`（3）のどれかです。発行されるのは `ERROR` だけで、`WARN` と `INFO` は予約されています。`switch` には 3 つすべての分岐を書いてください。
 
 失敗した C-API の呼び出しは、どの関数で失敗したかを前に付けた `ERROR` を 1 行出します（`ss_runtime_setup_animation: Animation not found`）。コールバックを登録していなければ文字列を組み立てないので、負荷はかかりません。
 
