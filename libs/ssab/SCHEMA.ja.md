@@ -282,9 +282,9 @@ SsAnimeBinary
 | `UVSY` | `uv_scale_y_keys` | `float` |
 | `BNDR` | `bounding_radius_keys` | `float` |
 | `MASK` | `mask_keys` | `float` |
-| `VERT` (skew) | `skew_keys` | `skews`（Vec2）のインデックス | *注: ssae の `VERT` タグは単一の `SsAttributeVertexKeyValue` に頂点オフセットと skew データの両方を含みます。ssab ではこれらが `vertex_keys` と `skew_keys` に分離されます。* |
+| `VERT` (skew) | `skew_keys` | `skews`（Vec2）のインデックス。*注: ssae の `VERT` タグは単一の `SsAttributeVertexKeyValue` に頂点オフセットと skew データの両方を含みます。ssab ではこれらが `vertex_keys` と `skew_keys` に分離されます。* |
 | `DEFM` | `deform_keys` | `deforms`（PartAttributeDeform）のインデックス |
-| `TCHG` | `texture_keys` | `uint32` | *値は `fnv1a(TextureName)` で、`external_textures` から解決可能。空の `TextureName`（作画上の「上書き無し」）はハッシュ化せず `0` に正規化するため、実テクスチャと区別でき `texture` の既定値とも一致する。ステップ評価であり補間されない。* |
+| `TCHG` | `texture_keys` | `uint32`。*値は `fnv1a(TextureName)` で、`external_textures` から解決可能。空の `TextureName`（作画上の「上書き無し」）はハッシュ化せず `0` に正規化するため、実テクスチャと区別でき `texture` の既定値とも一致する。ステップ評価であり補間されない。* |
 
 ### イベント属性（特殊な処理）
 
@@ -502,7 +502,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 
 | ssab フィールド | fnt フィールド | 備考 |
 |---------------|------------|------|
-| `id` | `id` | 文字 ID（Unicode コードポイント） |
+| `id` | `id` | 文字 ID（UTF-16 のコード単位） |
 | `atlas` | `x` / `y` / `width` / `height` | ページ画像内のグリフの領域 |
 | `offset` | `offset` | グリフ描画オフセット |
 | `width_advance` | `xadvance` | 水平方向の送り幅 |
@@ -539,8 +539,8 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 |---------------|---------------|------|
 | `ref_anime_pack` | `ref_anime_pack` | 参照アニメーションパック名 |
 | `ref_anime_pack_hash` | — | 高速検索用ハッシュ |
-| `ref_anime` | `ref_anime` | 参照アニメーション名 |
-| `ref_anime_hash` | — | 高速検索用ハッシュ |
+| `ref_anime_name` | `ref_anime` | 参照アニメーション名 |
+| `ref_anime_name_hash` | — | 高速検索用ハッシュ |
 | `repeat_count` | `repeat_count` | 繰り返し回数 |
 
 シーケンスフォーマットは ssqe と ssqb 間でほぼ同一であり、最小限の変換のみが行われます。

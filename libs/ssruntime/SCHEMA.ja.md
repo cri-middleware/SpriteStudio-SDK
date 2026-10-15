@@ -92,7 +92,7 @@ FrameData (FFI を介したメモリバッファ)
 
 ## 描画プラン: 順序・バッチ・マスクスライス
 
-`FrameData` はパーツ単位の状態だけでなく、**エンジン非依存の描画プラン** も保持します。事前にソートされたパーツ並びと、それを連続スライスに切り出したバッチリストを Player が 1 フレームに 1 度だけ走査します。これが「DrawBatch コントラクト」です。消費側の正典は [Batched Rendering Contract](./docs/30_core/40_render_loop.ja.md) です。
+`FrameData` はパーツ単位の状態だけでなく、**エンジン非依存の描画プラン** も保持します。事前にソートされたパーツ並びと、それを連続スライスに切り出したバッチリストを Player が 1 フレームに 1 度だけ走査します。これが「DrawBatch コントラクト」です。消費側の正典は [描画ループ](./docs/30_core/40_render_loop.ja.md) です。
 
 | FrameData フィールド | 型 | 説明 |
 |:---|:---|:---|
@@ -113,7 +113,7 @@ FrameData (FFI を介したメモリバッファ)
 | `index_count` | ushort | スライス内の全パーツが寄与するインデックス数の合計。 |
 | `blend_type` | BlendType | スライス共通の描画先との合成モード。ssab の `PartData.blend_type`。パーツカラーの `blend_type`（テクスチャとの合成）とは別。 |
 | `kind` | DrawBatchKind | 描画カテゴリ（下表）。Player がスライス内パーツについてどのジオメトリ／データを取り出すかを決定。 |
-| `flags` | ubyte | バッチごとのフラグビット。現状定義済み: ビット `0x01` = `MASK_INFLUENCE` (このスライス内のパーツがアクティブなマスクスライスでマスクされる)。残りビットは予約済み — 未知ビットは無視すること。完全な契約は [Batched Rendering Contract](./docs/30_core/40_render_loop.ja.md) を参照。 |
+| `flags` | ubyte | バッチごとのフラグビット。定義済み: ビット `0x01` = `MASK_INFLUENCE` (このスライス内のパーツがアクティブなマスクスライスでマスクされる)。残りビットは予約済み — 未知ビットは無視すること。完全な契約は [描画ループ](./docs/30_core/40_render_loop.ja.md) を参照。 |
 
 ### `DrawBatchKind`
 
@@ -121,7 +121,7 @@ FrameData (FFI を介したメモリバッファ)
 |:---|:---|
 | `Normal` | 標準スプライト矩形 — `vertex` プール + `cell` プール（テクスチャは `texture_hash` 経由: `cellmap_name_hash`、または上書き時は TCHG のテクスチャ名）。 |
 | `Shape` | `PartTypeShape` から生成される手続き的シェイプ（テクスチャ無し）。 |
-| `Instance` | サブアニメのインスタンススロット — スロット pull の詳細は [Player Guide](./docs/README.ja.md) を参照。 |
+| `Instance` | サブアニメのインスタンススロット — スロット pull の詳細は [Player 移植ガイド](./docs/README.ja.md) を参照。 |
 | `Effect` | 該当 `EffectSlot` のパーティクル矩形（`effect_draw_plan.fbs` 参照）。 |
 | `Mesh` | `PartMeshBinding` によるボーンスキニング済みインデックス付きメッシュ。 |
 | `Text` | テキストパーツの描画順における位置。1 パーツ 1 バッチで、ジオメトリ（`vertex_count` / `index_count` は `0`）もテクスチャ（`texture_hash`）も持たない。字詰め・ラスタライズ・フォント解決は Player の担当（[制限事項](./docs/10_introduction/20_limitations.ja.md) を参照）。マスク指定されたテキストパーツはプランから除外される。 |

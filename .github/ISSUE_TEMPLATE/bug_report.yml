@@ -74,7 +74,7 @@ body:
     attributes:
       label: OS, target and Rust version / OS・ターゲット・Rust のバージョン
       description: The Rust version only matters if you build from source. / Rust のバージョンはソースからビルドする場合のみ。
-      placeholder: macOS 26 (aarch64-apple-darwin), Rust 1.98
+      placeholder: macOS 26 (aarch64-apple-darwin), Rust 1.99
 
   - type: textarea
     id: logs

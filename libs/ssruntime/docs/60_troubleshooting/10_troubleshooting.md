@@ -40,7 +40,7 @@ Problems that often occur while building a Player, and their causes.
 
 ### 3-1. LNK2019 / LNK2001: unresolved external symbol
 
-**Symptom**: when you use `libssconverter.lib` or `libssruntime.lib` in a Windows C++ project, linking reports `LNK2019` / `LNK2001`.
+**Symptom**: when you use `ssconverter.lib` or `ssruntime.lib` in a Windows C++ project, linking reports `LNK2019` / `LNK2001`.
 
 **Cause**: the Windows API symbols the Rust standard library uses are not resolved when the final binary is linked.
 

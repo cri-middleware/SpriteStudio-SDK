@@ -57,7 +57,7 @@ Every track runs on one clock, the character's. An animation laid on a track pla
 
 The speed, the frame-rate override, frame skip and the playback direction belong to the **track**, not to the animation on it. A setting reaches every animation on the track now, both sides of a crossfade included, and every animation laid on it later, so a crossfade or `ss_runtime_set_track_animation` does not reset it.
 
-| Setting | Any track | Track 0's, by its older name |
+| Setting | Any track | Track 0 only |
 |---|---|---|
 | Speed | `ss_runtime_set_track_speed` | `ss_runtime_set_speed_scale` |
 | Frame-rate override | `ss_runtime_set_track_frame_rate` | `ss_runtime_set_frame_rate` |
@@ -72,7 +72,7 @@ The speed, the frame-rate override, frame skip and the playback direction belong
 
 ## 2. Playing a single animation
 
-If you do not use mixing, playback works as before.
+Without mixing, a Context plays one animation on track 0, as in [Playback Control](../30_core/20_playback_control.md).
 
 ```cpp
 ss_runtime_setup_animation(ctx, "walk");   // = put it on track 0

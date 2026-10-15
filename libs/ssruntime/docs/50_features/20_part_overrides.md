@@ -127,7 +127,7 @@ For a part with no size (`SizeX` / `SizeY`) keys, the swapped-in cell's size bec
 
 ### 3-3. Visibility override
 
-- `force = 0` clears it and `force = 1` force-hides. `force = 2` (force show) is reserved and currently always returns `false`.
+- `force = 0` clears it and `force = 1` force-hides. `force = 2` (force show) is reserved and always returns `false`.
 - **There is no priority mode.** It always beats keyframes, and it is **always cleared** when another animation is set up (the same behavior as `HoldUntilNextAnimation`).
 - With `cascade != 0`, every descendant part is hidden too.
 
