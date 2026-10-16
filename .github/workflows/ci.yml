@@ -2,10 +2,10 @@ name: CI
 
 # Two tiers. Every pull request runs what a change most often breaks: format,
 # clippy and rustdoc, the Linux and wasm32 builds with the workspace tests, the
-# declared MSRV and cargo-audit. The other platforms the SDK ships (Windows,
-# macOS, iOS, Android) and the documentation site are built by the weekly run, a
-# dispatch, and the release PR (release/X.Y into main), where a break is still
-# cheap to fix.
+# declared MSRV, cargo-audit, and Miri over the C ABI's handles. The other
+# platforms the SDK ships (Windows, macOS, iOS, Android) and the documentation
+# site are built by the weekly run, a dispatch, and the release PR (release/X.Y
+# into main), where a break is still cheap to fix.
 on:
   pull_request:
     paths-ignore:
@@ -246,6 +246,47 @@ jobs:
 
       - name: Run cargo audit
         run: cargo audit
+        shell: bash
+
+  # The C ABI keeps its handles alive through Arc counts held as raw pointers,
+  # and lends a resource out as 'static. A mistake there is undefined behaviour
+  # that the plain test run passes (a missing refcount increment did); Miri
+  # reports it. The packs are converted natively first: Miri cannot run the
+  # converter in any reasonable time.
+  miri:
+    name: 🔬 Miri (C ABI handles)
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+
+      - name: setup for SpriteStudio-SDK
+        uses: ./.github/actions/setup
+        with:
+          platform: miri
+          os: ubuntu-latest
+
+      - name: Install Miri
+        run: |
+          rustup toolchain install nightly --component miri,rust-src
+          cargo +nightly miri setup
+        shell: bash
+
+      - name: Convert the packs the test plays
+        run: cargo run -p ssconverter-cli -- -o target/miri-fixtures/overall tests/overall/overall.sspj
+        shell: bash
+
+      - name: Test the C ABI handles under Miri
+        run: cargo +nightly miri test -p ssruntime --features ffi --test ffi_lifecycle
+        env:
+          MIRIFLAGS: -Zmiri-disable-isolation
+          SSRUNTIME_FIXTURES: ${{ github.workspace }}/target/miri-fixtures
         shell: bash
 
   # The weekly tier. `github.base_ref == 'main'` is the release PR: under git-flow
