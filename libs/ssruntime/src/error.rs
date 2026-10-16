@@ -19,7 +19,10 @@
 /// Everything that can go wrong loading or playing back an animation.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SSRuntimeError {
-    /// Failed to load data (e.g. empty data).
+    /// A resource whose pack did not parse was bound to a context or an effect slot.
+    /// Neither the C nor the web face hands out such a resource, so nothing reports
+    /// this today. Empty or truncated bytes are not caught here: loading does not
+    /// validate the `.ssab`.
     EmptyData,
     /// SSAB version mismatch.
     InvalidVersion { expected: u32, got: u32 },

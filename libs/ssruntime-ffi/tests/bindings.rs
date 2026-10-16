@@ -31,3 +31,15 @@ fn the_committed_c_header_is_the_generated_one() {
 fn the_committed_csharp_bindings_are_the_generated_ones() {
     check("SSRuntimeMethods.g.cs");
 }
+
+/// C and C# readers cannot follow a rustdoc link, so the docs that reach them
+/// name an item as `name`, not [`name`].
+#[test]
+fn the_bindings_carry_no_rustdoc_links() {
+    for file in ["ssruntime.h", "SSRuntimeMethods.g.cs"] {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("target").join(file);
+        let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+        let lines: Vec<usize> = text.lines().enumerate().filter(|(_, line)| line.contains("[`")).map(|(i, _)| i + 1).collect();
+        assert!(lines.is_empty(), "{file} carries rustdoc link syntax at lines {lines:?}: write `name`, not [`name`], in docs that reach the bindings");
+    }
+}

@@ -1,34 +1,37 @@
 //! The C ABI — how every non-Rust Player talks to the runtime.
 //!
 //! A flat set of `extern "C"` functions mirroring the Rust API, plus the opaque handles
-//! that carry state across the boundary. `cbindgen` turns this module into `ssruntime.h`
-//! at build time; that header, not this page, is what a C or C++ integrator reads.
+//! that carry state across the boundary. `cbindgen` generates `ssruntime.h` from this
+//! module and opens it with this text, so it is written for the C or C++ integrator.
 //!
 //! # Handles
 //!
-//! Two opaque pointers, both `*mut c_void` to C:
+//! Every handle is an opaque `void *`. The two that every Player holds:
 //!
 //! - **Resource** (`ss_resource_create_copy` / `_borrow` → `ss_resource_destroy`) — parsed
 //!   `.ssab` data. Internally reference-counted, so it is safe to destroy a resource that
 //!   contexts are still bound to; the buffer stays alive until the last one lets go.
 //!   The `_borrow` variant does *not* copy, so the caller's buffer must outlive it.
-//! - **Context** ([`ss_runtime_create`] → [`ss_runtime_destroy`]) — the playback state of
-//!   one animation. Bind a resource with [`ss_runtime_bind_resource`]; several contexts
-//!   may share one.
+//! - **Context** (`ss_runtime_create` → `ss_runtime_destroy`) — the playback state of
+//!   one animated object: a stack of tracks, each playing an animation, layered onto the
+//!   setup pose. Bind a resource with `ss_runtime_bind_resource`; several contexts may
+//!   share one.
 //!
-//! Effect and instance parts get their own handles ([`ss_effect_slot_create`],
-//! [`ss_instance_slot_create`]), stepped once per tick by the Player.
+//! Effect and instance parts get their own handles (`ss_effect_slot_create`,
+//! `ss_instance_slot_create`), stepped once per tick by the Player.
 //!
 //! # Calling convention
 //!
-//! Fallible calls return `bool` (or a null pointer, or [`SS_RUNTIME_INVALID_HANDLE`]) and
-//! record the reason on the context. [`ss_runtime_get_last_error`] reads back the stable
-//! code (compare against [`crate::error::SSRuntimeError::as_code`]), and
-//! [`ss_runtime_error_message`] turns that code into the text to put in front of a user —
-//! which is what a Player owes its caller.
+//! Fallible calls return `bool` (or a null pointer, or `SS_RUNTIME_INVALID_HANDLE`) and
+//! record the reason on the context. `ss_runtime_get_last_error` reads back a stable code,
+//! and `ss_runtime_error_message` turns that code into the text to put in front of a
+//! user — which is what a Player owes its caller.
 //! **The message takes the code, not the context**, so it is a pure lookup with nothing
-//! to own and nothing to outlive. Getters that return a float use `NaN` for "no such
-//! thing", which is distinguishable from a legitimate `0.0`.
+//! to own and nothing to outlive. The track and source getters that return a float use
+//! `NaN` for a track or source that does not exist, which is distinguishable from a
+//! legitimate `0.0`. The context-wide ones (`ss_runtime_get_frame_no`,
+//! `ss_runtime_get_speed_scale` and `ss_runtime_update`) have no such case, and return
+//! `0.0` for a null context.
 //!
 //! The two `ss_resource_create_*` constructors and `ss_effect_slot_create` are the
 //! exception: they take no context, so a null return is the whole report. For a resource
@@ -39,8 +42,8 @@
 //!
 //! # Building a resource
 //!
-//! `ss_resource_create_*` then [`ss_runtime_bind_resource`] is the full form: it leaves
-//! you holding the resource handle, which is what [`ss_effect_slot_create`] takes and
+//! `ss_resource_create_*` then `ss_runtime_bind_resource` is the full form: it leaves
+//! you holding the resource handle, which is what `ss_effect_slot_create` takes and
 //! what lets one parsed pack serve several contexts. `ss_runtime_load_ssab_*` is the
 //! one-liner for when you need neither — it creates, binds, and drops its own reference.
 //!
@@ -53,21 +56,22 @@
 //!
 //! # Safety
 //!
-//! Every entry point that takes a handle or a pointer is `unsafe` to call from Rust,
-//! under one contract stated here rather than on each of them:
+//! Every entry point that takes a handle or a pointer relies on one contract, stated
+//! here rather than on each of them (it is why they are `unsafe` to call from Rust):
 //!
 //! - A handle is null, or what its own create function returned and not yet destroyed:
 //!   a context where a context is asked for, a slot where a slot is. A null handle is
 //!   never dereferenced.
-//! - A handle is not used from two threads at once.
+//! - A handle is not used from two threads at once. Different handles may be used from
+//!   different threads at the same time, contexts that share one resource included.
 //! - An `out_data` / `out_len` pointer is null or valid for a write.
 //!
 //! The ones that read a data or string pointer add their own `# Safety` section.
 //!
 //! # Validation
 //!
-//! Loading does not validate the `.ssab` — see the crate docs. Every entry point that
-//! takes a data pointer trusts it.
+//! Loading does not validate the `.ssab` (see "Limitations to design around" in the
+//! `ssruntime` crate docs). Every entry point that takes a data pointer trusts it.
 
 #![allow(clippy::missing_safety_doc)]
 #![allow(clippy::doc_lazy_continuation)]
@@ -79,13 +83,13 @@ use alloc::sync::Arc;
 use core::ffi::{CStr, c_char, c_float, c_int, c_uchar, c_void};
 use core::sync::atomic::{AtomicPtr, Ordering};
 
-/// Severity passed to [`SsLogCallback`]. The runtime only ever emits `ERROR`
+/// Severity passed to `SsLogCallback`. The runtime only ever emits `ERROR`
 /// today; `WARN` and `INFO` are reserved so a host can switch on the level
 /// without its arms going stale when the runtime starts using them.
 pub const SS_RUNTIME_LOG_ERROR: c_int = 1;
-/// See [`SS_RUNTIME_LOG_ERROR`].
+/// See `SS_RUNTIME_LOG_ERROR`.
 pub const SS_RUNTIME_LOG_WARN: c_int = 2;
-/// See [`SS_RUNTIME_LOG_ERROR`].
+/// See `SS_RUNTIME_LOG_ERROR`.
 pub const SS_RUNTIME_LOG_INFO: c_int = 3;
 
 pub type SsLogCallback = extern "C" fn(level: core::ffi::c_int, message: *const core::ffi::c_char);
@@ -266,9 +270,10 @@ pub unsafe extern "C" fn ss_runtime_reset(context: *mut c_void) {
     }
 }
 
-/// Why the last call that tracks a reason failed, as the stable code from
-/// [`crate::error::SSRuntimeError::as_code`]. `0` means the last such call
-/// succeeded, and so does a null `context`.
+/// Why the last call that tracks a reason failed, as a stable code. The codes
+/// are listed with `SSRuntimeError` in
+/// <https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/src/error.rs>.
+/// `0` means the last such call succeeded, and so does a null `context`.
 ///
 /// Every fallible entry point that has a context to write to clears this on
 /// entry, so it always describes the most recent one rather than some earlier
@@ -287,7 +292,7 @@ pub unsafe extern "C" fn ss_runtime_get_last_error(context: *mut c_void) -> i32 
     }
 }
 
-/// The wording behind a code from [`ss_runtime_get_last_error`], as
+/// The wording behind a code from `ss_runtime_get_last_error`, as
 /// NUL-terminated UTF-8.
 ///
 /// **Takes the code, not a context**, so it is a pure lookup: no lifetime to
@@ -297,7 +302,7 @@ pub unsafe extern "C" fn ss_runtime_get_last_error(context: *mut c_void) -> i32 
 ///
 /// The text carries no numbers. `InvalidVersion` reads "Invalid SSAB version";
 /// a Player that wants to say *which* versions should compare
-/// [`ss_runtime_ssab_schema_version`] against the pack's own `version` field,
+/// `ss_runtime_ssab_schema_version` against the pack's own `version` field,
 /// which gives it two integers rather than a sentence to parse.
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_error_message(code: i32) -> *const c_char {
@@ -441,10 +446,6 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: 
 }
 
 #[unsafe(no_mangle)]
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mut *const c_uchar, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -530,10 +531,6 @@ pub unsafe extern "C" fn ss_runtime_setup_animation_by_hash(context: *mut c_void
 }
 
 #[unsafe(no_mangle)]
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_no: c_float, out_data: *mut *const c_uchar, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -554,10 +551,6 @@ pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_n
 }
 
 #[unsafe(no_mangle)]
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_world_matrices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -573,10 +566,6 @@ pub unsafe extern "C" fn ss_runtime_get_world_matrices(context: *mut c_void, out
 }
 
 #[unsafe(no_mangle)]
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_local_uvs(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -599,11 +588,6 @@ pub unsafe extern "C" fn ss_runtime_get_local_uvs(context: *mut c_void, out_data
 /// rectangle origin in the cellmap's texture pixel space, letting a
 /// Player build a complete source rect (origin + size) without its own
 /// cellmap lookup. Parts without a current cell carry zeros.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_cell_meta(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -628,11 +612,6 @@ pub unsafe extern "C" fn ss_runtime_get_cell_meta(context: *mut c_void, out_data
 /// flip, and per-frame vertex deformation. Parts without a current cell
 /// carry zeros. Replaces `FrameData::vertices` for renderers that consume
 /// pre-resolved SoA buffers.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_local_vertices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -657,11 +636,6 @@ pub unsafe extern "C" fn ss_runtime_get_local_vertices(context: *mut c_void, out
 /// valid; remaining slots are zero-initialized. Non-shape parts carry zero
 /// count and zero-filled vertex slots. When no part of the pack is a shape,
 /// the buffer is empty, as is `ss_runtime_get_shape_vertex_box_coords`.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_shape_vertices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -684,11 +658,6 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertices(context: *mut c_void, out
 /// corner, regardless of pivot offset or coordinate system. Players use
 /// this to interpolate the four part-color corners without re-deriving the
 /// box layout.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_shape_vertex_box_coords(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -707,11 +676,6 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertex_box_coords(context: *mut c_
 /// Per-part valid vertex count for `ss_runtime_get_shape_vertices`. Indexed
 /// by `part_index`. Zero for parts that are not shape parts (or shape
 /// parts whose size collapsed to zero).
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_shape_vertex_counts(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -732,11 +696,6 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertex_counts(context: *mut c_void
 /// ranges: part `p`'s vertices live at indices `offsets[p]..offsets[p + 1]`.
 /// Non-mesh parts contribute an empty range. SceneGraph render mode leaves the
 /// buffer empty (length 0).
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_x(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -755,11 +714,6 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_x(context: *mut c_void, ou
 /// Mesh per-vertex Y coordinates. SoA companion to
 /// `ss_runtime_get_mesh_vertices_x`; sliced identically via
 /// `ss_runtime_get_mesh_vertex_offsets`.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_y(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -779,11 +733,6 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_y(context: *mut c_void, ou
 /// part's mesh vertices live inside `ss_runtime_get_mesh_vertices_x`
 /// / `_y`. Part `p` occupies indices `[offsets[p], offsets[p + 1])`; non-mesh
 /// parts have `offsets[p] == offsets[p + 1]`.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_vertex_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -803,11 +752,6 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_vertex_offsets(context: *mut c_void
 /// `[u, v, ...]`, concatenated across all parts. Static — resolved once from
 /// each mesh part's frame-0 Cell. Sliced per-part by
 /// `ss_runtime_get_mesh_vertex_offsets`, identically to the vertex buffers.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_uvs(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -826,11 +770,6 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_uvs(context: *mut c_void, out_data:
 /// Mesh triangle indices (part-local, 0-based), concatenated across all parts.
 /// Static. Slice part `p`'s range via `ss_runtime_get_mesh_index_offsets`:
 /// `[offsets[p], offsets[p + 1])`.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_indices(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -849,11 +788,6 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_indices(context: *mut c_void, out_d
 /// CSR-style prefix sum (length = `num_parts + 1`) for the triangle indices in
 /// `ss_runtime_get_mesh_indices`. Part `p` occupies `[offsets[p], offsets[p + 1])`;
 /// non-mesh parts have an empty range.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_index_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -880,11 +814,6 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_index_offsets(context: *mut c_void,
 /// `ss_runtime_get_local_vertices` — so a Player just multiplies them by the
 /// part's world matrix. The grid is a 4x4 sheet for `nines_fill_mode == 0`
 /// (stretch) and independent quads per repeat for `== 1` (tile).
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_vertices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -904,11 +833,6 @@ pub unsafe extern "C" fn ss_runtime_get_nines_vertices(context: *mut c_void, out
 /// `[u, v, ...]`. Shares the vertex CSR of
 /// `ss_runtime_get_nines_vertex_offsets`. Divide by the texture size to
 /// normalize, the same as `ss_runtime_get_local_uvs`.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_uvs(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -932,11 +856,6 @@ pub unsafe extern "C" fn ss_runtime_get_nines_uvs(context: *mut c_void, out_data
 /// grid — the same weighting `ss_runtime_get_shape_vertex_box_coords` provides
 /// for Shape parts. A part flip is already folded in, so `fx` / `fy` always
 /// describe the drawn box.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_box_coords(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -956,11 +875,6 @@ pub unsafe extern "C" fn ss_runtime_get_nines_box_coords(context: *mut c_void, o
 /// `ss_runtime_get_nines_index_offsets`. Values are **part-local**
 /// (`0..vertex_count`), so a Player passes them alongside the part's vertex
 /// slice without rebasing. Each quad is wound `LT, RT, LB / LB, RT, RB`.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_indices(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -980,11 +894,6 @@ pub unsafe extern "C" fn ss_runtime_get_nines_indices(context: *mut c_void, out_
 /// `ss_runtime_get_nines_vertices` / `_uvs` / `_box_coords`. Part `p` occupies
 /// vertices `[offsets[p], offsets[p + 1])` — multiply by 2 to index the
 /// interleaved floats. Non-nines parts have an empty range.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_vertex_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -1003,11 +912,6 @@ pub unsafe extern "C" fn ss_runtime_get_nines_vertex_offsets(context: *mut c_voi
 /// CSR-style prefix sum (length = `num_parts + 1`) for the triangle indices in
 /// `ss_runtime_get_nines_indices`. Part `p` occupies
 /// `[offsets[p], offsets[p + 1])`; non-nines parts have an empty range.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_index_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
@@ -1251,7 +1155,7 @@ pub unsafe extern "C" fn ss_runtime_play_with_start_frame(context: *mut c_void, 
 /// Idempotent: pausing an already-paused animation leaves it paused.
 /// `ss_runtime_is_playing` stays true while held — a pause is a hold, not a
 /// stop — so tell the two apart with `ss_runtime_is_pausing`. Lift the hold
-/// with [`ss_runtime_resume`]; `ss_runtime_play` rewinds and cannot resume.
+/// with `ss_runtime_resume`; `ss_runtime_play` rewinds and cannot resume.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_pause(context: *mut c_void) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
@@ -1259,7 +1163,7 @@ pub unsafe extern "C" fn ss_runtime_pause(context: *mut c_void) {
     }
 }
 
-/// Lifts a [`ss_runtime_pause`], carrying on from the frame it stopped at.
+/// Lifts a `ss_runtime_pause`, carrying on from the frame it stopped at.
 ///
 /// Idempotent, and a no-op on an animation that was never paused. It does not
 /// start a stopped animation; use `ss_runtime_play` for that.
@@ -1324,14 +1228,18 @@ unsafe fn cstr_to_string(p: *const c_char) -> Option<alloc::string::String> {
     Some(alloc::string::String::from_utf8_lossy(c_buf.to_bytes()).into_owned())
 }
 
-/// Sentinel returned by the handle-returning track functions on failure.
+/// Sentinel returned on failure by the functions that return a source handle,
+/// and by `ss_runtime_get_track_blend` / `ss_runtime_get_track_sync` for a track
+/// that does not exist. No live handle ever equals it.
 pub const SS_RUNTIME_INVALID_HANDLE: u32 = u32::MAX;
 
-/// Track blend operators, mirroring [`crate::TrackBlend`].
+/// Track blend operators: what `ss_runtime_set_track_blend` takes and
+/// `ss_runtime_get_track_blend` returns.
 pub const SS_RUNTIME_TRACK_BLEND_MIX: u32 = 0;
 pub const SS_RUNTIME_TRACK_BLEND_ADDITIVE: u32 = 1;
 
-/// Where the animations laid on a track start, mirroring [`crate::TrackSync`].
+/// Where the animations laid on a track start: what `ss_runtime_set_track_sync`
+/// takes and `ss_runtime_get_track_sync` returns.
 pub const SS_RUNTIME_TRACK_SYNC_FREE: u32 = 0;
 pub const SS_RUNTIME_TRACK_SYNC_START: u32 = 1;
 

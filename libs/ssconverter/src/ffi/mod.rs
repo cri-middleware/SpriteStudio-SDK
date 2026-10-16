@@ -1,26 +1,27 @@
 //! The converter's C ABI — what an editor plugin drives to turn a `.sspj` into
-//! `.ssab` files.
+//! `.ssab` files. `cbindgen` generates `ssconverter.h` from this module and opens it
+//! with this text, so it is written for the C or C++ integrator.
 //!
 //! # Calling convention
 //!
-//! Both jobs here are asynchronous: [`ss_converter_convert`] and
-//! [`ss_converter_scan_dir`] return as soon as the worker is spawned, and the
-//! caller polls [`ss_converter_is_finished`]. **A context runs one of them at a
-//! time** — see [`ss_converter_create`].
+//! Both jobs here are asynchronous: `ss_converter_convert` and
+//! `ss_converter_scan_dir` return as soon as the worker is spawned, and the
+//! caller polls `ss_converter_is_finished`. **A context runs one of them at a
+//! time** — see `ss_converter_create`.
 //!
 //! Every entry point tolerates a null context and returns a safe default rather
 //! than dereferencing it, and each one runs its work inside `catch_unwind`.
 //! **That net only exists where the binary was built with unwinding.** This
 //! repository's own profiles set `panic = "abort"`, so in the artifacts it ships
 //! a panic ends the host process instead of being reported here. Reporting
-//! malformed input as [`ConverterError`] rather than panicking is therefore what
-//! the conversion path is held to; the `catch_unwind` above it is a second line
+//! malformed input as an error rather than panicking is therefore what the
+//! conversion path is held to; the `catch_unwind` above it is a second line
 //! for callers who build with unwinding, not the guarantee.
 //!
 //! # Strings
 //!
-//! [`ss_converter_version`] is the only one that **transfers ownership**; its
-//! string must be released with [`ss_converter_version_free`]. Every other
+//! `ss_converter_version` is the only one that **transfers ownership**; its
+//! string must be released with `ss_converter_version_free`. Every other
 //! string is **borrowed from the context**, must not be freed, and stays valid
 //! only until the call named in its own documentation — usually the next job on
 //! that context, or the context's destruction.
@@ -76,7 +77,7 @@ pub enum CConverterError {
 /// The converter's version string.
 ///
 /// **The caller owns the returned string** and must hand it to
-/// [`ss_converter_version_free`]. It is the one function here that transfers
+/// `ss_converter_version_free`. It is the one function here that transfers
 /// ownership; every other `*const c_char` this ABI returns is borrowed from a
 /// context and must not be freed.
 #[unsafe(no_mangle)]
@@ -86,9 +87,9 @@ pub extern "C" fn ss_converter_version() -> *const c_char {
     s.into_raw()
 }
 
-/// Release a string from [`ss_converter_version`]. Null is accepted and ignored.
+/// Release a string from `ss_converter_version`. Null is accepted and ignored.
 /// Passing anything else — including a pointer from
-/// [`ss_converter_scan_result_at`] or [`ss_converter_get_error`] — is undefined.
+/// `ss_converter_scan_result_at` or `ss_converter_get_error` — is undefined.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_version_free(s: *mut c_char) {
     let _ = catch_unwind(AssertUnwindSafe(|| {
@@ -114,19 +115,19 @@ pub extern "C" fn ss_converter_ssqb_schema_version() -> u32 {
 /// A conversion context, or null if the allocation failed.
 ///
 /// **A context runs one job at a time** — a conversion
-/// ([`ss_converter_convert`]) or a directory scan ([`ss_converter_scan_dir`]).
+/// (`ss_converter_convert`) or a directory scan (`ss_converter_scan_dir`).
 /// Starting a conversion drops any earlier scan, because `is_running`,
 /// `is_finished` and `abort` all answer about whichever job is current. Use two
 /// contexts to run a scan and a conversion at once.
 ///
-/// Release it with [`ss_converter_destroy`].
+/// Release it with `ss_converter_destroy`.
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_create() -> *mut Context {
     let c = Context::new();
     Box::into_raw(Box::new(c))
 }
 
-/// Release a context from [`ss_converter_create`]. Null is accepted and ignored.
+/// Release a context from `ss_converter_create`. Null is accepted and ignored.
 ///
 /// Every borrowed pointer taken from this context — the scan results, the error
 /// text — dies with it.
@@ -144,8 +145,8 @@ type LogCallback = Option<extern "C" fn(*const c_char)>;
 
 /// Start converting one `.sspj` into `output_dir`, **on a worker thread**.
 ///
-/// Returns immediately. Poll [`ss_converter_is_finished`], then call
-/// [`ss_converter_get_result`] for the outcome and [`ss_converter_get_error`]
+/// Returns immediately. Poll `ss_converter_is_finished`, then call
+/// `ss_converter_get_result` for the outcome and `ss_converter_get_error`
 /// for the text when it is not `Success`.
 ///
 /// `callback` is invoked **on the worker thread** with a message that is only
@@ -153,7 +154,7 @@ type LogCallback = Option<extern "C" fn(*const c_char)>;
 /// a UI toolkit from it.
 ///
 /// Starting a conversion clears this context's previous result, error text and
-/// scan — see [`ss_converter_create`] on one job at a time.
+/// scan — see `ss_converter_create` on one job at a time.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char, embedded: bool, callback: LogCallback) {
     if ctx.is_null() {
@@ -212,7 +213,7 @@ pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_
 }
 
 /// Whether this context's current job is still going. The complement of
-/// [`ss_converter_is_finished`] for a job that has started; both are `false` on
+/// `ss_converter_is_finished` for a job that has started; both are `false` on
 /// a context that has never been given one.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_is_running(ctx: *mut Context) -> bool {
@@ -246,7 +247,7 @@ pub unsafe extern "C" fn ss_converter_is_finished(context: *mut Context) -> bool
 
 /// Ask this context's current job to stop early. Returns immediately — the
 /// worker notices at its next checkpoint, so keep polling
-/// [`ss_converter_is_finished`]. An aborted conversion reports `ErrorAborted`.
+/// `ss_converter_is_finished`. An aborted conversion reports `ErrorAborted`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_abort(context: *mut Context) {
     if context.is_null() {
@@ -262,7 +263,7 @@ pub unsafe extern "C" fn ss_converter_abort(context: *mut Context) {
 
 /// The outcome of the conversion started on this context.
 ///
-/// **Blocks until the worker finishes**, so call [`ss_converter_is_finished`]
+/// **Blocks until the worker finishes**, so call `ss_converter_is_finished`
 /// first unless blocking the calling thread is acceptable — on an editor's UI
 /// thread it is not.
 ///
@@ -318,7 +319,7 @@ pub unsafe extern "C" fn ss_converter_get_result(context: *mut Context) -> CConv
     outcome
 }
 
-/// The failure text behind a non-`Success` [`ss_converter_get_result`], as
+/// The failure text behind a non-`Success` `ss_converter_get_result`, as
 /// UTF-8 with its length. Either out pointer may be null.
 ///
 /// Writes a null pointer and a zero length when there is no error — including
@@ -346,13 +347,13 @@ pub unsafe extern "C" fn ss_converter_get_error(context: *mut Context, out_data:
 
 /// Start scanning `dir` for `.sspj` files, **on a worker thread**.
 ///
-/// Returns immediately; poll [`ss_converter_is_finished`]. The three budgets
+/// Returns immediately; poll `ss_converter_is_finished`. The three budgets
 /// bound the walk — `max_depth` directories deep, `max_entries` entries, and
-/// `max_millis` of wall clock; [`ss_converter_scan_budget_exceeded`] reports
+/// `max_millis` of wall clock; `ss_converter_scan_budget_exceeded` reports
 /// whether one of them cut the walk short, in which case the results are a
 /// prefix rather than the whole tree.
 ///
-/// See [`ss_converter_create`] on one job at a time: a context scanning is not
+/// See `ss_converter_create` on one job at a time: a context scanning is not
 /// a context converting.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_scan_dir(ctx: *mut Context, dir: *const c_char, max_depth: u32, max_entries: usize, max_millis: u64) {
@@ -381,7 +382,7 @@ pub unsafe extern "C" fn ss_converter_scan_visited(ctx: *mut Context) -> usize {
 }
 
 /// `.sspj` files the scan has found so far. Safe to poll while it runs, unlike
-/// [`ss_converter_scan_result_count`].
+/// `ss_converter_scan_result_count`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_scan_found(ctx: *mut Context) -> usize {
     if ctx.is_null() {
@@ -391,7 +392,7 @@ pub unsafe extern "C" fn ss_converter_scan_found(ctx: *mut Context) -> usize {
     context.scan.as_ref().map(|s| s.found()).unwrap_or(0)
 }
 
-/// Whether one of [`ss_converter_scan_dir`]'s budgets stopped the walk before
+/// Whether one of `ss_converter_scan_dir`'s budgets stopped the walk before
 /// it reached the end of the tree. The results are still usable; they are just
 /// not everything.
 #[unsafe(no_mangle)]
@@ -407,10 +408,10 @@ pub unsafe extern "C" fn ss_converter_scan_budget_exceeded(ctx: *mut Context) ->
 ///
 /// Despite the name this rebuilds the context's result strings from the
 /// scanner, which is what makes them readable by
-/// [`ss_converter_scan_result_at`] — so call it before the first read, and
+/// `ss_converter_scan_result_at` — so call it before the first read, and
 /// again whenever you want newer results.
 ///
-/// **It invalidates every pointer a previous [`ss_converter_scan_result_at`]
+/// **It invalidates every pointer a previous `ss_converter_scan_result_at`
 /// handed out.** Read the paths you want, or copy them, before calling this
 /// again.
 #[unsafe(no_mangle)]
@@ -428,10 +429,10 @@ pub unsafe extern "C" fn ss_converter_scan_result_count(ctx: *mut Context) -> us
 }
 
 /// One `.sspj` path from the scan, as UTF-8, or null when `index` is past the
-/// count that [`ss_converter_scan_result_count`] last reported.
+/// count that `ss_converter_scan_result_count` last reported.
 ///
 /// **Borrowed from the context** — do not free it. It dies at the next
-/// [`ss_converter_scan_result_count`], the next [`ss_converter_convert`] on
+/// `ss_converter_scan_result_count`, the next `ss_converter_convert` on
 /// this context, or the context's own destruction.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_scan_result_at(ctx: *mut Context, index: usize) -> *const c_char {
