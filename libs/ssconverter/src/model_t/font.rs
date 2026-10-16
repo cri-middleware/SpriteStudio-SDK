@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCharMap>) -> Vec<ssab::ssab::ss::format::FontBitmapT> {
+pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCharMap>) -> Result<Vec<ssab::ssab::ss::format::FontBitmapT>, crate::ConverterError> {
     let mut v = charmap_dic
         .iter()
         .map(|(key, charmap)| {
@@ -51,9 +51,16 @@ pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCh
             let mut table_data = charmap
                 .chars
                 .values()
+                // BMFont's invalid-char glyph (-1) is not a character, so no text can draw it.
+                .filter(|c| c.id != -1)
                 .map(|c| {
+                    // `id` is 16 bits: truncating would put the glyph on another character's id.
+                    let Ok(id) = u16::try_from(c.id) else {
+                        let code = if c.id < 0 { format!("id {}", c.id) } else { format!("U+{:04X}", c.id) };
+                        return Err(crate::ConverterError::ConversionFailed(format!("{key}: glyph {code} is outside U+0000..U+FFFF, the range a bitmap font covers; draw such characters with an outline font")));
+                    };
                     let mut glyph = ssab::ssab::ss::format::FontGlyphBitmapT::default();
-                    glyph.id = c.id as u16;
+                    glyph.id = id;
 
                     let mut atlas = ssab::ssab::ss::format::RegionT::default();
                     atlas.x = c.src_rect.x1 as f32;
@@ -72,18 +79,18 @@ pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCh
                     glyph.page = c.page as i8;
                     glyph.channel = 0;
 
-                    glyph
+                    Ok(glyph)
                 })
-                .collect::<Vec<_>>();
+                .collect::<Result<Vec<_>, _>>()?;
 
             table_data.sort_by_key(|g| g.id);
             bitmap.table_data = if table_data.is_empty() { None } else { Some(table_data) };
 
-            bitmap
+            Ok(bitmap)
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>, crate::ConverterError>>()?;
     v.sort_by_key(|e| e.name_hash);
-    v
+    Ok(v)
 }
 
 #[cfg(test)]
@@ -104,7 +111,7 @@ mod tests {
 
         charmap_dic.insert("MockFontData".to_string(), &mock_charmap);
 
-        let result = convert_font_bitmaps(&charmap_dic);
+        let result = convert_font_bitmaps(&charmap_dic).expect("convert");
 
         assert_eq!(result.len(), 1);
         let bitmap = &result[0];
@@ -142,6 +149,36 @@ mod tests {
         assert_eq!(offset.v2, 29.0);
     }
 
+    /// U+20BB7 used to be truncated to U+0BB7, a glyph for a Tamil letter.
+    #[test]
+    fn a_glyph_above_u_ffff_is_an_error() {
+        let mut mock_charmap = SsCharMap::default();
+        for id in [0x0BB7, 0x20BB7] {
+            mock_charmap.chars.insert(id, SsCharMapChar { id, ..Default::default() });
+        }
+        let charmap_dic = HashMap::from([("mock.fnt".to_string(), &mock_charmap)]);
+
+        let e = convert_font_bitmaps(&charmap_dic).expect_err("a glyph above U+FFFF must be reported");
+
+        let message = e.to_string();
+        assert!(message.contains("mock.fnt") && message.contains("U+20BB7"), "{message}");
+    }
+
+    /// BMFont's invalid-char glyph used to be truncated to U+FFFF.
+    #[test]
+    fn the_invalid_char_glyph_is_left_out() {
+        let mut mock_charmap = SsCharMap::default();
+        for id in [0x0BB7, -1] {
+            mock_charmap.chars.insert(id, SsCharMapChar { id, ..Default::default() });
+        }
+        let charmap_dic = HashMap::from([("mock.fnt".to_string(), &mock_charmap)]);
+
+        let result = convert_font_bitmaps(&charmap_dic).expect("convert");
+
+        let ids: Vec<u16> = result[0].table_data.as_ref().unwrap().iter().map(|g| g.id).collect();
+        assert_eq!(ids, [0x0BB7]);
+    }
+
     #[test]
     fn test_page_textures_are_rebased_with_forward_slash() {
         let mut charmap_dic = HashMap::new();
@@ -154,7 +191,7 @@ mod tests {
         // rebased on that directory and must read the same on every host OS.
         charmap_dic.insert("font/nested/mock.fnt".to_string(), &mock_charmap);
 
-        let result = convert_font_bitmaps(&charmap_dic);
+        let result = convert_font_bitmaps(&charmap_dic).expect("convert");
 
         let name_texture = result[0].name_texture.as_ref().unwrap();
         assert_eq!(name_texture, &["font/nested/mock_0.png".to_string(), "font/nested/mock_1.png".to_string()]);
@@ -181,7 +218,7 @@ mod tests {
         let mut charmap_dic = HashMap::new();
         charmap_dic.insert("RoundedMPlus".to_string(), &charmap);
 
-        let result = convert_font_bitmaps(&charmap_dic);
+        let result = convert_font_bitmaps(&charmap_dic).expect("convert");
 
         assert_eq!(result.len(), 1);
         let bitmap = &result[0];
