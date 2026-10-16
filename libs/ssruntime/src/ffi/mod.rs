@@ -1321,15 +1321,15 @@ pub extern "C" fn ss_runtime_prev_frame(context: *mut c_void) {
 
 /// Run a fallible `Context` call, recording the error code on failure. Every
 /// bool-returning track entry point funnels through this so the `last_error`
-/// contract is stated once.
-fn report<F>(ffi_context: &mut FfiContext, f: F) -> bool
+/// contract is stated once; `api` is that entry point, for [`FfiContext::fail`].
+fn report<F>(ffi_context: &mut FfiContext, api: &str, f: F) -> bool
 where
     F: FnOnce(&mut crate::Context<'static>) -> Result<(), crate::error::SSRuntimeError>,
 {
     match f(&mut ffi_context.ctx) {
         Ok(()) => true,
         Err(e) => {
-            ffi_context.fail("ss_runtime_prev_frame", e);
+            ffi_context.fail(api, e);
             false
         }
     }
@@ -1375,7 +1375,7 @@ pub unsafe extern "C" fn ss_runtime_set_track_animation(context: *mut c_void, tr
         ffi_context.fail("ss_runtime_set_track_animation", crate::error::SSRuntimeError::InvalidParameter);
         return false;
     };
-    report(ffi_context, |ctx| ctx.set_track_animation(track, &a))
+    report(ffi_context, "ss_runtime_set_track_animation", |ctx| ctx.set_track_animation(track, &a))
 }
 
 #[unsafe(no_mangle)]
@@ -1384,7 +1384,7 @@ pub extern "C" fn ss_runtime_set_track_animation_by_hash(context: *mut c_void, t
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.set_track_animation_by_hash(track, hash))
+    report(ffi_context, "ss_runtime_set_track_animation_by_hash", |ctx| ctx.set_track_animation_by_hash(track, hash))
 }
 
 #[unsafe(no_mangle)]
@@ -1393,7 +1393,7 @@ pub extern "C" fn ss_runtime_set_track_alpha(context: *mut c_void, track: u32, a
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.set_track_alpha(track, alpha))
+    report(ffi_context, "ss_runtime_set_track_alpha", |ctx| ctx.set_track_alpha(track, alpha))
 }
 
 /// Returns `NaN` for a track that does not exist, so callers can tell it apart
@@ -1418,7 +1418,7 @@ pub extern "C" fn ss_runtime_set_track_blend(context: *mut c_void, track: u32, b
             return false;
         }
     };
-    report(ffi_context, |ctx| ctx.set_track_blend(track, blend))
+    report(ffi_context, "ss_runtime_set_track_blend", |ctx| ctx.set_track_blend(track, blend))
 }
 
 /// Returns `SS_RUNTIME_INVALID_HANDLE` for a track that does not exist.
@@ -1447,7 +1447,7 @@ pub extern "C" fn ss_runtime_set_track_sync(context: *mut c_void, track: u32, sy
             return false;
         }
     };
-    report(ffi_context, |ctx| ctx.set_track_sync(track, sync))
+    report(ffi_context, "ss_runtime_set_track_sync", |ctx| ctx.set_track_sync(track, sync))
 }
 
 /// Returns `SS_RUNTIME_INVALID_HANDLE` for a track that does not exist.
@@ -1471,7 +1471,7 @@ pub extern "C" fn ss_runtime_clear_track(context: *mut c_void, track: u32) -> bo
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.clear_track(track))
+    report(ffi_context, "ss_runtime_clear_track", |ctx| ctx.clear_track(track))
 }
 
 /// Fade `track` to `name` over `duration_ms` — the same time unit as
@@ -1490,7 +1490,7 @@ pub unsafe extern "C" fn ss_runtime_crossfade(context: *mut c_void, track: u32, 
         ffi_context.fail("ss_runtime_crossfade", crate::error::SSRuntimeError::InvalidParameter);
         return false;
     };
-    report(ffi_context, |ctx| ctx.crossfade(track, &a, duration_ms))
+    report(ffi_context, "ss_runtime_crossfade", |ctx| ctx.crossfade(track, &a, duration_ms))
 }
 
 #[unsafe(no_mangle)]
@@ -1499,7 +1499,7 @@ pub extern "C" fn ss_runtime_crossfade_by_hash(context: *mut c_void, track: u32,
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.crossfade_by_hash(track, hash, duration_ms))
+    report(ffi_context, "ss_runtime_crossfade_by_hash", |ctx| ctx.crossfade_by_hash(track, hash, duration_ms))
 }
 
 #[unsafe(no_mangle)]
@@ -1508,7 +1508,7 @@ pub extern "C" fn ss_runtime_fade_track(context: *mut c_void, track: u32, target
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.fade_track(track, target_alpha, duration_ms))
+    report(ffi_context, "ss_runtime_fade_track", |ctx| ctx.fade_track(track, target_alpha, duration_ms))
 }
 
 /// Progress in `[0, 1]` of the fade on `track`; `NaN` when it is not fading.
@@ -1523,7 +1523,7 @@ pub extern "C" fn ss_runtime_cancel_track_fade(context: *mut c_void, track: u32)
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.cancel_track_fade(track))
+    report(ffi_context, "ss_runtime_cancel_track_fade", |ctx| ctx.cancel_track_fade(track))
 }
 
 #[unsafe(no_mangle)]
@@ -1532,7 +1532,7 @@ pub extern "C" fn ss_runtime_set_track_frame(context: *mut c_void, track: u32, f
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.set_track_frame(track, frame))
+    report(ffi_context, "ss_runtime_set_track_frame", |ctx| ctx.set_track_frame(track, frame))
 }
 
 /// Returns `NaN` when the track has no animation on it.
@@ -1547,7 +1547,7 @@ pub extern "C" fn ss_runtime_set_track_speed(context: *mut c_void, track: u32, s
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.set_track_speed(track, speed))
+    report(ffi_context, "ss_runtime_set_track_speed", |ctx| ctx.set_track_speed(track, speed))
 }
 
 /// What `ss_runtime_set_track_speed` stored (a negative speed reads back as
@@ -1563,7 +1563,7 @@ pub extern "C" fn ss_runtime_set_track_frame_rate(context: *mut c_void, track: u
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.set_track_frame_rate(track, frame_rate))
+    report(ffi_context, "ss_runtime_set_track_frame_rate", |ctx| ctx.set_track_frame_rate(track, frame_rate))
 }
 
 /// The rate the track's animation plays at; `0` for a track with no animation
@@ -1579,7 +1579,7 @@ pub extern "C" fn ss_runtime_set_track_skip_frames(context: *mut c_void, track: 
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.set_track_skip_frames(track, skip))
+    report(ffi_context, "ss_runtime_set_track_skip_frames", |ctx| ctx.set_track_skip_frames(track, skip))
 }
 
 /// `false` for a track that does not exist.
@@ -1598,7 +1598,7 @@ pub extern "C" fn ss_runtime_set_track_playback_direction(context: *mut c_void, 
     ffi_context.last_error = None;
     let d = if direction == 0 { crate::core::playback_controller::PlaybackDirection::Forward } else { crate::core::playback_controller::PlaybackDirection::Backward };
     let s = if style == 0 { crate::core::playback_controller::PlaybackStyle::Normal } else { crate::core::playback_controller::PlaybackStyle::PingPong };
-    report(ffi_context, |ctx| ctx.set_track_playback_direction(track, d, s))
+    report(ffi_context, "ss_runtime_set_track_playback_direction", |ctx| ctx.set_track_playback_direction(track, d, s))
 }
 
 /// 0 = forward, 1 = backward; `-1` for a track that does not exist.
@@ -1626,7 +1626,7 @@ pub extern "C" fn ss_runtime_set_track_loop_count(context: *mut c_void, track: u
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.set_track_loop_count(track, loop_count))
+    report(ffi_context, "ss_runtime_set_track_loop_count", |ctx| ctx.set_track_loop_count(track, loop_count))
 }
 
 /// `-1` for a track that loops forever; `0` for a track with no animation.
@@ -1659,7 +1659,7 @@ pub extern "C" fn ss_runtime_set_track_outgoing_event_threshold(context: *mut c_
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.set_track_outgoing_event_threshold(track, threshold))
+    report(ffi_context, "ss_runtime_set_track_outgoing_event_threshold", |ctx| ctx.set_track_outgoing_event_threshold(track, threshold))
 }
 
 /// `NaN` for a track that does not exist.
@@ -1722,7 +1722,7 @@ pub extern "C" fn ss_runtime_set_source_weight(context: *mut c_void, handle: u32
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.set_source_weight(handle, weight))
+    report(ffi_context, "ss_runtime_set_source_weight", |ctx| ctx.set_source_weight(handle, weight))
 }
 
 /// Returns `NaN` for an invalid or released handle, so `weight == 0` stays
@@ -1738,7 +1738,7 @@ pub extern "C" fn ss_runtime_set_source_frame(context: *mut c_void, handle: u32,
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.set_source_frame(handle, frame))
+    report(ffi_context, "ss_runtime_set_source_frame", |ctx| ctx.set_source_frame(handle, frame))
 }
 
 /// Which animation the source `handle` plays, as an index into the ssab's
@@ -1770,7 +1770,7 @@ pub extern "C" fn ss_runtime_set_source_event_threshold(context: *mut c_void, ha
         return false;
     };
     ffi_context.last_error = None;
-    report(ffi_context, |ctx| ctx.set_source_event_threshold(handle, threshold))
+    report(ffi_context, "ss_runtime_set_source_event_threshold", |ctx| ctx.set_source_event_threshold(handle, threshold))
 }
 
 #[unsafe(no_mangle)]
@@ -2332,13 +2332,44 @@ mod tests {
         let name = CString::new("walk").unwrap();
         // Nothing bound, so the runtime has no animation to set up.
         assert!(!unsafe { ss_runtime_setup_animation(ctx, name.as_ptr()) });
+        // The track entry points record theirs through `report`.
+        assert!(!ss_runtime_set_track_alpha(ctx, 0, f32::NAN));
         ss_runtime_destroy(ctx);
 
         // The callback is a process-global the ABI gives no way to clear, so
         // other tests' failures land in here too -- look for this one rather
         // than counting.
         let lines = LINES.lock().unwrap();
-        assert!(lines.iter().any(|(level, text)| *level == SS_RUNTIME_LOG_ERROR && text.starts_with("ss_runtime_setup_animation: ")), "the failure never reached the log callback: {lines:?}");
+        for api in ["ss_runtime_setup_animation", "ss_runtime_set_track_alpha"] {
+            let tag = std::format!("{api}: ");
+            assert!(lines.iter().any(|(level, text)| *level == SS_RUNTIME_LOG_ERROR && text.starts_with(&tag)), "{api}'s failure never reached the log callback: {lines:?}");
+        }
+    }
+
+    /// The name a failure is logged under is written out by hand at each call,
+    /// so a line copied from another entry point keeps that one's name.
+    #[test]
+    fn every_failure_is_logged_under_the_entry_point_that_failed() {
+        let source = std::fs::read_to_string("src/ffi/mod.rs").expect("read ffi/mod.rs");
+        let mut entry_point = None;
+        let mut checked = 0usize;
+        let mut wrong = std::vec::Vec::new();
+        for (no, line) in source.lines().enumerate() {
+            if let Some(name) = exported_c_symbols(line).into_iter().next() {
+                entry_point = Some(name);
+            }
+            for marker in [".fail(\"", "report(ffi_context, \""] {
+                for (at, _) in line.match_indices(marker) {
+                    let named: std::string::String = line[at + marker.len()..].chars().take_while(|c| *c != '"').collect();
+                    checked += 1;
+                    if entry_point.as_deref() != Some(named.as_str()) {
+                        wrong.push(std::format!("line {}: {} logs as {named}", no + 1, entry_point.as_deref().unwrap_or("no entry point")));
+                    }
+                }
+            }
+        }
+        assert!(checked > 40, "the scan found only {checked} named failures; the scan itself is broken");
+        assert!(wrong.is_empty(), "failures logged under another entry point's name:\n  {}", wrong.join("\n  "));
     }
 
     #[test]
