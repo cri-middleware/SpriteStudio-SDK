@@ -145,7 +145,6 @@ pub fn is_point_in_quad(target_p: (f32, f32), v_x: &[f32; 4], v_y: &[f32; 4]) ->
     let intersect_x = x0 + (tp_y - y0) * dx / dy;
     let x_cond = tp_x.simd_lt(intersect_x);
 
-    // Combine conditions: both must be true (bitwise AND on mask)
     let inside_mask = y_cond & x_cond;
 
     // Using wide's to_bitmask, we get a 4-bit integer where each bit represents a lane.
@@ -370,8 +369,6 @@ pub enum ShapeType {
     Arrow = 3,
 }
 
-/// Computes local vertices for a primitive shape.
-/// Returns the number of vertices and the coordinates.
 /// Spreads the four box-corner vertex-deform offsets across an arbitrary
 /// point inside the part's bounding box by bilinear interpolation.
 ///
@@ -389,6 +386,8 @@ pub fn bilinear_box_deform(dx: &[f32; 4], dy: &[f32; 4], fx: f32, fy: f32) -> (f
     (dx[0] * w_lt + dx[1] * w_rt + dx[2] * w_lb + dx[3] * w_rb, dy[0] * w_lt + dy[1] * w_rt + dy[2] * w_lb + dy[3] * w_rb)
 }
 
+/// Computes local vertices for a primitive shape.
+/// Returns the number of vertices and the coordinates.
 pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize, [f32; 16], [f32; 16]) {
     let (w, h) = size;
     let hw = w * 0.5;
@@ -400,7 +399,7 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
     let count = match shape_type {
         ShapeType::Rectangle => {
             // Center + 4 corners (perimeter winding) + closing vertex — a
-            // TRIANGLE_FAN layout matching the other shapes. A deformed or
+            // TRIANGLE_FAN layout matching Triangle and Star. A deformed or
             // per-corner-coloured rectangle then interpolates from its center
             // (4 triangles) instead of across a single diagonal seam
             // (2 triangles), which is what SpriteStudio does.
@@ -431,8 +430,8 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
             5
         }
         ShapeType::Star => {
-            // Center + 10 outer points + closing vertex (so a TRIANGLE_FAN consumer
-            // gets all 10 wedges).
+            // Center + 10 perimeter points (5 tips, 5 inner corners) + closing vertex
+            // (so a TRIANGLE_FAN consumer gets all 10 wedges).
             out_x[0] = 0.0;
             out_y[0] = 0.0;
 
@@ -632,8 +631,8 @@ pub fn compute_skinned_mesh_vertices(
 /// scatter and is applied separately (scalar) by the caller.
 ///
 /// `flip_rest_y` negates the rest Y. The rest comes from the cell's
-/// `table_coordinate` (Y-down native), so it flips for a Y-up target — the
-/// opposite of the Y-up-native skinned bind coordinates.
+/// `table_coord_x` / `table_coord_y` (Y-down native), so it flips for a Y-up
+/// target — the opposite of the Y-up-native skinned bind coordinates.
 pub fn compute_rigid_mesh_vertices(rest_x: &[f32], rest_y: &[f32], world: &SsMatrix4x4, flip_rest_y: bool, out_x: &mut [f32], out_y: &mut [f32]) {
     let count = out_x.len();
     debug_assert_eq!(out_y.len(), count);
@@ -721,7 +720,6 @@ mod tests {
 
     use super::*;
 
-    // Float comparison helper
     fn assert_approx_eq(a: f32, b: f32) {
         assert!((a - b).abs() < 1e-4, "{} != {}", a, b);
     }
@@ -831,8 +829,7 @@ mod tests {
 
     #[test]
     fn test_vertices_complex_flip_offset() {
-        // 100x100 square, pivot at bottom-right (0.5, -0.5), offset by (0.5, 0.5)
-        // effectively pivot is at (1.0, 0.0) relative to center, which is right edge center.
+        // 100x100 square, pivot at bottom-right (0.5, -0.5), offset by (0.5, 0.5).
         let size = (100.0, 100.0);
         let pivot = (0.5, -0.5);
         let pivot_offset = (0.5, 0.5);
@@ -898,7 +895,7 @@ mod tests {
         assert!(is_point_in_quad((5.0, 5.0), &vx, &vy));
         // Outside
         assert!(!is_point_in_quad((11.0, 5.0), &vx, &vy));
-        // Exactly on edge (should be true with our epsilon)
+        // Exactly on the left edge: the crossing test keeps left / bottom edges, drops right / top
         assert!(is_point_in_quad((0.0, 5.0), &vx, &vy));
         // Exactly on vertex
         assert!(is_point_in_quad((0.0, 0.0), &vx, &vy));

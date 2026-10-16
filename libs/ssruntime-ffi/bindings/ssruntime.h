@@ -83,7 +83,7 @@ typedef void (*SsLogCallback)(int level, const char *message);
  * Result of `EffectSlot::step` / `ss_effect_slot_step`.
  *
  * `draw_plan_buf` is a FlatBuffer-encoded `EffectDrawPlan` (see
- * `runtime/effect_draw_plan.fbs`). It is valid only when `visible == true`,
+ * `fbs/effect_draw_plan.fbs`). It is valid only when `visible == true`,
  * and only until the next `step` call on the same slot — callers must consume
  * it within the same frame and not retain pointers across calls.
  */
@@ -123,10 +123,10 @@ typedef struct ss_effect_event_info {
 /**
  * Result of `InstanceSlot::step` / `ss_instance_slot_step`.
  *
- * `transitioned == true` indicates a new EventInstance edge — the caller
- * should run any side effects tied to the child's `play()` (event-sink
- * notifications, etc.) on this tick. Frame stepping is already applied
- * inside `step`, so callers only consume `child_frame_no` to redraw.
+ * `transitioned == true` indicates a new EventInstance edge — `step` has
+ * configured the child for the new key without starting it, so the caller
+ * plays the child on this tick. Frame stepping is already applied inside
+ * `step`, so callers only consume `child_frame_no` to redraw.
  */
 typedef struct ss_instance_step_result {
   bool visible;
@@ -144,7 +144,7 @@ typedef struct ss_instance_step_result {
  * most recent `EventInstance` whose `frame_index <= current parent frame`
  * for `slot_index`. When no event is active, the function returns SS6
  * default semantics: `is_synthetic_default = true`, `loop_num = 1`,
- * `speed = 1.0`, all label hashes 0 (caller falls back), all flags false.
+ * `speed = 1.0`, all label hashes 0 (unset), all flags false.
  *
  * `start_label_hash` / `end_label_hash` are returned raw. They are
  * already resolved internally by `ss_instance_slot_step` against the
@@ -157,12 +157,12 @@ typedef struct ss_event_instance_info {
    */
   int32_t event_frame;
   /**
-   * 0 = unset → caller should fall back to 0.
+   * 0 = unset → the child animation's start frame.
    */
   uint32_t start_label_hash;
   int32_t start_offset;
   /**
-   * 0 = unset → caller should fall back to (child_total_frames - 1).
+   * 0 = unset → the child animation's end frame.
    */
   uint32_t end_label_hash;
   int32_t end_offset;
@@ -248,10 +248,10 @@ void ss_runtime_reset(void *context);
  *
  * Every fallible entry point that has a context to write to clears this on
  * entry, so it always describes the most recent one rather than some earlier
- * failure. The exceptions are the resource constructors
- * (`ss_resource_create_borrow` / `ss_resource_create_copy`), which take no
- * context and so have nowhere to record: a null return from those is all there
- * is.
+ * failure. The exceptions are the constructors that take no context
+ * (`ss_resource_create_borrow` / `ss_resource_create_copy` and
+ * `ss_effect_slot_create`), which have nowhere to record: a null return from
+ * those is all there is.
  *
  * Reading does not clear it. Read it immediately after the call that returned
  * `false`, before making another on the same context.
@@ -345,11 +345,6 @@ uintptr_t ss_runtime_get_ssab_len(void *context);
  */
 bool ss_runtime_setup_animation(void *context, const char *name);
 
-/**
- * # Safety
- *
- * This function is unsafe because it dereferences a raw pointer.
- */
 bool ss_runtime_setup_animation_by_hash(void *context, uint32_t name_hash);
 
 /**
@@ -464,10 +459,10 @@ void ss_runtime_get_shape_vertex_counts(void *context,
                                         uintptr_t *out_len);
 
 /**
- * Skinned mesh per-vertex X coordinates in world space, concatenated across all
+ * Mesh per-vertex X coordinates in world space, concatenated across all
  * parts. Pair with `ss_runtime_get_mesh_vertex_offsets` to slice per-part
  * ranges: part `p`'s vertices live at indices `offsets[p]..offsets[p + 1]`.
- * Non-mesh parts contribute an empty range. Indirect render mode leaves the
+ * Non-mesh parts contribute an empty range. SceneGraph render mode leaves the
  * buffer empty (length 0).
  *
  * # Safety
@@ -478,7 +473,7 @@ void ss_runtime_get_shape_vertex_counts(void *context,
 void ss_runtime_get_mesh_vertices_x(void *context, const float **out_data, uintptr_t *out_len);
 
 /**
- * Skinned mesh per-vertex Y coordinates. SoA companion to
+ * Mesh per-vertex Y coordinates. SoA companion to
  * `ss_runtime_get_mesh_vertices_x`; sliced identically via
  * `ss_runtime_get_mesh_vertex_offsets`.
  *
@@ -491,7 +486,7 @@ void ss_runtime_get_mesh_vertices_y(void *context, const float **out_data, uintp
 
 /**
  * CSR-style prefix sum (length = `num_parts + 1`) describing where each
- * part's skinned mesh vertices live inside `ss_runtime_get_mesh_vertices_x`
+ * part's mesh vertices live inside `ss_runtime_get_mesh_vertices_x`
  * / `_y`. Part `p` occupies indices `[offsets[p], offsets[p + 1])`; non-mesh
  * parts have `offsets[p] == offsets[p + 1]`.
  *
@@ -1079,15 +1074,17 @@ int32_t ss_runtime_get_passed_event_index(void *context, int32_t index);
  * Which source fired the collected event at `index` — parallel to
  * `ss_runtime_get_passed_event_index`, and read with the same index.
  *
- * With every source at the default event threshold (`+∞`) this is uniformly
- * `ss_runtime_get_track_main_source` of track 0, so a Player that does not use
- * animation mixing can ignore it. It diverges once a secondary source opts in
- * to firing events via `ss_runtime_set_source_event_threshold`, and that is
- * when a host needs it: without it, two blended animations' events arrive in
- * one undifferentiated list.
+ * With every source and every track's outgoing side at the default event
+ * threshold (`+∞`) this is uniformly `ss_runtime_get_track_main_source` of
+ * track 0, so a Player that does not use animation mixing can ignore it. It
+ * diverges once a secondary source opts in to firing events via
+ * `ss_runtime_set_source_event_threshold`, or a crossfade's outgoing side via
+ * `ss_runtime_set_track_outgoing_event_threshold`, and that is when a host
+ * needs it: without it, two blended animations' events arrive in one
+ * undifferentiated list.
  *
- * Returns `U32_MAX` for a negative or out-of-range `index`, which no live
- * handle ever equals.
+ * Returns `SS_RUNTIME_INVALID_HANDLE` for a negative or out-of-range `index`,
+ * which no live handle ever equals.
  */
 uint32_t ss_runtime_get_passed_event_source_handle(void *context, int32_t index);
 
@@ -1126,6 +1123,9 @@ uint32_t ss_runtime_hash_string(const char *s);
 /**
  * Resolve a part name to its `part_index` in the current primary animation.
  * Returns `-1` on null context / null or invalid name / not found.
+ *
+ * # Safety
+ * `part_name` must be null or a valid null-terminated string.
  */
 int32_t ss_runtime_find_part_index(void *context, const char *part_name);
 
@@ -1159,6 +1159,9 @@ bool ss_runtime_set_part_color_override(void *context,
 /**
  * Set a per-part color override from four packed RGBA corners in ssruntime
  * order `lt, rt, lb, rb` (`rgba_ltrtlbrb` points to 4 `uint32` = `0xRRGGBBAA`).
+ *
+ * # Safety
+ * `rgba_ltrtlbrb` must be null or point to 4 readable `uint32`.
  */
 bool ss_runtime_set_part_color_override_corners(void *context,
                                                 uint32_t part,

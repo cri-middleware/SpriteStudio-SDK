@@ -111,7 +111,6 @@ mod tests {
         let mut state = ParticleStateSoA::default();
         state.resize(2);
 
-        // Modify index 1
         state.id[1] = 42;
         state.cycle[1] = 1;
         state.exist[1] = true;
@@ -119,10 +118,8 @@ mod tests {
         state.stime[1] = 10;
         state.endtime[1] = 20;
 
-        // Cleanup index 1
         state.cleanup(1);
 
-        // Verify index 1 is reset
         assert_eq!(state.id[1], 0);
         assert_eq!(state.cycle[1], 0);
         assert!(!state.exist[1]);

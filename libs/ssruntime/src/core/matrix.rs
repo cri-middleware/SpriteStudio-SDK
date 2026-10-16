@@ -215,8 +215,8 @@ impl SsMatrix4x4 {
         Self { m: res }
     }
 
-    /// Calculates the world matrix for inheritance and the local matrix for drawing.
-    /// Returns `(inheritance_matrix, drawing_matrix)`.
+    /// Calculates the world matrix the part's children inherit, and the one it draws
+    /// with, which adds its local scale. Returns `(inheritance_matrix, drawing_matrix)`.
     #[inline]
     #[must_use]
     pub fn compute_world_matrix(state: &crate::runtime::framedata::ss::runtime::PartState, parent_world_matrix: Option<&Self>, parent_size: Option<(f32, f32)>) -> (Self, Self) {
@@ -306,7 +306,6 @@ impl SsMatrix4x4 {
     pub fn multiply(&self, rhs: &Self) -> Self {
         let mut res = [0.0f32; 16];
 
-        // Load LHS columns as SIMD vectors safely
         let a_col0 = f32x4::from([self.m[0], self.m[1], self.m[2], self.m[3]]);
         let a_col1 = f32x4::from([self.m[4], self.m[5], self.m[6], self.m[7]]);
         let a_col2 = f32x4::from([self.m[8], self.m[9], self.m[10], self.m[11]]);
@@ -606,7 +605,7 @@ mod tests {
         assert_f32_eq(id.m[10], 1.0);
         assert_f32_eq(id.m[15], 1.0);
 
-        assert_f32_eq(id.m[1], 0.0); // Random off-diagonal element
+        assert_f32_eq(id.m[1], 0.0);
     }
 
     #[test]

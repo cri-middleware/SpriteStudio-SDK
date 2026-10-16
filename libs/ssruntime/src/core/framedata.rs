@@ -83,8 +83,7 @@ pub(crate) fn resolve_cell(cellmaps: &flatbuffers::Vector<'_, flatbuffers::Forwa
     let (pivot_x, pivot_y) = (p.v1(), p.v2());
     let r = cell.region();
     let (rect_left, rect_top, size_w, size_h) = (r.x(), r.y(), r.w(), r.h());
-    // Mirror compute_local_uvs's fallback: if the cellmap doesn't carry
-    // size_original (or it's zero), treat the cell rect dimensions as the size.
+    // A zero `size_original` takes the cell rect's size as the texture size.
     let v = cellmap.size_original();
     let (w, h) = (v.v1(), v.v2());
     let (tex_w, tex_h) = if w > 0.0 && h > 0.0 { (w, h) } else { (size_w, size_h) };
@@ -362,8 +361,7 @@ pub struct CachedPartData {
     /// The key runs of the attributes in [`key_mask`](Self::key_mask), in bit
     /// order: attribute `idx` is `runs[cursor_slot(key_mask, idx)]`, the same
     /// packing as an instance's cursors. A part keys a handful of its
-    /// attributes, so this holds a few runs where a field per attribute held
-    /// all of them. Read one with [`run`](Self::run).
+    /// attributes, so this holds a few runs. Read one with [`run`](Self::run).
     pub runs: alloc::boxed::Box<[KeyRun]>,
 }
 
@@ -705,7 +703,6 @@ pub(crate) fn setup_pose_part(
 fn default_part_evaluation(cached_part: &CachedPartData) -> (runtime::framedata::ss::runtime::PartState, PartEvaluationResult) {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
 
-    // default values
     part_state.set_alpha(1.0);
     part_state.set_local_alpha(1.0);
     part_state.set_scale_x(1.0);
@@ -721,9 +718,8 @@ fn default_part_evaluation(cached_part: &CachedPartData) -> (runtime::framedata:
     part_state.set_shader(-1);
     part_state.set_vertex(-1);
     part_state.set_deform(-1);
-    // A part with no Hide keys at all is rendered as hidden by default.
-    // hide_keys=None leaves this initial state intact; hide_keys=Some(..)
-    // overrides it via evaluate_bool below. This is the standard SS authoring
+    // A part with no Hide keys at all is rendered as hidden by default; a Hide
+    // run overrides it in `evaluate_part`. This is the standard SS authoring
     // model: a part has to opt in to being shown with a Hide=false key.
     part_state.set_hide(true);
 
@@ -846,9 +842,9 @@ pub(crate) fn evaluate_part(
         // Deform offsets are an ssae animation attribute — Y-up native like
         // position / pivot / anchor — so they flip for a Y-down target, the
         // SAME condition as those attributes. The mesh rest, by contrast,
-        // comes from the .ssce cell (`table_coordinate`) and is Y-down native,
-        // so it flips on the opposite (YUp) condition in compute_mesh_vertices.
-        // rest and deform are deliberately mirror-imaged.
+        // comes from the .ssce cell (`table_coord_x` / `table_coord_y`) and is
+        // Y-down native, so it flips on the opposite (YUp) condition in
+        // compute_mesh_vertices. rest and deform are deliberately mirror-imaged.
         if y_down {
             for v in deform_coord_workspace.iter_mut() {
                 v.set_y(-v.y());
@@ -1069,11 +1065,12 @@ pub fn extract_pose<'a>(
         let effective_alpha = if has_local_alpha { result.state.local_alpha() } else { inh_alpha };
         result.state.set_alpha(effective_alpha);
 
-        // Hide is per-part in SpriteStudio: a hidden parent does NOT hide its children.
-        // The hierarchy is a transform hierarchy, and hidden parts are routinely
-        // used as pure transform anchors with visible children (e.g. a hidden
-        // hand part anchoring a visible weapon). Only alpha inherits down the
-        // tree; `hide` must not be propagated.
+        // Hide is per-part at runtime: the converter bakes each part's HIDE
+        // inheritance (`ineheritRates/HIDE`) into its own keys. The hierarchy is a
+        // transform hierarchy, and hidden parts are routinely used as pure
+        // transform anchors with visible children (e.g. a hidden hand part
+        // anchoring a visible weapon). Only alpha inherits down the tree; `hide`
+        // must not be propagated.
 
         // Pre-multiply per-vertex parts color alpha with the hierarchical alpha.
         if let Some(pc) = result.part_color {
@@ -1565,9 +1562,8 @@ pub fn compose_frame_data<'a>(
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs { cells: cells_off, parts_color: parts_color_off, shaders: shaders_off, vertices: vertices_off, deforms: deforms_off, ..Default::default() };
     args.parts = Some(fb.create_vector(parts_vec));
 
-    // z_order と batch 計算は parts_vec / cell_texture_hashes が満たされた後で行う。
-    // FrameData::create より前に args.draw_order / args.draw_batches を設定する必要があるため
-    // ここで実行する (lib.rs から z_order.update を移譲)。
+    // The draw order, batches and mask indices need the finished `parts_vec` and
+    // `cell_texture_hashes`, and must be in `args` before `FrameData::create`.
     z_order.update(parts_vec);
     let (draw_order_off, draw_batches_off, mask_indices_off) = build_draw_order_and_batches(fb, z_order.indices(), cached_parts, parts_vec, cell_texture_hashes, nines, draw_order_workspace, batches_workspace, mask_indices_workspace);
     args.draw_order = Some(draw_order_off);
@@ -1628,7 +1624,6 @@ mod tests {
 
     #[test]
     fn test_num_part_attributes_count() {
-        // NUM_PART_ATTRIBUTES should exactly match the number of set bits in UpdateAttributeFlags::all().
         assert_eq!(NUM_PART_ATTRIBUTES, UpdateAttributeFlags::all().bits().count_ones() as usize);
     }
 
@@ -1966,9 +1961,8 @@ mod tests {
 
     #[test]
     fn raw_vertex_deform_default_is_inert() {
-        // `extract_pose` zero-fills `raw_vertex_deform` at the top of each frame
-        // and Stage B reads `present` to decide whether to apply offsets, so the
-        // Default impl must produce `present == false` and zeroed offsets.
+        // Stage B applies a slot's offsets only when `present` is set, so a slot
+        // made with `Default` must read as no deform.
         let d = RawVertexDeform::default();
         assert!(!d.present);
         assert_eq!(d.dx, [0.0; 4]);
@@ -2070,8 +2064,8 @@ mod tests {
         assert_eq!((out.box_coords[0], out.box_coords[1]), (1.0, 0.0));
         assert_eq!((out.vertices[0], out.vertices[1]), (50.0, 50.0));
 
-        // Mirroring a single axis would reverse each triangle, so the emitter
-        // swaps the last two indices back.
+        // Mirroring a single axis would reverse each triangle, so
+        // `compute_nines_geometry_for_parts` swaps the last two indices back.
         assert_eq!(&out.indices[0..6], &[0, 4, 1, 4, 5, 1]);
 
         // Mirroring both axes cancels out and leaves the original winding.
@@ -2143,9 +2137,8 @@ mod tests {
         let (mut draw_order, mut batches, mut mask_indices) = (Vec::new(), Vec::new(), Vec::new());
         build_draw_order_and_batches(&mut fb, &[0, 1, 2], &cached, &parts_vec, &[0, 0, 0], &NinesBuffers::default(), &mut draw_order, &mut batches, &mut mask_indices);
 
-        // Text now takes part in the draw order — it used to be dropped before
-        // the plan was built — but a text mask is left out entirely, since the
-        // runtime has no glyphs to write coverage with.
+        // Text takes part in the draw order, but a text mask is left out
+        // entirely, since the runtime has no glyphs to write coverage with.
         assert_eq!(draw_order, vec![0, 2]);
         assert!(mask_indices.is_empty(), "a text mask must not claim coverage it cannot write");
 

@@ -1,10 +1,10 @@
 //! Per-part runtime **Override Layer**
 //!
-//! Applies per-part runtime overrides (Visibility now; Color/Cell added in later
-//! stages) on the *resolved* pose at a single seam in `Context::get_frame_data`
-//! — after the source mix, before `compose_frame_data`. Overriding here (rather
-//! than during per-source `extract_pose`) is what lets an override win over both
-//! keyframe values and blend results.
+//! Applies per-part runtime overrides (Visibility, Color, Cell) on the
+//! *resolved* pose at a single seam in `Context::get_frame_data` — after the
+//! source mix, before `compose_frame_data`. Overriding here (rather than during
+//! per-source `extract_pose`) is what lets an override win over both keyframe
+//! values and blend results.
 //!
 //! The override table is a dense `Vec<Option<PartOverride>>` on `InstanceState`,
 //! indexed by `part_index` (O(1), zero per-frame alloc, `no_std` — no `HashMap`).
@@ -29,8 +29,8 @@ pub enum PriorityMode {
     /// the update of its first evaluation, so setting on a keyframe wins that
     /// keyframe's segment, however many times that update's frame is evaluated.
     ///
-    /// At handover the slot is dropped, so it does not reappear (only a re-set or
-    /// a new animation reactivates it). If the play range decodes no key of that
+    /// At handover the slot is dropped, so it does not reappear (only a re-set
+    /// reactivates it). If the play range decodes no key of that
     /// attribute, the override persists like `Permanent`. The "surviving key"
     /// wording matters: the converter prunes flat-hold duplicates, so handover
     /// lands on a key that actually shapes the curve. Cleared on a new animation.
@@ -77,16 +77,16 @@ pub struct ColorOverride {
     /// `OverwriteOnNextKeyframe` only: the update the override was first
     /// evaluated in (the context's `Context::update` count), or `None` before
     /// that. Every evaluation in that update skips `set_frame`, so a frame
-    /// evaluated again gives the same answer. See [`super`] module docs /
-    /// `passed_reaches_key`.
+    /// evaluated again gives the same answer. See
+    /// [`PriorityMode::OverwriteOnNextKeyframe`] / [`passed_reaches_key`].
     pub first_eval_update: Option<u64>,
 }
 
 /// Per-part cell override (mirrors SS6 `CellChangeParts`). Applied to Normal and
 /// Mask parts only. The cell is identified by `(cellmap_name_hash,
 /// cell_name_hash)` and resolved to a [`ResolvedCellMeta`] **once at set time**
-/// (cached here); the seam then only writes the resolved geometry/texture and
-/// repoints the identity index — no per-frame hash lookup.
+/// (cached here); the seam then only writes the resolved geometry / texture / UV
+/// meta and repoints the identity index — no per-frame hash lookup.
 #[derive(Clone, Copy)]
 pub struct CellOverride {
     pub cellmap_name_hash: u32,
@@ -103,8 +103,8 @@ pub struct CellOverride {
 
 /// Force-hide a part, optionally cascading to its descendants (a faithful port
 /// of SS6 `HideSet`'s `flagInvolveChildren`). Force-*visible* (overriding a
-/// keyframed hide) is intentionally reserved but not implemented (handover D-5);
-/// the FFI reserves `force == 2` for it.
+/// keyframed hide) is intentionally reserved but not implemented; the FFI
+/// reserves `force == 2` for it.
 #[derive(Clone, Copy, Default)]
 pub struct VisibilityOverride {
     /// When set, the force-hide propagates to all descendants in the part tree.
@@ -207,8 +207,6 @@ pub fn apply_part_overrides(
         let parent_idx = cached_parts[i].parent_index;
         let ancestor_cascading = if parent_idx >= 0 && (parent_idx as usize) < i { override_hide_workspace[parent_idx as usize] } else { false };
 
-        // This part is force-hidden if it has its own override or inherits a
-        // cascading force-hide from an ancestor.
         let force_hidden = self_hide || ancestor_cascading;
         // The workspace flag = "force-hide cascades from here to descendants":
         // an inherited cascade continues, and an own override cascades only when
@@ -237,9 +235,9 @@ pub fn apply_part_overrides(
 
         // NON (OverwriteOnNextKeyframe): one-shot temporal handover. The override
         // wins until playback decodes a surviving PartColor key of this part —
-        // i.e. a traversed frame lands on a key (its own set-frame key skipped on
-        // the first evaluation). Dropping the slot makes it permanent: it
-        // survives loops and only a re-set / new animation brings it back.
+        // i.e. a traversed frame lands on a key (its own set-frame key skipped
+        // through the update of its first evaluation). Dropping the slot makes
+        // it permanent: it survives loops and only a re-set brings it back.
         if color.priority == PriorityMode::OverwriteOnNextKeyframe {
             let skip = skips_set_frame(color.first_eval_update, update);
             let handed_over = passed_reaches_key(passed_frames, color.set_frame, skip, |f| run_has_key_at(keys, cached_parts[i].run(crate::core::framedata::IDX_ATTRIBUTEPARTCOLOR), f));
@@ -476,15 +474,15 @@ mod tests {
     // --- Color NON (OverwriteOnNextKeyframe) ---
     //
     // The seam decides handover from `passed_frames` against the part's key
-    // array. The pure predicate is unit-tested in `passed_reaches_key_*` below;
-    // the end-to-end behaviour with real keyframes / looping / sections lives in
-    // the `override_*_non_*` tests in lib.rs. Here we assert only the plumbing
+    // run. The pure predicate is unit-tested in `passed_reaches_key_*` below;
+    // the end-to-end behaviour with real keyframes / looping lives in the
+    // `override_*_non_*` tests in `tests.rs`. Here we assert only the plumbing
     // for a part that has no color keys: it can never decode one, so a NON
     // override applies indefinitely (like Permanent).
 
     #[test]
     fn color_non_without_keys_is_permanent() {
-        let cached = [cached_part_stub(0, -1, PartType::PartTypeNormal, false)]; // no part_color_keys
+        let cached = [cached_part_stub(0, -1, PartType::PartTypeNormal, false)];
         let mut parts = [state(1.0, UpdateAttributeFlags::empty())];
         let mut ovr = [Some(color(0, [1, 2, 3, 255], PriorityMode::OverwriteOnNextKeyframe))];
         // Even with frames "passed", a keyless part never hands over.

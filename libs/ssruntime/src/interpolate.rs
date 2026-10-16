@@ -2,7 +2,8 @@
 //!
 //! Curve evaluation with no dependency on `ssab` or any other SpriteStudio type — just
 //! numbers in, numbers out. Linear, Hermite and Bezier interpolation plus the easing rate
-//! functions, all generic over [`SsFloat`] so the same code serves `f32` and `f64`.
+//! functions, generic over [`SsFloat`] so the same code serves `f32` and `f64`; the
+//! `interpolate_*_linear` batch helpers are `f32` only.
 //!
 //! ```
 //! use ssruntime::interpolate::{linear, rate_ease_in};
@@ -142,7 +143,7 @@ pub fn interpolate_vertex_linear(start: &[f32; 8], end: &[f32; 8], rate: f32, ou
     }
 }
 
-/// Batch linear interpolation for PartColor attribute (fixed 16 floats: LT.rgba, RT.rgba, LB.rgba, RB.rgba).
+/// Batch linear interpolation for PartColor attribute (fixed 16 floats: four channels each for LT, RT, LB, RB).
 pub fn interpolate_color_linear(start: &[f32; 16], end: &[f32; 16], rate: f32, out: &mut [f32; 16]) {
     let rate_v = f32x4::splat(rate);
     for ((s, e), o) in start.as_chunks::<4>().0.iter().zip(end.as_chunks::<4>().0).zip(out.as_chunks_mut::<4>().0) {

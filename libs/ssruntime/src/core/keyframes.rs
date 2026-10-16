@@ -394,7 +394,7 @@ fn transfer_vertex(source: &ssab::ssab::ss::format::PartAttributeVertex) -> runt
     let lb = s.lb().map(|lb| runtime::framedata::ss::runtime::Vec2::new(lb.v1(), lb.v2())).unwrap_or_default();
     let rb = s.rb().map(|rb| runtime::framedata::ss::runtime::Vec2::new(rb.v1(), rb.v2())).unwrap_or_default();
 
-    // The center vertex is filled later by get_parts after pivot/size/flip/deform are applied.
+    // The center is left at zero: `compute_local_vertices_for_parts` computes it once pivot/size/flip/deform are applied.
     runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb, &runtime::framedata::ss::runtime::Vec2::default())
 }
 

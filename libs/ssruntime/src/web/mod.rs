@@ -355,8 +355,6 @@ impl SSRuntimeContext {
         self.inner.setup_animation_by_hash(name_hash).map_err(js_error)
     }
 
-    // Zero-copy getters
-
     /// Build the frame data for `frame_no` and return its byte length. Read the
     /// bytes with `get_frame_data_buf`, which does not evaluate again.
     ///
@@ -365,6 +363,8 @@ impl SSRuntimeContext {
     pub fn prepare_frame_data(&mut self, frame_no: f32) -> Result<usize, JsValue> {
         self.inner.get_frame_data(frame_no).map(|s| s.len()).map_err(js_error)
     }
+
+    // Zero-copy getters
 
     /// Pointer to what the last `prepare_frame_data` built. Null before the
     /// first call; valid until the next one.
@@ -554,7 +554,7 @@ impl SSRuntimeContext {
         self.inner.just_looped()
     }
 
-    // setting getter functions
+    // Playback state and setting getters
     pub fn is_playing(&self) -> bool {
         self.inner.is_playing()
     }
@@ -905,7 +905,8 @@ impl SSRuntimeContext {
     }
 
     /// Which animation track 0's main source plays, as an index into the
-    /// ssab's animations; a crossfade on track 0 changes it from the call on.
+    /// ssab's animations; a crossfade or a track animation on track 0 changes
+    /// it from the call on.
     pub fn get_current_animation_index(&self) -> Option<u32> {
         self.inner.get_current_animation_index()
     }
@@ -946,7 +947,7 @@ impl SSRuntimeContext {
         self.inner.get_active_effect_event(slot_index).into()
     }
 
-    // ---- Override Layer (Phase 2): per-part runtime overrides -------------
+    // ---- Override Layer: per-part runtime overrides ----------------------
     // Mirrors the `ss_runtime_*_override` C FFI in `src/ffi/mod.rs`.
 
     /// Mirror of `ss_runtime_find_part_index`. `-1` if not loaded / not found.
@@ -1006,8 +1007,8 @@ impl SSRuntimeContext {
 
 /// JS-friendly wrapper of `EffectSlot`. Same conceptual flow as the C FFI:
 /// 1) construct via `create`, 2) call `step` per frame with the resolved
-/// active event and timing, 3) read `draw_plan_buf`/`draw_plan_len` only
-/// when `step` returned `true` and only before the next call.
+/// active event and timing, 3) read `get_draw_plan_buf`/`get_draw_plan_len`
+/// only when `step` returned `true` and only before the next call.
 #[wasm_bindgen]
 pub struct SSRuntimeEffectSlot {
     inner: crate::EffectSlot<'static>,
@@ -1081,7 +1082,9 @@ impl SSRuntimeEffectSlot {
 /// JS-friendly wrapper of `InstanceSlot`. Same conceptual flow as the C FFI:
 /// 1) construct via `create`, 2) call `step` per frame with the resolved
 /// active event, child context, and timing, 3) on `transitioned == true`
-/// fire any host-side `play()` side effects (event sinks etc.).
+/// call `play` on the child context: the slot configures the child for the
+/// new key without starting it, and an independent child never advances
+/// otherwise.
 #[wasm_bindgen]
 pub struct SSRuntimeInstanceSlot {
     inner: crate::InstanceSlot,

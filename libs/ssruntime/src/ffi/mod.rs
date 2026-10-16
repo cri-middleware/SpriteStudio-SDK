@@ -30,11 +30,12 @@
 //! to own and nothing to outlive. Getters that return a float use `NaN` for "no such
 //! thing", which is distinguishable from a legitimate `0.0`.
 //!
-//! The two `ss_resource_create_*` constructors are the exception: they take no context,
-//! so a null return is the whole report. It needs no more than that, because there are
-//! only two ways to get one — a null `ptr`, which the caller passed, and an `.ssab` whose
-//! schema version this runtime does not read. (Bytes that are not an `.ssab` at all are
-//! not among them; nothing here validates the input. See *Validation* below.)
+//! The two `ss_resource_create_*` constructors and `ss_effect_slot_create` are the
+//! exception: they take no context, so a null return is the whole report. For a resource
+//! that is enough, because there are only two ways to get one — a null `ptr`, which the
+//! caller passed, and an `.ssab` whose schema version this runtime does not read. (Bytes
+//! that are not an `.ssab` at all are not among them; nothing here validates the input.
+//! See *Validation* below.)
 //!
 //! # Building a resource
 //!
@@ -154,10 +155,9 @@ unsafe fn get_context<'a>(ptr: *mut c_void) -> Option<&'a mut FfiContext> {
 
 /// Parse `data` into a resource handle, keeping the reason on failure.
 ///
-/// The reason is the point: a version mismatch and a malformed buffer both come
-/// back as a null handle from the two `ss_resource_create_*` entry points, which
-/// have no context to record on. The entry points that DO have one record the
-/// difference, readable through [`ss_runtime_get_last_error`].
+/// The two `ss_resource_create_*` entry points have no context to record it on
+/// and return a null handle; the `ss_runtime_load_ssab_*` pair records it,
+/// readable through [`ss_runtime_get_last_error`].
 ///
 /// # Safety
 ///
@@ -260,10 +260,10 @@ pub unsafe extern "C" fn ss_runtime_reset(context: *mut c_void) {
 ///
 /// Every fallible entry point that has a context to write to clears this on
 /// entry, so it always describes the most recent one rather than some earlier
-/// failure. The exceptions are the resource constructors
-/// (`ss_resource_create_borrow` / `ss_resource_create_copy`), which take no
-/// context and so have nowhere to record: a null return from those is all there
-/// is.
+/// failure. The exceptions are the constructors that take no context
+/// (`ss_resource_create_borrow` / `ss_resource_create_copy` and
+/// `ss_effect_slot_create`), which have nowhere to record: a null return from
+/// those is all there is.
 ///
 /// Reading does not clear it. Read it immediately after the call that returned
 /// `false`, before making another on the same context.
@@ -345,8 +345,7 @@ pub unsafe extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource
     // stays valid because `bound_resource` owns the surrounding Arc.
     let res_ptr = arc_clone.resource_static_ptr();
     if res_ptr.is_null() {
-        // The resource handle is live but carries no parsed animations — the
-        // bytes behind it were not a readable SSAB.
+        // A handle whose pack did not parse; `ss_resource_create_*` never returns one.
         ffi_context.fail("ss_runtime_bind_resource", crate::error::SSRuntimeError::EmptyData);
         return false;
     }
@@ -378,9 +377,6 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *c
     let data = unsafe { ::core::slice::from_raw_parts(ptr, len) };
     match crate::SsabData::load_copy(data) {
         Ok(ssab_data) => {
-            // The real reason, not `MemoryError`: this fails on a version
-            // mismatch far more often than on an allocation, and the two want
-            // opposite things from the user.
             // SAFETY: the C caller guarantees a valid `.ssab` (see "Security and Validation").
             let res_ptr = match unsafe { create_ffi_resource(ssab_data) } {
                 Ok(p) => p,
@@ -422,9 +418,6 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: 
 
     match unsafe { crate::SsabData::load_borrow(ptr, len) } {
         Ok(ssab_data) => {
-            // The real reason, not `MemoryError`: this fails on a version
-            // mismatch far more often than on an allocation, and the two want
-            // opposite things from the user.
             // SAFETY: the C caller guarantees a valid `.ssab` (see "Security and Validation").
             let res_ptr = match unsafe { create_ffi_resource(ssab_data) } {
                 Ok(p) => p,
@@ -519,9 +512,6 @@ pub unsafe extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: 
 }
 
 #[unsafe(no_mangle)]
-/// # Safety
-///
-/// This function is unsafe because it dereferences a raw pointer.
 pub unsafe extern "C" fn ss_runtime_setup_animation_by_hash(context: *mut c_void, name_hash: u32) -> bool {
     let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
@@ -734,10 +724,10 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertex_counts(context: *mut c_void
 }
 
 #[unsafe(no_mangle)]
-/// Skinned mesh per-vertex X coordinates in world space, concatenated across all
+/// Mesh per-vertex X coordinates in world space, concatenated across all
 /// parts. Pair with `ss_runtime_get_mesh_vertex_offsets` to slice per-part
 /// ranges: part `p`'s vertices live at indices `offsets[p]..offsets[p + 1]`.
-/// Non-mesh parts contribute an empty range. Indirect render mode leaves the
+/// Non-mesh parts contribute an empty range. SceneGraph render mode leaves the
 /// buffer empty (length 0).
 ///
 /// # Safety
@@ -759,7 +749,7 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_x(context: *mut c_void, ou
 }
 
 #[unsafe(no_mangle)]
-/// Skinned mesh per-vertex Y coordinates. SoA companion to
+/// Mesh per-vertex Y coordinates. SoA companion to
 /// `ss_runtime_get_mesh_vertices_x`; sliced identically via
 /// `ss_runtime_get_mesh_vertex_offsets`.
 ///
@@ -783,7 +773,7 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_y(context: *mut c_void, ou
 
 #[unsafe(no_mangle)]
 /// CSR-style prefix sum (length = `num_parts + 1`) describing where each
-/// part's skinned mesh vertices live inside `ss_runtime_get_mesh_vertices_x`
+/// part's mesh vertices live inside `ss_runtime_get_mesh_vertices_x`
 /// / `_y`. Part `p` occupies indices `[offsets[p], offsets[p + 1])`; non-mesh
 /// parts have `offsets[p] == offsets[p + 1]`.
 ///
@@ -1029,7 +1019,7 @@ pub unsafe extern "C" fn ss_runtime_get_nines_index_offsets(context: *mut c_void
     }
 }
 
-// Frame Number getter functions
+// Playback state and setting getters
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_get_frame_no(context: *mut c_void) -> c_float {
     if let Some(ffi_context) = unsafe { get_context(context) } {
@@ -2045,15 +2035,17 @@ pub unsafe extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void,
 /// Which source fired the collected event at `index` — parallel to
 /// `ss_runtime_get_passed_event_index`, and read with the same index.
 ///
-/// With every source at the default event threshold (`+∞`) this is uniformly
-/// `ss_runtime_get_track_main_source` of track 0, so a Player that does not use
-/// animation mixing can ignore it. It diverges once a secondary source opts in
-/// to firing events via `ss_runtime_set_source_event_threshold`, and that is
-/// when a host needs it: without it, two blended animations' events arrive in
-/// one undifferentiated list.
+/// With every source and every track's outgoing side at the default event
+/// threshold (`+∞`) this is uniformly `ss_runtime_get_track_main_source` of
+/// track 0, so a Player that does not use animation mixing can ignore it. It
+/// diverges once a secondary source opts in to firing events via
+/// `ss_runtime_set_source_event_threshold`, or a crossfade's outgoing side via
+/// `ss_runtime_set_track_outgoing_event_threshold`, and that is when a host
+/// needs it: without it, two blended animations' events arrive in one
+/// undifferentiated list.
 ///
-/// Returns `U32_MAX` for a negative or out-of-range `index`, which no live
-/// handle ever equals.
+/// Returns `SS_RUNTIME_INVALID_HANDLE` for a negative or out-of-range `index`,
+/// which no live handle ever equals.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_get_passed_event_source_handle(context: *mut c_void, index: i32) -> u32 {
     if index >= 0
@@ -2109,10 +2101,13 @@ pub unsafe extern "C" fn ss_runtime_hash_string(s: *const c_char) -> u32 {
     if let Ok(rust_str) = c_str.to_str() { crate::fnv1a_hash_str(rust_str) } else { 0 }
 }
 
-// --- Override Layer API (Phase 2) ---
+// --- Override Layer API ---
 
 /// Resolve a part name to its `part_index` in the current primary animation.
 /// Returns `-1` on null context / null or invalid name / not found.
+///
+/// # Safety
+/// `part_name` must be null or a valid null-terminated string.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_find_part_index(context: *mut c_void, part_name: *const c_char) -> i32 {
     let Some(ffi_context) = (unsafe { get_context(context) }) else {
@@ -2183,6 +2178,9 @@ pub unsafe extern "C" fn ss_runtime_set_part_color_override(context: *mut c_void
 
 /// Set a per-part color override from four packed RGBA corners in ssruntime
 /// order `lt, rt, lb, rb` (`rgba_ltrtlbrb` points to 4 `uint32` = `0xRRGGBBAA`).
+///
+/// # Safety
+/// `rgba_ltrtlbrb` must be null or point to 4 readable `uint32`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_set_part_color_override_corners(context: *mut c_void, part: u32, blend_op: c_uchar, rgba_ltrtlbrb: *const u32, priority_mode: c_uchar) -> bool {
     let Some(ffi_context) = (unsafe { get_context(context) }) else {
@@ -2432,8 +2430,6 @@ mod tests {
         assert!(!unsafe { ss_runtime_load_ssab_borrow(ctx, ssab.as_ptr(), ssab.len()) });
 
         let (code, text) = read_error(ctx);
-        // Not MemoryError, which is what this path used to report for every
-        // failed parse.
         assert_eq!(code, crate::error::SSRuntimeError::InvalidVersion { expected: 0, got: 0 }.as_code());
         assert_eq!(text, "Invalid SSAB version");
         unsafe { ss_runtime_destroy(ctx) };
@@ -2470,9 +2466,8 @@ mod tests {
                 // Only names in a family this ABI actually exports. Derived from
                 // the exports rather than listed, so a new family is covered the
                 // day it lands — and so that `ss_partcolor_blend` (a GLSL helper
-                // in a shader example) and `ss_player_release` (prose about a
-                // Player's own disposal call) are read as what they are rather
-                // than as missing entry points.
+                // in a shader example) is read as what it is rather than as a
+                // missing entry point.
                 if !families.contains(family_of(&name)) || exported.contains(&name) || ALLOWED.iter().any(|(p, _)| name.starts_with(p)) {
                     continue;
                 }
@@ -2501,9 +2496,9 @@ mod tests {
     /// `Debug` on an error prints the Rust variant name, and twenty-eight call
     /// sites were doing exactly that — handing a JS caller `AnimationNotFound`,
     /// an identifier from a language they are not writing, which then reaches
-    /// their user through whatever the Player shows. It also drops what
-    /// `InvalidVersion` knows. One closure copied twenty-eight times is how that
-    /// happened, so what is pinned here is that there are none left.
+    /// their user through whatever the Player shows. One closure copied
+    /// twenty-eight times is how that happened, so what is pinned here is that
+    /// there are none left.
     #[test]
     fn the_wasm_face_does_not_debug_format_an_error() {
         let web = std::fs::read_to_string("src/web/mod.rs").expect("read web/mod.rs");
@@ -2579,8 +2574,8 @@ mod tests {
     }
 
     /// The `match code` in `ss_runtime_error_message` and the `match self` in
-    /// `SSRuntimeError::as_str` are two tables for one mapping. Every drift this
-    /// session came from exactly that shape, so pin them to each other.
+    /// `SSRuntimeError::as_str` are two tables for one mapping, so pin them to
+    /// each other.
     #[test]
     fn error_message_matches_every_variant() {
         use crate::error::SSRuntimeError::*;

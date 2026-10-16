@@ -18,7 +18,7 @@
 /// most recent `EventInstance` whose `frame_index <= current parent frame`
 /// for `slot_index`. When no event is active, the function returns SS6
 /// default semantics: `is_synthetic_default = true`, `loop_num = 1`,
-/// `speed = 1.0`, all label hashes 0 (caller falls back), all flags false.
+/// `speed = 1.0`, all label hashes 0 (unset), all flags false.
 ///
 /// `start_label_hash` / `end_label_hash` are returned raw. They are
 /// already resolved internally by `ss_instance_slot_step` against the
@@ -29,10 +29,10 @@
 pub struct ss_event_instance_info {
     /// Parent `frame_index` this `EventInstance` was emitted at; 0 for synthetic default.
     pub event_frame: i32,
-    /// 0 = unset → caller should fall back to 0.
+    /// 0 = unset → the child animation's start frame.
     pub start_label_hash: u32,
     pub start_offset: i32,
-    /// 0 = unset → caller should fall back to (child_total_frames - 1).
+    /// 0 = unset → the child animation's end frame.
     pub end_label_hash: u32,
     pub end_offset: i32,
     /// -1 = infinite, >=1 = finite count.
@@ -95,7 +95,7 @@ impl Default for ss_effect_event_info {
 /// Result of `EffectSlot::step` / `ss_effect_slot_step`.
 ///
 /// `draw_plan_buf` is a FlatBuffer-encoded `EffectDrawPlan` (see
-/// `runtime/effect_draw_plan.fbs`). It is valid only when `visible == true`,
+/// `fbs/effect_draw_plan.fbs`). It is valid only when `visible == true`,
 /// and only until the next `step` call on the same slot — callers must consume
 /// it within the same frame and not retain pointers across calls.
 #[repr(C)]
@@ -120,10 +120,10 @@ impl Default for ss_effect_step_result {
 
 /// Result of `InstanceSlot::step` / `ss_instance_slot_step`.
 ///
-/// `transitioned == true` indicates a new EventInstance edge — the caller
-/// should run any side effects tied to the child's `play()` (event-sink
-/// notifications, etc.) on this tick. Frame stepping is already applied
-/// inside `step`, so callers only consume `child_frame_no` to redraw.
+/// `transitioned == true` indicates a new EventInstance edge — `step` has
+/// configured the child for the new key without starting it, so the caller
+/// plays the child on this tick. Frame stepping is already applied inside
+/// `step`, so callers only consume `child_frame_no` to redraw.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct ss_instance_step_result {
