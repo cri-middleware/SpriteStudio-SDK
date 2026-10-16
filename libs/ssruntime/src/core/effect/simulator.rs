@@ -42,7 +42,6 @@ fn blend_float_simd(a: f32x4, b: f32x4, rate: f32x4) -> f32x4 {
     (b - a).mul_add(rate, a)
 }
 
-// Vectorized PRNG using wide
 pub use super::prng::{XorShift32, XorShift32x4};
 
 pub struct EffectSimulator;
@@ -711,7 +710,6 @@ impl EffectSimulator {
         let mut results = [ParticleDrawState::default(); 4];
         let life_zero_mask = life_zero.to_bitmask();
         for i in 0..4 {
-            // If the i-th bit is 1, it means life was zero
             if (life_zero_mask & (1 << i)) != 0 {
                 continue;
             }
@@ -850,7 +848,7 @@ mod tests {
     fn test_calculate_state_simd_vs_scalar_equivalence() {
         let (emitter_params, mut particle_params) = create_base_params();
 
-        // Enable various parameters to ensure all branches of SIMD calculation are tested
+        // Enable the color, color-transition, gravity and rotation branches.
         particle_params.use_color = true;
         particle_params.init_color = Color::new(255, 100, 150, 200);
         particle_params.init_color2 = Color::new(50, 50, 50, 50);
@@ -871,22 +869,18 @@ mod tests {
         let current_time = 10.0;
         let emitter_pos = Vector2::new(100.0, 200.0);
 
-        // Parameters for 4 particles
         let stimes = [0, 2, 4, 6];
         let endtimes = [15, 17, 19, 21];
         let particle_ids = [0, 1, 2, 3];
         let pids = [10, 20, 30, 40];
 
-        // 1. Calculate using scalar fallback
         let mut scalar_results = [ParticleDrawState::default(); 4];
         for i in 0..4 {
             scalar_results[i] = EffectSimulator::calculate_state(current_time, stimes[i], endtimes[i], particle_ids[i], &emitter_params, &particle_params, emitter_seed, seed_offset, &seed_list, emitter_pos, pids[i]);
         }
 
-        // 2. Calculate using SIMD batch
         let simd_results = EffectSimulator::calculate_state_batch(current_time, stimes, endtimes, particle_ids, &emitter_params, &particle_params, emitter_seed, seed_offset, &seed_list, [emitter_pos; 4], pids);
 
-        // 3. Verify equivalence
         for i in 0..4 {
             let s = &scalar_results[i];
             let v = &simd_results[i];

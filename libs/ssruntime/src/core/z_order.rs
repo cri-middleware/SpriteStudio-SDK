@@ -27,15 +27,14 @@ impl ZOrderTable {
 
     /// Set the table up for `animation`. The draw order only has to be sorted
     /// every frame when some part's priority changes during the animation;
-    /// otherwise it is sorted once, by the first `update`.
+    /// otherwise it is sorted once.
     pub fn setup(&mut self, animation: i32, cached_parts: &[CachedPartData]) {
         let num_parts = cached_parts.len();
         self.indices.clear();
         self.indices.extend(0..num_parts);
         self.animation = animation;
 
-        // A run of one key holds the priority for the whole animation; the
-        // converter writes one for every part from the setup pose.
+        // A run of one key holds the priority for the whole animation.
         self.is_static = !cached_parts.iter().any(|p| p.run(crate::core::framedata::IDX_ATTRIBUTEPRIO).is_some_and(|run| run.count() > 1));
         if self.is_static && !cached_parts.iter().any(|p| p.run(crate::core::framedata::IDX_ATTRIBUTEPRIO).is_some()) {
             // Without priority keys, priority() is uniformly 0 — sort reduces to part_index ascending.

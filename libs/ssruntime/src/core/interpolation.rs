@@ -275,7 +275,7 @@ pub fn evaluate_vertex(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint:
             let r_v1 = [out_arr[0], out_arr[2], out_arr[4], out_arr[6]];
             let r_v2 = [out_arr[1], out_arr[3], out_arr[5], out_arr[7]];
 
-            // The center vertex is filled later by get_parts after pivot/size/flip/deform are applied.
+            // The center is left at zero: `compute_local_vertices_for_parts` computes it once pivot/size/flip/deform are applied.
             runtime::framedata::ss::runtime::PartAttributeVertex::new(
                 &runtime::framedata::ss::runtime::Vec2::new(r_v1[0], r_v2[0]),
                 &runtime::framedata::ss::runtime::Vec2::new(r_v1[1], r_v2[1]),
@@ -316,8 +316,8 @@ pub fn evaluate_skew(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &
 /// `index_out`. Both output buffers are cleared at entry, so the caller
 /// can reuse them across parts without manual reset.
 ///
-/// Returns whether a key was found at or before `frame_no`, as the other
-/// `evaluate_*` helpers return `Some`.
+/// Returns `false` only for a run with no keys; a frame before the first key
+/// reads the first key, as [`search_prev_next`] does.
 #[inline]
 pub fn evaluate_deform(
     keys: &KeyColumns<'_>,
@@ -574,7 +574,7 @@ mod tests {
         assert_eq!(evaluate_bool(&keys, &run, -1.0, &mut hint), None);
         // Fractional: floor() applied internally — 9.9 → 9 → still uses prev (true)
         assert_eq!(evaluate_bool(&keys, &run, 9.9, &mut hint), Some(true));
-        // Fractional: 10.0 → 10 → false
+        // Back on the key after a fractional frame: 10.0 → 10 → false
         assert_eq!(evaluate_bool(&keys, &run, 10.0, &mut hint), Some(false));
     }
 
@@ -625,7 +625,7 @@ mod tests {
         let val = evaluate_int(&keys, &run, 5.5, &mut hint).unwrap();
         assert_eq!(val, 55);
 
-        // Integer frame still works at the keyframe (rate=0.5 -> 50)
+        // Integer frame between the keys (rate=0.5 -> 50)
         let mut hint = 0;
         let val = evaluate_int(&keys, &run, 5.0, &mut hint).unwrap();
         assert_eq!(val, 50);
@@ -864,7 +864,7 @@ mod tests {
 
     #[test]
     fn test_evaluate_deform_simd_chunk_aligned() {
-        // 8 vertices = exactly 2 SIMD chunks, no tail.
+        // 8 vertices = 16 interleaved floats: exactly 4 SIMD chunks, no tail.
         let prev: alloc::vec::Vec<(f32, f32)> = (0..8).map(|i| (i as f32, i as f32 * 2.0)).collect();
         let next: alloc::vec::Vec<(f32, f32)> = (0..8).map(|i| (i as f32 * 3.0, i as f32 * 4.0)).collect();
         let buf = deform_buf(&[(0, InterpolationType::Linear, &prev, &[]), (10, InterpolationType::None, &next, &[])]);
@@ -883,7 +883,7 @@ mod tests {
 
     #[test]
     fn test_evaluate_deform_simd_with_tail() {
-        // 7 vertices = 1 SIMD chunk (4) + tail (3). Both branches must produce identical results.
+        // 7 vertices = 14 interleaved floats: 3 SIMD chunks + a 1-vertex tail. Both branches must produce identical results.
         let prev: alloc::vec::Vec<(f32, f32)> = (0..7).map(|i| (i as f32, i as f32 * 10.0)).collect();
         let next: alloc::vec::Vec<(f32, f32)> = (0..7).map(|i| ((i as f32) + 100.0, (i as f32) * 10.0 + 1000.0)).collect();
         let buf = deform_buf(&[(0, InterpolationType::Linear, &prev, &[]), (10, InterpolationType::None, &next, &[])]);
@@ -902,7 +902,7 @@ mod tests {
 
     #[test]
     fn test_evaluate_deform_simd_only_tail() {
-        // 3 vertices = 0 SIMD chunks, 3 tail. Exercises the scalar path.
+        // 3 vertices = 6 interleaved floats: 1 SIMD chunk + a 1-vertex tail.
         let prev = [(0.0, 0.0), (1.0, 2.0), (3.0, 4.0)];
         let next = [(10.0, 20.0), (11.0, 22.0), (13.0, 24.0)];
         let buf = deform_buf(&[(0, InterpolationType::Linear, &prev, &[]), (10, InterpolationType::None, &next, &[])]);

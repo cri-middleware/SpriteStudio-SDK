@@ -193,8 +193,8 @@ impl PlaybackController {
         self.remain_loops == 0 && !self.is_playing
     }
 
-    /// `true` for the single `update` that wrapped the playhead back to the
-    /// start frame. Cleared on entry to every `update`, so it must be polled
+    /// `true` for the single `update` that took the playhead back to the start
+    /// of its cycle. Cleared on entry to every `update`, so it must be polled
     /// after each one or the pulse is lost. Never raised on the final cycle of
     /// a finite loop count — that cycle finishes instead of looping.
     pub fn just_looped(&self) -> bool {
@@ -282,7 +282,7 @@ impl PlaybackController {
         Self {
             // Not paused and not playing are different things: a controller
             // that has never played must not report itself as held, or every
-            // Player's `is_paused` inherits a meaningless `true`.
+            // Player's `is_pausing` inherits a meaningless `true`.
             is_pausing: false,
             is_playing: false,
 
@@ -351,17 +351,18 @@ impl PlaybackController {
     /// anything the transition itself specifies is reset — otherwise state N's
     /// behaviour would depend on state N-1, and a `loops = 1` meant for an
     /// attack would quietly follow the character into its walk. That covers the
-    /// section (frame indices mean nothing against a different clip), the loop
-    /// count, and the direction / style.
+    /// section (frame indices mean nothing against a different clip) and the
+    /// loop count.
     ///
-    /// `speed_scale` and `is_skip_frames` survive, because a *different* system
-    /// sets them: a slow-motion effect, a haste buff, a "show every frame"
-    /// capture mode. Resetting those here would let an animation transition
-    /// clobber a setting the state machine never knew about. The Players'
-    /// sub-frame flag is the same kind of setting and already behaves this way
-    /// — it simply lives on their side of the FFI, so this never touched it.
+    /// The speed, the frame-rate override, the frame skip and the direction /
+    /// style survive, because a *different* system sets them: a slow-motion
+    /// effect, a haste buff, a "show every frame" capture mode. Resetting those
+    /// here would let an animation transition clobber a setting the state
+    /// machine never knew about. The Players' sub-frame flag is the same kind of
+    /// setting and already behaves this way — it simply lives on their side of
+    /// the FFI, so this never touched it.
     ///
-    /// [`Self::reset_setup`] does reset both: it releases the slot for a
+    /// [`Self::reset_setup`] does reset them: it releases the slot for a
     /// different owner, rather than handing the same one a new clip.
     pub fn setup(&mut self, start_frame: i32, end_frame: i32, fps: i32) {
         self.reset_state();
@@ -727,8 +728,8 @@ impl PlaybackController {
     ///
     /// Unlike `update(delta)` this is a deterministic, non-incremental
     /// computation — the same `diff` always produces the same frame, which is
-    /// what allows parent-driven seek / reverse / frame-skip on Instance and
-    /// Effect parts to render correctly.
+    /// what allows parent-driven seek / reverse / frame-skip on Instance parts
+    /// to render correctly.
     pub fn set_frame_relative(&mut self, diff: f32) {
         let (frame, _finished) = resolve_frame(diff, self.start_frame, self.end_frame, self.loops, self.playback_style, self.playback_direction);
         self.current_frame = frame;
@@ -1261,7 +1262,6 @@ mod tests {
             assert!(t.is_playing());
         }
 
-        // At frame 10, end_frame_reached should be true
         assert!(t.is_end_frame_reached(), "end_frame_reached should be true at frame 10");
 
         // Next update should stop playback
@@ -1332,7 +1332,6 @@ mod tests {
             assert_eq!(frame, i as f32, "Backward failed at step {}", i);
         }
 
-        // Back at 0, now end_frame_reached should be true
         assert!(t.is_end_frame_reached(), "end_frame_reached should be true after full PingPong cycle");
 
         // Final update stops
@@ -1390,7 +1389,6 @@ mod tests {
 
         let frame = t.update(delta);
 
-        // In Fixed mode, it should ONLY advance by 1 frame, no matter how large delta is.
         assert_eq!(frame, 1.0, "Fixed animation should only advance by 1 frame at a time");
 
         // The remaining time (500 - 33.33) should be stored in next_frame_time.
@@ -1717,7 +1715,7 @@ mod tests {
     fn test_is_looped_flag_pingpong() {
         let mut t = PlaybackController::new();
         t.setup(0, 5, 30); // 0 to 5
-        t.set_loop_count(2); // 2 loops
+        t.set_loop_count(2);
         t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
         t.set_skip_frames(false);
         t.play();
@@ -1945,7 +1943,7 @@ mod tests {
         assert!(t.is_playing());
     }
 
-    // ---- what survives set_animation --------------------------------------
+    // ---- what survives setup ----------------------------------------------
 
     #[test]
     fn setup_keeps_the_speed_and_frame_skip_the_host_chose() {
@@ -2020,8 +2018,8 @@ mod tests {
         t.play();
         t.update(1000.0); // one second
 
-        // 60fps x2 = 120 frames in a second, not 60 (rate lost) and not 30
-        // (old clip's fps).
+        // 60fps x2 = 120 frames in a second; losing the speed, or folding it into
+        // the old clip's 30fps, gives 60.
         assert!((t.get_frame_no() - 120.0).abs() < 1.0, "expected ~120 frames, got {}", t.get_frame_no());
     }
 
