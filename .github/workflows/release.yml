@@ -67,6 +67,33 @@ jobs:
             arch: wasm32
 
     steps:
+      # A run from a release/ branch or a v* tag is the release or its QA build
+      # (RELEASING.md steps 3 and 5). The steps below skip signing and
+      # notarization when a secret is absent, and pass; for those runs a missing
+      # secret fails here instead.
+      - name: Require the signing secrets
+        if: (matrix.platform == 'macos' || matrix.platform == 'ios') && (startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/release/'))
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          APPLE_DEV_ID_APP_CERT: ${{ secrets.APPLE_DEV_ID_APP_CERT }}
+          APPLE_DEV_ID_APP_NAME: ${{ secrets.APPLE_DEV_ID_APP_NAME }}
+          ASC_API_KEY_PASS: ${{ secrets.ASC_API_KEY_PASS }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+        run: |
+          required="APPLE_DEV_ID_APP_CERT APPLE_DEV_ID_APP_NAME"
+          if [ "$PLATFORM" = macos ]; then
+            required="$required ASC_API_KEY_PASS ASC_API_ISSUER_ID ASC_API_KEY_ID"
+          fi
+          missing=""
+          for name in $required; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::a run from $GITHUB_REF_NAME ships signed, and these secrets are not set:$missing"
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -81,7 +108,7 @@ jobs:
       # Import the Developer ID Application certificate into an ephemeral
       # keychain so codesign (run inside the release scripts) can find the
       # signing identity. No-ops when the certificate secret is absent, leaving
-      # the artifacts unsigned.
+      # the artifacts unsigned; the first step allows that only outside a release.
       - name: Set up signing keychain
         if: matrix.platform == 'macos' || matrix.platform == 'ios'
         env:
@@ -117,7 +144,7 @@ jobs:
 
       # Decode the App Store Connect API key (.p8) used to notarize the shipped
       # macOS binaries and expose its path to the macOS build step. No-ops when
-      # the secret is absent. macOS only (iOS has no notarization).
+      # the secret is absent, as above. macOS only (iOS has no notarization).
       - name: Prepare Apple API key
         if: matrix.platform == 'macos'
         env:
