@@ -8,7 +8,7 @@ Anyone with the Write role on this repository can cut a release: every step is a
 
 A release is a tag on `main`, pushed first and built second. The version is written in one place, `[workspace.package] version` in the root `Cargo.toml`: `scripts/release-version.sh` prints it, the tag is `v` followed by it, and the release build refuses a tag that disagrees — the six Players that download the SDK pin that tag. Branches follow git-flow: `develop` integrates, `main` holds released commits only, and `release/X.Y` lives for one release — cut from `develop` when the release ships `develop`'s work, or from the line's latest tag when it ships only fixes on top of it, and deleted once the release is out.
 
-Every block runs as written in a new shell: it works out what it needs from the checkout, git and GitHub. The one value set by hand is the version being released, written `<version>` in steps 1 and 2 — fill it in, as in `7.0.1`; left as it is, the line stops with a syntax error. A value that would not stop a command by itself when empty is read as `${VAR:?}`: an empty `OLD` in step 2 would match every `""` in the repository, and an empty `RUN` would let the signing check in step 3 print nothing and pass.
+Every block runs as written in a new shell: it works out what it needs from the checkout, git and GitHub. The one value set by hand is the version being released, written `<version>` in steps 1 and 2 — fill it in, as in `7.0.1`; left as it is, the line stops with a syntax error. A value that would not stop a command by itself when empty is read as `${VAR:?}`: an empty `OLD` in step 2, for one, would match every `""` in the repository.
 
 An agent can run every block, but a person sorts the scan's matches in step 3, and two steps are a person's to decide: the merge in step 4, which puts the release on `main`, and step 6, which publishes it for good.
 
@@ -70,10 +70,9 @@ BRANCH=$(git branch --show-current | grep '^release/')
 git push origin "${BRANCH:?}" &&
   RUN=$(gh workflow run release.yml --ref "${BRANCH:?}" | sed 's|.*/||')
 gh run watch "${RUN:?}" --exit-status
-gh run view "${RUN:?}" --log | grep -E 'not set|Skipping' | grep -v 'echo '   # must print nothing
 ```
 
-A missing signing secret does not fail the macOS and iOS jobs: they skip signing or notarization, say so in the log, and pass. The block's last command looks for that, here and in step 5, and must print nothing. If it prints anything, no change on the branch fixes it: the organization's signing secrets are not reaching this repository. An organization owner decides which repositories they reach, and on GitHub Free they cannot reach a private one. Dispatch again once they do; in step 5, delete the draft first.
+A run from a `release/` branch or a `v*` tag needs the signing secrets: without one, the macOS or iOS job fails at its first step and names what is missing. No change on the branch fixes that: the organization's signing secrets are not reaching this repository. An organization owner decides which repositories they reach, and on GitHub Free they cannot reach a private one. Dispatch again once they do. A run from any other branch skips signing or notarization instead, says so in the log, and passes.
 
 Nothing builds the documentation site on a pull request, and `pages.yml` builds it from the tag after the Release is published, where a fault in a page cannot be fixed by re-running it. Build it here as `pages.yml` will:
 
@@ -123,14 +122,13 @@ git switch main && git pull --ff-only &&
 
 ### 5. Build the Release
 
-Dispatch from the tag on `main`. The run creates a **draft** Release carrying every zip, `SHA256SUMS` and generated notes; nothing is public yet. The block's last command checks the signing as in step 3.
+Dispatch from the tag on `main`. The run creates a **draft** Release carrying every zip, `SHA256SUMS` and generated notes; nothing is public yet. As in step 3, a missing signing secret fails the run.
 
 ```bash
 git fetch origin --tags
 TAG=$(git describe --exact-match --tags --match 'v[0-9]*' origin/main)
 RUN=$(gh workflow run release.yml --ref "${TAG:?}" -f upload_release=true | sed 's|.*/||')
 gh run watch "${RUN:?}" --exit-status
-gh run view "${RUN:?}" --log | grep -E 'not set|Skipping' | grep -v 'echo '   # must print nothing
 ```
 
 Nothing passes the tag around: `build-release.sh` reads `GITHUB_REF_NAME`, or the tag `HEAD` is checked out at, and stamps it into every archive's `VERSION`. A tag that already has a Release, draft or published, keeps it as it is: the run builds, says so in a notice and creates nothing, so delete a draft before dispatching again ([Undoing a release](#undoing-a-release)). With `-f upload_release=false` a run from the tag only builds, its files kept on the run.
@@ -209,7 +207,7 @@ git checkout "$(gh run view "${RUN:?}" --json headSha -q .headSha)" &&
 
 リリースは `main` 上のタグです。先にタグを push し、ビルドはその後です。バージョンが書かれているのはルートの `Cargo.toml` の `[workspace.package] version` の 1 か所だけで、`scripts/release-version.sh` がそれを出力し、タグはその頭に `v` を付けたものです。食い違うタグはリリースビルドが拒否します。SDK をダウンロードする 6 つの Player がこのタグにピンしています。ブランチは git-flow です。`develop` が統合ブランチで、`main` にはリリース済みのコミットだけが入ります。`release/X.Y` は 1 回のリリースの間だけ使います。`develop` の作業を出すリリースなら `develop` から、タグの上に修正だけを載せるリリースならその系統の最新のタグから切り、リリースが済んだら消します。
 
-どのブロックも、新しいシェルで書かれたとおりに実行できます。必要なものはチェックアウト・git・GitHub から求めます。手で設定する値はリリースするバージョンだけで、手順 1 と 2 に `<version>` と書いてあります。`7.0.1` のように埋めてください。埋めずに実行すると、その行は構文エラーで止まります。空でもそれだけでは止まらない値は `${VAR:?}` で読みます。手順 2 の `OLD` が空だとリポジトリ中の `""` すべてに一致し、`RUN` が空だと手順 3 の署名の確認が何も出力せずに通ってしまうためです。
+どのブロックも、新しいシェルで書かれたとおりに実行できます。必要なものはチェックアウト・git・GitHub から求めます。手で設定する値はリリースするバージョンだけで、手順 1 と 2 に `<version>` と書いてあります。`7.0.1` のように埋めてください。埋めずに実行すると、その行は構文エラーで止まります。空でもそれだけでは止まらない値は `${VAR:?}` で読みます。たとえば手順 2 の `OLD` が空だと、リポジトリ中の `""` すべてに一致してしまいます。
 
 どのブロックもエージェントに実行させられますが、手順 3 の照合の一致は人が仕分け、2 つの手順は人が判断します。リリースを `main` に入れる手順 4 のマージと、取り消せない公開を行う手順 6 です。
 
@@ -271,10 +269,9 @@ BRANCH=$(git branch --show-current | grep '^release/')
 git push origin "${BRANCH:?}" &&
   RUN=$(gh workflow run release.yml --ref "${BRANCH:?}" | sed 's|.*/||')
 gh run watch "${RUN:?}" --exit-status
-gh run view "${RUN:?}" --log | grep -E 'not set|Skipping' | grep -v 'echo '   # 何も出力されないこと
 ```
 
-署名の Secret が欠けていても macOS と iOS のジョブは失敗しません。署名や公証を飛ばし、その旨をログに出して成功します。ブロックの最後のコマンドはそれを探すもので、ここでも手順 5 でも何も出力されてはいけません。何か出力されたら、ブランチをどう変えても直りません。組織の署名用 Secret がこのリポジトリに届いていません。どのリポジトリに届けるかは組織のオーナーが決めますが、GitHub Free では private のリポジトリには届けられません。届くようになったら実行し直してください。手順 5 では先に下書きを消します。
+`release/` ブランチや `v*` タグからの実行には署名の Secret が必要です。欠けていると、macOS か iOS のジョブが最初のステップで失敗し、足りない Secret の名前を出します。ブランチをどう変えてもこれは直りません。組織の署名用 Secret がこのリポジトリに届いていません。どのリポジトリに届けるかは組織のオーナーが決めますが、GitHub Free では private のリポジトリには届けられません。届くようになったら実行し直してください。ほかのブランチからの実行では、署名や公証を飛ばし、その旨をログに出して成功します。
 
 プルリクエストではドキュメントサイトを誰もビルドしません。`pages.yml` がビルドするのは Release を公開した後で、しかもタグからなので、ページの不具合は再実行では直せません。ここで `pages.yml` と同じようにビルドしておきます。
 
@@ -324,14 +321,13 @@ git switch main && git pull --ff-only &&
 
 ### 5. Release のビルド
 
-`main` 上のタグからワークフローを実行します。すべての zip と `SHA256SUMS`、自動生成のリリースノートを持つ**下書き**の Release が作られます。まだ何も公開されていません。ブロックの最後のコマンドで、手順 3 と同じように署名を確認します。
+`main` 上のタグからワークフローを実行します。すべての zip と `SHA256SUMS`、自動生成のリリースノートを持つ**下書き**の Release が作られます。まだ何も公開されていません。手順 3 と同じく、署名の Secret が欠けていれば実行は失敗します。
 
 ```bash
 git fetch origin --tags
 TAG=$(git describe --exact-match --tags --match 'v[0-9]*' origin/main)
 RUN=$(gh workflow run release.yml --ref "${TAG:?}" -f upload_release=true | sed 's|.*/||')
 gh run watch "${RUN:?}" --exit-status
-gh run view "${RUN:?}" --log | grep -E 'not set|Skipping' | grep -v 'echo '   # 何も出力されないこと
 ```
 
 タグは受け渡されません。`build-release.sh` が `GITHUB_REF_NAME`（ローカルでは `HEAD` のタグ）を読み、各アーカイブの `VERSION` に刻みます。Release がすでにあるタグでは、下書きでも公開済みでも、その Release に触れません。run はビルドして notice を出すだけなので、もう一度実行するときは先に下書きを消します（[リリースの取り消し](#リリースの取り消し)）。`-f upload_release=false` を付けると、タグからの実行でもビルドだけを行い、成果物を run に残します。

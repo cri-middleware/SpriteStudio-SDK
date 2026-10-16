@@ -31,7 +31,7 @@ cargo build -p ssruntime-ffi --release --features "libc_alloc,panic-handler"
 cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-default-features --features "web"
 
 # WebAssembly without a JavaScript dependency (WASI or embedded WebAssembly engines)
-cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-default-features --features "wasm_alloc,panic-handler"
+cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-default-features --features "ffi,wasm_alloc,panic-handler"
 
 # Embedding as a Rust crate (the host provides the allocator and the panic handler)
 cargo build -p ssruntime --release

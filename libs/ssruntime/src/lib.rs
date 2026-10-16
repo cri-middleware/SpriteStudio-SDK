@@ -112,9 +112,9 @@
 //! # Mobile / console / desktop, C-API
 //! cargo build -p ssruntime-ffi --no-default-features --features ffi,libc_alloc,panic-handler
 //! # Browser, wasm-bindgen
-//! cargo build -p ssruntime-ffi --no-default-features --features web
+//! cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --no-default-features --features web
 //! # Pure WASM (WASI or a custom engine)
-//! cargo build -p ssruntime-ffi --no-default-features --features wasm_alloc,panic-handler
+//! cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --no-default-features --features ffi,wasm_alloc,panic-handler
 //! ```
 //!
 //! # Limitations to design around

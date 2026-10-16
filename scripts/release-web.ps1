@@ -8,6 +8,14 @@ $ErrorActionPreference = "Stop"
 $baseDirectory = Split-Path -Parent $PSCommandPath
 $rootDirectory = Split-Path -Parent $baseDirectory
 
+# $ErrorActionPreference does not reach a native command's exit code, and an
+# exit code would not stop a caller either: throw.
+function Invoke-Checked {
+    param([string] $What, [scriptblock] $Body)
+    & $Body
+    if ($LASTEXITCODE -ne 0) { throw "$What failed ($LASTEXITCODE)" }
+}
+
 $buildMode = "release"
 $wasmPackFlags = @()
 if ($args.Count -gt 0 -and $args[0] -eq "debug") {
@@ -43,7 +51,7 @@ try {
         Remove-Item -Recurse -Force "pkg/runtime-web/$buildMode"
     }
 
-    & $wasmPack build libs/ssruntime-ffi @wasmPackFlags --target web --out-dir $outDir -- --features web --no-default-features
+    Invoke-Checked "runtime-web build" { & $wasmPack build libs/ssruntime-ffi @wasmPackFlags --target web --out-dir $outDir -- --features web --no-default-features }
 
     # ssruntime no-SIMD variant -> pkg/runtime-web-nosimd. For hosts whose WASM
     # engine lacks simd128 — notably the NW.js bundled with RPG Maker MZ, whose
@@ -59,7 +67,7 @@ try {
     $oldRustFlagsRuntime = $env:RUSTFLAGS
     try {
         $env:RUSTFLAGS = "-C target-feature=-simd128"
-        & $wasmPack build libs/ssruntime-ffi @wasmPackFlags --target web --out-dir $nosimdOutDir -- --features web --no-default-features
+        Invoke-Checked "runtime-web-nosimd build" { & $wasmPack build libs/ssruntime-ffi @wasmPackFlags --target web --out-dir $nosimdOutDir -- --features web --no-default-features }
     } finally {
         $env:RUSTFLAGS = $oldRustFlagsRuntime
     }
@@ -76,7 +84,7 @@ try {
     $oldRustFlags = $env:RUSTFLAGS
     try {
         $env:RUSTFLAGS = "-C target-feature=-simd128"
-        & $wasmPack build libs/ssconverter-ffi @wasmPackFlags --target web --out-dir $converterOutDir -- --features web --no-default-features
+        Invoke-Checked "converter-web build" { & $wasmPack build libs/ssconverter-ffi @wasmPackFlags --target web --out-dir $converterOutDir -- --features web --no-default-features }
     } finally {
         $env:RUSTFLAGS = $oldRustFlags
     }

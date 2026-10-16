@@ -34,10 +34,10 @@ The binary deliverables are built from `ssruntime-ffi`, the sibling crate that e
 cargo build -p ssruntime-ffi --no-default-features --features ffi,libc_alloc,panic-handler
 
 # Web Wasm (browser / wasm-bindgen)
-cargo build -p ssruntime-ffi --no-default-features --features web
+cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --no-default-features --features web
 
 # Pure Wasm (WASI / custom Wasm engine)
-cargo build -p ssruntime-ffi --no-default-features --features wasm_alloc,panic-handler
+cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --no-default-features --features ffi,wasm_alloc,panic-handler
 ```
 
 *Note: An allocator (`alloc` crate) is still required even in `no_std` mode — animation state and metadata are heap-allocated.*

@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 
 # # prepare
 # $ rustup toolchain install nightly
@@ -23,9 +22,8 @@ pushd ${ROOTDIR} > /dev/null
 
 # Build a static library (.a / .rlib) for wasm32 consumers that statically link
 # Rust into their own wasm build (e.g. Godot Web / Unity WebGL via Emscripten).
-# JS-facing builds go through release-web.sh (wasm-pack). The cdylib crate-type is
-# excluded here because no FFI/wasm-bindgen exports are enabled under these features,
-# which would otherwise produce an empty .wasm artifact.
+# JS-facing builds go through release-web.sh (wasm-pack). The cdylib crate-type
+# is not built: these consumers link the static library.
 # Uses emscripten_alloc for memory management to delegate allocations to the host's malloc,
 # while keeping math deterministic via libm.
 #
