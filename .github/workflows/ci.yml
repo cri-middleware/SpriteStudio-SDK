@@ -56,6 +56,21 @@ jobs:
         run: cargo fmt --all -- --check
         shell: bash
 
+      # cargo package and wasm-pack ship each crate's own copy of the root
+      # LICENSE files, which scripts/generate-licenses.sh keeps in sync.
+      - name: License copies match the root
+        run: |
+          status=0
+          for copy in $(git ls-files '*/LICENSE.md' '*/LICENSE.ja.md'); do
+            root=$(basename "$copy")
+            if ! cmp -s "$root" "$copy"; then
+              echo "::error file=$copy::differs from the root $root: copy it over, or run scripts/generate-licenses.sh"
+              status=1
+            fi
+          done
+          exit $status
+        shell: bash
+
       # --all-features, like the rustdoc step below: the test modules sit behind
       # `feature = "std"`, so without it the largest body of code in the
       # workspace is the one part clippy never sees.

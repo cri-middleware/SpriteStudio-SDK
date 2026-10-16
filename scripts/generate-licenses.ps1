@@ -32,8 +32,8 @@ try {
     # rather than the default-feature build.
     #
     # ssruntime: union of the shipped features (mobile/desktop FFI, wasm, web).
-    # Deliberately omit `std` — it pulls in ssconverter (tests only) and would
-    # pollute the runtime's minimal notices. So do NOT use --all-features here.
+    # Deliberately omit `std`: no release build enables it. So do NOT use
+    # --all-features here.
     #
     # ssconverter: native + web. No self-coupling, so --all-features is fine.
     $crates = @(
@@ -44,16 +44,20 @@ try {
         @{ Path = "libs/ssruntime";   Flags = @("--no-default-features", "--features", "ffi,libc_alloc,wasm_alloc,emscripten_alloc,web,panic-handler") }
     )
 
+    # Every crate above, and the two FFI crates, whose committed copies
+    # wasm-pack bundles into the web packages (release-web.ps1).
+    $licenseDirs = @($crates.Path) + @("libs/ssconverter-ffi", "libs/ssruntime-ffi")
+
     New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
 
-    # 1. Sync the root license into each crate. cargo-about (and cargo publish)
-    # read the license text from a file inside the crate; without it,
+    # 1. Sync the root license into each of $licenseDirs. cargo-about (and cargo
+    # publish) read the license text from a file inside the crate; without it,
     # cargo-about falls back to the generic SPDX template and drops the real
     # copyright holder. These per-crate LICENSE.md copies ARE committed. The
     # translation rides along; cargo includes every LICENSE* in the packaged crate.
-    foreach ($crate in $crates) {
-        Copy-Item "LICENSE.md" "$($crate.Path)/LICENSE.md" -Force
-        Copy-Item "LICENSE.ja.md" "$($crate.Path)/LICENSE.ja.md" -Force
+    foreach ($path in $licenseDirs) {
+        Copy-Item "LICENSE.md" "$path/LICENSE.md" -Force
+        Copy-Item "LICENSE.ja.md" "$path/LICENSE.ja.md" -Force
     }
 
     # 2. Generate the third-party notices into $OutDir as
