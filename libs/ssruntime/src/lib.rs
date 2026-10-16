@@ -171,6 +171,8 @@ mod context;
 mod effect_slot;
 mod instance_slot;
 mod mix;
+#[cfg(any(feature = "ffi", feature = "web"))]
+mod owning;
 mod resource;
 
 pub use context::Context;
