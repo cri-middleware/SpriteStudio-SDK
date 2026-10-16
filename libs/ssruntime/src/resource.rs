@@ -9,7 +9,7 @@ use crate::error;
 /// The pointer/length pair is never observed publicly; it is only constructed
 /// inside [`SsabData::load_borrow`] (whose `# Safety` clause owns the validity
 /// invariant) and read internally via [`SsabStorage::as_slice`].
-pub(crate) struct BorrowedBuffer {
+struct BorrowedBuffer {
     ptr: ::core::ptr::NonNull<u8>,
     len: usize,
 }
@@ -23,7 +23,7 @@ pub(crate) struct BorrowedBuffer {
 unsafe impl Send for BorrowedBuffer {}
 unsafe impl Sync for BorrowedBuffer {}
 
-pub(crate) enum SsabStorage {
+enum SsabStorage {
     Owned(Vec<u8>),
     Borrowed(BorrowedBuffer),
 }

@@ -269,7 +269,7 @@ fn js_error(e: crate::error::SSRuntimeError) -> JsValue {
 
 #[wasm_bindgen]
 pub struct SSRuntimeResource {
-    pub(crate) inner: Arc<SsabResource>,
+    inner: Arc<SsabResource>,
 }
 
 #[wasm_bindgen]
