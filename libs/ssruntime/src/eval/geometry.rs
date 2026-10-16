@@ -122,6 +122,14 @@ pub fn is_point_in_rect(local_p: (f32, f32), size: (f32, f32)) -> bool {
 
 /// Performs a hit test for a point against a 4-point quadrilateral in world space.
 /// Uses the even-odd rule (ray casting) algorithm and SIMD via the `wide` crate to support both convex and concave quadrilaterals efficiently.
+///
+/// A point exactly on an edge is inside when the quad lies on the edge's +x
+/// side, or on its +y side for an edge parallel to the x axis: on an
+/// axis-aligned quad, the left edge and the edge at the smaller y (the top one
+/// in Y-down coordinates) are inside, and the right edge and the edge at the
+/// larger y are outside. [`is_point_in_rect`] counts all four edges as inside.
+/// On a slanted edge the crossing is computed with rounding, so a point on it
+/// can fall either way.
 pub fn is_point_in_quad(target_p: (f32, f32), v_x: &[f32; 4], v_y: &[f32; 4]) -> bool {
     let tp_x = f32x4::splat(target_p.0);
     let tp_y = f32x4::splat(target_p.1);

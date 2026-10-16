@@ -220,9 +220,9 @@ namespace SpriteStudio.SsRuntime
         /// <summary>
         ///  Per-part shape vertex positions for the current frame, written by
         ///  `ss_runtime_get_frame_data`. Layout: 12 vertices × `(x, y)` = 24 floats
-        ///  per part, indexed by `part_index * 24`. Vertices are in local space,
-        ///  post-pivot, post-coord-system, so a Player just multiplies them by the
-        ///  world matrix. Only the first
+        ///  (`SHAPE_VERTICES_STRIDE`) per part, indexed by `part_index * 24`.
+        ///  Vertices are in local space, post-pivot, post-coord-system, so a Player
+        ///  just multiplies them by the world matrix. Only the first
         ///  `ss_runtime_get_shape_vertex_counts(...)[part_index]` vertices are
         ///  valid; remaining slots are zero-initialized. Non-shape parts carry zero
         ///  count and zero-filled vertex slots. When no part of the pack is a shape,
@@ -234,11 +234,11 @@ namespace SpriteStudio.SsRuntime
         /// <summary>
         ///  Per-vertex normalized bounding-box coordinates paired with
         ///  `ss_runtime_get_shape_vertices`. Layout: 12 vertices × `(fx, fy)` = 24
-        ///  floats per part, indexed by `part_index * 24`. `(0, 0)` corresponds to
-        ///  the LT corner of the shape's pre-pivot bounding box, `(1, 1)` to the RB
-        ///  corner, regardless of pivot offset or coordinate system. Players use
-        ///  this to interpolate the four part-color corners without re-deriving the
-        ///  box layout.
+        ///  floats (`SHAPE_VERTICES_STRIDE`) per part, indexed by `part_index * 24`.
+        ///  `(0, 0)` corresponds to the LT corner of the shape's pre-pivot bounding
+        ///  box, `(1, 1)` to the RB corner, regardless of pivot offset or coordinate
+        ///  system. Players use this to interpolate the four part-color corners
+        ///  without re-deriving the box layout.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_shape_vertex_box_coords", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_shape_vertex_box_coords(void* context, float** out_data, nuint* out_len);

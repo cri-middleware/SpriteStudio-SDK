@@ -45,6 +45,10 @@ const IDX_ATTRIBUTESKEW: usize = crate::runtime::framedata::ss::runtime::UpdateA
 pub const IDX_ATTRIBUTEDEFORM: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform.bits().trailing_zeros() as usize;
 pub const IDX_ATTRIBUTETEXTURE: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeTexture.bits().trailing_zeros() as usize;
 
+/// Stride (number of `f32`s) per part in the `shape_vertices` and
+/// `shape_vertex_box_coords` buffers (`ss_runtime_get_shape_vertices` and
+/// `ss_runtime_get_shape_vertex_box_coords` in the C-API): 12 vertices of two
+/// floats each, the most a shape part has (a star).
 pub const SHAPE_VERTICES_STRIDE: usize = 24;
 
 /// Stride (number of `f32`s) per part in the `local_vertices` SoA buffer.
