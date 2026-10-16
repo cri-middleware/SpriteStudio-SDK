@@ -14,7 +14,8 @@
 //! bridging a JS `Function` and a `js-sys` dependency, which is held off
 //! until the JS/TS Player needs it.
 
-use crate::{Context, SsabData, SsabResource};
+use crate::owning::{OwningContext, OwningEffectSlot};
+use crate::{SsabData, SsabResource};
 use alloc::boxed::Box;
 use alloc::string::ToString;
 use alloc::sync::Arc;
@@ -295,16 +296,14 @@ impl SSRuntimeResource {
 
 #[wasm_bindgen]
 pub struct SSRuntimeContext {
-    inner: Context<'static>,
-    // Hold the resource to keep it alive
-    bound_resource: Option<Arc<SsabResource>>,
+    inner: OwningContext,
 }
 
 #[wasm_bindgen]
 impl SSRuntimeContext {
     #[wasm_bindgen(constructor)]
     pub fn new(data: Option<Box<[u8]>>) -> Result<SSRuntimeContext, JsValue> {
-        let mut ctx = SSRuntimeContext { inner: Context::new(), bound_resource: None };
+        let mut ctx = SSRuntimeContext { inner: OwningContext::new() };
         if let Some(d) = data {
             let res = SSRuntimeResource::new(&d)?;
             ctx.bind_resource(&res);
@@ -314,18 +313,10 @@ impl SSRuntimeContext {
 
     pub fn reset(&mut self) {
         self.inner.reset();
-        self.bound_resource = None;
     }
 
     pub fn bind_resource(&mut self, resource: &SSRuntimeResource) -> bool {
-        let res_ptr = resource.inner.resource_static_ptr();
-        if res_ptr.is_null() {
-            return false;
-        }
-        // Safety: We clone the Arc into bound_resource, keeping the buffer alive.
-        self.bound_resource = Some(resource.inner.clone());
-        self.inner.bind_resource(unsafe { &*res_ptr });
-        true
+        self.inner.bind(resource.inner.clone()).is_ok()
     }
 
     pub fn load_ssab_copy(&mut self, data: &[u8]) -> bool {
@@ -1011,9 +1002,7 @@ impl SSRuntimeContext {
 /// only when `step` returned `true` and only before the next call.
 #[wasm_bindgen]
 pub struct SSRuntimeEffectSlot {
-    inner: crate::EffectSlot<'static>,
-    #[allow(dead_code)]
-    resource_handle: Arc<SsabResource>,
+    inner: OwningEffectSlot,
     last_draw_plan_ptr: *const u8,
     last_draw_plan_len: usize,
 }
@@ -1021,13 +1010,8 @@ pub struct SSRuntimeEffectSlot {
 #[wasm_bindgen]
 impl SSRuntimeEffectSlot {
     pub fn create(resource: &SSRuntimeResource, effect_name_hash: u32, seed: u32) -> Result<SSRuntimeEffectSlot, JsValue> {
-        let res_ptr = resource.inner.resource_static_ptr();
-        if res_ptr.is_null() {
-            return Err(JsValue::from_str("Resource not initialized"));
-        }
-        let resource_handle = resource.inner.clone();
-        match crate::EffectSlot::new(unsafe { &*res_ptr }, effect_name_hash, seed) {
-            Ok(inner) => Ok(SSRuntimeEffectSlot { inner, resource_handle, last_draw_plan_ptr: core::ptr::null(), last_draw_plan_len: 0 }),
+        match OwningEffectSlot::new(resource.inner.clone(), effect_name_hash, seed) {
+            Ok(inner) => Ok(SSRuntimeEffectSlot { inner, last_draw_plan_ptr: core::ptr::null(), last_draw_plan_len: 0 }),
             Err(e) => Err(js_error(e)),
         }
     }

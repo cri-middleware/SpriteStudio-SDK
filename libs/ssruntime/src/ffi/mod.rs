@@ -113,11 +113,10 @@ macro_rules! ss_log {
 }
 
 use crate::SsabResource;
+use crate::owning::{OwningContext, OwningEffectSlot};
 
 struct FfiContext {
-    ctx: crate::Context<'static>,
-    // We hold the resource here to keep it alive
-    bound_resource: Option<Arc<SsabResource>>,
+    ctx: OwningContext,
     /// The reason the last call that tracks one failed, or `None` if it
     /// succeeded.
     last_error: Option<crate::error::SSRuntimeError>,
@@ -141,7 +140,7 @@ impl Default for FfiContext {
 
 impl FfiContext {
     fn new() -> Self {
-        Self { ctx: crate::Context::new(), bound_resource: None, last_error: None }
+        Self { ctx: OwningContext::new(), last_error: None }
     }
 }
 
@@ -170,6 +169,20 @@ unsafe fn create_ffi_resource(data: crate::SsabData) -> Result<*mut c_void, crat
         return Err(arc.parse_error().cloned().unwrap_or(crate::error::SSRuntimeError::Unknown));
     }
     Ok(Arc::into_raw(arc) as *mut c_void)
+}
+
+/// Another share of the resource behind `resource`, for a context or slot to hold.
+///
+/// # Safety
+///
+/// `resource` must be a live handle from `ss_resource_create_*`.
+unsafe fn share_resource(resource: *const c_void) -> Arc<SsabResource> {
+    let resource = resource as *const SsabResource;
+    // SAFETY: the handle is an `Arc::into_raw` that `ss_resource_destroy` has not yet released.
+    unsafe {
+        Arc::increment_strong_count(resource);
+        Arc::from_raw(resource)
+    }
 }
 
 #[unsafe(no_mangle)]
@@ -249,7 +262,6 @@ pub unsafe extern "C" fn ss_runtime_destroy(context: *mut c_void) {
 pub unsafe extern "C" fn ss_runtime_reset(context: *mut c_void) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.reset();
-        ffi_context.bound_resource = None;
         ffi_context.last_error = None;
     }
 }
@@ -335,22 +347,13 @@ pub unsafe extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource
         return false;
     }
 
-    // Safety: Increment refcount by cloning from the raw pointer.
-    let arc = unsafe { Arc::from_raw(resource as *mut SsabResource) };
-    let arc_clone = arc.clone();
-    let _ = Arc::into_raw(arc); // Keep original pointer valid
-
-    // Use a raw pointer to break the borrow on `arc_clone` so it can be moved
-    // into `bound_resource` before the pointer is dereferenced. The pointer
-    // stays valid because `bound_resource` owns the surrounding Arc.
-    let res_ptr = arc_clone.resource_static_ptr();
-    if res_ptr.is_null() {
-        // A handle whose pack did not parse; `ss_resource_create_*` never returns one.
-        ffi_context.fail("ss_runtime_bind_resource", crate::error::SSRuntimeError::EmptyData);
+    // SAFETY: the C caller passes a live handle from `ss_resource_create_*`.
+    let resource = unsafe { share_resource(resource) };
+    // `EmptyData` is a handle whose pack did not parse; `ss_resource_create_*` never returns one.
+    if let Err(e) = ffi_context.ctx.bind(resource) {
+        ffi_context.fail("ss_runtime_bind_resource", e);
         return false;
     }
-    ffi_context.bound_resource = Some(arc_clone);
-    ffi_context.ctx.bind_resource(unsafe { &*res_ptr });
     true
 }
 
@@ -1751,14 +1754,6 @@ pub unsafe extern "C" fn ss_runtime_get_source_event_threshold(context: *mut c_v
     unsafe { get_context(context) }.and_then(|c| c.ctx.get_source_event_threshold(handle)).unwrap_or(f32::NAN)
 }
 
-// NOTE: declaration order matters — `inner` borrows from `resource`,
-// so it must drop first.
-struct FfiEffectSlot {
-    inner: crate::EffectSlot<'static>,
-    #[allow(dead_code)]
-    resource: Arc<SsabResource>,
-}
-
 /// Create a new EffectSlot bound to `resource`. Returns null on failure
 /// (resource not loaded, effect_name_hash not found, malformed effect data).
 ///
@@ -1770,20 +1765,10 @@ pub unsafe extern "C" fn ss_effect_slot_create(resource: *const c_void, effect_n
     if resource.is_null() {
         return core::ptr::null_mut();
     }
-    // Safety: Increment refcount by cloning from the raw pointer.
-    let arc = unsafe { Arc::from_raw(resource as *const SsabResource) };
-    let arc_clone = arc.clone();
-    let _ = Arc::into_raw(arc); // Keep original pointer valid
-
-    // Use a raw pointer to break the borrow on `arc_clone` so it can be moved
-    // into the slot before the pointer is dereferenced. The pointer stays valid
-    // because the slot owns the surrounding Arc.
-    let res_ptr = arc_clone.resource_static_ptr();
-    if res_ptr.is_null() {
-        return core::ptr::null_mut();
-    }
-    match crate::EffectSlot::new(unsafe { &*res_ptr }, effect_name_hash, seed) {
-        Ok(inner) => Box::into_raw(Box::new(FfiEffectSlot { inner, resource: arc_clone })) as *mut c_void,
+    // SAFETY: the C caller passes a live handle from `ss_resource_create_*`.
+    let resource = unsafe { share_resource(resource) };
+    match OwningEffectSlot::new(resource, effect_name_hash, seed) {
+        Ok(slot) => Box::into_raw(Box::new(slot)) as *mut c_void,
         Err(_) => core::ptr::null_mut(),
     }
 }
@@ -1794,7 +1779,7 @@ pub unsafe extern "C" fn ss_effect_slot_destroy(slot: *mut c_void) {
         return;
     }
     unsafe {
-        let _ = Box::from_raw(slot as *mut FfiEffectSlot);
+        let _ = Box::from_raw(slot as *mut OwningEffectSlot);
     }
 }
 
@@ -1808,8 +1793,8 @@ pub unsafe extern "C" fn ss_effect_slot_reset(slot: *mut c_void) {
     if slot.is_null() {
         return;
     }
-    let slot = unsafe { &mut *(slot as *mut FfiEffectSlot) };
-    slot.inner.reset();
+    let slot = unsafe { &mut *(slot as *mut OwningEffectSlot) };
+    slot.reset();
 }
 
 /// Advance the slot one frame. The caller resolves the active effect event
@@ -1838,8 +1823,8 @@ pub unsafe extern "C" fn ss_effect_slot_step(slot: *mut c_void, ev: ss_effect_ev
     if slot.is_null() {
         return ss_effect_step_result::not_visible();
     }
-    let slot = unsafe { &mut *(slot as *mut FfiEffectSlot) };
-    slot.inner.step(ev, parent_frame, delta_seconds, fps, parent_looped, y_flip, vert_stride, draw)
+    let slot = unsafe { &mut *(slot as *mut OwningEffectSlot) };
+    slot.step(ev, parent_frame, delta_seconds, fps, parent_looped, y_flip, vert_stride, draw)
 }
 
 #[unsafe(no_mangle)]
@@ -1847,8 +1832,8 @@ pub unsafe extern "C" fn ss_effect_slot_get_seed(slot: *mut c_void) -> u32 {
     if slot.is_null() {
         return 0;
     }
-    let slot = unsafe { &*(slot as *const FfiEffectSlot) };
-    slot.inner.get_seed()
+    let slot = unsafe { &*(slot as *const OwningEffectSlot) };
+    slot.get_seed()
 }
 
 /// Whether the slot is currently running independently of the parent's frame.
@@ -1860,8 +1845,8 @@ pub unsafe extern "C" fn ss_effect_slot_is_independent(slot: *mut c_void) -> boo
     if slot.is_null() {
         return false;
     }
-    let slot = unsafe { &*(slot as *const FfiEffectSlot) };
-    slot.inner.is_independent()
+    let slot = unsafe { &*(slot as *const OwningEffectSlot) };
+    slot.is_independent()
 }
 
 /// Create a fresh InstanceSlot. Slots are stateless at construction (no
