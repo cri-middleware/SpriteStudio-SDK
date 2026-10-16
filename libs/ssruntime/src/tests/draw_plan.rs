@@ -38,7 +38,7 @@ fn nines_buffers(context: &Context<'_>) -> NinesBuffers {
 #[test]
 fn test_text_parts_are_placed_in_the_draw_plan() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/allPartsV7/allPartsV7/text.ssab");
+    let ssab_path = fixture("allPartsV7/text.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read text.ssab");
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
@@ -78,9 +78,9 @@ fn test_text_parts_are_placed_in_the_draw_plan() {
 #[test]
 fn test_nines_leaves_ssab_without_nines_parts_alone() {
     prepare();
-    for f in ["tests/overall/overall/Basic.ssab", "tests/overall/overall/Mask.ssab", "tests/overall/overall/Mesh.ssab", "tests/allPartsV7/allPartsV7/shape.ssab", "tests/Ringo/Ringo/Ringo.ssab"] {
-        let path = get_test_base_path().join(f);
-        let Ok(buf) = std::fs::read(&path) else { continue };
+    for f in ["overall/Basic.ssab", "overall/Mask.ssab", "overall/Mesh.ssab", "allPartsV7/shape.ssab", "Ringo/Ringo.ssab"] {
+        let path = fixture(f);
+        let buf = std::fs::read(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
         let ssab_data = SsabData::load_copy(&buf).unwrap();
         let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.unwrap();
         for anime in resource.get_animation_names() {
@@ -104,7 +104,7 @@ fn test_nines_leaves_ssab_without_nines_parts_alone() {
 #[test]
 fn test_nines_stretch_batch_and_geometry() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/allPartsV7/allPartsV7/nineslice.ssab");
+    let ssab_path = fixture("allPartsV7/nineslice.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read nineslice.ssab");
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
@@ -160,7 +160,7 @@ fn test_nines_stretch_batch_and_geometry() {
 #[test]
 fn test_nines_tile_repeats_to_fill_the_part() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/overall/overall/NineSlice.ssab");
+    let ssab_path = fixture("overall/NineSlice.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read NineSlice.ssab");
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
@@ -217,7 +217,7 @@ fn test_nines_tile_repeats_to_fill_the_part() {
 #[test]
 fn texture_change_splits_batches_by_overridden_texture() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/overall/overall/TextureChange.ssab");
+    let ssab_path = fixture("overall/TextureChange.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("read TextureChange.ssab");
     let ssab_data = SsabData::load_copy(&input_buf).expect("load");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");

@@ -17,10 +17,8 @@ function Invoke-Checked {
     if ($LASTEXITCODE -ne 0) { throw "$What failed ($LASTEXITCODE)" }
 }
 
-$buildMode = "release"
 $cargoFlags = @("--release")
 if ($args.Count -gt 0 -and $args[0] -eq "debug") {
-    $buildMode = "debug"
     $cargoFlags = @()
 }
 

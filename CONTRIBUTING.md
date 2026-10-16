@@ -89,7 +89,7 @@ scripts/build-pages.sh serve=yes   # the published tree: that build + rustdoc at
 ### FFI and C-API
 Since this SDK provides C-compatible interfaces (`ssruntime`, `ssconverter`), please pay attention to:
 - **Binary Compatibility**: Avoid breaking changes to the C-API unless absolutely necessary.
-- **Header Generation**: `build.rs` in `ssruntime-ffi` and `ssconverter-ffi` writes the C header and the C# bindings into the crate's `target/`, and `cargo test` compares them with the copies committed in its `bindings/`. If you change the C-API on purpose, run `UPDATE_BINDINGS=1 cargo test -p ssruntime-ffi --test bindings` (or `-p ssconverter-ffi`) and commit the copies, so the change shows in the pull request.
+- **Header Generation**: `build.rs` in `ssruntime-ffi` and `ssconverter-ffi` writes the C header and the C# bindings into the crate's `target/`, and `cargo test` compares them with the copies committed in its `bindings/`. If you change the C-API on purpose, or only a `///` comment on an `extern "C"` function or a `#[repr(C)]` type (both files carry those comments), run `UPDATE_BINDINGS=1 cargo test -p ssruntime-ffi --test bindings` (or `-p ssconverter-ffi`) and commit the copies, so the change shows in the pull request.
 - **Memory Management**: Clearly document who owns the memory across the FFI boundary.
 
 #### Naming the C-API
@@ -201,7 +201,7 @@ scripts/build-pages.sh serve=yes   # 公開ツリー: 上記 + /api/ の rustdoc
 ### FFI と C-API
 この SDK は C 互換インターフェース（`ssruntime`、`ssconverter`）を提供しているため、以下の点に注意してください：
 - **バイナリ互換性**: 避けられない場合を除き、C-API の破壊的変更は避けてください。
-- **ヘッダー生成**: `ssruntime-ffi` と `ssconverter-ffi` の `build.rs` は、C ヘッダーと C# バインディングをそのクレートの `target/` に書き出し、`cargo test` がそれを `bindings/` にコミットされた写しと比べます。C-API を意図して変更した場合は、`UPDATE_BINDINGS=1 cargo test -p ssruntime-ffi --test bindings`（コンバーターは `-p ssconverter-ffi`）を実行して写しをコミットしてください。変更が PR にそのまま表示されます。
+- **ヘッダー生成**: `ssruntime-ffi` と `ssconverter-ffi` の `build.rs` は、C ヘッダーと C# バインディングをそのクレートの `target/` に書き出し、`cargo test` がそれを `bindings/` にコミットされた写しと比べます。C-API を意図して変更した場合や、`extern "C"` 関数や `#[repr(C)]` 型の `///` コメントだけを直した場合（このコメントは両方のファイルに写されます）は、`UPDATE_BINDINGS=1 cargo test -p ssruntime-ffi --test bindings`（コンバーターは `-p ssconverter-ffi`）を実行して写しをコミットしてください。変更が PR にそのまま表示されます。
 - **メモリ管理**: FFI 境界を越えてデータをやり取りする場合、メモリの所有権を明確にドキュメント化してください。
 
 #### C-API の命名

@@ -2339,6 +2339,42 @@ mod tests {
         assert!(wrong.is_empty(), "failures logged under another entry point's name:\n  {}", wrong.join("\n  "));
     }
 
+    /// The clear on entry is written out by hand at each entry point, so one
+    /// without it reports an earlier call's failure after it succeeds.
+    #[test]
+    fn every_entry_point_that_records_a_failure_clears_the_last_one_first() {
+        let source = std::fs::read_to_string("src/ffi/mod.rs").expect("read ffi/mod.rs");
+        let source = source.split("\nmod tests {").next().expect("the code before the tests");
+        let (mut entry_point, mut cleared, mut awaiting_clear) = (None, false, false);
+        let mut checked = 0usize;
+        let mut wrong = std::collections::BTreeSet::new();
+        for line in source.lines() {
+            if let Some(name) = exported_c_symbols(line).into_iter().next() {
+                (entry_point, cleared, awaiting_clear) = (Some(name), false, false);
+                continue;
+            }
+            let code = line.trim();
+            if awaiting_clear {
+                // Only the `else` of a `let`-`else` may come between the lookup and the clear.
+                if code == "ffi_context.last_error = None;" {
+                    (cleared, awaiting_clear) = (true, false);
+                } else if !(code.starts_with("return ") || code == "};") {
+                    awaiting_clear = false;
+                }
+            } else if !cleared && code.contains("get_context(") {
+                awaiting_clear = true;
+            }
+            if [".fail(\"", "report(ffi_context, \""].iter().any(|marker| line.contains(marker)) {
+                checked += 1;
+                if !cleared {
+                    wrong.insert(entry_point.clone().unwrap_or_default());
+                }
+            }
+        }
+        assert!(checked > 40, "the scan found only {checked} recorded failures; the scan itself is broken");
+        assert!(wrong.is_empty(), "entry points that record a failure without clearing the last one on entry:\n  {}", wrong.into_iter().collect::<std::vec::Vec<_>>().join("\n  "));
+    }
+
     #[test]
     fn a_fresh_context_reports_no_error() {
         let ctx = ss_runtime_create();

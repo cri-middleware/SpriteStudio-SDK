@@ -12,10 +12,8 @@ BASEDIR=$(cd $BASEDIR && pwd -P)
 ROOTDIR=${BASEDIR}/..
 ROOTDIR=$(cd $ROOTDIR && pwd -P)
 
-BUILD_MODE="release"
 CARGO_FLAGS="--release"
 if [ "$1" = "debug" ]; then
-    BUILD_MODE="debug"
     CARGO_FLAGS=""
 fi
 

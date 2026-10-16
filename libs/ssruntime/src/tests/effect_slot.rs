@@ -8,7 +8,7 @@ use super::*;
 #[test]
 fn an_undrawn_effect_step_keeps_the_slot_in_step_with_a_drawn_one() {
     prepare();
-    let input_buf = std::fs::read(get_test_base_path().join("tests/overall/overall/Effect.ssab")).expect("read pack");
+    let input_buf = std::fs::read(fixture("overall/Effect.ssab")).expect("read pack");
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
     let binary = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_data.as_slice()) };

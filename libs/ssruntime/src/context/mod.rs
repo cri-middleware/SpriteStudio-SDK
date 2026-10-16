@@ -398,6 +398,7 @@ impl<'a> Context<'a> {
         self.instance.render_mode = crate::core::RenderMode::default();
         self.instance.z_order = crate::core::z_order::ZOrderTable::new();
         self.instance.part_overrides.clear();
+        self.instance.globals.mesh_layout = NO_MESH_LAYOUT;
     }
 
     pub fn set_render_mode(&mut self, mode: crate::core::RenderMode) {
@@ -418,6 +419,8 @@ impl<'a> Context<'a> {
         self.instance.resolved_layer.cursors.clear();
         // A new SSAB invalidates part identity — drop all overrides.
         self.instance.part_overrides.clear();
+        // The layout indexes the old pack's static mesh buffers.
+        self.instance.globals.mesh_layout = NO_MESH_LAYOUT;
         // Configuration (coordinate_system, origin, unit) is preserved.
     }
 

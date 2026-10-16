@@ -5,7 +5,7 @@ use super::*;
 #[test]
 fn test_ssab_data_and_resource_separation() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
+    let ssab_path = fixture("overall/Basic.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -27,7 +27,7 @@ fn test_ssab_data_and_resource_separation() {
 #[test]
 fn test_ssab_resource_accessors() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
+    let ssab_path = fixture("overall/Basic.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -57,7 +57,7 @@ fn test_load_borrow_rejects_null_pointer() {
 #[test]
 fn test_ssab_resource_arc_sharing_keeps_buffer_alive() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
+    let ssab_path = fixture("overall/Basic.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
