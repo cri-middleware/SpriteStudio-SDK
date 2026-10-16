@@ -25,6 +25,11 @@
 //! string is **borrowed from the context**, must not be freed, and stays valid
 //! only until the call named in its own documentation — usually the next job on
 //! that context, or the context's destruction.
+//!
+//! Every string is UTF-8, both ways. A path passed in is a NUL-terminated UTF-8
+//! string: bytes that are not UTF-8 are replaced, so such a path names a
+//! different file, which is not found. On Windows, pass UTF-8 rather than the
+//! ANSI code page.
 
 use crate::scan::SspjScan;
 use crate::{ConverterConfig, ConverterError};
@@ -155,6 +160,9 @@ type LogCallback = Option<extern "C" fn(*const c_char)>;
 ///
 /// Starting a conversion clears this context's previous result, error text and
 /// scan — see `ss_converter_create` on one job at a time.
+///
+/// A null `sspj` or `output_dir` starts nothing and finishes at once with
+/// `ErrorIo`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char, embedded: bool, callback: LogCallback) {
     if ctx.is_null() {
@@ -172,7 +180,16 @@ pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_
         context.scan = None;
         context.scan_results_c.clear();
 
+        if let Some(prev_handler) = context.handler.take() {
+            // ignore previous handler result
+            let _ = prev_handler.join();
+        }
+
         if sspj.is_null() || output_dir.is_null() {
+            let message = "ss_converter_convert: `sspj` and `output_dir` must not be null";
+            context.error_c = CString::new(message).ok();
+            context.error = Some(message.into());
+            context.result = Some(CConverterError::ErrorIo);
             return;
         }
         let sspj_buf = unsafe { CStr::from_ptr(sspj) };
@@ -184,11 +201,6 @@ pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_
         let mut config = ConverterConfig::default();
         config.output = output_dir_str;
         config.convert_config.embedded = embedded;
-
-        if let Some(prev_handler) = context.handler.take() {
-            // ignore previous handler result
-            let _ = prev_handler.join();
-        }
 
         context.should_stop = Arc::new(AtomicBool::new(false));
         let should_stop_clone = context.should_stop.clone();
@@ -240,7 +252,7 @@ pub unsafe extern "C" fn ss_converter_is_finished(context: *mut Context) -> bool
         if let Some(scan) = &context.scan {
             return scan.is_finished();
         }
-        context.handler.as_ref().map(|h| h.is_finished()).unwrap_or(false)
+        context.handler.as_ref().map(|h| h.is_finished()).unwrap_or(context.result.is_some())
     }));
     result.unwrap_or(false)
 }
@@ -355,6 +367,8 @@ pub unsafe extern "C" fn ss_converter_get_error(context: *mut Context, out_data:
 ///
 /// See `ss_converter_create` on one job at a time: a context scanning is not
 /// a context converting.
+///
+/// A null `dir` scans nothing, as a directory that does not exist does.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_scan_dir(ctx: *mut Context, dir: *const c_char, max_depth: u32, max_entries: usize, max_millis: u64) {
     if ctx.is_null() {
@@ -362,10 +376,7 @@ pub unsafe extern "C" fn ss_converter_scan_dir(ctx: *mut Context, dir: *const c_
     }
     let _ = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *ctx };
-        if dir.is_null() {
-            return;
-        }
-        let dir_path = std::path::PathBuf::from(unsafe { CStr::from_ptr(dir) }.to_string_lossy().into_owned());
+        let dir_path = if dir.is_null() { std::path::PathBuf::new() } else { std::path::PathBuf::from(unsafe { CStr::from_ptr(dir) }.to_string_lossy().into_owned()) };
         context.scan_results_c.clear();
         context.scan = Some(SspjScan::start(dir_path, max_depth as usize, max_entries, max_millis));
     }));
@@ -496,6 +507,32 @@ mod tests {
             assert_eq!(ss_converter_get_result(ctx), first, "the second read disagreed with the first");
             assert_eq!(ss_converter_get_result(ctx), first);
 
+            ss_converter_destroy(ctx);
+        }
+    }
+
+    /// A null path is reported as a finished job. It used to start nothing, so
+    /// `is_finished` stayed `false` and a caller polling it waited forever.
+    #[test]
+    fn a_null_path_finishes_at_once() {
+        unsafe {
+            let ctx = ss_converter_create();
+            let out = CString::new(std::env::temp_dir().to_string_lossy().as_ref()).unwrap();
+            ss_converter_convert(ctx, std::ptr::null(), out.as_ptr(), false, None);
+            assert!(ss_converter_is_finished(ctx));
+            assert!(!ss_converter_is_running(ctx));
+            assert_eq!(ss_converter_get_result(ctx), CConverterError::ErrorIo);
+            let mut len = 0;
+            ss_converter_get_error(ctx, std::ptr::null_mut(), &mut len);
+            assert!(len > 0, "the failure has no text");
+            assert!(ss_converter_is_finished(ctx), "reading the result made the job look unfinished");
+
+            ss_converter_scan_dir(ctx, std::ptr::null(), 1, 64, 2_000);
+            while ss_converter_is_running(ctx) {
+                std::thread::sleep(std::time::Duration::from_millis(5));
+            }
+            assert!(ss_converter_is_finished(ctx));
+            assert_eq!(ss_converter_scan_result_count(ctx), 0);
             ss_converter_destroy(ctx);
         }
     }
