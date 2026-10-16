@@ -7043,16 +7043,16 @@ mod tests {
     fn passed_event_source_handles_reach_the_c_abi() {
         use crate::ffi::*;
         let ssab = load_ringo_resource();
-        let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
-        let (ctx, _) = ringo_ctx(&resource, "walk");
-
-        let boxed = Box::into_raw(Box::new(ctx)) as *mut ::core::ffi::c_void;
+        let bytes = ssab.as_slice();
+        let ctx = ss_runtime_create();
+        assert!(unsafe { ss_runtime_load_ssab_copy(ctx, bytes.as_ptr(), bytes.len()) });
+        assert!(unsafe { ss_runtime_setup_animation_by_hash(ctx, fnv1a_hash_str("walk")) });
         // Out of range in either direction is the sentinel, not a read past the
         // slice — which is the whole reason this is bounds-checked here.
-        assert_eq!(ss_runtime_get_passed_event_source_handle(boxed, -1), u32::MAX);
-        assert_eq!(ss_runtime_get_passed_event_source_handle(boxed, 9999), u32::MAX);
+        assert_eq!(ss_runtime_get_passed_event_source_handle(ctx, -1), u32::MAX);
+        assert_eq!(ss_runtime_get_passed_event_source_handle(ctx, 9999), u32::MAX);
         assert_eq!(ss_runtime_get_passed_event_source_handle(::core::ptr::null_mut(), 0), u32::MAX);
-        drop(unsafe { Box::from_raw(boxed as *mut Context) });
+        ss_runtime_destroy(ctx);
     }
 
     /// The C face maps `SS_RUNTIME_TRACK_SYNC_*` both ways and refuses a value
