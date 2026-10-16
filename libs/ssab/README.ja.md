@@ -113,7 +113,7 @@ fn create_ssab() {
 
 ## 更新手順
 
-1. `flatc` (Google FlatBuffers Compiler) をインストールします。
+1. `flatc` (Google FlatBuffers Compiler) をインストールします。使うバージョンは [CONTRIBUTING](../../CONTRIBUTING.md#前提条件) を参照してください。
 2. `fbs/` フォルダ内の `.fbs` ファイルを更新・編集します。
 3. 以下のスクリプトを実行し、Rust コードを再生成します。
 

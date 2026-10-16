@@ -132,8 +132,7 @@ void play_animation(const uint8_t* ssab_data, size_t size) {
 
 ## Header File
 
-A C/C++ header file (`ssruntime.h`) is generated using `cbindgen` during the build.
-Please refer to it for API signatures and struct definitions.
+`ssruntime.h` is a C header that C++ can include as well; refer to it for API signatures and struct definitions. A build of `ssruntime-ffi` writes it, with the C# bindings `SSRuntimeMethods.g.cs`, to `libs/ssruntime-ffi/target/`. Committed copies of both are in `libs/ssruntime-ffi/bindings/`, to read without building, and a release's library zips carry them in `include/` and `bindings/`.
 
 # For Player Implementers
 
@@ -151,7 +150,7 @@ Regeneration requires the `flatc` command (Google FlatBuffers Compiler) to be in
 
 ## Update Procedure
 
-1. Install `flatc` (Google FlatBuffers Compiler).
+1. Install `flatc` (Google FlatBuffers Compiler), the version [CONTRIBUTING](../../CONTRIBUTING.md#prerequisites) says to use.
 2. Update or modify the `.fbs` files in the `fbs/` folder.
 3. Run the following script to regenerate the Rust code.
 

@@ -30,6 +30,7 @@ that is useful information, not a problem.
 - [ ] Scoped to one thing. Unrelated fixes are easier to review as their own PR.
 - [ ] Follows the style of the files it touches.
 - [ ] Docs updated if behaviour changed.
+- [ ] A changed porting-guide page follows the guide's [authoring rules](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/docs/CONTRIBUTING.ja.md) (in Japanese).
 - [ ] Anything that exists twice changed twice — a page and its translation, a `.sh` and its `.ps1`.
 - [ ] `ssruntime` and `ssab` stay `#![no_std]` (`core` and `alloc` only), and the playback hot path allocates nothing.
 - [ ] C ABI: no breaking change unless unavoidable, headers regenerated, names follow `ss_<object>_<verb>_<noun>`.

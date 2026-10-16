@@ -26,7 +26,7 @@ ssconverter = "7.0.0-beta.1"
 
 このライブラリは、コンバータの作成や進捗監視を行うための C API を公開しています。詳細な組み込み方法については、[libssconverter 組み込みガイド](./docs/USAGE.ja.md) を参照してください。
 
-ヘッダファイルは `cbindgen` によって `target/ssconverter.h` に生成されます。
+`ssconverter.h` は C++ からもインクルードできる C ヘッダです。`ssconverter-ffi` をビルドすると、C# バインディングの `SSConverterMethods.g.cs` とともに `libs/ssconverter-ffi/target/` に書き出されます。どちらもコミットされた写しが `libs/ssconverter-ffi/bindings/` にあるので、ビルドしなくても読めます。リリースのライブラリ zip では `include/` と `bindings/` に入っています。
 
 ## C++ API 使用例
 
@@ -61,7 +61,7 @@ void convert() {
 
 # ビルド機能 (Features)
 
-- **`ffi`**: C-API および静的/動的ライブラリの生成を有効にします。`native` を含みます。
+- **`ffi`**: C-API（`ffi` モジュールの `extern "C"` 関数）をコンパイルします。`native` を含みます。静的/動的ライブラリは、この feature を有効にする隣のクレート `ssconverter-ffi` からビルドします。
 - **`native`** (default): ネイティブビルド（CLI / Tauri バックエンド）— 並列変換、ファイルシステム I/O、ディレクトリ走査。`parallel` と `scan` を含みます。
 - **`parallel`**: `rayon` による並列変換。`sspj` の並列パースにも波及します。
 - **`scan`**: バッチ変換用のディレクトリ走査（`walkdir`）。

@@ -50,8 +50,7 @@ If you have an idea, please open an issue to discuss it before starting work.
 
 ### Prerequisites
 - [Rustup](https://rustup.rs/) (Stable channel). The oldest Rust the workspace supports is the `rust-version` in the root `Cargo.toml`.
-- [FlatBuffers compiler](https://google.github.io/flatbuffers/) (Required if modifying `.fbs` files)
-- [cbindgen](https://github.com/mozilla/cbindgen) (For C-API header generation)
+- [FlatBuffers compiler](https://google.github.io/flatbuffers/) (`flatc`), if you modify `.fbs` files. Use the release whose version matches the `flatbuffers` crate in the root `Cargo.toml`: the generated code calls that crate.
 
 ### Build
 ```bash
@@ -77,10 +76,10 @@ Every check runs, and the summary at the end lists each one as passed, FAILED or
 If you run a command by hand, keep its `--all-features`: the test modules sit behind `feature = "std"`, so without it `clippy` never lints them and a plain `cargo test` passes without running them.
 
 ### Generated code
-The `.fbs` schemas under `libs/ssab/fbs/` and `libs/ssruntime/fbs/` have generated Rust bindings: after changing one, run that library's `scripts/generate.sh` (or `.ps1`). `cbindgen` writes the C/C++ headers for `ssconverter` and `ssruntime`.
+The `.fbs` schemas under `libs/ssab/fbs/` and `libs/ssruntime/fbs/` have generated Rust bindings: after changing one, run that library's `scripts/generate.sh` (or `.ps1`). The build generates the C headers and the C# bindings with `cbindgen` and `csbindgen`, which are build-dependencies, so neither needs installing; [FFI and C-API](#ffi-and-c-api) says where they are written and when to commit them.
 
 ### Documentation site
-The Player Porting Guide under `libs/ssruntime/docs` is published as a site. If you edit a page there, build both locales before you finish, with `scripts/check.sh docs=yes` or the commands below: nothing builds the docs on a pull request, so that local build is the only gate before the merge (CI builds them weekly). Set the toolchain up once with `scripts/prepare-docs.sh`, then:
+The Player Porting Guide under `libs/ssruntime/docs` is published as a site, and [libs/ssruntime/docs/CONTRIBUTING.ja.md](./libs/ssruntime/docs/CONTRIBUTING.ja.md) (in Japanese) sets the rules for writing and translating its pages. If you edit a page there, build both locales before you finish, with `scripts/check.sh docs=yes` or the commands below: nothing builds the docs on a pull request, so that local build is the only gate before the merge (CI builds them weekly). Set the toolchain up once with `scripts/prepare-docs.sh`, then:
 
 ```bash
 scripts/build-docs.sh              # generate the locale trees, build en then ja, both --strict
@@ -172,8 +171,7 @@ SDK を改善するアイデアがある場合は、開発を始める前に Iss
 
 ### 前提条件
 - [Rustup](https://rustup.rs/) (Stable チャンネル)。ワークスペースが対応する最も古い Rust は、ルートの `Cargo.toml` の `rust-version` です。
-- [FlatBuffers コンパイラ](https://google.github.io/flatbuffers/) (`.fbs` ファイルを変更する場合に必要)
-- [cbindgen](https://github.com/mozilla/cbindgen) (C-API ヘッダー生成に必要)
+- [FlatBuffers コンパイラ](https://google.github.io/flatbuffers/) (`flatc`)。`.fbs` ファイルを変更する場合に必要です。ルートの `Cargo.toml` にある `flatbuffers` クレートと同じバージョンのリリースを使ってください。生成されたコードはそのクレートを呼び出します。
 
 ### ビルド
 ```bash
@@ -199,10 +197,10 @@ scripts/check.sh docs=yes       # 加えて、Player 移植ガイドを両ロケ
 コマンドを手で実行するときも `--all-features` は外さないでください。テストモジュールは `feature = "std"` 配下にあるため、付けないと `clippy` はそこを lint せず、素の `cargo test` はそれらを実行しないまま成功します。
 
 ### 生成コード
-`libs/ssab/fbs/` と `libs/ssruntime/fbs/` の `.fbs` スキーマには生成された Rust バインディングがあります。変更したら、そのライブラリの `scripts/generate.sh`（または `.ps1`）を実行してください。`ssconverter` と `ssruntime` の C/C++ ヘッダーは `cbindgen` が生成します。
+`libs/ssab/fbs/` と `libs/ssruntime/fbs/` の `.fbs` スキーマには生成された Rust バインディングがあります。変更したら、そのライブラリの `scripts/generate.sh`（または `.ps1`）を実行してください。C ヘッダーと C# バインディングは、ビルドが build-dependency の `cbindgen` と `csbindgen` で生成するので、どちらもインストールは不要です。書き出す場所とコミットするタイミングは [FFI と C-API](#ffi-と-c-api) にあります。
 
 ### ドキュメントサイト
-`libs/ssruntime/docs` の Player 移植ガイドはサイトとして公開されます。ページを編集したら、仕上げる前に、`scripts/check.sh docs=yes` か下のコマンドで両ロケールをビルドしてください。プルリクエストでは docs はビルドされないため、マージ前のゲートは手元のビルドだけです（CI がビルドするのは週次です）。`scripts/prepare-docs.sh` で一度ツールチェーンを用意してから、以下を実行してください。
+`libs/ssruntime/docs` の Player 移植ガイドはサイトとして公開されます。ページの書き方と翻訳の規約は [libs/ssruntime/docs/CONTRIBUTING.ja.md](./libs/ssruntime/docs/CONTRIBUTING.ja.md) にあります。ページを編集したら、仕上げる前に、`scripts/check.sh docs=yes` か下のコマンドで両ロケールをビルドしてください。プルリクエストでは docs はビルドされないため、マージ前のゲートは手元のビルドだけです（CI がビルドするのは週次です）。`scripts/prepare-docs.sh` で一度ツールチェーンを用意してから、以下を実行してください。
 
 ```bash
 scripts/build-docs.sh              # ロケール別ツリーを生成し、en → ja の順に --strict でビルド

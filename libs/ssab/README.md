@@ -117,7 +117,7 @@ Regeneration requires the `flatc` command (Google FlatBuffers Compiler) to be in
 
 ## Update Procedure
 
-1. Install `flatc` (Google FlatBuffers Compiler).
+1. Install `flatc` (Google FlatBuffers Compiler), the version [CONTRIBUTING](../../CONTRIBUTING.md#prerequisites) says to use.
 2. Update or modify the `.fbs` files in the `fbs/` folder.
 3. Run the following script to regenerate the Rust code.
 
