@@ -25,7 +25,6 @@ pub mod matrix;
 pub mod override_layer;
 pub mod playback_controller;
 pub mod ssab_lookup;
-pub mod util;
 pub mod z_order;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
