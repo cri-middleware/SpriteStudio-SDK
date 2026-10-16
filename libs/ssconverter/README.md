@@ -27,7 +27,7 @@ ssconverter = "7.0.0-beta.1"
 This library exposes a C API for creating converters and monitoring progress.
 For detailed integration instructions, see the [libssconverter Integration Guide](./docs/USAGE.md).
 
-Headers are generated in `target/ssconverter.h` by `cbindgen`.
+`ssconverter.h` is a C header that C++ can include as well. A build of `ssconverter-ffi` writes it, with the C# bindings `SSConverterMethods.g.cs`, to `libs/ssconverter-ffi/target/`. Committed copies of both are in `libs/ssconverter-ffi/bindings/`, to read without building, and a release's library zips carry them in `include/` and `bindings/`.
 
 
 ## Example C++ API Usage
@@ -64,7 +64,7 @@ void convert() {
 
 # Build Features
 
-- **`ffi`**: Enables C-API and static/dynamic library generation. Implies `native`.
+- **`ffi`**: Compiles the C-API, the `extern "C"` functions of the `ffi` module. Implies `native`. The static and dynamic libraries are built from `ssconverter-ffi`, the sibling crate that turns this feature on.
 - **`native`** (default): Native build (CLI / Tauri backend) — parallel conversion, filesystem I/O, and directory scanning. Implies `parallel` and `scan`.
 - **`parallel`**: Parallel conversion via `rayon`. Propagates to `sspj`'s parallel parsing.
 - **`scan`**: Directory traversal (`walkdir`) for batch conversion.

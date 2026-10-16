@@ -32,6 +32,7 @@ plays them through `libssruntime`: a stateless **Brain** emitting per-frame stat
 | Releases, maintainers only | [RELEASING.md](./RELEASING.md) |
 | Plans and non-goals | [ROADMAP.md](./ROADMAP.md) |
 | Runtime semantics a Player must honour | the [Player Porting Guide](./libs/ssruntime/docs/README.md) |
+| How the guide's pages are written and translated | [its authoring rules](./libs/ssruntime/docs/CONTRIBUTING.ja.md), in Japanese |
 | What official Players owe users, and the reference Player | [MAINTAINING_PLAYERS.md](./MAINTAINING_PLAYERS.md) |
 | Binary layouts | [ssab SCHEMA](./libs/ssab/SCHEMA.md), [FrameData SCHEMA](./libs/ssruntime/SCHEMA.md) |
 

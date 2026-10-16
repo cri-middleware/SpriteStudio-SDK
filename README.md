@@ -89,6 +89,7 @@ Follow these steps to convert a sample project and see the SDK in action.
 ### 1. Download the Tools or Libraries
 Download the latest version of the tools for your platform from the [GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) page.
 - **ssconverter-cli**: Pre-built binaries are available for **Windows**, **macOS**, and **Linux**.
+- **Native libraries (C-API)**: `spritestudio-sdk-static-libs.zip` holds the static libraries and `spritestudio-sdk-dynamic-libs.zip` the dynamic ones: `libssruntime` for each platform and `libssconverter` for Windows, macOS and Linux in `libs/`, the C headers in `include/`, and the C# bindings in `bindings/`.
 - **Web (WASM)**: A pre-built package for direct JavaScript/TypeScript usage is available as `spritestudio-sdk-web-libs.zip`.
 
 ### 2. Convert a Sample Project
