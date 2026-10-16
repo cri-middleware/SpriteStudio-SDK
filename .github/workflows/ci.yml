@@ -35,6 +35,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # scripts/check.sh and check.ps1 run this job and the Test step below on a
+  # contributor's machine, and `msrv=yes` the msrv job: a step changed here
+  # changes there too.
   lint:
     name: 💅 Lint & Format
     runs-on: ubuntu-latest

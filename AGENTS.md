@@ -9,10 +9,9 @@
 *   **Anything that exists twice changes twice** — a page and its translation, a `.sh` and its `.ps1`.
     Missing one half is this family's most common defect.
 *   **Never break a line between two Japanese characters**; Chrome renders the break as a space.
-*   **Finish with this repository's checks**: the commands in [CONTRIBUTING.md](./CONTRIBUTING.md) —
-    `cargo fmt`, `clippy`, `cargo test --workspace --all-features`, and for `libs/ssruntime/docs` the
-    both-locale build. Read what a run says it verified, not its exit code — several checks pass, or skip
-    themselves, without a prerequisite.
+*   **Finish with this repository's checks**: `scripts/check.sh`, what CI runs on a pull request. Add
+    `features=yes` when code behind a feature changed, and `docs=yes` when `libs/ssruntime/docs` did. Read
+    its summary, not its exit code — a check whose prerequisite is missing skips itself.
 *   **Do not restate what another file owns**; the table below says which file. A fact no file owns goes
     where its staleness will be noticed.
 *   **For `clippy --fix`, `git add` your edits first and pass `--allow-staged`**, never `--allow-dirty`, so

@@ -126,26 +126,5 @@ graph LR
 不具合の報告、使い方の質問、機能の要望などについては、[サポートガイド (SUPPORT.md)](./SUPPORT.md) を参照してください。
 
 ## 🛠️ SDK 開発者向け
-### 準備
-[rustup](https://rustup.rs/) をインストールしてください。
 
-### ビルド
-
-```bash
-cargo build --release
-```
-
-### テスト
-#### ユニットテスト
-
-```bash
-cargo test --workspace --all-features
-```
-
-`--all-features` は省略できません。テストモジュールは `feature = "std"` 配下にあり、素の `cargo test` はそれらを実行しないまま成功します。
-
-#### sspj から ssab への変換テスト
-
-```bash
-./target/release/ssconverter-cli ./
-```
+SDK のビルド、変更が通すべきチェック、ドキュメントサイトのビルドは [CONTRIBUTING.md](./CONTRIBUTING.md#開発環境のセットアップ) にあります。

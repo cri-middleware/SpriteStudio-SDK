@@ -127,27 +127,5 @@ You can use these projects as references when implementing your own player or ve
 If you encounter bugs, need help, or want to suggest features, please refer to our [Support Guide](./SUPPORT.md).
 
 ## 🛠️ For SDK Developers
-### Prepare
-install [rustup](https://rustup.rs/)
 
-### Build
-
-```bash
-cargo build --release
-```
-
-### Test
-#### Unit tests
-
-```bash
-cargo test --workspace --all-features
-```
-
-`--all-features` is not optional: the test modules sit behind `feature = "std"`, and a plain `cargo test`
-passes without running them.
-
-#### tests for converting from sspj files to ssab files
-
-```bash
-./target/release/ssconverter-cli ./
-```
+Building the SDK, the checks a change has to pass, and the documentation site are covered in [CONTRIBUTING.md](./CONTRIBUTING.md#development-environment).

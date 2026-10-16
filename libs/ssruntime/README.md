@@ -27,18 +27,7 @@ A Rust dependent takes the crate as it comes — nothing is on by default:
 ssruntime = "7.0.0-beta.1"
 ```
 
-The binary deliverables are built from `ssruntime-ffi`, the sibling crate that emits this one as a `staticlib` / `cdylib`. Pick the feature set that matches your target:
-
-```sh
-# Mobile / Console / Desktop no_std (C-API)
-cargo build -p ssruntime-ffi --no-default-features --features ffi,libc_alloc,panic-handler
-
-# Web Wasm (browser / wasm-bindgen)
-cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --no-default-features --features web
-
-# Pure Wasm (WASI / custom Wasm engine)
-cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --no-default-features --features ffi,wasm_alloc,panic-handler
-```
+The binary deliverables are built from `ssruntime-ffi`, the sibling crate that emits this one as a `staticlib` / `cdylib`. The feature set for each target, and the command that builds it, are in [Integrating into no_std environments §1](./docs/20_design/40_no_std_integration.md#1-build-configuration).
 
 *Note: An allocator (`alloc` crate) is still required even in `no_std` mode — animation state and metadata are heap-allocated.*
 
