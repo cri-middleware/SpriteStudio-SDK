@@ -43,27 +43,27 @@ fn override_table_is_created_by_the_first_override() {
     context.setup_animation("anime_1").expect("setup");
     let num_parts = context.override_part_count();
     assert!(num_parts > 1);
-    assert!(context.instance.part_overrides.is_empty(), "setup allocates no table");
+    assert!(context.instance().part_overrides.is_empty(), "setup allocates no table");
 
     // Clearing what was never set is a no-op, and still range-checked; a
     // rejected set allocates nothing.
     context.clear_part_color_override(0).expect("clear without a table");
     assert!(matches!(context.clear_part_color_override(num_parts as u32), Err(error::SSRuntimeError::InvalidParameter)));
     assert!(matches!(context.set_part_visibility_override(num_parts as u32, 1, false), Err(error::SSRuntimeError::InvalidParameter)));
-    assert!(context.instance.part_overrides.is_empty());
+    assert!(context.instance().part_overrides.is_empty());
 
     context.set_part_visibility_override(1, 1, false).expect("set");
-    assert_eq!(context.instance.part_overrides.len(), num_parts);
+    assert_eq!(context.instance().part_overrides.len(), num_parts);
 
     // A new animation drops the visibility override, and the empty table with it.
     context.setup_animation("anime_1").expect("re-setup");
-    assert!(context.instance.part_overrides.is_empty());
+    assert!(context.instance().part_overrides.is_empty());
 
     // A PERMANENT color override survives it, and keeps the table.
     context.set_part_color_override(1, 0, 0xff0000ff, 2).expect("permanent color");
     context.setup_animation("anime_1").expect("re-setup");
-    assert_eq!(context.instance.part_overrides.len(), num_parts);
-    assert!(context.instance.part_overrides[1].as_ref().is_some_and(|o| o.color.is_some()));
+    assert_eq!(context.instance().part_overrides.len(), num_parts);
+    assert!(context.instance().part_overrides[1].as_ref().is_some_and(|o| o.color.is_some()));
 }
 
 #[test]
@@ -80,19 +80,19 @@ fn override_visibility_force_hide_and_clear() {
 
     // Baseline: POS_XYZ is a visible drawing part at frame 0.
     context.get_frame_data(0.0).expect("frame 0");
-    assert!(!context.instance.resolved_layer.parts_vec[idx].hide(), "POS_XYZ expected visible at baseline");
+    assert!(!context.instance().resolved_layer.parts_vec[idx].hide(), "POS_XYZ expected visible at baseline");
 
     // Force-hide → hidden.
     context.set_part_visibility_override(idx as u32, 1, false).expect("set");
-    assert!(context.instance.has_any_override());
+    assert!(context.instance().has_any_override());
     context.get_frame_data(0.0).expect("frame 0");
-    assert!(context.instance.resolved_layer.parts_vec[idx].hide());
+    assert!(context.instance().resolved_layer.parts_vec[idx].hide());
 
     // Clear → reverts to the animation's value (visible again).
     context.clear_part_visibility_override(idx as u32).expect("clear");
-    assert!(!context.instance.has_any_override(), "empty entry should compact to None");
+    assert!(!context.instance().has_any_override(), "empty entry should compact to None");
     context.get_frame_data(0.0).expect("frame 0");
-    assert!(!context.instance.resolved_layer.parts_vec[idx].hide());
+    assert!(!context.instance().resolved_layer.parts_vec[idx].hide());
 }
 
 #[test]
@@ -111,19 +111,19 @@ fn override_visibility_cascade() {
     // Cascade force-hide the parent → the child is hidden too.
     context.set_part_visibility_override(parent, 1, true).expect("set cascade");
     context.get_frame_data(0.0).expect("frame 0");
-    assert!(context.instance.resolved_layer.parts_vec[parent as usize].hide());
-    assert!(context.instance.resolved_layer.parts_vec[child].hide(), "cascade should hide the child");
+    assert!(context.instance().resolved_layer.parts_vec[parent as usize].hide());
+    assert!(context.instance().resolved_layer.parts_vec[child].hide(), "cascade should hide the child");
 
     // Non-cascade: the child reverts to its own animated visibility
     // (keyframed hide does NOT cascade — this proves the override cascade
     // is the only thing that reached the child).
     context.clear_all_part_overrides();
     context.get_frame_data(0.0).expect("frame 0");
-    let child_baseline = context.instance.resolved_layer.parts_vec[child].hide();
+    let child_baseline = context.instance().resolved_layer.parts_vec[child].hide();
     context.set_part_visibility_override(parent, 1, false).expect("set no-cascade");
     context.get_frame_data(0.0).expect("frame 0");
-    assert!(context.instance.resolved_layer.parts_vec[parent as usize].hide());
-    assert_eq!(context.instance.resolved_layer.parts_vec[child].hide(), child_baseline, "non-cascade must not touch the child");
+    assert!(context.instance().resolved_layer.parts_vec[parent as usize].hide());
+    assert_eq!(context.instance().resolved_layer.parts_vec[child].hide(), child_baseline, "non-cascade must not touch the child");
 }
 
 #[test]
@@ -136,22 +136,22 @@ fn override_cleared_on_setup_animation() {
 
     let idx = context.find_part_index("POS_XYZ") as u32;
     context.set_part_visibility_override(idx, 1, false).expect("set");
-    assert!(context.instance.has_any_override());
+    assert!(context.instance().has_any_override());
 
     // A new animation clears visibility overrides.
     context.setup_animation("anime_1").expect("re-setup");
-    assert!(!context.instance.has_any_override());
+    assert!(!context.instance().has_any_override());
 }
 
 // --- Override Layer: Color ---
 
 /// Read the `lt` corner rgba of a part's resolved color, or `None` if unset.
 fn part_color_lt(ctx: &Context, idx: usize) -> Option<(u8, u8, u8, u8)> {
-    let pc_idx = ctx.instance.resolved_layer.parts_vec[idx].part_color();
+    let pc_idx = ctx.instance().resolved_layer.parts_vec[idx].part_color();
     if pc_idx < 0 {
         return None;
     }
-    let c = &ctx.instance.resolved_layer.parts_color_vec[pc_idx as usize];
+    let c = &ctx.instance().resolved_layer.parts_color_vec[pc_idx as usize];
     let rgba = c.lt().rgba();
     Some((rgba.r(), rgba.g(), rgba.b(), rgba.a()))
 }
@@ -173,13 +173,13 @@ fn override_color_applies_and_premultiplies() {
     context.set_part_color_override(idx as u32, 0, 0x8040_20FF, 1).expect("set color");
     context.get_frame_data(0.0).expect("frame 0");
 
-    let part_alpha = context.instance.resolved_layer.parts_vec[idx].alpha();
+    let part_alpha = context.instance().resolved_layer.parts_vec[idx].alpha();
     let expected_a = ((1.0 * part_alpha) * 255.0).clamp(0.0, 255.0) as u8;
     let (r, g, b, a) = part_color_lt(&context, idx).expect("override color present");
     assert_eq!((r, g, b), (0x80, 0x40, 0x20));
     assert_eq!(a, expected_a, "alpha must be pre-multiplied by the part alpha");
     // Center-vertex flag must be set so compose emits per-vertex color.
-    assert!(context.instance.resolved_layer.parts_vec[idx].update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor));
+    assert!(context.instance().resolved_layer.parts_vec[idx].update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor));
 }
 
 #[test]
@@ -216,7 +216,7 @@ fn override_color_priority_non_vs_now() {
     // Baseline: a keyframed color exists at frame 0 (flag ON).
     context.get_frame_data(0.0).expect("frame 0");
     part_color_lt(&context, idx).expect("keyframed color present at frame 0");
-    assert!(context.instance.resolved_layer.parts_vec[idx].update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor));
+    assert!(context.instance().resolved_layer.parts_vec[idx].update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor));
 
     let interval = 1000.0 / context.get_frame_rate().max(1) as f32;
     context.play();
@@ -229,7 +229,7 @@ fn override_color_priority_non_vs_now() {
     context.get_frame_data(f).expect("frame 0");
     let (r, g, b, _a) = part_color_lt(&context, idx).expect("override color present");
     assert_eq!((r, g, b), (0x01, 0x02, 0x03), "NON wins at its set frame (own keyframe skipped)");
-    assert!(context.instance.part_overrides[idx].as_ref().unwrap().color.is_some(), "slot retained on the set frame");
+    assert!(context.instance().part_overrides[idx].as_ref().unwrap().color.is_some(), "slot retained on the set frame");
 
     // Play a full loop: playback decodes a PartColor key past frame 0 (or
     // key@0 again on the wrap), so the one-shot hands over and drops.
@@ -238,7 +238,7 @@ fn override_color_priority_non_vs_now() {
         let f = context.update(interval);
         context.get_frame_data(f).expect("frame");
     }
-    assert!(context.instance.part_overrides[idx].as_ref().is_none_or(|o| o.color.is_none()), "NON hands over one-shot after decoding a key");
+    assert!(context.instance().part_overrides[idx].as_ref().is_none_or(|o| o.color.is_none()), "NON hands over one-shot after decoding a key");
 
     // NOW: wins the keyframe every frame regardless of what the animation drives.
     context.set_part_color_override(idx as u32, 0, 0x0102_03FF, 1).expect("set NOW");
@@ -274,11 +274,11 @@ fn override_non_reads_the_same_however_often_its_update_is_evaluated() {
         context.get_frame_data(f).expect("frame 0");
         let (r, g, b, _a) = part_color_lt(&context, idx).expect("override color present");
         assert_eq!((r, g, b), (0x01, 0x02, 0x03), "read {read}: the color override");
-        let rl = &context.instance.resolved_layer;
+        let rl = &context.instance().resolved_layer;
         let cv = &rl.cell_vec[rl.parts_vec[idx].cell() as usize];
         assert_eq!((cv.cellmap_name_hash(), cv.name_hash()), (cm_hash, cell_hash), "read {read}: the cell override");
         // The cell keyed at frame 0 may be this very cell, so the slot tells a handover apart.
-        let slot = context.instance.part_overrides[idx].as_ref().expect("the part's overrides");
+        let slot = context.instance().part_overrides[idx].as_ref().expect("the part's overrides");
         assert!(slot.color.is_some() && slot.cell.is_some(), "read {read}: both slots held");
     }
 }
@@ -294,9 +294,9 @@ fn override_color_no_accumulation_across_frames() {
     context.set_part_color_override(idx, 0, 0x8040_20FF, 1).expect("set");
 
     context.get_frame_data(0.0).expect("frame 0");
-    let len1 = context.instance.resolved_layer.parts_color_vec.len();
+    let len1 = context.instance().resolved_layer.parts_color_vec.len();
     context.get_frame_data(1.0).expect("frame 1");
-    let len2 = context.instance.resolved_layer.parts_color_vec.len();
+    let len2 = context.instance().resolved_layer.parts_color_vec.len();
     assert_eq!(len1, len2, "override append must not accumulate across frames");
 }
 
@@ -312,13 +312,13 @@ fn override_color_permanent_survives_setup() {
     // PERMANENT persists across a new animation...
     context.set_part_color_override(idx, 0, 0x8040_20FF, 2).expect("set permanent");
     context.setup_animation("anime_1").expect("re-setup");
-    assert!(context.instance.has_any_override(), "PERMANENT must survive setup_animation");
+    assert!(context.instance().has_any_override(), "PERMANENT must survive setup_animation");
 
     // ...but NOW does not.
     context.clear_all_part_overrides();
     context.set_part_color_override(idx, 0, 0x8040_20FF, 1).expect("set now");
     context.setup_animation("anime_1").expect("re-setup");
-    assert!(!context.instance.has_any_override(), "NOW must clear on setup_animation");
+    assert!(!context.instance().has_any_override(), "NOW must clear on setup_animation");
 }
 
 // --- Override Layer: Cell ---
@@ -351,7 +351,7 @@ fn override_cell_applies_all_channels() {
     context.set_part_cell_override(idx as u32, cm_hash, cell_hash, 1).expect("set cell");
     context.get_frame_data(0.0).expect("frame 0");
 
-    let rl = &context.instance.resolved_layer;
+    let rl = &context.instance().resolved_layer;
     let ps = &rl.parts_vec[idx];
     // Identity channel.
     assert!(ps.cell() >= 0, "cell index repointed");
@@ -377,7 +377,7 @@ fn override_cell_normal_and_mask_only() {
     // root (index 0) is PartTypeNull → cell override is a no-op.
     context.set_part_cell_override(0, cm_hash, cell_hash, 1).expect("set");
     context.get_frame_data(0.0).expect("frame 0");
-    assert_eq!(context.instance.resolved_layer.parts_vec[0].cell(), -1, "Null part must not take a cell override");
+    assert_eq!(context.instance().resolved_layer.parts_vec[0].cell(), -1, "Null part must not take a cell override");
 }
 
 #[test]
@@ -391,11 +391,11 @@ fn override_cell_priority_non_vs_now() {
     // "CELL" is a Normal part with a keyframed cell.
     let cell_part = context.find_part_index("CELL") as usize;
     context.get_frame_data(0.0).expect("frame 0");
-    let ci = context.instance.resolved_layer.parts_vec[cell_part].cell();
+    let ci = context.instance().resolved_layer.parts_vec[cell_part].cell();
     assert!(ci >= 0, "CELL part has a keyframed cell");
-    assert!(context.instance.resolved_layer.parts_vec[cell_part].update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell));
+    assert!(context.instance().resolved_layer.parts_vec[cell_part].update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell));
     let (base_cm, base_cell) = {
-        let b = &context.instance.resolved_layer.cell_vec[ci as usize];
+        let b = &context.instance().resolved_layer.cell_vec[ci as usize];
         (b.cellmap_name_hash(), b.name_hash())
     };
 
@@ -419,13 +419,13 @@ fn override_cell_priority_non_vs_now() {
     context.set_part_cell_override(cell_part as u32, base_cm, alt, 0).expect("set NON");
     let f = context.update(0.0);
     context.get_frame_data(f).expect("frame 0");
-    let ci2 = context.instance.resolved_layer.parts_vec[cell_part].cell();
+    let ci2 = context.instance().resolved_layer.parts_vec[cell_part].cell();
     let got = {
-        let c = &context.instance.resolved_layer.cell_vec[ci2 as usize];
+        let c = &context.instance().resolved_layer.cell_vec[ci2 as usize];
         (c.cellmap_name_hash(), c.name_hash())
     };
     assert_eq!(got, (base_cm, alt), "NON wins at its set frame (own key skipped)");
-    assert!(context.instance.part_overrides[cell_part].as_ref().unwrap().cell.is_some());
+    assert!(context.instance().part_overrides[cell_part].as_ref().unwrap().cell.is_some());
 
     // Play a full loop: a cell key is decoded → one-shot handover, dropped.
     let end = context.get_end_frame();
@@ -433,15 +433,15 @@ fn override_cell_priority_non_vs_now() {
         let f = context.update(interval);
         context.get_frame_data(f).expect("frame");
     }
-    assert!(context.instance.part_overrides[cell_part].as_ref().is_none_or(|o| o.cell.is_none()), "cell NON hands over after decoding a key");
+    assert!(context.instance().part_overrides[cell_part].as_ref().is_none_or(|o| o.cell.is_none()), "cell NON hands over after decoding a key");
 
     // NOW: wins the keyframed cell every frame.
     context.set_part_cell_override(cell_part as u32, base_cm, alt, 1).expect("set NOW");
     let f = context.update(interval);
     context.get_frame_data(f).expect("frame");
-    let ci3 = context.instance.resolved_layer.parts_vec[cell_part].cell();
+    let ci3 = context.instance().resolved_layer.parts_vec[cell_part].cell();
     let got = {
-        let c = &context.instance.resolved_layer.cell_vec[ci3 as usize];
+        let c = &context.instance().resolved_layer.cell_vec[ci3 as usize];
         (c.cellmap_name_hash(), c.name_hash())
     };
     assert_eq!(got, (base_cm, alt), "NOW must override the keyframed cell");
@@ -457,14 +457,14 @@ fn override_cell_changes_uvs() {
 
     let cell_part = context.find_part_index("CELL") as usize;
     context.get_frame_data(0.0).expect("frame 0");
-    let ci = context.instance.resolved_layer.parts_vec[cell_part].cell();
+    let ci = context.instance().resolved_layer.parts_vec[cell_part].cell();
     assert!(ci >= 0);
     let (base_cm, base_cell) = {
-        let b = &context.instance.resolved_layer.cell_vec[ci as usize];
+        let b = &context.instance().resolved_layer.cell_vec[ci as usize];
         (b.cellmap_name_hash(), b.name_hash())
     };
     let base = cell_part * 10;
-    let baseline_uvs: Vec<f32> = context.instance.globals.local_uvs[base..base + 10].to_vec();
+    let baseline_uvs: Vec<f32> = context.instance().globals.local_uvs[base..base + 10].to_vec();
 
     // A different cell in the same cellmap sits at a different atlas rect.
     let alt = {
@@ -482,7 +482,7 @@ fn override_cell_changes_uvs() {
     // cell and ignored the override, so only size/texture changed.)
     context.set_part_cell_override(cell_part as u32, base_cm, alt, 1).expect("set NOW");
     context.get_frame_data(0.0).expect("frame 0");
-    let overridden_uvs: Vec<f32> = context.instance.globals.local_uvs[base..base + 10].to_vec();
+    let overridden_uvs: Vec<f32> = context.instance().globals.local_uvs[base..base + 10].to_vec();
 
     assert_ne!(baseline_uvs, overridden_uvs, "a cell override must change the sampled UVs");
 }
@@ -500,14 +500,14 @@ fn override_cell_permanent_survival_and_sentinel_clear() {
     // PERMANENT persists across a new animation...
     context.set_part_cell_override(idx, cm_hash, cell_hash, 2).expect("set permanent");
     context.setup_animation("anime_1").expect("re-setup");
-    assert!(context.instance.has_any_override(), "PERMANENT cell must survive setup_animation");
+    assert!(context.instance().has_any_override(), "PERMANENT cell must survive setup_animation");
 
     // ...and the (0,0) sentinel reverts to the animation (clears).
     context.set_part_cell_override(idx, 0, 0, 2).expect("sentinel clear");
-    assert!(!context.instance.has_any_override(), "(0,0) must clear the cell override");
+    assert!(!context.instance().has_any_override(), "(0,0) must clear the cell override");
 
     // NOW does not survive setup.
     context.set_part_cell_override(idx, cm_hash, cell_hash, 1).expect("set now");
     context.setup_animation("anime_1").expect("re-setup");
-    assert!(!context.instance.has_any_override(), "NOW cell must clear on setup_animation");
+    assert!(!context.instance().has_any_override(), "NOW cell must clear on setup_animation");
 }

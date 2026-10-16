@@ -52,7 +52,7 @@ fn ringo_ctx<'a>(resource: &'a AnimationResource<'a>, anim: &str) -> (Context<'a
     let mut ctx = Context::new();
     ctx.bind_resource(resource);
     ctx.setup_animation(anim).unwrap();
-    let start = ctx.instance.primary_source().controller.get_start_frame() as f32;
+    let start = ctx.instance().primary_source().controller.get_start_frame() as f32;
     (ctx, start)
 }
 

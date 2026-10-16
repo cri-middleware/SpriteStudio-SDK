@@ -143,7 +143,7 @@ fn the_incoming_animation_of_a_crossfade_keeps_playing() {
     let mut ctx = playing_ringo(&resource);
 
     ctx.crossfade(0, "run", 200.0).unwrap();
-    let incoming = ctx.instance.sources.len() - 1;
+    let incoming = ctx.instance().sources.len() - 1;
     let start = ctx.get_source_frame(incoming as u32).unwrap();
     tick(&mut ctx, 100.0);
     assert!(ctx.get_track_fade_progress(0).is_some(), "fixture sanity: still mid-fade");
@@ -218,7 +218,7 @@ fn play_heads_out_track_zero_and_leaves_the_other_tracks_in_place() {
     assert!(overlay > 0.0, "fixture sanity: the overlay has moved off its first frame");
     ctx.stop();
     ctx.play();
-    let start = ctx.instance.primary_source().controller.get_start_frame() as f32;
+    let start = ctx.instance().primary_source().controller.get_start_frame() as f32;
     assert_eq!(ctx.get_track_frame(0), Some(start), "play rewinds track 0");
     assert_eq!(ctx.get_track_frame(1), Some(overlay), "play moved the overlay");
     assert_eq!(ctx.get_track_frame(2), Some(5.0), "play moved the scrubbed track");

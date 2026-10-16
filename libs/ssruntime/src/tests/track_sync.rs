@@ -4,13 +4,13 @@ use super::*;
 
 /// Where track 0's main animation stands in its section, as a fraction.
 fn primary_phase(ctx: &Context<'_>) -> f32 {
-    let c = &ctx.instance.primary_source().controller;
+    let c = &ctx.instance().primary_source().controller;
     (c.get_frame_no() - c.get_start_frame() as f32) / (c.get_end_frame() - c.get_start_frame() + 1) as f32
 }
 
 /// The frame `phase` of the way through `handle`'s section.
 fn frame_at_phase(ctx: &Context<'_>, handle: u32, phase: f32) -> f32 {
-    let c = &ctx.instance.sources[handle as usize].controller;
+    let c = &ctx.instance().sources[handle as usize].controller;
     c.get_start_frame() as f32 + phase * (c.get_end_frame() - c.get_start_frame() + 1) as f32
 }
 
@@ -55,7 +55,7 @@ fn a_start_synced_crossfade_on_track_zero_starts_where_the_outgoing_one_stands()
 
     ctx.set_track_sync(0, TrackSync::Start).unwrap();
     ctx.crossfade(0, "run", 400.0).unwrap();
-    let incoming = ctx.instance.sources.len() as u32 - 1;
+    let incoming = ctx.instance().sources.len() as u32 - 1;
     let expected = frame_at_phase(&ctx, incoming, phase);
     let frame = ctx.get_source_frame(incoming).unwrap();
     assert!((frame - expected).abs() < 1e-3, "run starts at {frame}, not at {expected}");

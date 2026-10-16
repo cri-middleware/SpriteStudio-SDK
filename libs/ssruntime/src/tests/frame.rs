@@ -115,10 +115,10 @@ fn frame_data_starts_aligned_after_the_builder_is_resized() {
         ctx.setup_animation(&name).expect("setup");
         for _ in 0..2 {
             for f in meta.start_frame..=meta.end_frame {
-                let capacity = ctx.eval.fb_capacity;
+                let capacity = ctx.eval().fb_capacity;
                 let start = ctx.get_frame_data(f as f32).expect("frame").as_ptr() as usize;
                 assert_eq!(start % 8, 0, "{name} frame {f}: frame data starts off an 8-byte boundary");
-                resized += usize::from(ctx.eval.fb_capacity != capacity);
+                resized += usize::from(ctx.eval().fb_capacity != capacity);
             }
         }
     }
@@ -395,7 +395,7 @@ fn test_world_matrices() {
     let world_matrices_len = context.get_world_matrices_len();
 
     // Length should be 16 floats per part
-    let num_parts = context.instance.resolved_layer.parts_vec.len();
+    let num_parts = context.instance().resolved_layer.parts_vec.len();
     assert_eq!(world_matrices_len, num_parts * 16);
 
     let world_matrices = unsafe { ::core::slice::from_raw_parts(world_matrices_ptr, world_matrices_len) };
@@ -420,7 +420,7 @@ fn test_local_uvs() {
 
     let uvs_ptr = context.get_local_uvs_ptr();
     let uvs_len = context.get_local_uvs_len();
-    let num_parts = context.instance.resolved_layer.parts_vec.len();
+    let num_parts = context.instance().resolved_layer.parts_vec.len();
     // 5 vertices * 2 floats per part.
     assert_eq!(uvs_len, num_parts * 10);
 
@@ -472,7 +472,7 @@ fn test_cell_meta_per_part() {
 
     let meta_ptr = context.get_cell_meta_ptr();
     let meta_len = context.get_cell_meta_len();
-    let num_parts = context.instance.resolved_layer.parts_vec.len();
+    let num_parts = context.instance().resolved_layer.parts_vec.len();
     assert_eq!(meta_len, num_parts * 6);
 
     let meta = unsafe { ::core::slice::from_raw_parts(meta_ptr, meta_len) };

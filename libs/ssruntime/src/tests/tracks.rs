@@ -7,14 +7,14 @@ fn evaluate_ringo(resource: &AnimationResource<'_>, anim: &str) -> Vec<(f32, f32
     let mut ctx = Context::new();
     ctx.bind_resource(resource);
     ctx.setup_animation(anim).unwrap_or_else(|_| panic!("setup_animation({anim}) failed"));
-    let start = ctx.instance.primary_source().controller.get_start_frame() as f32;
+    let start = ctx.instance().primary_source().controller.get_start_frame() as f32;
     let _ = ctx.get_frame_data(start).expect("get_frame_data failed");
-    ctx.instance.resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect()
+    ctx.instance().resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect()
 }
 
 /// Sample the resolved pose of every part, for comparing two setups.
 fn resolved_of(ctx: &Context<'_>) -> Vec<(f32, f32, f32, f32)> {
-    ctx.instance.resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect()
+    ctx.instance().resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect()
 }
 
 /// Two sources on one track blend by weight, exactly as they did before the
@@ -28,7 +28,7 @@ fn two_sources_on_one_track_blend_by_weight() {
 
     let (mut ctx, walk_start) = ringo_ctx(&resource, "walk");
     let handle = ctx.add_track_source(0, "run", 1.0).expect("add_track_source(run)");
-    let run_start = ctx.instance.sources[handle as usize].controller.get_start_frame();
+    let run_start = ctx.instance().sources[handle as usize].controller.get_start_frame();
     ctx.set_source_frame(handle, run_start as f32).unwrap();
     ctx.get_frame_data(walk_start).expect("get_frame_data");
     let mixed = resolved_of(&ctx);
@@ -98,8 +98,8 @@ fn track_zero_at_alpha_zero_resolves_to_the_setup_pose() {
     ctx.get_frame_data(start).expect("get_frame_data");
 
     let walk = &resource.animations()[resource.find_animation_index("walk").unwrap()];
-    let setup = walk.setup_pose(ctx.instance.coordinate_system, ctx.instance.origin, ctx.instance.unit).to_vec();
-    for (i, part) in ctx.instance.resolved_layer.parts_vec.iter().enumerate() {
+    let setup = walk.setup_pose(ctx.instance().coordinate_system, ctx.instance().origin, ctx.instance().unit).to_vec();
+    for (i, part) in ctx.instance().resolved_layer.parts_vec.iter().enumerate() {
         assert!((part.position_x() - setup[i].position_x()).abs() < 1e-4, "part {i} position_x: resolved={} setup={}", part.position_x(), setup[i].position_x());
         assert!((part.rotation_z() - setup[i].rotation_z()).abs() < 1e-4, "part {i} rotation_z");
         assert!((part.scale_x() - setup[i].scale_x()).abs() < 1e-4, "part {i} scale_x");
@@ -113,7 +113,7 @@ fn crossfade_hands_the_track_over_and_releases_the_old_source() {
     let (mut ctx, _) = ringo_ctx(&resource, "walk");
     // Fades run on the character's clock, so it has to be playing.
     ctx.play();
-    let walk = ctx.instance.tracks[0].main;
+    let walk = ctx.instance().tracks[0].main;
 
     ctx.crossfade(0, "run", 1000.0).unwrap();
     assert_eq!(ctx.get_track_fade_progress(0), Some(0.0));
@@ -126,9 +126,9 @@ fn crossfade_hands_the_track_over_and_releases_the_old_source() {
 
     ctx.update(600.0);
     assert!(ctx.get_track_fade_progress(0).is_none());
-    assert_ne!(ctx.instance.tracks[0].main, walk);
+    assert_ne!(ctx.instance().tracks[0].main, walk);
     assert!(ctx.get_source_weight(walk).is_none(), "the outgoing source is released");
-    assert_eq!(ctx.instance.primary, ctx.instance.tracks[0].main, "track 0 still carries the structure");
+    assert_eq!(ctx.instance().primary, ctx.instance().tracks[0].main, "track 0 still carries the structure");
 }
 
 /// `update` returns the frame of whichever source is primary when it
@@ -162,7 +162,7 @@ fn update_returns_a_frame_get_frame_data_accepts_across_a_crossfade() {
 
 /// Weights of the live sources on `track`, keyed by handle.
 fn track_weights(ctx: &Context<'_>, track: u16) -> Vec<(u32, f32)> {
-    ctx.instance.sources.iter().enumerate().filter(|(_, s)| s.animation_idx >= 0 && s.track == track).map(|(i, s)| (i as u32, s.weight)).collect()
+    ctx.instance().sources.iter().enumerate().filter(|(_, s)| s.animation_idx >= 0 && s.track == track).map(|(i, s)| (i as u32, s.weight)).collect()
 }
 
 fn weight_of(ctx: &Context<'_>, handle: u32) -> f32 {
@@ -178,10 +178,10 @@ fn crossfade_restart_folds_the_fade_in_flight() {
     let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
     let (mut ctx, _) = ringo_ctx(&resource, "walk");
     ctx.play();
-    let walk = ctx.instance.tracks[0].main;
+    let walk = ctx.instance().tracks[0].main;
 
     ctx.crossfade(0, "run", 1000.0).unwrap();
-    let run = ctx.instance.sources.iter().enumerate().position(|(i, s)| i as u32 != walk && s.animation_idx >= 0).unwrap() as u32;
+    let run = ctx.instance().sources.iter().enumerate().position(|(i, s)| i as u32 != walk && s.animation_idx >= 0).unwrap() as u32;
     ctx.update(300.0);
     ctx.crossfade(0, "dance", 1000.0).unwrap();
 
@@ -199,7 +199,7 @@ fn crossfade_restart_folds_the_fade_in_flight() {
     ctx.update(600.0);
     let left = track_weights(&ctx, 0);
     assert_eq!(left.len(), 1, "every outgoing source is released on completion: {left:?}");
-    assert_eq!(left[0], (ctx.instance.tracks[0].main, 1.0));
+    assert_eq!(left[0], (ctx.instance().tracks[0].main, 1.0));
 }
 
 /// The incoming animation takes the main role, and on track 0 the primary,
@@ -211,19 +211,19 @@ fn a_crossfade_hands_the_main_role_over_when_it_begins() {
     let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
     let (mut ctx, _) = ringo_ctx(&resource, "wait1");
     ctx.play();
-    let wait = ctx.instance.tracks[0].main;
+    let wait = ctx.instance().tracks[0].main;
 
     ctx.crossfade(0, "attack1", 1000.0).unwrap();
     let attack = ctx.get_track_main_source(0).unwrap();
     assert_ne!(attack, wait, "the incoming animation is the track's main one at once");
-    assert_eq!(ctx.instance.primary, attack, "and on track 0, the primary");
+    assert_eq!(ctx.instance().primary, attack, "and on track 0, the primary");
     assert_eq!(ctx.get_source_animation_index(attack), Some(resource.find_animation_index("attack1").unwrap() as u32));
     assert_eq!(ctx.get_source_weight(attack), Some(0.0), "while its pose has not started to show");
     assert_eq!(ctx.get_source_weight(wait), Some(1.0));
 
     let frame = ctx.update(1000.0 / 60.0);
     ctx.get_frame_data(frame).expect("the frame update returns is the incoming animation's");
-    assert_eq!(ctx.instance.resolved_layer.cell_ids, ctx.instance.layers[attack as usize].cell_ids, "the discrete attributes are the incoming animation's");
+    assert_eq!(ctx.instance().resolved_layer.cell_ids, ctx.instance().layers[attack as usize].cell_ids, "the discrete attributes are the incoming animation's");
 }
 
 /// An outgoing animation that runs out mid-fade does not finish the
@@ -266,7 +266,7 @@ fn a_crossfade_plays_the_incoming_animation_the_way_track_zero_is_played() {
     ctx.play();
 
     ctx.crossfade(0, "run", 1000.0).unwrap();
-    let run = &ctx.instance.sources[ctx.get_track_main_source(0).unwrap() as usize].controller;
+    let run = &ctx.instance().sources[ctx.get_track_main_source(0).unwrap() as usize].controller;
     assert_eq!(run.get_speed_scale(), 2.0);
     assert_eq!(run.get_frame_rate(), 30);
     assert!(!run.get_skip_frames());
@@ -289,7 +289,7 @@ fn a_track_keeps_its_speed_across_the_animations_laid_on_it() {
     // Set before anything is laid there: the track keeps it until something is.
     ctx.set_track_speed(1, 0.5).unwrap();
     ctx.set_track_animation(1, "run").unwrap();
-    let speed_of = |ctx: &Context<'_>, track: u32| ctx.instance.sources[ctx.get_track_main_source(track).unwrap() as usize].controller.get_speed_scale();
+    let speed_of = |ctx: &Context<'_>, track: u32| ctx.instance().sources[ctx.get_track_main_source(track).unwrap() as usize].controller.get_speed_scale();
     assert_eq!(speed_of(&ctx, 1), 0.5);
 
     ctx.set_track_animation(1, "dance").unwrap();
@@ -298,7 +298,7 @@ fn a_track_keeps_its_speed_across_the_animations_laid_on_it() {
     ctx.crossfade(1, "walk", 1000.0).unwrap();
     ctx.set_track_speed(1, 0.25).unwrap();
     for (handle, _) in track_weights(&ctx, 1) {
-        assert_eq!(ctx.instance.sources[handle as usize].controller.get_speed_scale(), 0.25, "source {handle} missed the change");
+        assert_eq!(ctx.instance().sources[handle as usize].controller.get_speed_scale(), 0.25, "source {handle} missed the change");
     }
     assert_eq!(ctx.get_track_speed(1), Some(0.25));
     assert_eq!(ctx.get_speed_scale(), 1.0, "track 0 is untouched");
@@ -367,11 +367,11 @@ fn setup_keeps_track_zero_s_settings_after_a_crossfade() {
     ctx.play();
     ctx.crossfade(0, "run", 100.0).unwrap();
     ctx.update(200.0);
-    assert_ne!(ctx.instance.primary, 0, "the crossfade moved the primary off slot 0");
+    assert_ne!(ctx.instance().primary, 0, "the crossfade moved the primary off slot 0");
 
     ctx.setup_animation("dance").unwrap();
     assert_eq!(ctx.get_speed_scale(), 2.0);
-    assert_eq!(ctx.instance.primary_source().controller.get_speed_scale(), 2.0);
+    assert_eq!(ctx.instance().primary_source().controller.get_speed_scale(), 2.0);
 }
 
 /// What a cancelled fade leaves on the track fades out with the next one,
@@ -384,7 +384,7 @@ fn a_crossfade_after_a_cancel_carries_the_leftover_out() {
     let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
     let (mut ctx, _) = ringo_ctx(&resource, "walk");
     ctx.play();
-    let walk = ctx.instance.tracks[0].main;
+    let walk = ctx.instance().tracks[0].main;
 
     ctx.crossfade(0, "run", 1000.0).unwrap();
     ctx.update(250.0);
@@ -410,7 +410,7 @@ fn a_crossfade_from_a_mixed_track_fades_every_source_out() {
     let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
     let (mut ctx, _) = ringo_ctx(&resource, "walk");
     ctx.play();
-    let walk = ctx.instance.tracks[0].main;
+    let walk = ctx.instance().tracks[0].main;
     ctx.set_source_weight(walk, 3.0).unwrap();
     let run = ctx.add_track_source(0, "run", 1.0).unwrap();
 
@@ -462,7 +462,7 @@ fn cancel_track_fade_leaves_the_weights_alone() {
     let ssab = load_ringo_resource();
     let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
     let (mut ctx, _) = ringo_ctx(&resource, "walk");
-    let walk = ctx.instance.tracks[0].main;
+    let walk = ctx.instance().tracks[0].main;
 
     ctx.crossfade(0, "run", 1000.0).unwrap();
     ctx.update(250.0);
@@ -484,7 +484,7 @@ fn set_track_animation_replaces_what_the_track_was_playing() {
     ctx.set_track_animation(0, "dance").unwrap();
 
     assert!(ctx.get_source_weight(extra).is_none(), "the replaced animation's extra sources go with it");
-    assert_eq!(ctx.instance.primary, ctx.instance.tracks[0].main);
+    assert_eq!(ctx.instance().primary, ctx.instance().tracks[0].main);
 }
 
 #[test]
@@ -515,7 +515,7 @@ fn setup_animation_collapses_the_stack() {
     ctx.setup_animation("dance").unwrap();
     assert_eq!(ctx.get_track_count(), 1, "a new setup starts from one track again");
     assert_eq!(ctx.get_track_alpha(0), Some(1.0));
-    assert_eq!(ctx.instance.primary, 0);
+    assert_eq!(ctx.instance().primary, 0);
 }
 
 #[test]
@@ -566,7 +566,7 @@ fn bind_resource_clears_track_state() {
 
     ctx.bind_resource(&resource);
     assert_eq!(ctx.get_track_count(), 1);
-    assert_eq!(ctx.instance.primary, 0);
+    assert_eq!(ctx.instance().primary, 0);
 }
 
 /// Only track 0's animation fires events by default; a source opts in by

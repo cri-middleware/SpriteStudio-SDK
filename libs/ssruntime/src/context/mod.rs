@@ -353,13 +353,25 @@ impl<'a> InstanceState<'a> {
 }
 
 pub struct Context<'a> {
-    pub(crate) eval: EvaluationContext<'a>,
-    pub(crate) instance: InstanceState<'a>,
+    eval: EvaluationContext<'a>,
+    instance: InstanceState<'a>,
 }
 
 impl<'a> Default for Context<'a> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// Read-only access to the internals, for the unit tests in `crate::tests`.
+#[cfg(all(test, feature = "std"))]
+impl<'a> Context<'a> {
+    pub(crate) fn eval(&self) -> &EvaluationContext<'a> {
+        &self.eval
+    }
+
+    pub(crate) fn instance(&self) -> &InstanceState<'a> {
+        &self.instance
     }
 }
 
