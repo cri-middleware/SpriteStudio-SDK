@@ -220,10 +220,27 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
         .collect::<Vec<ssab::ssab::ss::format::EffectNodeT>>()
 }
 
-pub fn convert_effect_list(_sspj: &sspj::sspj::SsProject, effect_file_vec: &[&sspj::ssee::SsEffectFile]) -> Vec<ssab::ssab::ss::format::EffectT> {
+/// The runtime reads a node's parent by position and climbs toward the root, so
+/// `arrayIndex` has to be the node's position and its parent has to come before
+/// it. The editor writes nodes that way; a parent at or after its node is
+/// malformed and can close a loop.
+fn validate_effect_node_list(effect_file: &sspj::ssee::SsEffectFile) -> Result<(), crate::ConverterError> {
+    for (position, node) in effect_file.effect_data.node_list.iter().enumerate() {
+        if node.array_index != position as i32 {
+            return Err(crate::ConverterError::ConversionFailed(format!("{}: effect node \"{}\" has arrayIndex {}, not its position {}", effect_file.name, node.name, node.array_index, position)));
+        }
+        if !(-1..node.array_index).contains(&node.parent_index) {
+            return Err(crate::ConverterError::ConversionFailed(format!("{}: effect node \"{}\" has parentIndex {}, outside -1..{}", effect_file.name, node.name, node.parent_index, node.array_index)));
+        }
+    }
+    Ok(())
+}
+
+pub fn convert_effect_list(_sspj: &sspj::sspj::SsProject, effect_file_vec: &[&sspj::ssee::SsEffectFile]) -> Result<Vec<ssab::ssab::ss::format::EffectT>, crate::ConverterError> {
     let mut v = effect_file_vec
         .iter()
         .map(|effect_file| {
+            validate_effect_node_list(effect_file)?;
             let mut effect_t = ssab::ssab::ss::format::EffectT::default();
             effect_t.name_hash = crate::utils::fnv1a_hash_str(&effect_file.name);
             effect_t.name = effect_file.name.to_string();
@@ -236,9 +253,51 @@ pub fn convert_effect_list(_sspj: &sspj::sspj::SsProject, effect_file_vec: &[&ss
             effect_t.layout_scale = Box::new(layout_scale);
             effect_t.effect_node = convert_effect_node_list(&effect_file.effect_data.node_list);
 
-            effect_t
+            Ok(effect_t)
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>, crate::ConverterError>>()?;
     v.sort_by_key(|e| e.name_hash);
-    v
+    Ok(v)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sspj::ssloader::SsLoader;
+
+    fn load_effect() -> sspj::ssee::SsEffectFile {
+        let mut path = std::env::current_dir().unwrap();
+        if path.ends_with("ssconverter") {
+            path = path.parent().unwrap().parent().unwrap().to_path_buf();
+        }
+        path.push("tests/Doll/Effect01.ssee");
+        sspj::ssee::SsEffectFile::load_from_file(&path).expect("failed to load the fixture")
+    }
+
+    #[test]
+    fn a_well_formed_node_list_validates() {
+        validate_effect_node_list(&load_effect()).expect("the fixture is well formed");
+    }
+
+    #[test]
+    fn a_parent_after_its_node_is_an_error() {
+        let mut effect = load_effect();
+        effect.effect_data.node_list[0].parent_index = 2;
+        let e = validate_effect_node_list(&effect).expect_err("a parent after its node can close a loop");
+        assert!(format!("{e}").contains("Root"), "{e}");
+    }
+
+    #[test]
+    fn a_node_that_is_its_own_parent_is_an_error() {
+        let mut effect = load_effect();
+        effect.effect_data.node_list[1].parent_index = 1;
+        validate_effect_node_list(&effect).expect_err("a node that is its own parent is a loop");
+    }
+
+    #[test]
+    fn an_array_index_off_its_position_is_an_error() {
+        let mut effect = load_effect();
+        effect.effect_data.node_list[1].array_index = 2;
+        validate_effect_node_list(&effect).expect_err("the runtime reads a parent by position");
+    }
 }
