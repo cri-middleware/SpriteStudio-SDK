@@ -74,7 +74,7 @@ graph LR
 ## 📦 ライブラリとツール
 
 - ライブラリ
-    - [libsspj](./libs/sspj/README.ja.md): `sspj`、`ssae`、`ssce`、`ssee`、`ssqe`、`ssse`、ビットマップフォントの文字マップ（`fnt` / `json`）ファイルで構成される`sspj`プロジェクトを解析するライブラリです。
+    - [libsspj](./libs/sspj/README.ja.md): `sspj`、`ssae`、`ssce`、`ssee`、`ssqe`、`ssse`、ビットマップフォントの文字マップ（`fnt`）ファイルで構成される`sspj`プロジェクトを解析するライブラリです。
     - [libssab](./libs/ssab/README.ja.md): アニメーションバイナリファイルである`ssab`ファイルを作成・解析するライブラリです。
     - [libssconverter](./libs/ssconverter/README.ja.md): `sspj` プロジェクトを解析し、`ssab` ファイルを作成するライブラリです。
     - [libssruntime](./libs/ssruntime/README.ja.md): 再生の "Brain"。フレーム毎にパーツの状態（トランスフォーム、メッシュ変形、カラー）を計算し、エンジン非依存の `DrawBatch` プランを出力します。

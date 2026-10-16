@@ -15,7 +15,7 @@ This library handles the parsing of the following file types comprising a Sprite
 - **SSEE (`.ssee`)**: Particle effect data.
 - **SSQE (`.ssqe`)**: Sequence data.
 - **SSSE (`.ssse`)**: Sound effect lists.
-- **BitmapFont (`.fnt` / `.json`)**: Character maps (parsed via `sscharmap`).
+- **BitmapFont (`.fnt`)**: Character maps in BMFont's text format (parsed via `sscharmap`).
 
 # Installation
 
