@@ -141,7 +141,9 @@
 //!   — the layout of what [`Context::get_frame_data`] returns.
 //! - [Limitations](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/docs/10_introduction/20_limitations.md)
 //!   — supported scope and spec constraints. Read before making Player design decisions.
-
+//!
+// Without `ffi` there is no module to link to, so the links above go to its source.
+#![cfg_attr(not(feature = "ffi"), doc = "[`ffi`]: https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/src/ffi/mod.rs")]
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 
 mod platform;
