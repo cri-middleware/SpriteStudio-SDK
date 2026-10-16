@@ -50,6 +50,19 @@
 //! memory and stay valid only until the next call that rewrites them. Copy anything you
 //! need to keep.
 //!
+//! # Safety
+//!
+//! Every entry point that takes a handle or a pointer is `unsafe` to call from Rust,
+//! under one contract stated here rather than on each of them:
+//!
+//! - A handle is null, or what its own create function returned and not yet destroyed:
+//!   a context where a context is asked for, a slot where a slot is. A null handle is
+//!   never dereferenced.
+//! - A handle is not used from two threads at once.
+//! - An `out_data` / `out_len` pointer is null or valid for a write.
+//!
+//! The ones that read a data or string pointer add their own `# Safety` section.
+//!
 //! # Validation
 //!
 //! Loading does not validate the `.ssab` — see the crate docs. Every entry point that
@@ -75,15 +88,13 @@ pub const SS_RUNTIME_LOG_WARN: c_int = 2;
 pub const SS_RUNTIME_LOG_INFO: c_int = 3;
 
 pub type SsLogCallback = extern "C" fn(level: core::ffi::c_int, message: *const core::ffi::c_char);
-#[doc(hidden)]
-pub static LOG_CALLBACK: AtomicPtr<c_void> = AtomicPtr::new(core::ptr::null_mut());
+static LOG_CALLBACK: AtomicPtr<c_void> = AtomicPtr::new(core::ptr::null_mut());
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_set_log_callback(callback: SsLogCallback) {
     LOG_CALLBACK.store(callback as *mut c_void, Ordering::Relaxed);
 }
 
-#[macro_export]
 macro_rules! ss_log {
     ($level:expr, $($arg:tt)*) => {{
         let cb_ptr = $crate::ffi::LOG_CALLBACK.load(::core::sync::atomic::Ordering::Relaxed);
@@ -102,15 +113,13 @@ macro_rules! ss_log {
 
 use crate::SsabResource;
 
-pub struct FfiContext {
-    pub ctx: crate::Context<'static>,
+struct FfiContext {
+    ctx: crate::Context<'static>,
     // We hold the resource here to keep it alive
-    pub bound_resource: Option<Arc<SsabResource>>,
+    bound_resource: Option<Arc<SsabResource>>,
     /// The reason the last call that tracks one failed, or `None` if it
-    /// succeeded. Held as the error itself rather than its code so that the
-    /// payload `InvalidVersion` carries is still here for a Rust caller and the
-    /// wasm face, both of which format it.
-    pub last_error: Option<crate::error::SSRuntimeError>,
+    /// succeeded.
+    last_error: Option<crate::error::SSRuntimeError>,
 }
 impl FfiContext {
     /// Record a failure on both faces: [`ss_runtime_get_last_error`] for the
@@ -130,13 +139,13 @@ impl Default for FfiContext {
 }
 
 impl FfiContext {
-    pub fn new() -> Self {
+    fn new() -> Self {
         Self { ctx: crate::Context::new(), bound_resource: None, last_error: None }
     }
 }
 
 #[inline(always)]
-fn get_context<'a>(ptr: *mut c_void) -> Option<&'a mut FfiContext> {
+unsafe fn get_context<'a>(ptr: *mut c_void) -> Option<&'a mut FfiContext> {
     if ptr.is_null() {
         return None;
     }
@@ -164,7 +173,6 @@ unsafe fn create_ffi_resource(data: crate::SsabData) -> Result<*mut c_void, crat
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Creates an AnimationResource by copying the provided data.
 ///
 /// # Security and Validation
@@ -189,7 +197,6 @@ pub unsafe extern "C" fn ss_resource_create_copy(ptr: *const c_uchar, len: usize
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Creates an AnimationResource by borrowing the provided data.
 ///
 /// # Security and Validation
@@ -214,7 +221,7 @@ pub unsafe extern "C" fn ss_resource_create_borrow(ptr: *const c_uchar, len: usi
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_resource_destroy(resource: *mut c_void) {
+pub unsafe extern "C" fn ss_resource_destroy(resource: *mut c_void) {
     if resource.is_null() {
         return;
     }
@@ -230,8 +237,8 @@ pub extern "C" fn ss_runtime_create() -> *mut c_void {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_destroy(context: *mut c_void) {
-    if let Some(context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_destroy(context: *mut c_void) {
+    if let Some(context) = unsafe { get_context(context) } {
         unsafe {
             let _ = Box::from_raw(context as *mut FfiContext);
         }
@@ -239,8 +246,8 @@ pub extern "C" fn ss_runtime_destroy(context: *mut c_void) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_reset(context: *mut c_void) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_reset(context: *mut c_void) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.reset();
         ffi_context.bound_resource = None;
         ffi_context.last_error = None;
@@ -261,8 +268,8 @@ pub extern "C" fn ss_runtime_reset(context: *mut c_void) {
 /// Reading does not clear it. Read it immediately after the call that returned
 /// `false`, before making another on the same context.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_last_error(context: *mut c_void) -> i32 {
-    match get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_last_error(context: *mut c_void) -> i32 {
+    match unsafe { get_context(context) } {
         Some(ffi_context) => ffi_context.last_error.as_ref().map_or(0, |e| e.as_code()),
         None => 0,
     }
@@ -318,8 +325,8 @@ pub extern "C" fn ss_runtime_ssab_schema_version() -> u32 {
 ///   It is safe to destroy the `resource` (via `ss_resource_destroy`) even if it is still bound
 ///   to contexts; the memory will be kept alive until all bound contexts are also destroyed or reset.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut c_void) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut c_void) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -349,7 +356,6 @@ pub extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut 
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Security and Validation
 /// To maximize performance and minimize binary size, `libssruntime` **does not validate** the input `.ssab` data.
 /// Passing corrupted or maliciously crafted data will cause undefined behavior (e.g., out-of-bounds reads).
@@ -360,7 +366,7 @@ pub extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut 
 /// This function is unsafe because it dereferences a raw pointer.
 /// The caller must ensure the pointer is valid and points to a valid memory block.
 pub unsafe extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_uchar, len: usize) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -383,8 +389,8 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *c
                     return false;
                 }
             };
-            let success = ss_runtime_bind_resource(context, res_ptr);
-            ss_resource_destroy(res_ptr);
+            let success = unsafe { ss_runtime_bind_resource(context, res_ptr) };
+            unsafe { ss_resource_destroy(res_ptr) };
             success
         }
         Err(e) => {
@@ -395,7 +401,6 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *c
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Security and Validation
 /// To maximize performance and minimize binary size, `libssruntime` **does not validate** the input `.ssab` data.
 /// Passing corrupted or maliciously crafted data will cause undefined behavior (e.g., out-of-bounds reads).
@@ -406,7 +411,7 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *c
 /// This function is unsafe because it dereferences a raw pointer.
 /// The caller must ensure the pointer is valid and points to a valid memory block.
 pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: *const c_uchar, len: usize) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -428,8 +433,8 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: 
                     return false;
                 }
             };
-            let success = ss_runtime_bind_resource(context, res_ptr);
-            ss_resource_destroy(res_ptr);
+            let success = unsafe { ss_runtime_bind_resource(context, res_ptr) };
+            unsafe { ss_resource_destroy(res_ptr) };
             success
         }
         Err(e) => {
@@ -440,13 +445,12 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: 
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mut *const c_uchar, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
             unsafe {
                 if !out_data.is_null() {
@@ -463,8 +467,8 @@ pub unsafe extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mu
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_ssab_buf(context: *mut c_void) -> *const c_uchar {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_ssab_buf(context: *mut c_void) -> *const c_uchar {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
             return ssab_buf.as_ptr() as *const c_uchar;
         } else {
@@ -475,8 +479,8 @@ pub extern "C" fn ss_runtime_get_ssab_buf(context: *mut c_void) -> *const c_ucha
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_ssab_len(context: *mut c_void) -> usize {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_ssab_len(context: *mut c_void) -> usize {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
             return ssab_buf.len();
         } else {
@@ -487,13 +491,12 @@ pub extern "C" fn ss_runtime_get_ssab_len(context: *mut c_void) -> usize {
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences a raw pointer.
 /// The caller must ensure the pointer is valid and points to a valid null-terminated string.
 pub unsafe extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: *const c_char) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -517,7 +520,7 @@ pub unsafe extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: 
 ///
 /// This function is unsafe because it dereferences a raw pointer.
 pub unsafe extern "C" fn ss_runtime_setup_animation_by_hash(context: *mut c_void, name_hash: u32) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -531,13 +534,12 @@ pub unsafe extern "C" fn ss_runtime_setup_animation_by_hash(context: *mut c_void
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_no: c_float, out_data: *mut *const c_uchar, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         match ffi_context.ctx.get_frame_data(frame_no) {
             Ok(ret) => unsafe {
@@ -556,13 +558,12 @@ pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_n
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_world_matrices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -576,13 +577,12 @@ pub unsafe extern "C" fn ss_runtime_get_world_matrices(context: *mut c_void, out
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_local_uvs(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -596,7 +596,6 @@ pub unsafe extern "C" fn ss_runtime_get_local_uvs(context: *mut c_void, out_data
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Per-part resolved cell metadata for the current frame, written by
 /// `ss_runtime_get_frame_data`. Layout:
 /// `[pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]` per part,
@@ -610,7 +609,7 @@ pub unsafe extern "C" fn ss_runtime_get_local_uvs(context: *mut c_void, out_data
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_cell_meta(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -624,7 +623,6 @@ pub unsafe extern "C" fn ss_runtime_get_cell_meta(context: *mut c_void, out_data
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Per-part local-space vertex positions for the current frame, written by
 /// `ss_runtime_get_frame_data`. Layout per part:
 /// `[lt.x, lt.y, rt.x, rt.y, lb.x, lb.y, rb.x, rb.y, center.x, center.y]`
@@ -640,7 +638,7 @@ pub unsafe extern "C" fn ss_runtime_get_cell_meta(context: *mut c_void, out_data
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_local_vertices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -654,7 +652,6 @@ pub unsafe extern "C" fn ss_runtime_get_local_vertices(context: *mut c_void, out
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Per-part shape vertex positions for the current frame, written by
 /// `ss_runtime_get_frame_data`. Layout: 12 vertices × `(x, y)` = 24 floats
 /// per part, indexed by `part_index * 24`. Vertices are in local space,
@@ -670,7 +667,7 @@ pub unsafe extern "C" fn ss_runtime_get_local_vertices(context: *mut c_void, out
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_shape_vertices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -684,7 +681,6 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertices(context: *mut c_void, out
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Per-vertex normalized bounding-box coordinates paired with
 /// `ss_runtime_get_shape_vertices`. Layout: 12 vertices × `(fx, fy)` = 24
 /// floats per part, indexed by `part_index * 24`. `(0, 0)` corresponds to
@@ -698,7 +694,7 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertices(context: *mut c_void, out
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_shape_vertex_box_coords(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -712,7 +708,6 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertex_box_coords(context: *mut c_
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Per-part valid vertex count for `ss_runtime_get_shape_vertices`. Indexed
 /// by `part_index`. Zero for parts that are not shape parts (or shape
 /// parts whose size collapsed to zero).
@@ -722,7 +717,7 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertex_box_coords(context: *mut c_
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_shape_vertex_counts(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -736,7 +731,6 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertex_counts(context: *mut c_void
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Skinned mesh per-vertex X coordinates in world space, concatenated across all
 /// parts. Pair with `ss_runtime_get_mesh_vertex_offsets` to slice per-part
 /// ranges: part `p`'s vertices live at indices `offsets[p]..offsets[p + 1]`.
@@ -748,7 +742,7 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertex_counts(context: *mut c_void
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_x(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -762,7 +756,6 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_x(context: *mut c_void, ou
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Skinned mesh per-vertex Y coordinates. SoA companion to
 /// `ss_runtime_get_mesh_vertices_x`; sliced identically via
 /// `ss_runtime_get_mesh_vertex_offsets`.
@@ -772,7 +765,7 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_x(context: *mut c_void, ou
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_y(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -786,7 +779,6 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_y(context: *mut c_void, ou
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// CSR-style prefix sum (length = `num_parts + 1`) describing where each
 /// part's skinned mesh vertices live inside `ss_runtime_get_mesh_vertices_x`
 /// / `_y`. Part `p` occupies indices `[offsets[p], offsets[p + 1])`; non-mesh
@@ -797,7 +789,7 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_y(context: *mut c_void, ou
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_vertex_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -811,7 +803,6 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_vertex_offsets(context: *mut c_void
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Mesh per-vertex UV coordinates in cellmap texture-pixel space, interleaved
 /// `[u, v, ...]`, concatenated across all parts. Static — resolved once from
 /// each mesh part's frame-0 Cell. Sliced per-part by
@@ -822,7 +813,7 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_vertex_offsets(context: *mut c_void
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_uvs(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -836,7 +827,6 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_uvs(context: *mut c_void, out_data:
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Mesh triangle indices (part-local, 0-based), concatenated across all parts.
 /// Static. Slice part `p`'s range via `ss_runtime_get_mesh_index_offsets`:
 /// `[offsets[p], offsets[p + 1])`.
@@ -846,7 +836,7 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_uvs(context: *mut c_void, out_data:
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_indices(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -860,7 +850,6 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_indices(context: *mut c_void, out_d
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// CSR-style prefix sum (length = `num_parts + 1`) for the triangle indices in
 /// `ss_runtime_get_mesh_indices`. Part `p` occupies `[offsets[p], offsets[p + 1])`;
 /// non-mesh parts have an empty range.
@@ -870,7 +859,7 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_indices(context: *mut c_void, out_d
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_index_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -884,7 +873,6 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_index_offsets(context: *mut c_void,
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Nine-Slice per-vertex positions for the current frame, interleaved
 /// `[x, y, ...]` and concatenated across all parts, written by
 /// `ss_runtime_get_frame_data`. Slice per part with
@@ -902,7 +890,7 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_index_offsets(context: *mut c_void,
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_vertices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -916,7 +904,6 @@ pub unsafe extern "C" fn ss_runtime_get_nines_vertices(context: *mut c_void, out
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Nine-Slice per-vertex UVs in cellmap texture-pixel space, interleaved
 /// `[u, v, ...]`. Shares the vertex CSR of
 /// `ss_runtime_get_nines_vertex_offsets`. Divide by the texture size to
@@ -927,7 +914,7 @@ pub unsafe extern "C" fn ss_runtime_get_nines_vertices(context: *mut c_void, out
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_uvs(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -941,7 +928,6 @@ pub unsafe extern "C" fn ss_runtime_get_nines_uvs(context: *mut c_void, out_data
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Nine-Slice per-vertex box coordinates, interleaved `[fx, fy, ...]` with
 /// `0` at the part's left / top edge and `1` at its right / bottom edge.
 /// Shares the vertex CSR of `ss_runtime_get_nines_vertex_offsets`.
@@ -956,7 +942,7 @@ pub unsafe extern "C" fn ss_runtime_get_nines_uvs(context: *mut c_void, out_data
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_box_coords(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -970,7 +956,6 @@ pub unsafe extern "C" fn ss_runtime_get_nines_box_coords(context: *mut c_void, o
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Nine-Slice triangle indices, concatenated across all parts and sliced by
 /// `ss_runtime_get_nines_index_offsets`. Values are **part-local**
 /// (`0..vertex_count`), so a Player passes them alongside the part's vertex
@@ -981,7 +966,7 @@ pub unsafe extern "C" fn ss_runtime_get_nines_box_coords(context: *mut c_void, o
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_indices(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -995,7 +980,6 @@ pub unsafe extern "C" fn ss_runtime_get_nines_indices(context: *mut c_void, out_
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// CSR-style prefix sum (length = `num_parts + 1`) over the vertex buffers
 /// `ss_runtime_get_nines_vertices` / `_uvs` / `_box_coords`. Part `p` occupies
 /// vertices `[offsets[p], offsets[p + 1])` — multiply by 2 to index the
@@ -1006,7 +990,7 @@ pub unsafe extern "C" fn ss_runtime_get_nines_indices(context: *mut c_void, out_
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_vertex_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -1020,7 +1004,6 @@ pub unsafe extern "C" fn ss_runtime_get_nines_vertex_offsets(context: *mut c_voi
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// CSR-style prefix sum (length = `num_parts + 1`) for the triangle indices in
 /// `ss_runtime_get_nines_indices`. Part `p` occupies
 /// `[offsets[p], offsets[p + 1])`; non-nines parts have an empty range.
@@ -1030,7 +1013,7 @@ pub unsafe extern "C" fn ss_runtime_get_nines_vertex_offsets(context: *mut c_voi
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_index_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
@@ -1045,8 +1028,8 @@ pub unsafe extern "C" fn ss_runtime_get_nines_index_offsets(context: *mut c_void
 
 // Frame Number getter functions
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_frame_no(context: *mut c_void) -> c_float {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_frame_no(context: *mut c_void) -> c_float {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.get_frame_no();
     }
     0.0
@@ -1059,40 +1042,40 @@ pub extern "C" fn ss_runtime_get_frame_no(context: *mut c_void) -> c_float {
 ///
 /// This is a *state*, not a pulse: to notify once, take its rising edge.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_is_finished(context: *mut c_void) -> bool {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_is_finished(context: *mut c_void) -> bool {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.is_finished();
     }
     false
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_just_looped(context: *mut c_void) -> bool {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_just_looped(context: *mut c_void) -> bool {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.just_looped();
     }
     false
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_is_playing(context: *mut c_void) -> bool {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_is_playing(context: *mut c_void) -> bool {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.is_playing();
     }
     false
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_is_playing_forward(context: *mut c_void) -> bool {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_is_playing_forward(context: *mut c_void) -> bool {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.is_playing_forward();
     }
     false
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_is_pausing(context: *mut c_void) -> bool {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_is_pausing(context: *mut c_void) -> bool {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.is_pausing();
     }
     false
@@ -1103,15 +1086,15 @@ pub extern "C" fn ss_runtime_is_pausing(context: *mut c_void) -> bool {
 /// the other tracks and the fades run on. `ss_runtime_is_playing` reads
 /// track 0's state instead.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_is_clock_playing(context: *mut c_void) -> bool {
-    get_context(context).is_some_and(|c| c.ctx.is_clock_playing())
+pub unsafe extern "C" fn ss_runtime_is_clock_playing(context: *mut c_void) -> bool {
+    unsafe { get_context(context) }.is_some_and(|c| c.ctx.is_clock_playing())
 }
 
 /// `true` while `ss_runtime_pause` holds a playing clock, after track 0 has
 /// finished as well. Implies `ss_runtime_is_clock_playing`.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_is_clock_pausing(context: *mut c_void) -> bool {
-    get_context(context).is_some_and(|c| c.ctx.is_clock_pausing())
+pub unsafe extern "C" fn ss_runtime_is_clock_pausing(context: *mut c_void) -> bool {
+    unsafe { get_context(context) }.is_some_and(|c| c.ctx.is_clock_pausing())
 }
 
 /// `true` while the track stack would move the pose on a running clock for a
@@ -1120,66 +1103,66 @@ pub extern "C" fn ss_runtime_is_clock_pausing(context: *mut c_void) -> bool {
 /// clock; read it with `ss_runtime_is_clock_playing` and
 /// `ss_runtime_is_clock_pausing`.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_is_stack_in_motion(context: *mut c_void) -> bool {
-    get_context(context).is_some_and(|c| c.ctx.is_stack_in_motion())
+pub unsafe extern "C" fn ss_runtime_is_stack_in_motion(context: *mut c_void) -> bool {
+    unsafe { get_context(context) }.is_some_and(|c| c.ctx.is_stack_in_motion())
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_skip_frames(context: *mut c_void) -> bool {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_skip_frames(context: *mut c_void) -> bool {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.get_skip_frames();
     }
     false
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_playback_direction(context: *mut c_void) -> i32 {
-    if let Some(ffi_context) = get_context(context) { if ffi_context.ctx.get_playback_direction() == crate::core::playback_controller::PlaybackDirection::Forward { 0 } else { 1 } } else { 0 }
+pub unsafe extern "C" fn ss_runtime_get_playback_direction(context: *mut c_void) -> i32 {
+    if let Some(ffi_context) = unsafe { get_context(context) } { if ffi_context.ctx.get_playback_direction() == crate::core::playback_controller::PlaybackDirection::Forward { 0 } else { 1 } } else { 0 }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_playback_style(context: *mut c_void) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_playback_style(context: *mut c_void) -> i32 {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.get_playback_style() as i32;
     }
     0
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_loop_count(context: *mut c_void) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_loop_count(context: *mut c_void) -> i32 {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.get_loop_count();
     }
     0
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_remaining_loops(context: *mut c_void) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_remaining_loops(context: *mut c_void) -> i32 {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.get_remaining_loops();
     }
     0
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_start_frame(context: *mut c_void) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_start_frame(context: *mut c_void) -> i32 {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.get_start_frame();
     }
     0
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_end_frame(context: *mut c_void) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_end_frame(context: *mut c_void) -> i32 {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.get_end_frame();
     }
     0
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_frame_rate(context: *mut c_void) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_frame_rate(context: *mut c_void) -> i32 {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.get_frame_rate();
     }
     0
@@ -1190,8 +1173,8 @@ pub extern "C" fn ss_runtime_get_frame_rate(context: *mut c_void) -> i32 {
 /// Reads back what `ss_runtime_set_speed_scale` stored, which is not
 /// always what it was handed: a negative rate clamps to `0.0`.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_speed_scale(context: *mut c_void) -> c_float {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_speed_scale(context: *mut c_void) -> c_float {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.get_speed_scale();
     }
     0.0
@@ -1199,29 +1182,29 @@ pub extern "C" fn ss_runtime_get_speed_scale(context: *mut c_void) -> c_float {
 
 // Playback setup
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_skip_frames(context: *mut c_void, skip: bool) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_set_skip_frames(context: *mut c_void, skip: bool) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.set_skip_frames(skip);
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_loop_count(context: *mut c_void, loop_count: c_int) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_set_loop_count(context: *mut c_void, loop_count: c_int) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.set_loop_count(loop_count);
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_frame_rate(context: *mut c_void, frame_rate: c_int) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_set_frame_rate(context: *mut c_void, frame_rate: c_int) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.set_frame_rate(frame_rate);
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_playback_direction(context: *mut c_void, direction: c_int, style: c_int) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_set_playback_direction(context: *mut c_void, direction: c_int, style: c_int) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         let d = if direction == 0 { crate::core::playback_controller::PlaybackDirection::Forward } else { crate::core::playback_controller::PlaybackDirection::Backward };
         let s = if style == 0 { crate::core::playback_controller::PlaybackStyle::Normal } else { crate::core::playback_controller::PlaybackStyle::PingPong };
         ffi_context.ctx.set_playback_direction(d, s);
@@ -1229,15 +1212,15 @@ pub extern "C" fn ss_runtime_set_playback_direction(context: *mut c_void, direct
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_speed_scale(context: *mut c_void, speed_scale: c_float) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_set_speed_scale(context: *mut c_void, speed_scale: c_float) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.set_speed_scale(speed_scale);
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_animation_section(context: *mut c_void, start_frame: c_int, end_frame: c_int) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_set_animation_section(context: *mut c_void, start_frame: c_int, end_frame: c_int) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.set_animation_section(start_frame, end_frame);
     }
 }
@@ -1245,23 +1228,23 @@ pub extern "C" fn ss_runtime_set_animation_section(context: *mut c_void, start_f
 // Playback control
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_update(context: *mut c_void, delta: f32) -> c_float {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_update(context: *mut c_void, delta: f32) -> c_float {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.update(delta);
     }
     0.0
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_play(context: *mut c_void) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_play(context: *mut c_void) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.play();
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_play_with_start_frame(context: *mut c_void, frame_no: f32) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_play_with_start_frame(context: *mut c_void, frame_no: f32) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.play_with_start_frame(frame_no);
     }
 }
@@ -1274,8 +1257,8 @@ pub extern "C" fn ss_runtime_play_with_start_frame(context: *mut c_void, frame_n
 /// stop — so tell the two apart with `ss_runtime_is_pausing`. Lift the hold
 /// with [`ss_runtime_resume`]; `ss_runtime_play` rewinds and cannot resume.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_pause(context: *mut c_void) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_pause(context: *mut c_void) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.pause();
     }
 }
@@ -1285,36 +1268,36 @@ pub extern "C" fn ss_runtime_pause(context: *mut c_void) {
 /// Idempotent, and a no-op on an animation that was never paused. It does not
 /// start a stopped animation; use `ss_runtime_play` for that.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_resume(context: *mut c_void) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_resume(context: *mut c_void) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.resume();
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_stop(context: *mut c_void) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_stop(context: *mut c_void) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.stop();
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_frame_no(context: *mut c_void, frame: c_float) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_set_frame_no(context: *mut c_void, frame: c_float) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.set_frame_no(frame);
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_next_frame(context: *mut c_void) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_next_frame(context: *mut c_void) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.next_frame();
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_prev_frame(context: *mut c_void) {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_prev_frame(context: *mut c_void) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.prev_frame();
     }
 }
@@ -1365,9 +1348,8 @@ pub const SS_RUNTIME_TRACK_SYNC_START: u32 = 1;
 /// # Safety
 /// `name` must be a valid null-terminated UTF-8 (or lossy-decodable) string.
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub unsafe extern "C" fn ss_runtime_set_track_animation(context: *mut c_void, track: u32, name: *const c_char) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1379,8 +1361,8 @@ pub unsafe extern "C" fn ss_runtime_set_track_animation(context: *mut c_void, tr
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_track_animation_by_hash(context: *mut c_void, track: u32, hash: u32) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_track_animation_by_hash(context: *mut c_void, track: u32, hash: u32) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1388,8 +1370,8 @@ pub extern "C" fn ss_runtime_set_track_animation_by_hash(context: *mut c_void, t
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_track_alpha(context: *mut c_void, track: u32, alpha: c_float) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_track_alpha(context: *mut c_void, track: u32, alpha: c_float) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1399,14 +1381,14 @@ pub extern "C" fn ss_runtime_set_track_alpha(context: *mut c_void, track: u32, a
 /// Returns `NaN` for a track that does not exist, so callers can tell it apart
 /// from a valid `alpha` of 0.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_track_alpha(context: *mut c_void, track: u32) -> c_float {
-    get_context(context).and_then(|c| c.ctx.get_track_alpha(track)).unwrap_or(f32::NAN)
+pub unsafe extern "C" fn ss_runtime_get_track_alpha(context: *mut c_void, track: u32) -> c_float {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_track_alpha(track)).unwrap_or(f32::NAN)
 }
 
 /// `blend` is one of `SS_RUNTIME_TRACK_BLEND_*`.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_track_blend(context: *mut c_void, track: u32, blend: u32) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_track_blend(context: *mut c_void, track: u32, blend: u32) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1423,8 +1405,8 @@ pub extern "C" fn ss_runtime_set_track_blend(context: *mut c_void, track: u32, b
 
 /// Returns `SS_RUNTIME_INVALID_HANDLE` for a track that does not exist.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_track_blend(context: *mut c_void, track: u32) -> u32 {
-    match get_context(context).and_then(|c| c.ctx.get_track_blend(track)) {
+pub unsafe extern "C" fn ss_runtime_get_track_blend(context: *mut c_void, track: u32) -> u32 {
+    match unsafe { get_context(context) }.and_then(|c| c.ctx.get_track_blend(track)) {
         Some(crate::TrackBlend::Mix) => SS_RUNTIME_TRACK_BLEND_MIX,
         Some(crate::TrackBlend::Additive) => SS_RUNTIME_TRACK_BLEND_ADDITIVE,
         None => SS_RUNTIME_INVALID_HANDLE,
@@ -1434,8 +1416,8 @@ pub extern "C" fn ss_runtime_get_track_blend(context: *mut c_void, track: u32) -
 /// `sync` is one of `SS_RUNTIME_TRACK_SYNC_*`. Set it before laying an
 /// animation on the track; a track with nothing on it yet is created for it.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_track_sync(context: *mut c_void, track: u32, sync: u32) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_track_sync(context: *mut c_void, track: u32, sync: u32) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1452,8 +1434,8 @@ pub extern "C" fn ss_runtime_set_track_sync(context: *mut c_void, track: u32, sy
 
 /// Returns `SS_RUNTIME_INVALID_HANDLE` for a track that does not exist.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_track_sync(context: *mut c_void, track: u32) -> u32 {
-    match get_context(context).and_then(|c| c.ctx.get_track_sync(track)) {
+pub unsafe extern "C" fn ss_runtime_get_track_sync(context: *mut c_void, track: u32) -> u32 {
+    match unsafe { get_context(context) }.and_then(|c| c.ctx.get_track_sync(track)) {
         Some(crate::TrackSync::Free) => SS_RUNTIME_TRACK_SYNC_FREE,
         Some(crate::TrackSync::Start) => SS_RUNTIME_TRACK_SYNC_START,
         None => SS_RUNTIME_INVALID_HANDLE,
@@ -1461,13 +1443,13 @@ pub extern "C" fn ss_runtime_get_track_sync(context: *mut c_void, track: u32) ->
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_track_count(context: *mut c_void) -> u32 {
-    get_context(context).map_or(0, |c| c.ctx.get_track_count())
+pub unsafe extern "C" fn ss_runtime_get_track_count(context: *mut c_void) -> u32 {
+    unsafe { get_context(context) }.map_or(0, |c| c.ctx.get_track_count())
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_clear_track(context: *mut c_void, track: u32) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_clear_track(context: *mut c_void, track: u32) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1480,9 +1462,8 @@ pub extern "C" fn ss_runtime_clear_track(context: *mut c_void, track: u32) -> bo
 /// # Safety
 /// `name` must be a valid null-terminated UTF-8 (or lossy-decodable) string.
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub unsafe extern "C" fn ss_runtime_crossfade(context: *mut c_void, track: u32, name: *const c_char, duration_ms: c_float) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1494,8 +1475,8 @@ pub unsafe extern "C" fn ss_runtime_crossfade(context: *mut c_void, track: u32, 
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_crossfade_by_hash(context: *mut c_void, track: u32, hash: u32, duration_ms: c_float) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_crossfade_by_hash(context: *mut c_void, track: u32, hash: u32, duration_ms: c_float) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1503,8 +1484,8 @@ pub extern "C" fn ss_runtime_crossfade_by_hash(context: *mut c_void, track: u32,
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_fade_track(context: *mut c_void, track: u32, target_alpha: c_float, duration_ms: c_float) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_fade_track(context: *mut c_void, track: u32, target_alpha: c_float, duration_ms: c_float) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1513,13 +1494,13 @@ pub extern "C" fn ss_runtime_fade_track(context: *mut c_void, track: u32, target
 
 /// Progress in `[0, 1]` of the fade on `track`; `NaN` when it is not fading.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_track_fade_progress(context: *mut c_void, track: u32) -> c_float {
-    get_context(context).and_then(|c| c.ctx.get_track_fade_progress(track)).unwrap_or(f32::NAN)
+pub unsafe extern "C" fn ss_runtime_get_track_fade_progress(context: *mut c_void, track: u32) -> c_float {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_track_fade_progress(track)).unwrap_or(f32::NAN)
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_cancel_track_fade(context: *mut c_void, track: u32) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_cancel_track_fade(context: *mut c_void, track: u32) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1527,8 +1508,8 @@ pub extern "C" fn ss_runtime_cancel_track_fade(context: *mut c_void, track: u32)
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_track_frame(context: *mut c_void, track: u32, frame: c_float) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_track_frame(context: *mut c_void, track: u32, frame: c_float) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1537,13 +1518,13 @@ pub extern "C" fn ss_runtime_set_track_frame(context: *mut c_void, track: u32, f
 
 /// Returns `NaN` when the track has no animation on it.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_track_frame(context: *mut c_void, track: u32) -> c_float {
-    get_context(context).and_then(|c| c.ctx.get_track_frame(track)).unwrap_or(f32::NAN)
+pub unsafe extern "C" fn ss_runtime_get_track_frame(context: *mut c_void, track: u32) -> c_float {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_track_frame(track)).unwrap_or(f32::NAN)
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_track_speed(context: *mut c_void, track: u32, speed: c_float) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_track_speed(context: *mut c_void, track: u32, speed: c_float) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1553,13 +1534,13 @@ pub extern "C" fn ss_runtime_set_track_speed(context: *mut c_void, track: u32, s
 /// What `ss_runtime_set_track_speed` stored (a negative speed reads back as
 /// `0.0`); `NaN` for a track that does not exist.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_track_speed(context: *mut c_void, track: u32) -> c_float {
-    get_context(context).and_then(|c| c.ctx.get_track_speed(track)).unwrap_or(f32::NAN)
+pub unsafe extern "C" fn ss_runtime_get_track_speed(context: *mut c_void, track: u32) -> c_float {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_track_speed(track)).unwrap_or(f32::NAN)
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_track_frame_rate(context: *mut c_void, track: u32, frame_rate: c_int) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_track_frame_rate(context: *mut c_void, track: u32, frame_rate: c_int) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1569,13 +1550,13 @@ pub extern "C" fn ss_runtime_set_track_frame_rate(context: *mut c_void, track: u
 /// The rate the track's animation plays at; `0` for a track with no animation
 /// and no override, `-1` for a track that does not exist.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_track_frame_rate(context: *mut c_void, track: u32) -> i32 {
-    get_context(context).and_then(|c| c.ctx.get_track_frame_rate(track)).unwrap_or(-1)
+pub unsafe extern "C" fn ss_runtime_get_track_frame_rate(context: *mut c_void, track: u32) -> i32 {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_track_frame_rate(track)).unwrap_or(-1)
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_track_skip_frames(context: *mut c_void, track: u32, skip: bool) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_track_skip_frames(context: *mut c_void, track: u32, skip: bool) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1584,15 +1565,15 @@ pub extern "C" fn ss_runtime_set_track_skip_frames(context: *mut c_void, track: 
 
 /// `false` for a track that does not exist.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_track_skip_frames(context: *mut c_void, track: u32) -> bool {
-    get_context(context).and_then(|c| c.ctx.get_track_skip_frames(track)).unwrap_or(false)
+pub unsafe extern "C" fn ss_runtime_get_track_skip_frames(context: *mut c_void, track: u32) -> bool {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_track_skip_frames(track)).unwrap_or(false)
 }
 
 /// `direction`: 0 = forward, otherwise backward. `style`: 0 = normal,
 /// otherwise ping-pong; as `ss_runtime_set_playback_direction`.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_track_playback_direction(context: *mut c_void, track: u32, direction: c_int, style: c_int) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_track_playback_direction(context: *mut c_void, track: u32, direction: c_int, style: c_int) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1603,8 +1584,8 @@ pub extern "C" fn ss_runtime_set_track_playback_direction(context: *mut c_void, 
 
 /// 0 = forward, 1 = backward; `-1` for a track that does not exist.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_track_playback_direction(context: *mut c_void, track: u32) -> i32 {
-    match get_context(context).and_then(|c| c.ctx.get_track_playback_direction(track)) {
+pub unsafe extern "C" fn ss_runtime_get_track_playback_direction(context: *mut c_void, track: u32) -> i32 {
+    match unsafe { get_context(context) }.and_then(|c| c.ctx.get_track_playback_direction(track)) {
         Some(crate::core::playback_controller::PlaybackDirection::Forward) => 0,
         Some(crate::core::playback_controller::PlaybackDirection::Backward) => 1,
         None => -1,
@@ -1613,16 +1594,16 @@ pub extern "C" fn ss_runtime_get_track_playback_direction(context: *mut c_void, 
 
 /// 0 = normal, 1 = ping-pong; `-1` for a track that does not exist.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_track_playback_style(context: *mut c_void, track: u32) -> i32 {
-    get_context(context).and_then(|c| c.ctx.get_track_playback_style(track)).map(|s| s as i32).unwrap_or(-1)
+pub unsafe extern "C" fn ss_runtime_get_track_playback_style(context: *mut c_void, track: u32) -> i32 {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_track_playback_style(track)).map(|s| s as i32).unwrap_or(-1)
 }
 
 /// How many times the track's animation plays before it holds its last frame;
 /// `0` or a negative count loops forever. It belongs to the animation on the
 /// track: laying another one there starts it looping forever again.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_track_loop_count(context: *mut c_void, track: u32, loop_count: c_int) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_track_loop_count(context: *mut c_void, track: u32, loop_count: c_int) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1631,31 +1612,31 @@ pub extern "C" fn ss_runtime_set_track_loop_count(context: *mut c_void, track: u
 
 /// `-1` for a track that loops forever; `0` for a track with no animation.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_track_loop_count(context: *mut c_void, track: u32) -> i32 {
-    get_context(context).and_then(|c| c.ctx.get_track_loop_count(track)).unwrap_or(0)
+pub unsafe extern "C" fn ss_runtime_get_track_loop_count(context: *mut c_void, track: u32) -> i32 {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_track_loop_count(track)).unwrap_or(0)
 }
 
 /// `true` once the track's animation has played its loop count out and holds
 /// its last frame, as `ss_runtime_is_finished` is for track 0. `false` for a
 /// track with no animation.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_is_track_finished(context: *mut c_void, track: u32) -> bool {
-    get_context(context).is_some_and(|c| c.ctx.is_track_finished(track))
+pub unsafe extern "C" fn ss_runtime_is_track_finished(context: *mut c_void, track: u32) -> bool {
+    unsafe { get_context(context) }.is_some_and(|c| c.ctx.is_track_finished(track))
 }
 
 /// `true` for the update in which the track's animation wrapped back to its
 /// start, as `ss_runtime_just_looped` is for track 0.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_track_just_looped(context: *mut c_void, track: u32) -> bool {
-    get_context(context).is_some_and(|c| c.ctx.track_just_looped(track))
+pub unsafe extern "C" fn ss_runtime_track_just_looped(context: *mut c_void, track: u32) -> bool {
+    unsafe { get_context(context) }.is_some_and(|c| c.ctx.track_just_looped(track))
 }
 
 /// How far into a crossfade on `track` the outgoing side keeps firing events:
 /// it fires while its share of the track, `1 - t`, is at least `threshold`.
 /// The default, `+inf`, keeps it silent from the moment the fade begins.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_track_outgoing_event_threshold(context: *mut c_void, track: u32, threshold: c_float) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_track_outgoing_event_threshold(context: *mut c_void, track: u32, threshold: c_float) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1664,16 +1645,16 @@ pub extern "C" fn ss_runtime_set_track_outgoing_event_threshold(context: *mut c_
 
 /// `NaN` for a track that does not exist.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_track_outgoing_event_threshold(context: *mut c_void, track: u32) -> c_float {
-    get_context(context).and_then(|c| c.ctx.get_track_outgoing_event_threshold(track)).unwrap_or(f32::NAN)
+pub unsafe extern "C" fn ss_runtime_get_track_outgoing_event_threshold(context: *mut c_void, track: u32) -> c_float {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_track_outgoing_event_threshold(track)).unwrap_or(f32::NAN)
 }
 
 /// Handle of the source carrying the track's animation, so it can be given a
 /// weight once the track holds several. `SS_RUNTIME_INVALID_HANDLE` when the
 /// track has no animation.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_track_main_source(context: *mut c_void, track: u32) -> u32 {
-    get_context(context).and_then(|c| c.ctx.get_track_main_source(track)).unwrap_or(SS_RUNTIME_INVALID_HANDLE)
+pub unsafe extern "C" fn ss_runtime_get_track_main_source(context: *mut c_void, track: u32) -> u32 {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_track_main_source(track)).unwrap_or(SS_RUNTIME_INVALID_HANDLE)
 }
 
 /// Add another weighted source to `track` (locomotion-style blending). Returns
@@ -1682,9 +1663,8 @@ pub extern "C" fn ss_runtime_get_track_main_source(context: *mut c_void, track: 
 /// # Safety
 /// `name` must be a valid null-terminated UTF-8 (or lossy-decodable) string.
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub unsafe extern "C" fn ss_runtime_add_track_source(context: *mut c_void, track: u32, name: *const c_char, weight: c_float) -> u32 {
-    let Some(ffi_context) = get_context(context) else {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return SS_RUNTIME_INVALID_HANDLE;
     };
     ffi_context.last_error = None;
@@ -1702,8 +1682,8 @@ pub unsafe extern "C" fn ss_runtime_add_track_source(context: *mut c_void, track
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_add_track_source_by_hash(context: *mut c_void, track: u32, hash: u32, weight: c_float) -> u32 {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_add_track_source_by_hash(context: *mut c_void, track: u32, hash: u32, weight: c_float) -> u32 {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return SS_RUNTIME_INVALID_HANDLE;
     };
     ffi_context.last_error = None;
@@ -1717,8 +1697,8 @@ pub extern "C" fn ss_runtime_add_track_source_by_hash(context: *mut c_void, trac
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_source_weight(context: *mut c_void, handle: u32, weight: c_float) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_source_weight(context: *mut c_void, handle: u32, weight: c_float) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1728,13 +1708,13 @@ pub extern "C" fn ss_runtime_set_source_weight(context: *mut c_void, handle: u32
 /// Returns `NaN` for an invalid or released handle, so `weight == 0` stays
 /// distinguishable from "no such source".
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_source_weight(context: *mut c_void, handle: u32) -> c_float {
-    get_context(context).and_then(|c| c.ctx.get_source_weight(handle)).unwrap_or(f32::NAN)
+pub unsafe extern "C" fn ss_runtime_get_source_weight(context: *mut c_void, handle: u32) -> c_float {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_source_weight(handle)).unwrap_or(f32::NAN)
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_source_frame(context: *mut c_void, handle: u32, frame: c_float) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_source_frame(context: *mut c_void, handle: u32, frame: c_float) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1747,26 +1727,26 @@ pub extern "C" fn ss_runtime_set_source_frame(context: *mut c_void, handle: u32,
 /// (`ss_runtime_get_passed_event_source_handle`), track 0's included: after a
 /// crossfade on track 0 that is the incoming animation.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_source_animation_index(context: *mut c_void, handle: u32) -> i32 {
-    get_context(context).and_then(|c| c.ctx.get_source_animation_index(handle)).map(|i| i as i32).unwrap_or(-1)
+pub unsafe extern "C" fn ss_runtime_get_source_animation_index(context: *mut c_void, handle: u32) -> i32 {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_source_animation_index(handle)).map(|i| i as i32).unwrap_or(-1)
 }
 
 /// Which animation track 0's main source plays, as an index into the ssab's
 /// `animations()`: a crossfade or a track animation on track 0 changes it from
 /// the call on. `-1` before anything is set up.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_current_animation_index(context: *mut c_void) -> i32 {
-    get_context(context).and_then(|c| c.ctx.get_current_animation_index()).map(|i| i as i32).unwrap_or(-1)
+pub unsafe extern "C" fn ss_runtime_get_current_animation_index(context: *mut c_void) -> i32 {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_current_animation_index()).map(|i| i as i32).unwrap_or(-1)
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_source_frame(context: *mut c_void, handle: u32) -> c_float {
-    get_context(context).and_then(|c| c.ctx.get_source_frame(handle)).unwrap_or(f32::NAN)
+pub unsafe extern "C" fn ss_runtime_get_source_frame(context: *mut c_void, handle: u32) -> c_float {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_source_frame(handle)).unwrap_or(f32::NAN)
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_source_event_threshold(context: *mut c_void, handle: u32, threshold: c_float) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_source_event_threshold(context: *mut c_void, handle: u32, threshold: c_float) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -1774,8 +1754,8 @@ pub extern "C" fn ss_runtime_set_source_event_threshold(context: *mut c_void, ha
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_source_event_threshold(context: *mut c_void, handle: u32) -> c_float {
-    get_context(context).and_then(|c| c.ctx.get_source_event_threshold(handle)).unwrap_or(f32::NAN)
+pub unsafe extern "C" fn ss_runtime_get_source_event_threshold(context: *mut c_void, handle: u32) -> c_float {
+    unsafe { get_context(context) }.and_then(|c| c.ctx.get_source_event_threshold(handle)).unwrap_or(f32::NAN)
 }
 
 // NOTE: declaration order matters — `inner` borrows from `resource`,
@@ -1793,7 +1773,7 @@ struct FfiEffectSlot {
 /// may be called while the slot is still alive, exactly as it may while a
 /// Context is still bound.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_slot_create(resource: *const c_void, effect_name_hash: u32, seed: u32) -> *mut c_void {
+pub unsafe extern "C" fn ss_effect_slot_create(resource: *const c_void, effect_name_hash: u32, seed: u32) -> *mut c_void {
     if resource.is_null() {
         return core::ptr::null_mut();
     }
@@ -1816,7 +1796,7 @@ pub extern "C" fn ss_effect_slot_create(resource: *const c_void, effect_name_has
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_slot_destroy(slot: *mut c_void) {
+pub unsafe extern "C" fn ss_effect_slot_destroy(slot: *mut c_void) {
     if slot.is_null() {
         return;
     }
@@ -1831,7 +1811,7 @@ pub extern "C" fn ss_effect_slot_destroy(slot: *mut c_void) {
 /// of debouncing the first key as the same one the slot last started. The
 /// resource binding and emitter caches are preserved.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_slot_reset(slot: *mut c_void) {
+pub unsafe extern "C" fn ss_effect_slot_reset(slot: *mut c_void) {
     if slot.is_null() {
         return;
     }
@@ -1861,7 +1841,7 @@ pub extern "C" fn ss_effect_slot_reset(slot: *mut c_void) {
 /// Returns `EffectDrawPlan` FlatBuffer pointer + length when visible. Buffer
 /// is valid only until the next call on the same slot.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_slot_step(slot: *mut c_void, ev: ss_effect_event_info, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8, draw: bool) -> ss_effect_step_result {
+pub unsafe extern "C" fn ss_effect_slot_step(slot: *mut c_void, ev: ss_effect_event_info, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8, draw: bool) -> ss_effect_step_result {
     if slot.is_null() {
         return ss_effect_step_result::not_visible();
     }
@@ -1870,7 +1850,7 @@ pub extern "C" fn ss_effect_slot_step(slot: *mut c_void, ev: ss_effect_event_inf
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_slot_get_seed(slot: *mut c_void) -> u32 {
+pub unsafe extern "C" fn ss_effect_slot_get_seed(slot: *mut c_void) -> u32 {
     if slot.is_null() {
         return 0;
     }
@@ -1883,7 +1863,7 @@ pub extern "C" fn ss_effect_slot_get_seed(slot: *mut c_void) -> u32 {
 /// this to decide whether to schedule continuous tick updates regardless of
 /// parent frame change.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_slot_is_independent(slot: *mut c_void) -> bool {
+pub unsafe extern "C" fn ss_effect_slot_is_independent(slot: *mut c_void) -> bool {
     if slot.is_null() {
         return false;
     }
@@ -1900,7 +1880,7 @@ pub extern "C" fn ss_instance_slot_create() -> *mut c_void {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_instance_slot_destroy(slot: *mut c_void) {
+pub unsafe extern "C" fn ss_instance_slot_destroy(slot: *mut c_void) {
     if slot.is_null() {
         return;
     }
@@ -1914,7 +1894,7 @@ pub extern "C" fn ss_instance_slot_destroy(slot: *mut c_void) {
 /// re-played animation re-fires the instance child from scratch instead of
 /// debouncing the first key as the same one the slot last started.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_instance_slot_reset(slot: *mut c_void) {
+pub unsafe extern "C" fn ss_instance_slot_reset(slot: *mut c_void) {
     if slot.is_null() {
         return;
     }
@@ -1933,11 +1913,11 @@ pub extern "C" fn ss_instance_slot_reset(slot: *mut c_void) {
 /// already put it where `play` snaps it, and a synced child's value follows the
 /// parent, which reading the frame back after `play` would lose.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_instance_slot_step(slot: *mut c_void, ev: ss_event_instance_info, child_ctx: *mut c_void, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> ss_instance_step_result {
+pub unsafe extern "C" fn ss_instance_slot_step(slot: *mut c_void, ev: ss_event_instance_info, child_ctx: *mut c_void, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> ss_instance_step_result {
     if slot.is_null() {
         return ss_instance_step_result::not_visible();
     }
-    let Some(child_ffi) = get_context(child_ctx) else {
+    let Some(child_ffi) = (unsafe { get_context(child_ctx) }) else {
         return ss_instance_step_result::not_visible();
     };
     let slot = unsafe { &mut *(slot as *mut crate::InstanceSlot) };
@@ -1945,7 +1925,7 @@ pub extern "C" fn ss_instance_slot_step(slot: *mut c_void, ev: ss_event_instance
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_instance_slot_is_independent(slot: *mut c_void) -> bool {
+pub unsafe extern "C" fn ss_instance_slot_is_independent(slot: *mut c_void) -> bool {
     if slot.is_null() {
         return false;
     }
@@ -1959,14 +1939,14 @@ pub extern "C" fn ss_instance_slot_is_independent(slot: *mut c_void) -> bool {
 /// Unknown values fall back to Direct.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_set_render_mode(context: *mut c_void, mode: u8) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         ffi_context.ctx.set_render_mode(crate::core::RenderMode::from_u8(mode));
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_get_render_mode(context: *mut c_void) -> u8 {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.render_mode() as u8;
     }
     crate::core::RenderMode::Direct as u8
@@ -1974,7 +1954,7 @@ pub unsafe extern "C" fn ss_runtime_get_render_mode(context: *mut c_void) -> u8 
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_set_coordinate_system(context: *mut c_void, coordinate_system: i32) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         let cs = match coordinate_system {
             1 => crate::core::SsCoordinateSystem::YDown,
             _ => crate::core::SsCoordinateSystem::YUp,
@@ -1985,7 +1965,7 @@ pub unsafe extern "C" fn ss_runtime_set_coordinate_system(context: *mut c_void, 
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_get_coordinate_system(context: *mut c_void) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         match ffi_context.ctx.get_coordinate_system() {
             crate::core::SsCoordinateSystem::YDown => 1,
             crate::core::SsCoordinateSystem::YUp => 0,
@@ -1997,7 +1977,7 @@ pub unsafe extern "C" fn ss_runtime_get_coordinate_system(context: *mut c_void) 
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_set_origin(context: *mut c_void, origin: i32) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         let o = match origin {
             1 => crate::core::SsOrigin::TopLeft,
             _ => crate::core::SsOrigin::Center,
@@ -2008,7 +1988,7 @@ pub unsafe extern "C" fn ss_runtime_set_origin(context: *mut c_void, origin: i32
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_get_origin(context: *mut c_void) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         match ffi_context.ctx.get_origin() {
             crate::core::SsOrigin::TopLeft => 1,
             crate::core::SsOrigin::Center => 0,
@@ -2020,7 +2000,7 @@ pub unsafe extern "C" fn ss_runtime_get_origin(context: *mut c_void) -> i32 {
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_set_unit(context: *mut c_void, unit: i32) {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         let u = match unit {
             1 => crate::core::SsUnit::Normalized,
             _ => crate::core::SsUnit::Pixel,
@@ -2031,7 +2011,7 @@ pub unsafe extern "C" fn ss_runtime_set_unit(context: *mut c_void, unit: i32) {
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_get_unit(context: *mut c_void) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         match ffi_context.ctx.get_unit() {
             crate::core::SsUnit::Normalized => 1,
             crate::core::SsUnit::Pixel => 0,
@@ -2042,16 +2022,16 @@ pub unsafe extern "C" fn ss_runtime_get_unit(context: *mut c_void) -> i32 {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_passed_event_count(context: *mut c_void) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_passed_event_count(context: *mut c_void) -> i32 {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.get_passed_event_indices().len() as i32;
     }
     0
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index: i32) -> i32 {
-    if let Some(ffi_context) = get_context(context)
+pub unsafe extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index: i32) -> i32 {
+    if let Some(ffi_context) = unsafe { get_context(context) }
         && let Some(&event_idx) = ffi_context.ctx.get_passed_event_indices().get(index as usize)
     {
         return event_idx;
@@ -2072,9 +2052,9 @@ pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index:
 /// Returns `U32_MAX` for a negative or out-of-range `index`, which no live
 /// handle ever equals.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_passed_event_source_handle(context: *mut c_void, index: i32) -> u32 {
+pub unsafe extern "C" fn ss_runtime_get_passed_event_source_handle(context: *mut c_void, index: i32) -> u32 {
     if index >= 0
-        && let Some(ffi_context) = get_context(context)
+        && let Some(ffi_context) = unsafe { get_context(context) }
         && let Some(&handle) = ffi_context.ctx.get_passed_event_source_handles().get(index as usize)
     {
         return handle;
@@ -2093,8 +2073,8 @@ pub extern "C" fn ss_runtime_get_passed_event_source_handle(context: *mut c_void
 /// child runtime — most Players should consume the slot helper rather
 /// than resolving labels themselves.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_active_event_instance(context: *mut c_void, slot_index: u32) -> ss_event_instance_info {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_active_event_instance(context: *mut c_void, slot_index: u32) -> ss_event_instance_info {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.get_active_event_instance(slot_index);
     }
     ss_event_instance_info::synthetic_default()
@@ -2106,15 +2086,14 @@ pub extern "C" fn ss_runtime_get_active_event_instance(context: *mut c_void, slo
 /// `is_synthetic_default = true`); if neither exists, returns full SS6
 /// defaults (`start_time = 0`, `speed = 1.0`, `independent = false`).
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_active_effect_event(context: *mut c_void, slot_index: u32) -> ss_effect_event_info {
-    if let Some(ffi_context) = get_context(context) {
+pub unsafe extern "C" fn ss_runtime_get_active_effect_event(context: *mut c_void, slot_index: u32) -> ss_effect_event_info {
+    if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.get_active_effect_event(slot_index);
     }
     ss_effect_event_info::synthetic_default()
 }
 
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences a raw pointer.
@@ -2132,9 +2111,8 @@ pub unsafe extern "C" fn ss_runtime_hash_string(s: *const c_char) -> u32 {
 /// Resolve a part name to its `part_index` in the current primary animation.
 /// Returns `-1` on null context / null or invalid name / not found.
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn ss_runtime_find_part_index(context: *mut c_void, part_name: *const c_char) -> i32 {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_find_part_index(context: *mut c_void, part_name: *const c_char) -> i32 {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return -1;
     };
     if part_name.is_null() {
@@ -2151,8 +2129,8 @@ pub extern "C" fn ss_runtime_find_part_index(context: *mut c_void, part_name: *c
 /// `force`: `0` = clear/revert, `1` = force-hide, `2` = force-visible (reserved).
 /// `cascade != 0` propagates a force-hide to descendants.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_part_visibility_override(context: *mut c_void, part: u32, force: c_uchar, cascade: c_uchar) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_part_visibility_override(context: *mut c_void, part: u32, force: c_uchar, cascade: c_uchar) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -2167,8 +2145,8 @@ pub extern "C" fn ss_runtime_set_part_visibility_override(context: *mut c_void, 
 
 /// Clear a part's visibility override (revert to animation).
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_clear_part_visibility_override(context: *mut c_void, part: u32) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_clear_part_visibility_override(context: *mut c_void, part: u32) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -2186,8 +2164,8 @@ pub extern "C" fn ss_runtime_clear_part_visibility_override(context: *mut c_void
 /// `0=OverwriteOnNextKeyframe 1=HoldUntilNextAnimation 2=Permanent`. Normal
 /// parts only.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_part_color_override(context: *mut c_void, part: u32, blend_op: c_uchar, rgba: u32, priority_mode: c_uchar) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_part_color_override(context: *mut c_void, part: u32, blend_op: c_uchar, rgba: u32, priority_mode: c_uchar) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -2203,9 +2181,8 @@ pub extern "C" fn ss_runtime_set_part_color_override(context: *mut c_void, part:
 /// Set a per-part color override from four packed RGBA corners in ssruntime
 /// order `lt, rt, lb, rb` (`rgba_ltrtlbrb` points to 4 `uint32` = `0xRRGGBBAA`).
 #[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn ss_runtime_set_part_color_override_corners(context: *mut c_void, part: u32, blend_op: c_uchar, rgba_ltrtlbrb: *const u32, priority_mode: c_uchar) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_part_color_override_corners(context: *mut c_void, part: u32, blend_op: c_uchar, rgba_ltrtlbrb: *const u32, priority_mode: c_uchar) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -2226,8 +2203,8 @@ pub extern "C" fn ss_runtime_set_part_color_override_corners(context: *mut c_voi
 
 /// Clear a part's color override.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_clear_part_color_override(context: *mut c_void, part: u32) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_clear_part_color_override(context: *mut c_void, part: u32) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -2245,8 +2222,8 @@ pub extern "C" fn ss_runtime_clear_part_color_override(context: *mut c_void, par
 /// `priority_mode`: `0=OverwriteOnNextKeyframe 1=HoldUntilNextAnimation 2=
 /// Permanent`. Normal + Mask parts only. Fails if the cell cannot be resolved.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_part_cell_override(context: *mut c_void, part: u32, cellmap_name_hash: u32, cell_name_hash: u32, priority_mode: c_uchar) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_set_part_cell_override(context: *mut c_void, part: u32, cellmap_name_hash: u32, cell_name_hash: u32, priority_mode: c_uchar) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -2261,8 +2238,8 @@ pub extern "C" fn ss_runtime_set_part_cell_override(context: *mut c_void, part: 
 
 /// Clear a part's cell override.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_clear_part_cell_override(context: *mut c_void, part: u32) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_clear_part_cell_override(context: *mut c_void, part: u32) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -2277,8 +2254,8 @@ pub extern "C" fn ss_runtime_clear_part_cell_override(context: *mut c_void, part
 
 /// Clear every per-part override on the context.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_clear_all_part_overrides(context: *mut c_void) -> bool {
-    let Some(ffi_context) = get_context(context) else {
+pub unsafe extern "C" fn ss_runtime_clear_all_part_overrides(context: *mut c_void) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
         return false;
     };
     ffi_context.last_error = None;
@@ -2294,7 +2271,7 @@ mod tests {
 
     /// The code a context is holding, and the wording that code maps to.
     fn read_error(ctx: *mut c_void) -> (i32, std::string::String) {
-        let code = ss_runtime_get_last_error(ctx);
+        let code = unsafe { ss_runtime_get_last_error(ctx) };
         let text = unsafe { CStr::from_ptr(ss_runtime_error_message(code)) };
         (code, text.to_string_lossy().into_owned())
     }
@@ -2333,8 +2310,8 @@ mod tests {
         // Nothing bound, so the runtime has no animation to set up.
         assert!(!unsafe { ss_runtime_setup_animation(ctx, name.as_ptr()) });
         // The track entry points record theirs through `report`.
-        assert!(!ss_runtime_set_track_alpha(ctx, 0, f32::NAN));
-        ss_runtime_destroy(ctx);
+        assert!(!unsafe { ss_runtime_set_track_alpha(ctx, 0, f32::NAN) });
+        unsafe { ss_runtime_destroy(ctx) };
 
         // The callback is a process-global the ABI gives no way to clear, so
         // other tests' failures land in here too -- look for this one rather
@@ -2376,7 +2353,7 @@ mod tests {
     fn a_fresh_context_reports_no_error() {
         let ctx = ss_runtime_create();
         assert_eq!(read_error(ctx), (0, std::string::String::new()));
-        ss_runtime_destroy(ctx);
+        unsafe { ss_runtime_destroy(ctx) };
     }
 
     #[test]
@@ -2388,7 +2365,7 @@ mod tests {
         let (code, text) = read_error(ctx);
         assert_eq!(code, crate::error::SSRuntimeError::NotLoaded.as_code());
         assert_eq!(text, "SSAB data is not loaded");
-        ss_runtime_destroy(ctx);
+        unsafe { ss_runtime_destroy(ctx) };
     }
 
     #[test]
@@ -2396,19 +2373,19 @@ mod tests {
         let ctx = ss_runtime_create();
         let name = CString::new("walk").unwrap();
         assert!(!unsafe { ss_runtime_setup_animation(ctx, name.as_ptr()) });
-        assert_eq!(ss_runtime_get_last_error(ctx), crate::error::SSRuntimeError::NotLoaded.as_code());
+        assert_eq!(unsafe { ss_runtime_get_last_error(ctx) }, crate::error::SSRuntimeError::NotLoaded.as_code());
 
         // A different failure replaces it rather than being masked by it.
         assert!(!unsafe { ss_runtime_load_ssab_borrow(ctx, core::ptr::null(), 0) });
-        assert_eq!(ss_runtime_get_last_error(ctx), crate::error::SSRuntimeError::InvalidParameter.as_code());
+        assert_eq!(unsafe { ss_runtime_get_last_error(ctx) }, crate::error::SSRuntimeError::InvalidParameter.as_code());
 
         // And a success clears it: the field says "did the last call fail", not
         // "has anything ever failed".
         let ssab = ssab_with_wrong_version();
         let _ = unsafe { ss_runtime_load_ssab_borrow(ctx, ssab.as_ptr(), ssab.len()) };
-        ss_runtime_reset(ctx);
+        unsafe { ss_runtime_reset(ctx) };
         assert_eq!(read_error(ctx), (0, std::string::String::new()));
-        ss_runtime_destroy(ctx);
+        unsafe { ss_runtime_destroy(ctx) };
     }
 
     /// The message no longer carries the two version numbers — `as_str` is
@@ -2427,7 +2404,7 @@ mod tests {
         // failed parse.
         assert_eq!(code, crate::error::SSRuntimeError::InvalidVersion { expected: 0, got: 0 }.as_code());
         assert_eq!(text, "Invalid SSAB version");
-        ss_runtime_destroy(ctx);
+        unsafe { ss_runtime_destroy(ctx) };
     }
 
     /// The porting guide may only name C entry points that exist.
@@ -2561,7 +2538,7 @@ mod tests {
     #[test]
     fn a_null_context_answers_without_dereferencing_it() {
         let null = core::ptr::null_mut();
-        assert_eq!(ss_runtime_get_last_error(null), 0);
+        assert_eq!(unsafe { ss_runtime_get_last_error(null) }, 0);
         // 0 is "no error", and the message for it is empty rather than null, so
         // a caller can log the result without checking either.
         let msg = ss_runtime_error_message(0);
@@ -2595,7 +2572,7 @@ mod tests {
         let ctx = ss_runtime_create();
         let ssab = ssab_with_wrong_version();
         assert!(!unsafe { ss_runtime_load_ssab_borrow(ctx, ssab.as_ptr(), ssab.len()) });
-        assert_eq!(ss_runtime_get_last_error(ctx), crate::error::SSRuntimeError::InvalidVersion { expected: 0, got: 0 }.as_code());
-        ss_runtime_destroy(ctx);
+        assert_eq!(unsafe { ss_runtime_get_last_error(ctx) }, crate::error::SSRuntimeError::InvalidVersion { expected: 0, got: 0 }.as_code());
+        unsafe { ss_runtime_destroy(ctx) };
     }
 }

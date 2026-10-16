@@ -7049,10 +7049,10 @@ mod tests {
         assert!(unsafe { ss_runtime_setup_animation_by_hash(ctx, fnv1a_hash_str("walk")) });
         // Out of range in either direction is the sentinel, not a read past the
         // slice — which is the whole reason this is bounds-checked here.
-        assert_eq!(ss_runtime_get_passed_event_source_handle(ctx, -1), u32::MAX);
-        assert_eq!(ss_runtime_get_passed_event_source_handle(ctx, 9999), u32::MAX);
-        assert_eq!(ss_runtime_get_passed_event_source_handle(::core::ptr::null_mut(), 0), u32::MAX);
-        ss_runtime_destroy(ctx);
+        assert_eq!(unsafe { ss_runtime_get_passed_event_source_handle(ctx, -1) }, u32::MAX);
+        assert_eq!(unsafe { ss_runtime_get_passed_event_source_handle(ctx, 9999) }, u32::MAX);
+        assert_eq!(unsafe { ss_runtime_get_passed_event_source_handle(::core::ptr::null_mut(), 0) }, u32::MAX);
+        unsafe { ss_runtime_destroy(ctx) };
     }
 
     /// The C face maps `SS_RUNTIME_TRACK_SYNC_*` both ways and refuses a value
@@ -7069,17 +7069,17 @@ mod tests {
         assert!(unsafe { ss_runtime_load_ssab_copy(ctx, bytes.as_ptr(), bytes.len()) });
         assert!(unsafe { ss_runtime_setup_animation_by_hash(ctx, fnv1a_hash_str("walk")) });
 
-        assert_eq!(ss_runtime_get_track_sync(ctx, 0), SS_RUNTIME_TRACK_SYNC_FREE);
-        assert!(ss_runtime_set_track_sync(ctx, 1, SS_RUNTIME_TRACK_SYNC_START));
-        assert_eq!(ss_runtime_get_track_sync(ctx, 1), SS_RUNTIME_TRACK_SYNC_START);
-        assert!(!ss_runtime_set_track_sync(ctx, 1, 2), "an unknown sync is refused");
-        assert_eq!(ss_runtime_get_track_sync(ctx, 1), SS_RUNTIME_TRACK_SYNC_START, "and leaves the setting alone");
-        assert_eq!(ss_runtime_get_track_sync(ctx, 99), SS_RUNTIME_INVALID_HANDLE);
+        assert_eq!(unsafe { ss_runtime_get_track_sync(ctx, 0) }, SS_RUNTIME_TRACK_SYNC_FREE);
+        assert!(unsafe { ss_runtime_set_track_sync(ctx, 1, SS_RUNTIME_TRACK_SYNC_START) });
+        assert_eq!(unsafe { ss_runtime_get_track_sync(ctx, 1) }, SS_RUNTIME_TRACK_SYNC_START);
+        assert!(!unsafe { ss_runtime_set_track_sync(ctx, 1, 2) }, "an unknown sync is refused");
+        assert_eq!(unsafe { ss_runtime_get_track_sync(ctx, 1) }, SS_RUNTIME_TRACK_SYNC_START, "and leaves the setting alone");
+        assert_eq!(unsafe { ss_runtime_get_track_sync(ctx, 99) }, SS_RUNTIME_INVALID_HANDLE);
 
-        let walk = ss_runtime_get_track_main_source(ctx, 0);
-        assert!(ss_runtime_get_source_animation_index(ctx, walk) >= 0);
-        assert_eq!(ss_runtime_get_source_animation_index(ctx, 999), -1);
-        ss_runtime_destroy(ctx);
+        let walk = unsafe { ss_runtime_get_track_main_source(ctx, 0) };
+        assert!(unsafe { ss_runtime_get_source_animation_index(ctx, walk) } >= 0);
+        assert_eq!(unsafe { ss_runtime_get_source_animation_index(ctx, 999) }, -1);
+        unsafe { ss_runtime_destroy(ctx) };
     }
 
     /// The C face of the track settings maps the direction and style both ways
@@ -7092,36 +7092,36 @@ mod tests {
         let ssab = load_ringo_resource();
         let bytes = ssab.as_slice();
         let ctx = ss_runtime_create();
-        assert_eq!(ss_runtime_get_current_animation_index(ctx), -1, "nothing is set up yet");
+        assert_eq!(unsafe { ss_runtime_get_current_animation_index(ctx) }, -1, "nothing is set up yet");
         assert!(unsafe { ss_runtime_load_ssab_copy(ctx, bytes.as_ptr(), bytes.len()) });
         assert!(unsafe { ss_runtime_setup_animation_by_hash(ctx, fnv1a_hash_str("walk")) });
-        let walk = ss_runtime_get_source_animation_index(ctx, ss_runtime_get_track_main_source(ctx, 0));
-        assert_eq!(ss_runtime_get_current_animation_index(ctx), walk);
+        let walk = unsafe { ss_runtime_get_source_animation_index(ctx, ss_runtime_get_track_main_source(ctx, 0)) };
+        assert_eq!(unsafe { ss_runtime_get_current_animation_index(ctx) }, walk);
 
-        assert!(ss_runtime_set_track_speed(ctx, 1, 0.5));
-        assert_eq!(ss_runtime_get_track_speed(ctx, 1), 0.5);
-        assert!(ss_runtime_set_track_frame_rate(ctx, 1, 24));
-        assert_eq!(ss_runtime_get_track_frame_rate(ctx, 1), 24);
-        assert!(ss_runtime_set_track_skip_frames(ctx, 1, false));
-        assert!(!ss_runtime_get_track_skip_frames(ctx, 1));
-        assert!(ss_runtime_set_track_playback_direction(ctx, 1, 1, 1));
-        assert_eq!((ss_runtime_get_track_playback_direction(ctx, 1), ss_runtime_get_track_playback_style(ctx, 1)), (1, 1));
-        assert!(ss_runtime_set_track_outgoing_event_threshold(ctx, 1, 0.5));
-        assert_eq!(ss_runtime_get_track_outgoing_event_threshold(ctx, 1), 0.5);
+        assert!(unsafe { ss_runtime_set_track_speed(ctx, 1, 0.5) });
+        assert_eq!(unsafe { ss_runtime_get_track_speed(ctx, 1) }, 0.5);
+        assert!(unsafe { ss_runtime_set_track_frame_rate(ctx, 1, 24) });
+        assert_eq!(unsafe { ss_runtime_get_track_frame_rate(ctx, 1) }, 24);
+        assert!(unsafe { ss_runtime_set_track_skip_frames(ctx, 1, false) });
+        assert!(!unsafe { ss_runtime_get_track_skip_frames(ctx, 1) });
+        assert!(unsafe { ss_runtime_set_track_playback_direction(ctx, 1, 1, 1) });
+        assert_eq!((unsafe { ss_runtime_get_track_playback_direction(ctx, 1) }, unsafe { ss_runtime_get_track_playback_style(ctx, 1) }), (1, 1));
+        assert!(unsafe { ss_runtime_set_track_outgoing_event_threshold(ctx, 1, 0.5) });
+        assert_eq!(unsafe { ss_runtime_get_track_outgoing_event_threshold(ctx, 1) }, 0.5);
 
-        assert!(!ss_runtime_set_track_loop_count(ctx, 1, 2), "no animation on track 1 to count the loops of");
-        assert_eq!(ss_runtime_get_track_loop_count(ctx, 1), 0);
-        assert!(!ss_runtime_is_track_finished(ctx, 1) && !ss_runtime_track_just_looped(ctx, 1));
-        assert!(ss_runtime_set_track_animation_by_hash(ctx, 1, fnv1a_hash_str("run")));
-        assert_eq!(ss_runtime_get_track_loop_count(ctx, 1), -1, "laid looping forever");
-        assert!(ss_runtime_set_track_loop_count(ctx, 1, 2));
-        assert_eq!(ss_runtime_get_track_loop_count(ctx, 1), 2);
+        assert!(!unsafe { ss_runtime_set_track_loop_count(ctx, 1, 2) }, "no animation on track 1 to count the loops of");
+        assert_eq!(unsafe { ss_runtime_get_track_loop_count(ctx, 1) }, 0);
+        assert!(!unsafe { ss_runtime_is_track_finished(ctx, 1) } && !unsafe { ss_runtime_track_just_looped(ctx, 1) });
+        assert!(unsafe { ss_runtime_set_track_animation_by_hash(ctx, 1, fnv1a_hash_str("run")) });
+        assert_eq!(unsafe { ss_runtime_get_track_loop_count(ctx, 1) }, -1, "laid looping forever");
+        assert!(unsafe { ss_runtime_set_track_loop_count(ctx, 1, 2) });
+        assert_eq!(unsafe { ss_runtime_get_track_loop_count(ctx, 1) }, 2);
 
-        assert!(ss_runtime_get_track_speed(ctx, 99).is_nan());
-        assert_eq!(ss_runtime_get_track_frame_rate(ctx, 99), -1);
-        assert_eq!((ss_runtime_get_track_playback_direction(ctx, 99), ss_runtime_get_track_playback_style(ctx, 99)), (-1, -1));
-        assert!(ss_runtime_get_track_outgoing_event_threshold(ctx, 99).is_nan());
-        ss_runtime_destroy(ctx);
+        assert!(unsafe { ss_runtime_get_track_speed(ctx, 99) }.is_nan());
+        assert_eq!(unsafe { ss_runtime_get_track_frame_rate(ctx, 99) }, -1);
+        assert_eq!((unsafe { ss_runtime_get_track_playback_direction(ctx, 99) }, unsafe { ss_runtime_get_track_playback_style(ctx, 99) }), (-1, -1));
+        assert!(unsafe { ss_runtime_get_track_outgoing_event_threshold(ctx, 99) }.is_nan());
+        unsafe { ss_runtime_destroy(ctx) };
     }
 
     #[test]
