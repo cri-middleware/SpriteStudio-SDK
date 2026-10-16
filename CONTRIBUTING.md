@@ -42,35 +42,45 @@ If you have an idea, please open an issue to discuss it before starting work.
 1. Fork the repository and create your branch from `develop`.
 2. Ensure your code follows the existing style and conventions.
 3. Add tests for any new features or bug fixes.
-4. Ensure all tests pass (`cargo test --workspace --all-features`).
+4. Ensure `scripts/check.sh` passes (see [Checks](#checks)).
 5. Update documentation if necessary (READMEs, Doc comments).
 6. Submit a Pull Request against `develop` with a clear description of the changes.
 
 ## Development Environment
 
 ### Prerequisites
-- [Rustup](https://rustup.rs/) (Stable channel)
+- [Rustup](https://rustup.rs/) (Stable channel). The oldest Rust the workspace supports is the `rust-version` in the root `Cargo.toml`.
 - [FlatBuffers compiler](https://google.github.io/flatbuffers/) (Required if modifying `.fbs` files)
 - [cbindgen](https://github.com/mozilla/cbindgen) (For C-API header generation)
 
-### Build and Test
+### Build
 ```bash
 # Build the entire workspace
 cargo build --release
-
-# Run all tests. --all-features is load-bearing: the test modules sit behind
-# feature "std", and a plain `cargo test` passes without running them.
-cargo test --workspace --all-features
 
 # Run the converter CLI for verification
 cargo run -p ssconverter-cli -- <path_to_sspj>
 ```
 
+### Checks
+`scripts/check.sh` (`scripts/check.ps1` in PowerShell) runs what CI runs on a pull request: `cargo fmt --check`, the license copies, `clippy` and `rustdoc` with warnings denied, and the workspace tests. Run it before you push.
+
+```bash
+scripts/check.sh                # what CI runs on a pull request
+scripts/check.sh features=yes   # ... and ssruntime's feature sets one at a time, native and wasm32
+scripts/check.sh msrv=yes       # ... and `cargo check` with the rust-version toolchain
+scripts/check.sh docs=yes       # ... and the Player Porting Guide in both locales
+```
+
+Every check runs, and the summary at the end lists each one as passed, FAILED or skipped. A check whose prerequisite is missing, such as the wasm32 target or the MSRV toolchain, is skipped rather than failed, so read the summary, not the exit status. Add `features=yes` when you change code behind a feature: `--all-features` compiles every feature at once, so it hides code that only one set compiles or leaves unused.
+
+If you run a command by hand, keep its `--all-features`: the test modules sit behind `feature = "std"`, so without it `clippy` never lints them and a plain `cargo test` passes without running them.
+
 ### Generated code
 The `.fbs` schemas under `libs/ssab/fbs/` and `libs/ssruntime/fbs/` have generated Rust bindings: after changing one, run that library's `scripts/generate.sh` (or `.ps1`). `cbindgen` writes the C/C++ headers for `ssconverter` and `ssruntime`.
 
 ### Documentation site
-The Player Porting Guide under `libs/ssruntime/docs` is published as a site. If you edit a page there, build both locales before you finish: nothing builds the docs on a pull request, so that local build is the only gate before the merge (CI builds them weekly). Set the toolchain up once with `scripts/prepare-docs.sh`, then:
+The Player Porting Guide under `libs/ssruntime/docs` is published as a site. If you edit a page there, build both locales before you finish, with `scripts/check.sh docs=yes` or the commands below: nothing builds the docs on a pull request, so that local build is the only gate before the merge (CI builds them weekly). Set the toolchain up once with `scripts/prepare-docs.sh`, then:
 
 ```bash
 scripts/build-docs.sh              # generate the locale trees, build en then ja, both --strict
@@ -83,7 +93,7 @@ scripts/build-pages.sh serve=yes   # the published tree: that build + rustdoc at
 
 ### Rust Guidelines
 - Use `rustfmt` to format your code: `cargo fmt`.
-- Check for common mistakes with `clippy`: `cargo clippy --workspace --all-targets --all-features -- -D warnings`. `--all-features` is load-bearing — the test modules sit behind `feature = "std"`, so without it they are the one body of code nothing lints.
+- Fix what `clippy` reports; `scripts/check.sh` runs it the way CI does.
 - Follow [Idiomatic Rust](https://github.com/mre/idiomatic-rust) practices.
 
 ### FFI and C-API
@@ -154,35 +164,45 @@ SDK を改善するアイデアがある場合は、開発を始める前に Iss
 1. リポジトリをフォークし、`develop` ブランチから作業用ブランチを作成してください。
 2. 既存のスタイルや規約に従ってコードを記述してください。
 3. 新しい機能やバグ修正には、対応するテストを追加してください。
-4. すべてのテストがパスすることを確認してください (`cargo test --workspace --all-features`)。
+4. `scripts/check.sh` が通ることを確認してください（[チェック](#チェック)を参照）。
 5. 必要に応じてドキュメント (README やコメント) を更新してください。
 6. `develop` ブランチに向けて、変更内容を明確に記載したプルリクエストを送信してください。
 
 ## 開発環境のセットアップ
 
 ### 前提条件
-- [Rustup](https://rustup.rs/) (Stable チャンネル)
+- [Rustup](https://rustup.rs/) (Stable チャンネル)。ワークスペースが対応する最も古い Rust は、ルートの `Cargo.toml` の `rust-version` です。
 - [FlatBuffers コンパイラ](https://google.github.io/flatbuffers/) (`.fbs` ファイルを変更する場合に必要)
 - [cbindgen](https://github.com/mozilla/cbindgen) (C-API ヘッダー生成に必要)
 
-### ビルドとテスト
+### ビルド
 ```bash
 # ワークスペース全体のビルド
 cargo build --release
-
-# すべてのテストを実行。--all-features は必須です。テストモジュールは feature "std" 配下にあり、
-# 素の `cargo test` はそれらを実行しないまま成功します
-cargo test --workspace --all-features
 
 # コンバーター CLI を実行して動作確認
 cargo run -p ssconverter-cli -- <path_to_sspj>
 ```
 
+### チェック
+`scripts/check.sh`（PowerShell では `scripts/check.ps1`）は、プルリクエストで CI が実行するものを実行します。`cargo fmt --check`、ライセンスの写し、警告をエラーにした `clippy` と `rustdoc`、ワークスペースのテストです。プッシュする前に実行してください。
+
+```bash
+scripts/check.sh                # プルリクエストで CI が実行するもの
+scripts/check.sh features=yes   # 加えて、ssruntime の feature の組み合わせを 1 つずつ（ネイティブと wasm32）
+scripts/check.sh msrv=yes       # 加えて、rust-version のツールチェーンで `cargo check`
+scripts/check.sh docs=yes       # 加えて、Player 移植ガイドを両ロケールでビルド
+```
+
+すべてのチェックを最後まで実行し、最後のまとめで、それぞれを passed / FAILED / skipped として示します。wasm32 のターゲットや MSRV のツールチェーンのように前提が欠けているチェックは、失敗ではなく skip になります。終了ステータスではなく、まとめを読んでください。feature の内側のコードを変えたら `features=yes` を付けてください。`--all-features` はすべての feature を一度にコンパイルするので、1 つの組み合わせでだけコンパイルされるコードや、使われなくなるコードが見えません。
+
+コマンドを手で実行するときも `--all-features` は外さないでください。テストモジュールは `feature = "std"` 配下にあるため、付けないと `clippy` はそこを lint せず、素の `cargo test` はそれらを実行しないまま成功します。
+
 ### 生成コード
 `libs/ssab/fbs/` と `libs/ssruntime/fbs/` の `.fbs` スキーマには生成された Rust バインディングがあります。変更したら、そのライブラリの `scripts/generate.sh`（または `.ps1`）を実行してください。`ssconverter` と `ssruntime` の C/C++ ヘッダーは `cbindgen` が生成します。
 
 ### ドキュメントサイト
-`libs/ssruntime/docs` の Player 移植ガイドはサイトとして公開されます。ページを編集したら、仕上げる前に両ロケールをビルドしてください。プルリクエストでは docs はビルドされないため、マージ前のゲートは手元のビルドだけです（CI がビルドするのは週次です）。`scripts/prepare-docs.sh` で一度ツールチェーンを用意してから、以下を実行してください。
+`libs/ssruntime/docs` の Player 移植ガイドはサイトとして公開されます。ページを編集したら、仕上げる前に、`scripts/check.sh docs=yes` か下のコマンドで両ロケールをビルドしてください。プルリクエストでは docs はビルドされないため、マージ前のゲートは手元のビルドだけです（CI がビルドするのは週次です）。`scripts/prepare-docs.sh` で一度ツールチェーンを用意してから、以下を実行してください。
 
 ```bash
 scripts/build-docs.sh              # ロケール別ツリーを生成し、en → ja の順に --strict でビルド
@@ -195,7 +215,7 @@ scripts/build-pages.sh serve=yes   # 公開ツリー: 上記 + /api/ の rustdoc
 
 ### Rust のガイドライン
 - `rustfmt` を使用してフォーマットを統一してください: `cargo fmt`
-- `clippy` を使用して一般的なミスをチェックしてください: `cargo clippy --workspace --all-targets --all-features -- -D warnings`。`--all-features` は必須です — テストモジュールは `feature = "std"` 配下にあるため、付けないとそこだけ lint されません
+- `clippy` の指摘を直してください。`scripts/check.sh` が CI と同じ方法で実行します
 - [慣用的な Rust](https://github.com/mre/idiomatic-rust) (Idiomatic Rust) のプラクティスに従ってください。
 
 ### FFI と C-API
