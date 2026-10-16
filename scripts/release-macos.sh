@@ -43,7 +43,7 @@ OUTPUT=target/universal-apple-darwin/${BUILD_MODE}
 /bin/mkdir -p ${OUTPUT}
 
 LIBS=(libssruntime.a libssruntime.dylib libssconverter.a libssconverter.dylib ssconverter-cli)
-for lib in ${LIBS[@]}; do
+for lib in "${LIBS[@]}"; do
     lipo -create target/aarch64-apple-darwin/${BUILD_MODE}/${lib} target/x86_64-apple-darwin/${BUILD_MODE}/${lib} -output ${OUTPUT}/${lib}
 done
 

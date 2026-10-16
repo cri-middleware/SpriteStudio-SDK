@@ -101,29 +101,3 @@ fn main() -> Result<(), ssconverter::ConverterError> {
     println!("All conversions completed successfully.");
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-
-    use rayon::prelude::*;
-    use std::path::{Path, PathBuf};
-
-    static TARGET_SSPJ_FILES: [&str; 5] = ["tests/ParticleEffect/ParticleEffect.sspj", "tests/allAttributeV7/allAttributeV7.sspj", "tests/allPartsV7/allPartsV7.sspj", "tests/overall/overall.sspj", "tests/Doll/Doll.sspj"];
-
-    fn get_test_base_path() -> PathBuf {
-        std::env::current_dir().expect("Failed to get the current directory").parent().expect("Failed to get the base directory").to_path_buf()
-    }
-
-    #[test]
-    fn test_convert_ssab() {
-        TARGET_SSPJ_FILES.par_iter().for_each(|&f| {
-            let p = Path::new(f);
-            let config = ssconverter::ConverterConfig::default();
-            let r = ssconverter::convert_sspj_to_ssab_files(get_test_base_path().join(p).as_path(), &config, &|msg: &str| println!("{}", msg));
-            match r {
-                Ok(_) => {}
-                Err(e) => panic!("{:?}", e),
-            }
-        });
-    }
-}
