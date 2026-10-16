@@ -35,9 +35,9 @@ fn touch(ptr: *const u8, len: usize) {
 
 fn play(ctx: *mut c_void, animation_hash: u32, frames: usize) {
     assert!(unsafe { ss_runtime_setup_animation_by_hash(ctx, animation_hash) });
-    ss_runtime_play(ctx);
+    unsafe { ss_runtime_play(ctx) };
     for _ in 0..frames {
-        let frame = ss_runtime_update(ctx, 1000.0 / 30.0);
+        let frame = unsafe { ss_runtime_update(ctx, 1000.0 / 30.0) };
         let (mut data, mut len) = (null(), 0);
         unsafe { ss_runtime_get_frame_data(ctx, frame, &mut data, &mut len) };
         touch(data, len);
@@ -52,13 +52,13 @@ fn a_context_keeps_its_resource_after_the_handle_is_destroyed() {
     assert!(!res.is_null());
     drop(bytes);
     let ctx = ss_runtime_create();
-    assert!(ss_runtime_bind_resource(ctx, res));
-    ss_resource_destroy(res);
+    assert!(unsafe { ss_runtime_bind_resource(ctx, res) });
+    unsafe { ss_resource_destroy(res) };
     play(ctx, animation, 3);
     let (mut data, mut len) = (null(), 0);
     unsafe { ss_runtime_get_ssab(ctx, &mut data, &mut len) };
     touch(data, len);
-    ss_runtime_destroy(ctx);
+    unsafe { ss_runtime_destroy(ctx) };
 }
 
 #[test]
@@ -67,19 +67,19 @@ fn a_context_lets_its_old_resource_go_when_rebound_reloaded_or_reset() {
     let ctx = ss_runtime_create();
     for bytes in [&a, &b, &a] {
         let res = unsafe { ss_resource_create_copy(bytes.as_ptr(), bytes.len()) };
-        assert!(ss_runtime_bind_resource(ctx, res));
+        assert!(unsafe { ss_runtime_bind_resource(ctx, res) });
         // The context now holds the only reference, which the next bind releases.
-        ss_resource_destroy(res);
+        unsafe { ss_resource_destroy(res) };
         play(ctx, first_animation(bytes), 2);
     }
     assert!(unsafe { ss_runtime_load_ssab_copy(ctx, b.as_ptr(), b.len()) });
     play(ctx, first_animation(&b), 2);
     assert!(unsafe { ss_runtime_load_ssab_borrow(ctx, a.as_ptr(), a.len()) });
     play(ctx, first_animation(&a), 2);
-    ss_runtime_reset(ctx);
+    unsafe { ss_runtime_reset(ctx) };
     assert!(unsafe { ss_runtime_load_ssab_borrow(ctx, b.as_ptr(), b.len()) });
     play(ctx, first_animation(&b), 2);
-    ss_runtime_destroy(ctx);
+    unsafe { ss_runtime_destroy(ctx) };
 }
 
 #[test]
@@ -89,19 +89,19 @@ fn an_effect_slot_keeps_its_resource_after_the_handle_and_the_context_are_destro
     assert!(!effects.is_empty(), "fixture sanity: Effect has effect parts");
     let res = unsafe { ss_resource_create_borrow(bytes.as_ptr(), bytes.len()) };
     let ctx = ss_runtime_create();
-    assert!(ss_runtime_bind_resource(ctx, res));
-    let slots: Vec<(u32, *mut c_void)> = effects.iter().map(|&(part, hash)| (part, ss_effect_slot_create(res, hash, part))).collect();
+    assert!(unsafe { ss_runtime_bind_resource(ctx, res) });
+    let slots: Vec<(u32, *mut c_void)> = effects.iter().map(|&(part, hash)| (part, unsafe { ss_effect_slot_create(res, hash, part) })).collect();
     assert!(slots.iter().all(|(_, slot)| !slot.is_null()));
-    ss_resource_destroy(res);
+    unsafe { ss_resource_destroy(res) };
 
     play(ctx, first_animation(&bytes), 0);
-    let fps = ss_runtime_get_frame_rate(ctx) as f32;
+    let fps = unsafe { ss_runtime_get_frame_rate(ctx) } as f32;
     let mut drawn = 0;
     for _ in 0..6 {
-        let frame = ss_runtime_update(ctx, 1000.0 / fps);
-        let looped = ss_runtime_just_looped(ctx);
+        let frame = unsafe { ss_runtime_update(ctx, 1000.0 / fps) };
+        let looped = unsafe { ss_runtime_just_looped(ctx) };
         for &(part, slot) in &slots {
-            let r = ss_effect_slot_step(slot, ss_runtime_get_active_effect_event(ctx, part), frame, 1.0 / fps, fps, looped, false, 2, true);
+            let r = unsafe { ss_effect_slot_step(slot, ss_runtime_get_active_effect_event(ctx, part), frame, 1.0 / fps, fps, looped, false, 2, true) };
             if r.visible {
                 touch(r.draw_plan_buf, r.draw_plan_len);
                 drawn += 1;
@@ -110,10 +110,10 @@ fn an_effect_slot_keeps_its_resource_after_the_handle_and_the_context_are_destro
     }
     assert!(drawn > 0, "fixture sanity: an effect drew");
 
-    ss_runtime_destroy(ctx);
+    unsafe { ss_runtime_destroy(ctx) };
     for (_, slot) in slots {
-        ss_effect_slot_reset(slot);
-        ss_effect_slot_destroy(slot);
+        unsafe { ss_effect_slot_reset(slot) };
+        unsafe { ss_effect_slot_destroy(slot) };
     }
 }
 
@@ -131,8 +131,8 @@ fn an_instance_child_plays_from_a_resource_whose_handle_is_destroyed() {
             let child_bytes = pack(&format!("{child_pack}.ssab"));
             let res = unsafe { ss_resource_create_copy(child_bytes.as_ptr(), child_bytes.len()) };
             let child = ss_runtime_create();
-            assert!(ss_runtime_bind_resource(child, res));
-            ss_resource_destroy(res);
+            assert!(unsafe { ss_runtime_bind_resource(child, res) });
+            unsafe { ss_resource_destroy(res) };
             assert!(unsafe { ss_runtime_setup_animation_by_hash(child, *animation) });
             (*part, ss_instance_slot_create(), child)
         })
@@ -141,12 +141,12 @@ fn an_instance_child_plays_from_a_resource_whose_handle_is_destroyed() {
     play(ctx, first_animation(&bytes), 0);
     let mut drawn = 0;
     for _ in 0..6 {
-        let frame = ss_runtime_update(ctx, 1000.0 / 30.0);
-        let looped = ss_runtime_just_looped(ctx);
+        let frame = unsafe { ss_runtime_update(ctx, 1000.0 / 30.0) };
+        let looped = unsafe { ss_runtime_just_looped(ctx) };
         for &(part, slot, child) in &children {
-            let r = ss_instance_slot_step(slot, ss_runtime_get_active_event_instance(ctx, part), child, frame, 1.0 / 30.0, looped);
+            let r = unsafe { ss_instance_slot_step(slot, ss_runtime_get_active_event_instance(ctx, part), child, frame, 1.0 / 30.0, looped) };
             if r.transitioned {
-                ss_runtime_play(child);
+                unsafe { ss_runtime_play(child) };
             }
             if r.visible {
                 let (mut data, mut len) = (null(), 0);
@@ -158,9 +158,9 @@ fn an_instance_child_plays_from_a_resource_whose_handle_is_destroyed() {
     }
     assert!(drawn > 0, "fixture sanity: an instance child drew");
 
-    ss_runtime_destroy(ctx);
+    unsafe { ss_runtime_destroy(ctx) };
     for (_, slot, child) in children {
-        ss_instance_slot_destroy(slot);
-        ss_runtime_destroy(child);
+        unsafe { ss_instance_slot_destroy(slot) };
+        unsafe { ss_runtime_destroy(child) };
     }
 }
