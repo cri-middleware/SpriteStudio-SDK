@@ -358,13 +358,9 @@ impl SsLoader for SsAnimePack {
 
     fn load(s: &str) -> Result<Self::Output, SspjError> {
         let mut ssae = quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)?;
-        let r = ssae.anime_list.binary_search_by(|anime| anime.is_setup.cmp(&true));
-        match r {
-            Ok(idx) => {
-                ssae.model.ref_setup_anime_pack = ssae.name.clone();
-                ssae.model.ref_setup_animation = ssae.anime_list[idx].name.clone();
-            }
-            Err(_e) => {}
+        if let Some(setup) = ssae.anime_list.iter().find(|anime| anime.is_setup) {
+            ssae.model.ref_setup_anime_pack = ssae.name.clone();
+            ssae.model.ref_setup_animation = setup.name.clone();
         }
         Ok(ssae)
     }
@@ -412,6 +408,15 @@ mod tests {
     }
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()
+    }
+
+    #[test]
+    fn the_setup_animation_is_found_wherever_the_list_puts_it() {
+        for f in ["tests/overall/Basic.ssae", "tests/Doll/Eye.ssae"] {
+            let pack = SsAnimePack::load_from_file(&get_test_base_path().join(f)).expect(f);
+            assert_eq!(pack.model.ref_setup_animation, "Setup", "{f}");
+            assert_eq!(pack.model.ref_setup_anime_pack, pack.name, "{f}");
+        }
     }
 
     #[test]
