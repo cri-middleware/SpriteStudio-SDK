@@ -2,12 +2,12 @@
 
 ## Supported Versions
 
-SpriteStudio SDK is in beta. Fixes are issued against the latest release only — if you
+Fixes are issued against the latest release only — if you
 are on an older one, please reproduce on the current release before reporting.
 
 | Version | Supported |
 |---|---|
-| Latest `7.0.x` release | ✅ |
+| The latest release | ✅ |
 | Anything older | ❌ |
 
 ## Reporting a Vulnerability
@@ -65,11 +65,11 @@ impact beyond it is more useful.
 
 ## サポート対象バージョン
 
-SpriteStudio SDK は beta 版です。修正は最新リリースに対してのみ提供されます。古いバージョンをご利用の場合は、最新リリースで再現することをご確認のうえご報告ください。
+修正は最新リリースに対してのみ提供されます。古いバージョンをご利用の場合は、最新リリースで再現することをご確認のうえご報告ください。
 
 | バージョン | サポート |
 |---|---|
-| 最新の `7.0.x` リリース | ✅ |
+| 最新のリリース | ✅ |
 | それ以前 | ❌ |
 
 ## 脆弱性の報告
