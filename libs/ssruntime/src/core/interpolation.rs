@@ -901,7 +901,7 @@ mod tests {
     }
 
     #[test]
-    fn test_evaluate_deform_simd_only_tail() {
+    fn test_evaluate_deform_simd_one_chunk_and_tail() {
         // 3 vertices = 6 interleaved floats: 1 SIMD chunk + a 1-vertex tail.
         let prev = [(0.0, 0.0), (1.0, 2.0), (3.0, 4.0)];
         let next = [(10.0, 20.0), (11.0, 22.0), (13.0, 24.0)];
@@ -927,7 +927,7 @@ mod tests {
 
         let mut hint = 0;
         let data = eval_deform_owned(&buf, 5.0, &mut hint).unwrap();
-        assert_eq!(data.coordinate.len(), 6, "output length should match prev_full");
+        assert_eq!(data.coordinate.len(), 6, "output length should match prev's vertex count");
         // First 4 are interpolated.
         for i in 0..4 {
             let exp_x = (prev[i].0 + next[i].0) / 2.0;

@@ -950,7 +950,7 @@ mod tests {
     }
 
     #[test]
-    fn set_loops_3_emits_looped_looped_finished() {
+    fn set_loop_count_3_emits_looped_looped_finished() {
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
         t.set_loop_count(3);
@@ -1022,7 +1022,7 @@ mod tests {
     }
 
     #[test]
-    fn set_loops_0_is_infinite() {
+    fn set_loop_count_0_is_infinite() {
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
         t.set_loop_count(0);
