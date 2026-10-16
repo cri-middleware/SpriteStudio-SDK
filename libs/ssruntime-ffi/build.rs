@@ -44,12 +44,11 @@ fn main() {
     {
         Ok(_) => {
             // Post-process the generated C# file to add Unity-specific platform macros for static linking (__Internal)
-            if let Ok(content) = std::fs::read_to_string(csharp_output_path) {
-                let modified = content
-                    .replace("const string __DllName = \"ssruntime\";", "#if (UNITY_IOS || UNITY_TVOS || UNITY_WEBGL) && !UNITY_EDITOR\n        const string __DllName = \"__Internal\";\n#else\n        const string __DllName = \"ssruntime\";\n#endif")
-                    .replace("namespace CsBindgen", "namespace SpriteStudio.SsRuntime");
-                std::fs::write(csharp_output_path, modified).unwrap();
-            }
+            let content = std::fs::read_to_string(csharp_output_path).expect("read the generated C# bindings");
+            let dll_name = "const string __DllName = \"ssruntime\";";
+            assert!(content.contains(dll_name), "the generated C# bindings no longer contain `{dll_name}`, so iOS, tvOS and WebGL would not get `__Internal`");
+            let modified = content.replace(dll_name, "#if (UNITY_IOS || UNITY_TVOS || UNITY_WEBGL) && !UNITY_EDITOR\n        const string __DllName = \"__Internal\";\n#else\n        const string __DllName = \"ssruntime\";\n#endif");
+            std::fs::write(csharp_output_path, modified).unwrap();
         }
         Err(e) => {
             eprintln!("Error generating C# bindings: {:?}", e);
