@@ -3,7 +3,7 @@
 use super::Context;
 use crate::mix::{LayerState, NO_SOURCE, SourceState, TrackBlend, TrackFade, TrackState, TrackSync, count_attribute_capacities};
 use crate::resource::fnv1a_hash_str;
-use crate::{core, error};
+use crate::{error, eval};
 
 impl<'a> Context<'a> {
     /// Put `name` on `track`, replacing whatever it was playing.
@@ -254,7 +254,7 @@ impl<'a> Context<'a> {
 
     /// The direction and style `track` plays its animations in. Kept by the
     /// track, as [`Self::set_track_speed`] is.
-    pub fn set_track_playback_direction(&mut self, track: u32, direction: core::playback_controller::PlaybackDirection, style: core::playback_controller::PlaybackStyle) -> Result<(), error::SSRuntimeError> {
+    pub fn set_track_playback_direction(&mut self, track: u32, direction: eval::playback_controller::PlaybackDirection, style: eval::playback_controller::PlaybackStyle) -> Result<(), error::SSRuntimeError> {
         self.ensure_track(track)?;
         self.instance.set_track_policy(
             track,
@@ -267,11 +267,11 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
-    pub fn get_track_playback_direction(&self, track: u32) -> Option<core::playback_controller::PlaybackDirection> {
+    pub fn get_track_playback_direction(&self, track: u32) -> Option<eval::playback_controller::PlaybackDirection> {
         Some(self.instance.tracks.get(track as usize)?.policy.playback_direction)
     }
 
-    pub fn get_track_playback_style(&self, track: u32) -> Option<core::playback_controller::PlaybackStyle> {
+    pub fn get_track_playback_style(&self, track: u32) -> Option<eval::playback_controller::PlaybackStyle> {
         Some(self.instance.tracks.get(track as usize)?.policy.playback_style)
     }
 
@@ -474,7 +474,7 @@ impl<'a> Context<'a> {
         let metadata = &resource.animations[animation_idx];
         let num_parts = metadata.cached_parts().len();
         let (cell_c, color_c, shader_c, deform_c) = count_attribute_capacities(metadata);
-        let cursor_c = crate::core::framedata::cursor_count(metadata.cached_parts());
+        let cursor_c = crate::eval::framedata::cursor_count(metadata.cached_parts());
 
         metadata.part_bases(self.instance.coordinate_system, self.instance.origin, self.instance.unit);
         let mut source = SourceState::new();

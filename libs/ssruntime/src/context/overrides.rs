@@ -24,7 +24,7 @@ impl<'a> Context<'a> {
     /// override at set time so its own set-frame keyframe can be skipped through
     /// the update of its first evaluation (see `PriorityMode::OverwriteOnNextKeyframe`).
     fn override_set_frame(&self) -> i32 {
-        crate::core::math::floorf(self.instance.primary_source().controller.get_frame_no()) as i32
+        crate::eval::math::floorf(self.instance.primary_source().controller.get_frame_no()) as i32
     }
 
     /// The primary animation's part count — the range an override's part index
@@ -39,7 +39,7 @@ impl<'a> Context<'a> {
 
     /// The override slot of `part`, creating the table the first time an
     /// override is set.
-    fn override_slot(&mut self, part: u32) -> Result<&mut Option<crate::core::override_layer::PartOverride>, error::SSRuntimeError> {
+    fn override_slot(&mut self, part: u32) -> Result<&mut Option<crate::eval::override_layer::PartOverride>, error::SSRuntimeError> {
         let (idx, num_parts) = (part as usize, self.override_part_count());
         if idx >= num_parts {
             return Err(error::SSRuntimeError::InvalidParameter);
@@ -52,7 +52,7 @@ impl<'a> Context<'a> {
 
     /// Clear one kind of override on `part`. Nothing to do when the table was
     /// never created.
-    fn clear_override(&mut self, part: u32, clear: impl FnOnce(&mut crate::core::override_layer::PartOverride)) -> Result<(), error::SSRuntimeError> {
+    fn clear_override(&mut self, part: u32, clear: impl FnOnce(&mut crate::eval::override_layer::PartOverride)) -> Result<(), error::SSRuntimeError> {
         let idx = part as usize;
         if idx >= self.override_part_count() {
             return Err(error::SSRuntimeError::InvalidParameter);
@@ -73,7 +73,7 @@ impl<'a> Context<'a> {
             0 => self.clear_override(part, |entry| entry.visibility = None)?,
             1 => {
                 let entry = self.override_slot(part)?.get_or_insert_with(Default::default);
-                entry.visibility = Some(crate::core::override_layer::VisibilityOverride { cascade });
+                entry.visibility = Some(crate::eval::override_layer::VisibilityOverride { cascade });
             }
             _ => return Err(error::SSRuntimeError::InvalidParameter),
         }
@@ -99,7 +99,7 @@ impl<'a> Context<'a> {
         if blend_op >= 4 {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
-        let Some(priority) = crate::core::override_layer::PriorityMode::from_u8(priority) else {
+        let Some(priority) = crate::eval::override_layer::PriorityMode::from_u8(priority) else {
             return Err(error::SSRuntimeError::InvalidParameter);
         };
         // Anchor the NON one-shot to "from the moment of override": remember the
@@ -107,7 +107,7 @@ impl<'a> Context<'a> {
         // evaluation).
         let set_frame = self.override_set_frame();
         let entry = self.override_slot(part)?.get_or_insert_with(Default::default);
-        entry.color = Some(crate::core::override_layer::ColorOverride { blend_op, corners_rgba, rate: 1.0, priority, set_frame, first_eval_update: None });
+        entry.color = Some(crate::eval::override_layer::ColorOverride { blend_op, corners_rgba, rate: 1.0, priority, set_frame, first_eval_update: None });
         Ok(())
     }
 
@@ -125,7 +125,7 @@ impl<'a> Context<'a> {
         if cellmap_name_hash == 0 && cell_name_hash == 0 {
             return self.clear_part_cell_override(part);
         }
-        let Some(priority) = crate::core::override_layer::PriorityMode::from_u8(priority) else {
+        let Some(priority) = crate::eval::override_layer::PriorityMode::from_u8(priority) else {
             return Err(error::SSRuntimeError::InvalidParameter);
         };
         if part as usize >= self.override_part_count() {
@@ -135,12 +135,12 @@ impl<'a> Context<'a> {
             return Err(error::SSRuntimeError::NotLoaded);
         };
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.get_ssab_data()) };
-        let Some(resolved) = ssab.cellmaps().and_then(|cellmaps| crate::core::framedata::resolve_cell(&cellmaps, cellmap_name_hash, cell_name_hash)) else {
+        let Some(resolved) = ssab.cellmaps().and_then(|cellmaps| crate::eval::framedata::resolve_cell(&cellmaps, cellmap_name_hash, cell_name_hash)) else {
             return Err(error::SSRuntimeError::InvalidParameter);
         };
         let set_frame = self.override_set_frame();
         let entry = self.override_slot(part)?.get_or_insert_with(Default::default);
-        entry.cell = Some(crate::core::override_layer::CellOverride { cellmap_name_hash, cell_name_hash, resolved, priority, set_frame, first_eval_update: None });
+        entry.cell = Some(crate::eval::override_layer::CellOverride { cellmap_name_hash, cell_name_hash, resolved, priority, set_frame, first_eval_update: None });
         Ok(())
     }
 

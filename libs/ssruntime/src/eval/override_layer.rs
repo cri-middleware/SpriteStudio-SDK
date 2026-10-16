@@ -11,8 +11,8 @@
 
 use alloc::vec::Vec;
 
-use crate::core::framedata::{CachedPartData, ResolvedCellMeta, premultiply_part_color_corner};
-use crate::core::keyframes::KeyColumns;
+use crate::eval::framedata::{CachedPartData, ResolvedCellMeta, premultiply_part_color_corner};
+use crate::eval::keyframes::KeyColumns;
 use crate::runtime::framedata::ss::runtime::{BlendType, PartAttributeCell, PartAttributePartColor, PartState, SsAttributePartColorKeyValueColor, U8Color, UpdateAttributeFlags};
 
 /// Keyframe-vs-override precedence for the attributes that conflict with the
@@ -151,7 +151,7 @@ fn skips_set_frame(first_eval_update: Option<u64>, update: u64) -> bool {
 
 /// True when `run` (surviving keyframes, sorted ascending by frame) has a
 /// keyframe exactly at frame `f`: the last key at or before `f` sits on it.
-fn run_has_key_at(keys: &KeyColumns, run: Option<crate::core::keyframes::KeyRun>, f: i32) -> bool {
+fn run_has_key_at(keys: &KeyColumns, run: Option<crate::eval::keyframes::KeyRun>, f: i32) -> bool {
     let Some(run) = run else { return false };
     keys.frames(&run).locate(f as f32, &mut 0).is_some_and(|i| keys.key(run.first() as usize + i).index() as i32 == f)
 }
@@ -191,7 +191,7 @@ pub fn apply_part_overrides(
     // propagates an "ancestor force-hidden (cascading)" flag through
     // `parent_index` handles the cascade without building child lists. Note
     // this cascade is *override-only* behavior: keyframed `hide` is per-part in
-    // SpriteStudio and never cascades (see `core/framedata.rs`), so we must not key the
+    // SpriteStudio and never cascades (see `eval/framedata.rs`), so we must not key the
     // cascade off `parts_vec[parent].hide()` — only off overrides.
     override_hide_workspace.clear();
     override_hide_workspace.resize(n, false);
@@ -240,7 +240,7 @@ pub fn apply_part_overrides(
         // it permanent: it survives loops and only a re-set brings it back.
         if color.priority == PriorityMode::OverwriteOnNextKeyframe {
             let skip = skips_set_frame(color.first_eval_update, update);
-            let handed_over = passed_reaches_key(passed_frames, color.set_frame, skip, |f| run_has_key_at(keys, cached_parts[i].run(crate::core::framedata::IDX_ATTRIBUTEPARTCOLOR), f));
+            let handed_over = passed_reaches_key(passed_frames, color.set_frame, skip, |f| run_has_key_at(keys, cached_parts[i].run(crate::eval::framedata::IDX_ATTRIBUTEPARTCOLOR), f));
             if let Some(o) = part_overrides.get_mut(i).and_then(|o| o.as_mut()) {
                 if handed_over {
                     o.color = None;
@@ -290,7 +290,7 @@ pub fn apply_part_overrides(
         // NON one-shot handover (see the color pass for the rationale).
         if cell.priority == PriorityMode::OverwriteOnNextKeyframe {
             let skip = skips_set_frame(cell.first_eval_update, update);
-            let handed_over = passed_reaches_key(passed_frames, cell.set_frame, skip, |f| run_has_key_at(keys, cp.run(crate::core::framedata::IDX_ATTRIBUTECELL), f));
+            let handed_over = passed_reaches_key(passed_frames, cell.set_frame, skip, |f| run_has_key_at(keys, cp.run(crate::eval::framedata::IDX_ATTRIBUTECELL), f));
             if let Some(o) = part_overrides.get_mut(i).and_then(|o| o.as_mut()) {
                 if handed_over {
                     o.cell = None;
@@ -346,7 +346,7 @@ pub fn apply_part_overrides(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::framedata::cached_part_stub;
+    use crate::eval::framedata::cached_part_stub;
     use ssab::ssab::ss::format::PartType;
 
     /// A blank part state with a given composited alpha and dirty-flag mask.
@@ -378,7 +378,7 @@ mod tests {
         let mut tex_hashes = vec![0u32; n];
         let mut uv_meta = vec![None; n];
         let mut ws = Vec::new();
-        let keyframes = crate::core::keyframes::empty_keyframes();
+        let keyframes = crate::eval::keyframes::empty_keyframes();
         let keys = KeyColumns::new(flatbuffers::root::<ssab::ssab::ss::format::Keyframes>(&keyframes).unwrap(), None);
         // Update 1: the helpers' NON overrides were first evaluated in update 0.
         apply_part_overrides(ovr, cached, &keys, parts, &mut color_vec, &mut cell_vec, &mut cell_meta, &mut tex_hashes, &mut uv_meta, &mut ws, passed_frames, 1);

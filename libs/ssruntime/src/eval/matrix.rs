@@ -1,4 +1,4 @@
-use crate::core::math::*;
+use crate::eval::math::*;
 use core::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign};
 use wide::f32x4;
 
@@ -275,12 +275,12 @@ impl SsMatrix4x4 {
 
         // Skew. SpriteStudio's Skew is a per-part Vertex-deform mode that does
         // NOT inherit, so by default it is applied to local vertices instead of
-        // here (see crate::core::SKEW_PROPAGATES and geometry::skew_local_tans).
+        // here (see crate::eval::SKEW_PROPAGATES and geometry::skew_local_tans).
         // This branch is the propagate path, kept ready for a future
         // SpriteStudio that makes Skew inherit; it is gated off today.
         let skew_x = state.skew_x() * core::f32::consts::PI / 180.0;
         let skew_y = state.skew_y() * core::f32::consts::PI / 180.0;
-        if crate::core::SKEW_PROPAGATES && (skew_x != 0.0 || skew_y != 0.0) {
+        if crate::eval::SKEW_PROPAGATES && (skew_x != 0.0 || skew_y != 0.0) {
             let sx = tanf(skew_x);
             let sy = tanf(skew_y);
             let new_col0 = col1.mul_add(f32x4::splat(sy), col0);
@@ -825,7 +825,7 @@ mod tests {
         let tan30 = tanf(30.0f32 * core::f32::consts::PI / 180.0);
         let tan45 = tanf(45.0f32 * core::f32::consts::PI / 180.0);
 
-        if crate::core::SKEW_PROPAGATES {
+        if crate::eval::SKEW_PROPAGATES {
             // Propagate mode: Skew is folded into the world matrix so it
             // inherits down to children.
             //   col0' = col0 + col1 * tan(sy) = [1, tan45, 0, 0]

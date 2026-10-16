@@ -1,4 +1,4 @@
-use crate::core::SsMatrix4x4;
+use crate::eval::SsMatrix4x4;
 use wide::f32x4;
 
 /// Computes the local vertices for a part, including pivot calculation and deformations.
@@ -42,15 +42,15 @@ pub fn compute_local_vertices(size: (f32, f32), pivot: (f32, f32), pivot_offset:
 /// `Some((tan(skew_x), tan(skew_y)))` when a part's Skew must be applied as a
 /// local-vertex shear, or `None` when there is no skew or when Skew runs in
 /// propagate mode (folded into the world matrix instead). See
-/// [`crate::core::SKEW_PROPAGATES`]. Angles are in degrees.
+/// [`crate::eval::SKEW_PROPAGATES`]. Angles are in degrees.
 #[inline]
 #[must_use]
 pub fn skew_local_tans(skew_x_deg: f32, skew_y_deg: f32) -> Option<(f32, f32)> {
-    if crate::core::SKEW_PROPAGATES || (skew_x_deg == 0.0 && skew_y_deg == 0.0) {
+    if crate::eval::SKEW_PROPAGATES || (skew_x_deg == 0.0 && skew_y_deg == 0.0) {
         return None;
     }
     let r = core::f32::consts::PI / 180.0;
-    Some((crate::core::math::tanf(skew_x_deg * r), crate::core::math::tanf(skew_y_deg * r)))
+    Some((crate::eval::math::tanf(skew_x_deg * r), crate::eval::math::tanf(skew_y_deg * r)))
 }
 
 /// Shears one local-space vertex about the pivot origin, in the part's Y-up
@@ -90,7 +90,7 @@ pub fn compute_local_uvs(
 
     let rot_rad = rot_deg * core::f32::consts::PI / 180.0;
     // Most parts never rotate their UVs, and sin and cos of ±0 are ±0 and 1.
-    let (sin_r, cos_r) = if rot_rad == 0.0 { (rot_rad, 1.0) } else { crate::core::math::sincosf(rot_rad) };
+    let (sin_r, cos_r) = if rot_rad == 0.0 { (rot_rad, 1.0) } else { crate::eval::math::sincosf(rot_rad) };
 
     let ou = center_u + tu;
     let ov = center_v + tv;
@@ -193,7 +193,7 @@ fn shrink_opposing_margins(near: f32, far: f32, extent: f32) -> (f32, f32) {
     if diff <= 0.0 {
         return (near, far);
     }
-    let half = crate::core::math::floorf(diff * 0.5);
+    let half = crate::eval::math::floorf(diff * 0.5);
     (near - half, far - (diff - half))
 }
 
@@ -250,7 +250,7 @@ fn nines_tile_div(dst: f32, src: f32) -> i32 {
     if dst <= 0.0 || src <= 0.0 {
         return 0;
     }
-    let div = crate::core::math::ceilf(dst / src);
+    let div = crate::eval::math::ceilf(dst / src);
     if div >= NINES_MAX_TILE_DIV as f32 { NINES_MAX_TILE_DIV } else { div as i32 }
 }
 
@@ -867,7 +867,7 @@ mod tests {
     fn test_uvs_zero_rotation_is_what_sincosf_gives() {
         // compute_local_uvs skips sincosf for a zero rotation.
         for zero in [0.0f32, -0.0] {
-            let (sin, cos) = crate::core::math::sincosf(zero);
+            let (sin, cos) = crate::eval::math::sincosf(zero);
             assert_eq!((sin.to_bits(), cos.to_bits()), (zero.to_bits(), 1.0f32.to_bits()));
         }
     }
@@ -1318,19 +1318,19 @@ mod tests {
         // No skew -> nothing to apply.
         assert!(skew_local_tans(0.0, 0.0).is_none());
         // With skew (and propagate off, the default) -> the tan pair.
-        if crate::core::SKEW_PROPAGATES {
+        if crate::eval::SKEW_PROPAGATES {
             assert!(skew_local_tans(30.0, 0.0).is_none());
         } else {
             let (tx, ty) = skew_local_tans(30.0, 45.0).expect("skew present");
-            assert!((tx - crate::core::math::tanf(30.0 * core::f32::consts::PI / 180.0)).abs() < 1e-6);
-            assert!((ty - crate::core::math::tanf(45.0 * core::f32::consts::PI / 180.0)).abs() < 1e-6);
+            assert!((tx - crate::eval::math::tanf(30.0 * core::f32::consts::PI / 180.0)).abs() < 1e-6);
+            assert!((ty - crate::eval::math::tanf(45.0 * core::f32::consts::PI / 180.0)).abs() < 1e-6);
         }
     }
 
     #[test]
     fn test_skew_point_yup() {
         // A horizontal shear (skew_x only) slides x by tan·y and leaves y.
-        let t = crate::core::math::tanf(30.0 * core::f32::consts::PI / 180.0);
+        let t = crate::eval::math::tanf(30.0 * core::f32::consts::PI / 180.0);
         // Top vertex (y > 0) moves +x; bottom (y < 0) moves -x: a lean.
         let (tx, ty) = skew_point_yup(0.0, 10.0, t, 0.0);
         assert!((tx - t * 10.0).abs() < 1e-6);

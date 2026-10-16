@@ -3,7 +3,7 @@
 use alloc::vec::Vec;
 
 use crate::resource::AnimationMetadata;
-use crate::{core, runtime};
+use crate::{eval, runtime};
 
 /// Per-layer pose buffers — the immediate output of `extract_pose`,
 /// before any cross-layer composition. SRT / Color / Cell ID / Vertex /
@@ -29,8 +29,8 @@ pub(crate) struct LayerState<'a> {
     pub(crate) cell_ids: Vec<Option<u32>>,
     pub(crate) local_vertices: Vec<f32>,
     /// Per-part mesh deform retained from Phase 1 for the Phase 2 skinning pass.
-    pub(crate) mesh_deform: Vec<crate::core::framedata::DeformSlot<crate::core::framedata::PartDeformFrame>>,
-    pub(crate) raw_vertex_deform: Vec<crate::core::framedata::DeformSlot<crate::core::framedata::RawVertexDeform>>,
+    pub(crate) mesh_deform: Vec<crate::eval::framedata::DeformSlot<crate::eval::framedata::PartDeformFrame>>,
+    pub(crate) raw_vertex_deform: Vec<crate::eval::framedata::DeformSlot<crate::eval::framedata::RawVertexDeform>>,
     /// Per-part attribute coverage of the animation this layer was extracted
     /// from (`CachedPartData::coverage`), consulted by [`mix_tracks`]. Copied in
     /// after pose extraction; empty means none was recorded (`layer_coverage`).
@@ -78,7 +78,7 @@ impl<'a> LayerState<'a> {
         self.cell_ids.clear();
         self.cell_ids.reserve(num_parts);
         self.local_vertices.clear();
-        self.local_vertices.resize(num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE, 0.0);
+        self.local_vertices.resize(num_parts * crate::eval::framedata::LOCAL_VERTICES_STRIDE, 0.0);
         self.raw_vertex_deform.clear();
         self.raw_vertex_deform.resize_with(num_parts, || None);
     }
@@ -88,17 +88,17 @@ impl<'a> LayerState<'a> {
     /// last held a different part count.
     pub(crate) fn fit(&mut self, metadata: &AnimationMetadata<'_>) {
         let num_parts = metadata.cached_parts().len();
-        let sized = self.raw_vertex_deform.len() == num_parts && self.cell_texture_hashes.len() == num_parts && self.cell_meta_per_part.len() == num_parts * 6 && self.local_vertices.len() == num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE;
+        let sized = self.raw_vertex_deform.len() == num_parts && self.cell_texture_hashes.len() == num_parts && self.cell_meta_per_part.len() == num_parts * 6 && self.local_vertices.len() == num_parts * crate::eval::framedata::LOCAL_VERTICES_STRIDE;
         if !sized {
             let (cell_c, color_c, shader_c, deform_c) = count_attribute_capacities(metadata);
-            self.resize_for_parts(num_parts, crate::core::framedata::cursor_count(metadata.cached_parts()), cell_c, color_c, shader_c, deform_c);
+            self.resize_for_parts(num_parts, crate::eval::framedata::cursor_count(metadata.cached_parts()), cell_c, color_c, shader_c, deform_c);
         }
     }
 }
 
 pub(crate) struct SourceState {
     pub(crate) animation_idx: i32,
-    pub(crate) controller: core::playback_controller::PlaybackController,
+    pub(crate) controller: eval::playback_controller::PlaybackController,
     /// Which track this source plays on. Sources sharing a track are mixed by
     /// weight; tracks fold onto each other by `TrackState::alpha`.
     pub(crate) track: u16,
@@ -123,7 +123,7 @@ pub(crate) const NO_EVENT_THRESHOLD: f32 = f32::INFINITY;
 
 impl SourceState {
     pub(crate) fn new() -> Self {
-        Self { animation_idx: -1, controller: core::playback_controller::PlaybackController::new(), track: 0, weight: 1.0, event_threshold: NO_EVENT_THRESHOLD, outgoing_share: 0.0 }
+        Self { animation_idx: -1, controller: eval::playback_controller::PlaybackController::new(), track: 0, weight: 1.0, event_threshold: NO_EVENT_THRESHOLD, outgoing_share: 0.0 }
     }
 
     pub(crate) fn is_active(&self) -> bool {
@@ -185,7 +185,7 @@ pub(crate) struct TrackState {
     /// frame-rate override, the frame skip, the direction and style. Every source
     /// laid on the track takes it, and changing it reaches the sources already
     /// there, so it survives a crossfade or a `set_track_animation`.
-    pub(crate) policy: core::playback_controller::PlaybackPolicy,
+    pub(crate) policy: eval::playback_controller::PlaybackPolicy,
     /// How far into a crossfade the outgoing side keeps firing events: it fires
     /// while its share of the track, `1 - t`, is at least this. The default,
     /// [`NO_EVENT_THRESHOLD`], keeps it silent from the moment the fade begins.
@@ -201,7 +201,7 @@ pub(crate) const NO_SOURCE: u32 = u32::MAX;
 
 impl TrackState {
     pub(crate) fn new() -> Self {
-        Self { alpha: 1.0, blend: TrackBlend::Mix, sync: TrackSync::Free, policy: core::playback_controller::PlaybackPolicy::DEFAULT, outgoing_event_threshold: NO_EVENT_THRESHOLD, main: NO_SOURCE, fade: None }
+        Self { alpha: 1.0, blend: TrackBlend::Mix, sync: TrackSync::Free, policy: eval::playback_controller::PlaybackPolicy::DEFAULT, outgoing_event_threshold: NO_EVENT_THRESHOLD, main: NO_SOURCE, fade: None }
     }
 
     /// A track contributes nothing at alpha 0 — `Mix` returns the pose below and
@@ -236,16 +236,16 @@ pub(crate) fn count_attribute_capacities(metadata: &AnimationMetadata<'_>) -> (u
     let mut shader_c = 0;
     let mut deform_c = 0;
     for p in metadata.cached_parts() {
-        if p.run(crate::core::framedata::IDX_ATTRIBUTECELL).is_some() {
+        if p.run(crate::eval::framedata::IDX_ATTRIBUTECELL).is_some() {
             cell_c += 1;
         }
-        if p.run(crate::core::framedata::IDX_ATTRIBUTEPARTCOLOR).is_some() {
+        if p.run(crate::eval::framedata::IDX_ATTRIBUTEPARTCOLOR).is_some() {
             color_c += 1;
         }
-        if p.run(crate::core::framedata::IDX_ATTRIBUTESHADER).is_some() {
+        if p.run(crate::eval::framedata::IDX_ATTRIBUTESHADER).is_some() {
             shader_c += 1;
         }
-        if p.run(crate::core::framedata::IDX_ATTRIBUTEDEFORM).is_some() {
+        if p.run(crate::eval::framedata::IDX_ATTRIBUTEDEFORM).is_some() {
             deform_c += 1;
         }
     }
@@ -570,7 +570,7 @@ pub(crate) fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>],
                 // same signal as coverage for the other attributes: normalize over
                 // the sources that actually have a deform, so a source without one
                 // does not pull the deltas toward zero.
-                if let Some(rvd) = crate::core::framedata::vertex_deform_at(&layers[j].raw_vertex_deform, i) {
+                if let Some(rvd) = crate::eval::framedata::vertex_deform_at(&layers[j].raw_vertex_deform, i) {
                     deform_weight += w;
                     let w_v = wide::f32x4::splat(w);
                     dx_acc = w_v.mul_add(wide::f32x4::from(rvd.dx), dx_acc);
@@ -619,7 +619,7 @@ pub(crate) fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>],
             mixed.set_update_flag(flag);
         }
         if deform_present {
-            **resolved_layer.raw_vertex_deform[i].get_or_insert_with(Default::default) = crate::core::framedata::RawVertexDeform { present: true, dx: cur_dx.to_array(), dy: cur_dy.to_array() };
+            **resolved_layer.raw_vertex_deform[i].get_or_insert_with(Default::default) = crate::eval::framedata::RawVertexDeform { present: true, dx: cur_dx.to_array(), dy: cur_dy.to_array() };
         }
 
         resolved_layer.parts_vec.push(mixed);

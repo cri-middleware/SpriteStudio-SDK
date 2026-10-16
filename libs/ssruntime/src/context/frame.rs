@@ -3,7 +3,7 @@
 use super::{Context, InstanceState, NO_MESH_LAYOUT};
 use crate::mix::mix_tracks;
 use crate::resource::AnimationMetadata;
-use crate::{core, error};
+use crate::{error, eval};
 
 impl<'a> Context<'a> {
     pub fn get_frame_data(&mut self, frame_no: f32) -> Result<&[u8], error::SSRuntimeError> {
@@ -65,7 +65,7 @@ impl<'a> Context<'a> {
             let into_resolved = single && i == primary_idx;
             let layer = if into_resolved { &mut self.instance.resolved_layer } else { &mut self.instance.layers[i] };
             layer.fit(metadata);
-            core::framedata::extract_pose(
+            eval::framedata::extract_pose(
                 &mut self.eval.fb,
                 metadata.cached_parts(),
                 &resource.source.keys,
@@ -128,7 +128,7 @@ impl<'a> Context<'a> {
             // controller borrow is released.
             self.eval.override_passed_frames_workspace.clear();
             self.eval.override_passed_frames_workspace.extend_from_slice(self.instance.primary_source().controller.get_passed_frames());
-            crate::core::override_layer::apply_part_overrides(
+            crate::eval::override_layer::apply_part_overrides(
                 &mut self.instance.part_overrides,
                 primary_metadata.cached_parts(),
                 &resource.source.keys,
@@ -154,7 +154,7 @@ impl<'a> Context<'a> {
         let resolved = &mut self.instance.resolved_layer;
         // A track-0 change can hand the primary role to another animation.
         self.instance.z_order.fit(primary_anim_idx, primary_metadata.cached_parts());
-        let offset = core::framedata::compose_frame_data(
+        let offset = eval::framedata::compose_frame_data(
             &mut self.eval.fb,
             primary_metadata.cached_parts(),
             &mut self.instance.z_order,
@@ -191,7 +191,7 @@ impl<'a> Context<'a> {
     /// in `instance.globals` — world / inheritance matrices, local UVs,
     /// and shape vertex buffers.
     fn resolve_global_state(instance: &mut InstanceState<'a>, metadata: &AnimationMetadata<'a>) {
-        if instance.render_mode == crate::core::RenderMode::Direct {
+        if instance.render_mode == crate::eval::RenderMode::Direct {
             Self::compute_matrices(instance, metadata.cached_parts());
             // Skinned mesh skinning depends on world matrices, so it lives in the
             // Direct path. Mesh parts in SceneGraph mode get empty per-part ranges.
@@ -229,13 +229,13 @@ impl<'a> Context<'a> {
         let layer = &instance.resolved_layer;
         // SSAB bind coordinates are authored Y-up; flip when the instance
         // (hence the bone world matrices) runs Y-down.
-        let flip_y = instance.coordinate_system == crate::core::SsCoordinateSystem::YDown;
+        let flip_y = instance.coordinate_system == crate::eval::SsCoordinateSystem::YDown;
         // The Deform-only mesh rest comes from the cell's `table_coord_x` /
         // `table_coord_y`, which ssconverter copies verbatim from the `.ssce`
         // meshPointList — texture-pixel space, i.e. already Y-down. So it must be
         // flipped for a Y-up target, the OPPOSITE of the Y-up-native bind
         // coordinates above.
-        let flip_rest = instance.coordinate_system == crate::core::SsCoordinateSystem::YUp;
+        let flip_rest = instance.coordinate_system == crate::eval::SsCoordinateSystem::YUp;
         let globals = &mut instance.globals;
 
         let total_vertices = globals.mesh_vertices_x.len();
@@ -270,7 +270,7 @@ impl<'a> Context<'a> {
                 }
                 let deform = layer.mesh_deform.get(i).and_then(|d| d.as_deref()).filter(|d| !d.indices.is_empty()).map(|d| (d.indices.as_slice(), d.dx.as_slice(), d.dy.as_slice(), &globals.world_matrices[i]));
                 let (out_x, out_y) = (&mut globals.mesh_vertices_x[start..end], &mut globals.mesh_vertices_y[start..end]);
-                crate::core::geometry::compute_skinned_mesh_vertices(&binding.influence_offsets, &binding.bone_indices, &binding.weights, &binding.coords_x, &binding.coords_y, &globals.world_matrices, deform, flip_y, out_x, out_y);
+                crate::eval::geometry::compute_skinned_mesh_vertices(&binding.influence_offsets, &binding.bone_indices, &binding.weights, &binding.coords_x, &binding.coords_y, &globals.world_matrices, deform, flip_y, out_x, out_y);
                 continue;
             }
 
@@ -285,7 +285,7 @@ impl<'a> Context<'a> {
             // Rest transform (W · rest) — SIMD over 4 vertices at a time.
             {
                 let (out_x, out_y) = (&mut globals.mesh_vertices_x[start..end], &mut globals.mesh_vertices_y[start..end]);
-                crate::core::geometry::compute_rigid_mesh_vertices(&mesh_cell.rest_x, &mesh_cell.rest_y, &globals.world_matrices[i], flip_rest, out_x, out_y);
+                crate::eval::geometry::compute_rigid_mesh_vertices(&mesh_cell.rest_x, &mesh_cell.rest_y, &globals.world_matrices[i], flip_rest, out_x, out_y);
             }
             // Apply deform deltas as-is — evaluate_part has already applied any
             // coordinate-system Y conversion. Sparse scatter, kept scalar.
@@ -334,7 +334,7 @@ impl<'a> Context<'a> {
     }
 
     #[allow(clippy::needless_range_loop)]
-    fn compute_matrices(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
+    fn compute_matrices(instance: &mut InstanceState<'a>, cached_parts: &[crate::eval::framedata::CachedPartData]) {
         let layer = &instance.resolved_layer;
         let globals = &mut instance.globals;
         for i in 0..layer.parts_vec.len() {
@@ -348,7 +348,7 @@ impl<'a> Context<'a> {
             });
 
             let part_state = &layer.parts_vec[i];
-            let (inh_m, draw_m) = crate::core::SsMatrix4x4::compute_world_matrix(part_state, parent_world, parent_size);
+            let (inh_m, draw_m) = crate::eval::SsMatrix4x4::compute_world_matrix(part_state, parent_world, parent_size);
             globals.inheritance_matrices[i] = inh_m;
             globals.world_matrices[i] = draw_m;
         }
@@ -392,7 +392,7 @@ impl<'a> Context<'a> {
             let (tu, tv, rot_deg, su, sv, fh, fv, ifh, ifv) =
                 (state.uv_translation_x() * meta.tex_w, state.uv_translation_y() * meta.tex_h, state.uv_rotation_z(), state.uv_scale_x(), state.uv_scale_y(), state.flip_h(), state.flip_v(), state.img_flip_h(), state.img_flip_v());
 
-            let (us, vs) = crate::core::geometry::compute_local_uvs((meta.rect_left, meta.rect_top, rect_right, rect_bottom), (tu, tv, rot_deg, su, sv), (fh, fv), (ifh, ifv), meta.rotated);
+            let (us, vs) = crate::eval::geometry::compute_local_uvs((meta.rect_left, meta.rect_top, rect_right, rect_bottom), (tu, tv, rot_deg, su, sv), (fh, fv), (ifh, ifv), meta.rotated);
 
             let offset = i * 10;
             for k in 0..5 {
@@ -403,12 +403,12 @@ impl<'a> Context<'a> {
     }
 
     #[allow(clippy::needless_range_loop)]
-    fn compute_shape_vertices(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
+    fn compute_shape_vertices(instance: &mut InstanceState<'a>, cached_parts: &[crate::eval::framedata::CachedPartData]) {
         let coordinate_system = instance.coordinate_system;
         let layer = &instance.resolved_layer;
         let globals = &mut instance.globals;
         let num_parts = layer.parts_vec.len();
-        let stride = crate::core::framedata::SHAPE_VERTICES_STRIDE;
+        let stride = crate::eval::framedata::SHAPE_VERTICES_STRIDE;
         if globals.shape_vertex_counts.len() != num_parts {
             globals.shape_vertex_counts.resize(num_parts, 0);
         }
@@ -429,13 +429,13 @@ impl<'a> Context<'a> {
                 continue;
             }
 
-            let (count, vx, vy) = crate::core::geometry::compute_shape_vertices(shape_kind, (size_x, size_y));
+            let (count, vx, vy) = crate::eval::geometry::compute_shape_vertices(shape_kind, (size_x, size_y));
             if count < 3 {
                 continue;
             }
 
             let mut effective_pivot_y = state.pivot_y();
-            if coordinate_system == crate::core::SsCoordinateSystem::YDown {
+            if coordinate_system == crate::eval::SsCoordinateSystem::YDown {
                 effective_pivot_y = -effective_pivot_y;
             }
             let tx = -state.pivot_x() * size_x;
@@ -449,10 +449,10 @@ impl<'a> Context<'a> {
             // weighting the renderer uses for per-corner PartColor. Offsets are
             // added in Y-up space, before the YDown negation, so the dy sign
             // matches the 4-corner deform path in `compute_local_vertices`.
-            let deform = crate::core::framedata::vertex_deform_at(&layer.raw_vertex_deform, i);
+            let deform = crate::eval::framedata::vertex_deform_at(&layer.raw_vertex_deform, i);
             // Skew shares the Vertex-deform slot; applied as a shear about the
             // pivot origin in Y-up, before the Y-down flip, like the deform.
-            let skew = crate::core::geometry::skew_local_tans(state.skew_x(), state.skew_y());
+            let skew = crate::eval::geometry::skew_local_tans(state.skew_x(), state.skew_y());
 
             let offset = i * stride;
             for v in 0..count {
@@ -461,18 +461,18 @@ impl<'a> Context<'a> {
 
                 let (mut dvx, mut dvy) = (vx[v] + tx, vy[v] + ty);
                 if let Some(d) = deform {
-                    let (ddx, ddy) = crate::core::geometry::bilinear_box_deform(&d.dx, &d.dy, fx, fy);
+                    let (ddx, ddy) = crate::eval::geometry::bilinear_box_deform(&d.dx, &d.dy, fx, fy);
                     dvx += ddx;
                     dvy += ddy;
                 }
                 if let Some((tan_x, tan_y)) = skew {
-                    let (nx, ny) = crate::core::geometry::skew_point_yup(dvx, dvy, tan_x, tan_y);
+                    let (nx, ny) = crate::eval::geometry::skew_point_yup(dvx, dvy, tan_x, tan_y);
                     dvx = nx;
                     dvy = ny;
                 }
 
                 let mut y = dvy;
-                if coordinate_system == crate::core::SsCoordinateSystem::YDown {
+                if coordinate_system == crate::eval::SsCoordinateSystem::YDown {
                     y = -y;
                 }
                 globals.shape_vertices[offset + 2 * v] = dvx;

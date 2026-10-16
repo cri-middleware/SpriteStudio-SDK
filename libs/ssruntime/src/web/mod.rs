@@ -30,20 +30,20 @@ pub enum WebCoordinateSystem {
     YDown = 1,
 }
 
-impl From<crate::core::SsCoordinateSystem> for WebCoordinateSystem {
-    fn from(cs: crate::core::SsCoordinateSystem) -> Self {
+impl From<crate::eval::SsCoordinateSystem> for WebCoordinateSystem {
+    fn from(cs: crate::eval::SsCoordinateSystem) -> Self {
         match cs {
-            crate::core::SsCoordinateSystem::YUp => WebCoordinateSystem::YUp,
-            crate::core::SsCoordinateSystem::YDown => WebCoordinateSystem::YDown,
+            crate::eval::SsCoordinateSystem::YUp => WebCoordinateSystem::YUp,
+            crate::eval::SsCoordinateSystem::YDown => WebCoordinateSystem::YDown,
         }
     }
 }
 
-impl From<WebCoordinateSystem> for crate::core::SsCoordinateSystem {
+impl From<WebCoordinateSystem> for crate::eval::SsCoordinateSystem {
     fn from(cs: WebCoordinateSystem) -> Self {
         match cs {
-            WebCoordinateSystem::YUp => crate::core::SsCoordinateSystem::YUp,
-            WebCoordinateSystem::YDown => crate::core::SsCoordinateSystem::YDown,
+            WebCoordinateSystem::YUp => crate::eval::SsCoordinateSystem::YUp,
+            WebCoordinateSystem::YDown => crate::eval::SsCoordinateSystem::YDown,
         }
     }
 }
@@ -55,20 +55,20 @@ pub enum WebOrigin {
     TopLeft = 1,
 }
 
-impl From<crate::core::SsOrigin> for WebOrigin {
-    fn from(origin: crate::core::SsOrigin) -> Self {
+impl From<crate::eval::SsOrigin> for WebOrigin {
+    fn from(origin: crate::eval::SsOrigin) -> Self {
         match origin {
-            crate::core::SsOrigin::Center => WebOrigin::Center,
-            crate::core::SsOrigin::TopLeft => WebOrigin::TopLeft,
+            crate::eval::SsOrigin::Center => WebOrigin::Center,
+            crate::eval::SsOrigin::TopLeft => WebOrigin::TopLeft,
         }
     }
 }
 
-impl From<WebOrigin> for crate::core::SsOrigin {
+impl From<WebOrigin> for crate::eval::SsOrigin {
     fn from(origin: WebOrigin) -> Self {
         match origin {
-            WebOrigin::Center => crate::core::SsOrigin::Center,
-            WebOrigin::TopLeft => crate::core::SsOrigin::TopLeft,
+            WebOrigin::Center => crate::eval::SsOrigin::Center,
+            WebOrigin::TopLeft => crate::eval::SsOrigin::TopLeft,
         }
     }
 }
@@ -80,20 +80,20 @@ pub enum WebUnit {
     Normalized = 1,
 }
 
-impl From<crate::core::SsUnit> for WebUnit {
-    fn from(unit: crate::core::SsUnit) -> Self {
+impl From<crate::eval::SsUnit> for WebUnit {
+    fn from(unit: crate::eval::SsUnit) -> Self {
         match unit {
-            crate::core::SsUnit::Pixel => WebUnit::Pixel,
-            crate::core::SsUnit::Normalized => WebUnit::Normalized,
+            crate::eval::SsUnit::Pixel => WebUnit::Pixel,
+            crate::eval::SsUnit::Normalized => WebUnit::Normalized,
         }
     }
 }
 
-impl From<WebUnit> for crate::core::SsUnit {
+impl From<WebUnit> for crate::eval::SsUnit {
     fn from(unit: WebUnit) -> Self {
         match unit {
-            WebUnit::Pixel => crate::core::SsUnit::Pixel,
-            WebUnit::Normalized => crate::core::SsUnit::Normalized,
+            WebUnit::Pixel => crate::eval::SsUnit::Pixel,
+            WebUnit::Normalized => crate::eval::SsUnit::Normalized,
         }
     }
 }
@@ -105,20 +105,20 @@ pub enum WebPlaybackDirection {
     Backward = 1,
 }
 
-impl From<crate::core::playback_controller::PlaybackDirection> for WebPlaybackDirection {
-    fn from(dir: crate::core::playback_controller::PlaybackDirection) -> Self {
+impl From<crate::eval::playback_controller::PlaybackDirection> for WebPlaybackDirection {
+    fn from(dir: crate::eval::playback_controller::PlaybackDirection) -> Self {
         match dir {
-            crate::core::playback_controller::PlaybackDirection::Forward => WebPlaybackDirection::Forward,
-            crate::core::playback_controller::PlaybackDirection::Backward => WebPlaybackDirection::Backward,
+            crate::eval::playback_controller::PlaybackDirection::Forward => WebPlaybackDirection::Forward,
+            crate::eval::playback_controller::PlaybackDirection::Backward => WebPlaybackDirection::Backward,
         }
     }
 }
 
-impl From<WebPlaybackDirection> for crate::core::playback_controller::PlaybackDirection {
+impl From<WebPlaybackDirection> for crate::eval::playback_controller::PlaybackDirection {
     fn from(dir: WebPlaybackDirection) -> Self {
         match dir {
-            WebPlaybackDirection::Forward => crate::core::playback_controller::PlaybackDirection::Forward,
-            WebPlaybackDirection::Backward => crate::core::playback_controller::PlaybackDirection::Backward,
+            WebPlaybackDirection::Forward => crate::eval::playback_controller::PlaybackDirection::Forward,
+            WebPlaybackDirection::Backward => crate::eval::playback_controller::PlaybackDirection::Backward,
         }
     }
 }
@@ -130,20 +130,20 @@ pub enum WebPlaybackStyle {
     PingPong = 1,
 }
 
-impl From<crate::core::playback_controller::PlaybackStyle> for WebPlaybackStyle {
-    fn from(style: crate::core::playback_controller::PlaybackStyle) -> Self {
+impl From<crate::eval::playback_controller::PlaybackStyle> for WebPlaybackStyle {
+    fn from(style: crate::eval::playback_controller::PlaybackStyle) -> Self {
         match style {
-            crate::core::playback_controller::PlaybackStyle::Normal => WebPlaybackStyle::Normal,
-            crate::core::playback_controller::PlaybackStyle::PingPong => WebPlaybackStyle::PingPong,
+            crate::eval::playback_controller::PlaybackStyle::Normal => WebPlaybackStyle::Normal,
+            crate::eval::playback_controller::PlaybackStyle::PingPong => WebPlaybackStyle::PingPong,
         }
     }
 }
 
-impl From<WebPlaybackStyle> for crate::core::playback_controller::PlaybackStyle {
+impl From<WebPlaybackStyle> for crate::eval::playback_controller::PlaybackStyle {
     fn from(style: WebPlaybackStyle) -> Self {
         match style {
-            WebPlaybackStyle::Normal => crate::core::playback_controller::PlaybackStyle::Normal,
-            WebPlaybackStyle::PingPong => crate::core::playback_controller::PlaybackStyle::PingPong,
+            WebPlaybackStyle::Normal => crate::eval::playback_controller::PlaybackStyle::Normal,
+            WebPlaybackStyle::PingPong => crate::eval::playback_controller::PlaybackStyle::PingPong,
         }
     }
 }
@@ -337,7 +337,7 @@ impl SSRuntimeContext {
     }
 
     pub fn set_render_mode(&mut self, mode: u8) {
-        self.inner.set_render_mode(crate::core::RenderMode::from_u8(mode));
+        self.inner.set_render_mode(crate::eval::RenderMode::from_u8(mode));
     }
 
     pub fn setup_animation(&mut self, name: &str) -> Result<(), JsValue> {

@@ -1,6 +1,6 @@
 use alloc::vec::Vec;
 
-use crate::core::framedata::CachedPartData;
+use crate::eval::framedata::CachedPartData;
 use crate::runtime::framedata::ss::runtime::PartState;
 
 /// Table holding the draw order (z-order). `indices` is a permutation of
@@ -35,8 +35,8 @@ impl ZOrderTable {
         self.animation = animation;
 
         // A run of one key holds the priority for the whole animation.
-        self.is_static = !cached_parts.iter().any(|p| p.run(crate::core::framedata::IDX_ATTRIBUTEPRIO).is_some_and(|run| run.count() > 1));
-        if self.is_static && !cached_parts.iter().any(|p| p.run(crate::core::framedata::IDX_ATTRIBUTEPRIO).is_some()) {
+        self.is_static = !cached_parts.iter().any(|p| p.run(crate::eval::framedata::IDX_ATTRIBUTEPRIO).is_some_and(|run| run.count() > 1));
+        if self.is_static && !cached_parts.iter().any(|p| p.run(crate::eval::framedata::IDX_ATTRIBUTEPRIO).is_some()) {
             // Without priority keys, priority() is uniformly 0 — sort reduces to part_index ascending.
             self.indices.sort_by_key(|&i| cached_parts[i].part_index);
             self.computed = true;
@@ -87,8 +87,8 @@ impl ZOrderTable {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::framedata::cached_part_stub;
-    use crate::core::keyframes::KeyRun;
+    use crate::eval::framedata::cached_part_stub;
+    use crate::eval::keyframes::KeyRun;
 
     fn parts(runs: &[Option<KeyRun>]) -> Vec<CachedPartData> {
         runs.iter()
@@ -96,7 +96,7 @@ mod tests {
             .map(|(i, run)| {
                 let mut p = cached_part_stub(i as i16, -1, ssab::ssab::ss::format::PartType::PartTypeNormal, false);
                 if let Some(run) = run {
-                    p.key_mask = 1 << crate::core::framedata::IDX_ATTRIBUTEPRIO;
+                    p.key_mask = 1 << crate::eval::framedata::IDX_ATTRIBUTEPRIO;
                     p.runs = alloc::boxed::Box::new([*run]);
                 }
                 p

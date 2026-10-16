@@ -1,7 +1,7 @@
 //! Read side of `SsAnimeBinary.keyframes`: every key of the pack, one column per
 //! field, and the tables its compound values live in.
 
-use crate::core::framedata::ResolvedCellMeta;
+use crate::eval::framedata::ResolvedCellMeta;
 use crate::runtime;
 use flatbuffers::{ForwardsUOffset, Vector};
 use ssab::ssab::ss::format::{CellMap, InterpolationType, KeyCurve, Keyframes, PartAttributeCell, PartAttributeDeform};
@@ -69,7 +69,7 @@ impl<'a> KeyColumns<'a> {
     pub fn new(keyframes: Keyframes<'a>, cellmaps: Option<Vector<'a, ForwardsUOffset<CellMap<'a>>>>) -> Self {
         let cell = |c: PartAttributeCell| CellValue {
             cell: runtime::framedata::ss::runtime::PartAttributeCell::new(c.cellmap_name_hash(), c.name_hash()),
-            meta: cellmaps.as_ref().and_then(|maps| crate::core::framedata::resolve_cell(maps, c.cellmap_name_hash(), c.name_hash())).unwrap_or_default(),
+            meta: cellmaps.as_ref().and_then(|maps| crate::eval::framedata::resolve_cell(maps, c.cellmap_name_hash(), c.name_hash())).unwrap_or_default(),
         };
         Self {
             runs: u32s(keyframes.runs()),

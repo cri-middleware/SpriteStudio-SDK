@@ -4,8 +4,8 @@ use super::*;
 
 #[test]
 fn a_part_base_plus_its_changing_attributes_is_the_full_evaluation() {
-    use crate::core::framedata::{IDX_ATTRIBUTEDEFORM, evaluate_part};
-    use crate::core::{SsCoordinateSystem, SsOrigin, SsUnit};
+    use crate::eval::framedata::{IDX_ATTRIBUTEDEFORM, evaluate_part};
+    use crate::eval::{SsCoordinateSystem, SsOrigin, SsUnit};
     prepare();
     for pack in ["Ringo/Ringo.ssab", "overall/Basic.ssab"] {
         let input_buf = std::fs::read(fixture(pack)).expect("read pack");
@@ -55,12 +55,12 @@ fn an_instance_keeps_a_cursor_per_keyed_attribute_only() {
         let mut base = 0;
         for p in parts {
             assert_eq!(p.cursor_base, base, "cursors are packed in part order");
-            assert_eq!(p.key_mask >> crate::core::framedata::IDX_ATTRIBUTECELL & 1 == 1, p.run(crate::core::framedata::IDX_ATTRIBUTECELL).is_some());
-            assert_eq!(p.key_mask >> crate::core::framedata::IDX_ATTRIBUTEDEFORM & 1 == 1, p.run(crate::core::framedata::IDX_ATTRIBUTEDEFORM).is_some());
+            assert_eq!(p.key_mask >> crate::eval::framedata::IDX_ATTRIBUTECELL & 1 == 1, p.run(crate::eval::framedata::IDX_ATTRIBUTECELL).is_some());
+            assert_eq!(p.key_mask >> crate::eval::framedata::IDX_ATTRIBUTEDEFORM & 1 == 1, p.run(crate::eval::framedata::IDX_ATTRIBUTEDEFORM).is_some());
             base += p.key_mask.count_ones();
         }
-        assert_eq!(crate::core::framedata::cursor_count(parts), base as usize);
-        assert!((base as usize) < parts.len() * crate::core::framedata::NUM_PART_ATTRIBUTES / 2, "fixture sanity: most attributes of most parts carry no keys");
+        assert_eq!(crate::eval::framedata::cursor_count(parts), base as usize);
+        assert!((base as usize) < parts.len() * crate::eval::framedata::NUM_PART_ATTRIBUTES / 2, "fixture sanity: most attributes of most parts carry no keys");
     }
 }
 
@@ -157,7 +157,7 @@ fn static_mesh_buffers_are_shared_not_copied() {
     assert_eq!(a.get_mesh_uvs_ptr(), b.get_mesh_uvs_ptr());
 
     // SceneGraph mode skins no mesh, so it hands out none.
-    b.set_render_mode(crate::core::RenderMode::SceneGraph);
+    b.set_render_mode(crate::eval::RenderMode::SceneGraph);
     b.get_frame_data(start(same)).expect("frame");
     assert_eq!((b.get_mesh_uvs_len(), b.get_mesh_indices_len(), b.get_mesh_index_offsets_len()), (0, 0, 0));
 }
@@ -514,7 +514,7 @@ fn test_deform_animation() {
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
     let mut context = Context::new();
-    context.set_render_mode(crate::core::RenderMode::SceneGraph);
+    context.set_render_mode(crate::eval::RenderMode::SceneGraph);
     context.bind_resource(&resource);
     context.setup_animation("anime_1").expect("Failed to setup animation");
 

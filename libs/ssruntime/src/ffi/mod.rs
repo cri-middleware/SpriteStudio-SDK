@@ -1017,7 +1017,7 @@ pub unsafe extern "C" fn ss_runtime_get_skip_frames(context: *mut c_void) -> boo
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_get_playback_direction(context: *mut c_void) -> i32 {
-    if let Some(ffi_context) = unsafe { get_context(context) } { if ffi_context.ctx.get_playback_direction() == crate::core::playback_controller::PlaybackDirection::Forward { 0 } else { 1 } } else { 0 }
+    if let Some(ffi_context) = unsafe { get_context(context) } { if ffi_context.ctx.get_playback_direction() == crate::eval::playback_controller::PlaybackDirection::Forward { 0 } else { 1 } } else { 0 }
 }
 
 #[unsafe(no_mangle)]
@@ -1105,8 +1105,8 @@ pub unsafe extern "C" fn ss_runtime_set_frame_rate(context: *mut c_void, frame_r
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_set_playback_direction(context: *mut c_void, direction: c_int, style: c_int) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
-        let d = if direction == 0 { crate::core::playback_controller::PlaybackDirection::Forward } else { crate::core::playback_controller::PlaybackDirection::Backward };
-        let s = if style == 0 { crate::core::playback_controller::PlaybackStyle::Normal } else { crate::core::playback_controller::PlaybackStyle::PingPong };
+        let d = if direction == 0 { crate::eval::playback_controller::PlaybackDirection::Forward } else { crate::eval::playback_controller::PlaybackDirection::Backward };
+        let s = if style == 0 { crate::eval::playback_controller::PlaybackStyle::Normal } else { crate::eval::playback_controller::PlaybackStyle::PingPong };
         ffi_context.ctx.set_playback_direction(d, s);
     }
 }
@@ -1481,8 +1481,8 @@ pub unsafe extern "C" fn ss_runtime_set_track_playback_direction(context: *mut c
         return false;
     };
     ffi_context.last_error = None;
-    let d = if direction == 0 { crate::core::playback_controller::PlaybackDirection::Forward } else { crate::core::playback_controller::PlaybackDirection::Backward };
-    let s = if style == 0 { crate::core::playback_controller::PlaybackStyle::Normal } else { crate::core::playback_controller::PlaybackStyle::PingPong };
+    let d = if direction == 0 { crate::eval::playback_controller::PlaybackDirection::Forward } else { crate::eval::playback_controller::PlaybackDirection::Backward };
+    let s = if style == 0 { crate::eval::playback_controller::PlaybackStyle::Normal } else { crate::eval::playback_controller::PlaybackStyle::PingPong };
     report(ffi_context, "ss_runtime_set_track_playback_direction", |ctx| ctx.set_track_playback_direction(track, d, s))
 }
 
@@ -1490,8 +1490,8 @@ pub unsafe extern "C" fn ss_runtime_set_track_playback_direction(context: *mut c
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_get_track_playback_direction(context: *mut c_void, track: u32) -> i32 {
     match unsafe { get_context(context) }.and_then(|c| c.ctx.get_track_playback_direction(track)) {
-        Some(crate::core::playback_controller::PlaybackDirection::Forward) => 0,
-        Some(crate::core::playback_controller::PlaybackDirection::Backward) => 1,
+        Some(crate::eval::playback_controller::PlaybackDirection::Forward) => 0,
+        Some(crate::eval::playback_controller::PlaybackDirection::Backward) => 1,
         None => -1,
     }
 }
@@ -1826,7 +1826,7 @@ pub unsafe extern "C" fn ss_instance_slot_is_independent(slot: *mut c_void) -> b
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_set_render_mode(context: *mut c_void, mode: u8) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
-        ffi_context.ctx.set_render_mode(crate::core::RenderMode::from_u8(mode));
+        ffi_context.ctx.set_render_mode(crate::eval::RenderMode::from_u8(mode));
     }
 }
 
@@ -1835,15 +1835,15 @@ pub unsafe extern "C" fn ss_runtime_get_render_mode(context: *mut c_void) -> u8 
     if let Some(ffi_context) = unsafe { get_context(context) } {
         return ffi_context.ctx.render_mode() as u8;
     }
-    crate::core::RenderMode::Direct as u8
+    crate::eval::RenderMode::Direct as u8
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_set_coordinate_system(context: *mut c_void, coordinate_system: i32) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         let cs = match coordinate_system {
-            1 => crate::core::SsCoordinateSystem::YDown,
-            _ => crate::core::SsCoordinateSystem::YUp,
+            1 => crate::eval::SsCoordinateSystem::YDown,
+            _ => crate::eval::SsCoordinateSystem::YUp,
         };
         ffi_context.ctx.set_coordinate_system(cs);
     }
@@ -1853,8 +1853,8 @@ pub unsafe extern "C" fn ss_runtime_set_coordinate_system(context: *mut c_void, 
 pub unsafe extern "C" fn ss_runtime_get_coordinate_system(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         match ffi_context.ctx.get_coordinate_system() {
-            crate::core::SsCoordinateSystem::YDown => 1,
-            crate::core::SsCoordinateSystem::YUp => 0,
+            crate::eval::SsCoordinateSystem::YDown => 1,
+            crate::eval::SsCoordinateSystem::YUp => 0,
         }
     } else {
         0
@@ -1865,8 +1865,8 @@ pub unsafe extern "C" fn ss_runtime_get_coordinate_system(context: *mut c_void) 
 pub unsafe extern "C" fn ss_runtime_set_origin(context: *mut c_void, origin: i32) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         let o = match origin {
-            1 => crate::core::SsOrigin::TopLeft,
-            _ => crate::core::SsOrigin::Center,
+            1 => crate::eval::SsOrigin::TopLeft,
+            _ => crate::eval::SsOrigin::Center,
         };
         ffi_context.ctx.set_origin(o);
     }
@@ -1876,8 +1876,8 @@ pub unsafe extern "C" fn ss_runtime_set_origin(context: *mut c_void, origin: i32
 pub unsafe extern "C" fn ss_runtime_get_origin(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         match ffi_context.ctx.get_origin() {
-            crate::core::SsOrigin::TopLeft => 1,
-            crate::core::SsOrigin::Center => 0,
+            crate::eval::SsOrigin::TopLeft => 1,
+            crate::eval::SsOrigin::Center => 0,
         }
     } else {
         0
@@ -1888,8 +1888,8 @@ pub unsafe extern "C" fn ss_runtime_get_origin(context: *mut c_void) -> i32 {
 pub unsafe extern "C" fn ss_runtime_set_unit(context: *mut c_void, unit: i32) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         let u = match unit {
-            1 => crate::core::SsUnit::Normalized,
-            _ => crate::core::SsUnit::Pixel,
+            1 => crate::eval::SsUnit::Normalized,
+            _ => crate::eval::SsUnit::Pixel,
         };
         ffi_context.ctx.set_unit(u);
     }
@@ -1899,8 +1899,8 @@ pub unsafe extern "C" fn ss_runtime_set_unit(context: *mut c_void, unit: i32) {
 pub unsafe extern "C" fn ss_runtime_get_unit(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = unsafe { get_context(context) } {
         match ffi_context.ctx.get_unit() {
-            crate::core::SsUnit::Normalized => 1,
-            crate::core::SsUnit::Pixel => 0,
+            crate::eval::SsUnit::Normalized => 1,
+            crate::eval::SsUnit::Pixel => 0,
         }
     } else {
         0
@@ -2177,7 +2177,7 @@ mod tests {
         let name = b.create_string("empty");
         let parts = b.create_vector::<flatbuffers::ForwardsUOffset<fmt::PartData>>(&[]);
         let animations = b.create_vector::<flatbuffers::ForwardsUOffset<fmt::AnimationData>>(&[]);
-        let keyframes = crate::core::keyframes::create_empty_keyframes(&mut b);
+        let keyframes = crate::eval::keyframes::create_empty_keyframes(&mut b);
         let root = fmt::SsAnimeBinary::create(&mut b, &fmt::SsAnimeBinaryArgs { version, name: Some(name), parts: Some(parts), animations: Some(animations), keyframes: Some(keyframes), ..Default::default() });
         fmt::finish_ss_anime_binary_buffer(&mut b, root);
         b.finished_data().to_vec()
