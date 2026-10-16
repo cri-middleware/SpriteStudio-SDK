@@ -15,7 +15,7 @@ SpriteStudio のプロジェクトファイル (`.sspj`) および、それに�
 - **SSEE (`.ssee`)**: パーティクルエフェクトデータ。
 - **SSQE (`.ssqe`)**: シーケンスデータ。
 - **SSSE (`.ssse`)**: サウンドエフェクトリスト。
-- **BitmapFont (`.fnt` / `.json`)**: 文字マップ (`sscharmap` モジュール経由で解析)。
+- **BitmapFont (`.fnt`)**: BMFont のテキスト形式の文字マップ (`sscharmap` モジュール経由で解析)。
 
 # インストール
 

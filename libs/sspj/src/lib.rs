@@ -14,7 +14,7 @@
 //! | `.ssee` | [`ssee`] | particle effects |
 //! | `.ssqe` | [`ssqe`] | sequence packs |
 //! | `.ssse` | [`ssse`] | sound effect lists |
-//! | `.fnt` / `.json` | [`sscharmap`] | bitmap font character maps |
+//! | `.fnt` | [`sscharmap`] | bitmap font character maps, in BMFont's text format |
 //!
 //! Keyframe attribute payloads live in [`ssattribute`], and the SpriteStudio enums
 //! (interpolation kinds, blend modes, part types) in [`sstypes`].
