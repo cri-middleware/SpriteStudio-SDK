@@ -102,31 +102,6 @@ mod tests {
     }
 
     #[test]
-    fn test_ssae_backward_compatibility_missing_locked() {
-        let part_xml = r#"
-            <value>
-                <name>root</name>
-                <arrayIndex>0</arrayIndex>
-                <parentIndex>-1</parentIndex>
-                <type>null</type>
-                <boundsType>none</boundsType>
-                <inheritType>self</inheritType>
-                <ineheritRates>
-                    <ALPH>1</ALPH><IFLH>0</IFLH><IFLV>0</IFLV><FLPH>0</FLPH><FLPV>0</FLPV><HIDE>0</HIDE>
-                </ineheritRates>
-                <alphaBlendType>mix</alphaBlendType>
-                <show>1</show>
-                <maskInfluence>1</maskInfluence>
-            </value>"#;
-        let xml = get_minimal_ssae_xml(part_xml);
-        let result = SsAnimePack::load(&xml);
-
-        if result.is_err() {
-            println!("Note: 'locked' field is mandatory in current implementation.");
-        }
-    }
-
-    #[test]
     fn test_sspj_robustness_minimal() {
         use crate::sspj::SsProject;
         let xml = r#"<?xml version="1.0" encoding="utf-8" standalone="yes"?>

@@ -645,3 +645,6 @@ CLAUDE.md
 # here keeps them findable next to the script that makes them.
 /artifacts/
 /release-dist/
+# Pre-release provenance reports: scripts/scan-snippets.sh writes its SCANOSS
+# report here, and RELEASING.md downloads provenance.yml's ScanCode report here.
+/qa/
