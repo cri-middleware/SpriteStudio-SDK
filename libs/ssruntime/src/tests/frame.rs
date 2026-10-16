@@ -162,6 +162,20 @@ fn static_mesh_buffers_are_shared_not_copied() {
     assert_eq!((b.get_mesh_uvs_len(), b.get_mesh_indices_len(), b.get_mesh_index_offsets_len()), (0, 0, 0));
 }
 
+/// Rebinding forgets the static mesh buffers, as a new setup does: until the
+/// next frame sets them up, the getters hand out none.
+#[test]
+fn rebinding_hands_out_no_mesh_buffers_until_the_next_frame() {
+    let ssab = load_ringo_resource();
+    let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+    let (mut ctx, start) = ringo_ctx(&resource, "walk");
+    ctx.get_frame_data(start).expect("frame");
+    assert!(ctx.get_mesh_uvs_len() > 0, "fixture sanity: Ringo has mesh parts");
+
+    ctx.bind_resource(&resource);
+    assert_eq!((ctx.get_mesh_uvs_len(), ctx.get_mesh_indices_len(), ctx.get_mesh_index_offsets_len()), (0, 0, 0));
+}
+
 /// The zero-copy pair reports the frame the last `get_frame_data` built, and
 /// reports nothing when there is not one. Without the guard the accessors
 /// would read an unfinished `FlatBufferBuilder`, which asserts — and under
