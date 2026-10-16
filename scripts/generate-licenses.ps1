@@ -12,6 +12,14 @@ $ErrorActionPreference = "Stop"
 $baseDirectory = Split-Path -Parent $PSCommandPath
 $rootDirectory = Split-Path -Parent $baseDirectory
 
+# $ErrorActionPreference does not reach a native command's exit code, and an
+# exit code would not stop a caller either: throw.
+function Invoke-Checked {
+    param([string] $What, [scriptblock] $Body)
+    & $Body
+    if ($LASTEXITCODE -ne 0) { throw "$What failed ($LASTEXITCODE)" }
+}
+
 pushd $rootDirectory
 
 try {
@@ -22,7 +30,7 @@ try {
     # Check if cargo-about is installed
     if (-not (Get-Command "cargo-about" -ErrorAction SilentlyContinue)) {
         Write-Host "cargo-about is not installed. Installing it now..."
-        cargo install cargo-about --locked --features cli
+        Invoke-Checked "cargo-about install" { cargo install cargo-about --locked --features cli }
     }
 
     $template = "about-markdown.hbs"
@@ -72,11 +80,13 @@ try {
         Write-Host "Generating third-party licenses for $path..."
         # $flags is an array; PowerShell splats it into separate arguments
         # (nothing when the crate has no flags).
-        cargo about generate $flags `
-            --manifest-path "$path/Cargo.toml" `
-            --config about.toml `
-            $template `
-            -o $output
+        Invoke-Checked "notices for $path" {
+            cargo about generate $flags `
+                --manifest-path "$path/Cargo.toml" `
+                --config about.toml `
+                $template `
+                -o $output
+        }
     }
 
     Write-Host "License generation complete. Notices written to $OutDir"
