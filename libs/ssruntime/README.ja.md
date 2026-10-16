@@ -33,11 +33,11 @@ ssruntime = "7.0.0-beta.1"
 # モバイル / コンソール / デスクトップ用 no_std (C-API 利用)
 cargo build -p ssruntime-ffi --no-default-features --features ffi,libc_alloc,panic-handler
 
-# Web Wasm (ブラウザ / wasm-bindgen) 用 no_std
-cargo build -p ssruntime-ffi --no-default-features --features web
+# Web Wasm (ブラウザ / wasm-bindgen) 用
+cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --no-default-features --features web
 
 # Pure Wasm (WASI / カスタム Wasm エンジン) 用 no_std
-cargo build -p ssruntime-ffi --no-default-features --features wasm_alloc,panic-handler
+cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --no-default-features --features ffi,wasm_alloc,panic-handler
 ```
 
 *注意: `no_std` モードでも、アニメーションの状態やメタデータを管理するためにアロケータ (`alloc` クレート) は必要です。*

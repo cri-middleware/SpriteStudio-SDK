@@ -151,15 +151,14 @@ jobs:
               exit 1
             fi
 
-            # Build for Godot GDExtension (Nightly + PIC)
-            export RUSTFLAGS="-C relocation-model=pic"
-            cargo +nightly rustc -Z build-std=core,alloc \
-              --target wasm32-unknown-unknown \
-              --verbose \
-              -p ssruntime-ffi \
-              --no-default-features \
-              --features "wasm_alloc,panic-handler" \
-              --crate-type staticlib,rlib
+            # WebAssembly without a JavaScript dependency, the recipe the porting
+            # guide gives (libs/ssruntime/docs/20_design/40_no_std_integration.md
+            # §1). Leave out `ffi` and it still builds, exporting nothing.
+            cargo build --target wasm32-unknown-unknown --verbose -p ssruntime-ffi --no-default-features --features "ffi,wasm_alloc,panic-handler"
+            if ! grep -q ss_runtime_create target/wasm32-unknown-unknown/debug/ssruntime.wasm; then
+              echo "::error::the WebAssembly build without JavaScript exports no C-API (no ss_runtime_create)"
+              exit 1
+            fi
 
             # Emscripten deliverable (release.yml ships its .a). Needs no emsdk —
             # the nightly toolchain and wasm target installed above are enough.
