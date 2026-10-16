@@ -451,6 +451,7 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: 
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mut *const c_uchar, out_len: *mut usize) {
     if let Some(ffi_context) = unsafe { get_context(context) } {
+        ffi_context.last_error = None;
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
             unsafe {
                 if !out_data.is_null() {
@@ -469,6 +470,7 @@ pub unsafe extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mu
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_get_ssab_buf(context: *mut c_void) -> *const c_uchar {
     if let Some(ffi_context) = unsafe { get_context(context) } {
+        ffi_context.last_error = None;
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
             return ssab_buf.as_ptr() as *const c_uchar;
         } else {
@@ -481,6 +483,7 @@ pub unsafe extern "C" fn ss_runtime_get_ssab_buf(context: *mut c_void) -> *const
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_get_ssab_len(context: *mut c_void) -> usize {
     if let Some(ffi_context) = unsafe { get_context(context) } {
+        ffi_context.last_error = None;
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
             return ssab_buf.len();
         } else {
@@ -2276,19 +2279,23 @@ mod tests {
         (code, text.to_string_lossy().into_owned())
     }
 
-    /// A valid FlatBuffer root whose `version` is not the one this runtime was
-    /// built against — the failure a user hits by playing a pack from a
-    /// different converter, and the reason the message has to carry numbers.
-    fn ssab_with_wrong_version() -> std::vec::Vec<u8> {
+    /// A valid FlatBuffer root with no parts or animations, at `version`.
+    fn empty_ssab(version: u32) -> std::vec::Vec<u8> {
         use ssab::ssab::ss::format as fmt;
         let mut b = flatbuffers::FlatBufferBuilder::new();
-        let name = b.create_string("wrong_version");
+        let name = b.create_string("empty");
         let parts = b.create_vector::<flatbuffers::ForwardsUOffset<fmt::PartData>>(&[]);
         let animations = b.create_vector::<flatbuffers::ForwardsUOffset<fmt::AnimationData>>(&[]);
         let keyframes = crate::core::keyframes::create_empty_keyframes(&mut b);
-        let root = fmt::SsAnimeBinary::create(&mut b, &fmt::SsAnimeBinaryArgs { version: ssab::SSAB_SCHEMA_VERSION + 1, name: Some(name), parts: Some(parts), animations: Some(animations), keyframes: Some(keyframes), ..Default::default() });
+        let root = fmt::SsAnimeBinary::create(&mut b, &fmt::SsAnimeBinaryArgs { version, name: Some(name), parts: Some(parts), animations: Some(animations), keyframes: Some(keyframes), ..Default::default() });
         fmt::finish_ss_anime_binary_buffer(&mut b, root);
         b.finished_data().to_vec()
+    }
+
+    /// A pack whose `version` is not the one this runtime was built against —
+    /// the failure a user hits by playing a pack from a different converter.
+    fn ssab_with_wrong_version() -> std::vec::Vec<u8> {
+        empty_ssab(ssab::SSAB_SCHEMA_VERSION + 1)
     }
 
     /// A failure is reported on both faces: the code for the caller that checks
@@ -2379,12 +2386,37 @@ mod tests {
         assert!(!unsafe { ss_runtime_load_ssab_borrow(ctx, core::ptr::null(), 0) });
         assert_eq!(unsafe { ss_runtime_get_last_error(ctx) }, crate::error::SSRuntimeError::InvalidParameter.as_code());
 
-        // And a success clears it: the field says "did the last call fail", not
-        // "has anything ever failed".
+        // And `ss_runtime_reset` clears it.
         let ssab = ssab_with_wrong_version();
         let _ = unsafe { ss_runtime_load_ssab_borrow(ctx, ssab.as_ptr(), ssab.len()) };
         unsafe { ss_runtime_reset(ctx) };
         assert_eq!(read_error(ctx), (0, std::string::String::new()));
+        unsafe { ss_runtime_destroy(ctx) };
+    }
+
+    /// The pack getters can fail too, so a success clears what an earlier call
+    /// left behind.
+    #[test]
+    fn a_successful_pack_read_clears_an_earlier_failure() {
+        let ctx = ss_runtime_create();
+        let ssab = empty_ssab(ssab::SSAB_SCHEMA_VERSION);
+        assert!(unsafe { ss_runtime_load_ssab_copy(ctx, ssab.as_ptr(), ssab.len()) });
+        let name = CString::new("walk").unwrap();
+        let reads: [(&str, &dyn Fn()); 3] = [
+            ("ss_runtime_get_ssab", &|| {
+                let (mut data, mut len) = (core::ptr::null(), 0);
+                unsafe { ss_runtime_get_ssab(ctx, &mut data, &mut len) };
+                assert_eq!(len, ssab.len());
+            }),
+            ("ss_runtime_get_ssab_buf", &|| assert!(!unsafe { ss_runtime_get_ssab_buf(ctx) }.is_null())),
+            ("ss_runtime_get_ssab_len", &|| assert_eq!(unsafe { ss_runtime_get_ssab_len(ctx) }, ssab.len())),
+        ];
+        for (api, read) in reads {
+            assert!(!unsafe { ss_runtime_setup_animation(ctx, name.as_ptr()) });
+            assert_eq!(unsafe { ss_runtime_get_last_error(ctx) }, crate::error::SSRuntimeError::AnimationNotFound.as_code());
+            read();
+            assert_eq!(unsafe { ss_runtime_get_last_error(ctx) }, 0, "{api}");
+        }
         unsafe { ss_runtime_destroy(ctx) };
     }
 
