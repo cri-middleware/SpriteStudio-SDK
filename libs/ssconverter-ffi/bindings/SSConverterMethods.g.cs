@@ -79,6 +79,9 @@ namespace SpriteStudio.SsConverter
         ///
         ///  Starting a conversion clears this context's previous result, error text and
         ///  scan — see `ss_converter_create` on one job at a time.
+        ///
+        ///  A null `sspj` or `output_dir` starts nothing and finishes at once with
+        ///  `ErrorIo`.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_converter_convert", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_converter_convert(Context* ctx, byte* sspj, byte* output_dir, [MarshalAs(UnmanagedType.U1)] bool embedded, delegate* unmanaged[Cdecl]<byte*, void> callback);
@@ -146,6 +149,8 @@ namespace SpriteStudio.SsConverter
         ///
         ///  See `ss_converter_create` on one job at a time: a context scanning is not
         ///  a context converting.
+        ///
+        ///  A null `dir` scans nothing, as a directory that does not exist does.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_converter_scan_dir", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_converter_scan_dir(Context* ctx, byte* dir, uint max_depth, nuint max_entries, ulong max_millis);

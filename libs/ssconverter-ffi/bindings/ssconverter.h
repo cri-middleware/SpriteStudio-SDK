@@ -26,6 +26,11 @@
  * string is **borrowed from the context**, must not be freed, and stays valid
  * only until the call named in its own documentation — usually the next job on
  * that context, or the context's destruction.
+ *
+ * Every string is UTF-8, both ways. A path passed in is a NUL-terminated UTF-8
+ * string: bytes that are not UTF-8 are replaced, so such a path names a
+ * different file, which is not found. On Windows, pass UTF-8 rather than the
+ * ANSI code page.
  */
 
 #ifndef SSCONVERTER_H
@@ -122,6 +127,9 @@ void ss_converter_destroy(struct Context *context);
  *
  * Starting a conversion clears this context's previous result, error text and
  * scan — see `ss_converter_create` on one job at a time.
+ *
+ * A null `sspj` or `output_dir` starts nothing and finishes at once with
+ * `ErrorIo`.
  */
 void ss_converter_convert(struct Context *ctx,
                           const char *sspj,
@@ -185,6 +193,8 @@ void ss_converter_get_error(struct Context *context, const char **out_data, uint
  *
  * See `ss_converter_create` on one job at a time: a context scanning is not
  * a context converting.
+ *
+ * A null `dir` scans nothing, as a directory that does not exist does.
  */
 void ss_converter_scan_dir(struct Context *ctx,
                            const char *dir,

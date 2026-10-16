@@ -13,6 +13,7 @@
 use clap::{CommandFactory, Parser};
 use std::ffi::OsString;
 use std::path::PathBuf;
+use std::process::ExitCode;
 use std::thread::JoinHandle;
 
 const VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "+", env!("VERGEN_GIT_SHA"));
@@ -56,15 +57,23 @@ fn version_string() -> String {
 }
  */
 
-fn main() -> Result<(), ssconverter::ConverterError> {
+fn main() -> ExitCode {
     let args = Cli::parse();
     let mut cmd = Cli::command();
 
+    // The walk below skips a path that does not exist without a word.
+    let missing: Vec<&PathBuf> = args.files.iter().filter(|path| !path.exists()).collect();
+    for path in &missing {
+        eprintln!("Error: {} does not exist.", path.display());
+    }
+
     let sspj_paths = ssconverter::utility::parse_args(&args.files);
     if sspj_paths.is_empty() {
-        eprintln!("Error: No SpriteStudio project files found at the specified paths.");
-        eprintln!("{}", cmd.render_usage());
-        std::process::exit(1);
+        if missing.len() < args.files.len() {
+            eprintln!("Error: No SpriteStudio project files found at the specified paths.");
+            eprintln!("{}", cmd.render_usage());
+        }
+        return ExitCode::FAILURE;
     }
 
     println!("{} {} (ssab schema v{})", cmd.get_name(), VERSION, ssconverter::ssab_schema_version());
@@ -88,16 +97,25 @@ fn main() -> Result<(), ssconverter::ConverterError> {
             std::thread::spawn(move || ssconverter::convert_sspj_to_ssab_files(p.as_path(), &c, &|msg| println!("{}", msg)))
         })
     });
-    for h in handlers {
-        match h.join() {
-            Ok(result) => result?,
-            Err(_) => {
-                eprintln!("Thread panic occurred");
-                panic!("A thread has panicked during execution");
-            }
-        }
+    // Every conversion is joined, so a failure neither cuts the others short nor
+    // hides theirs.
+    let mut failed = 0;
+    for (path, handler) in sspj_paths.iter().zip(handlers) {
+        let error = match handler.join() {
+            Ok(Ok(())) => continue,
+            Ok(Err(e)) => e.to_string(),
+            Err(_) => "the conversion panicked".to_string(),
+        };
+        eprintln!("Error: {}: {}", path.display(), error);
+        failed += 1;
     }
 
+    if failed > 0 {
+        eprintln!("{} of {} conversions failed.", failed, sspj_paths.len());
+    }
+    if failed > 0 || !missing.is_empty() {
+        return ExitCode::FAILURE;
+    }
     println!("All conversions completed successfully.");
-    Ok(())
+    ExitCode::SUCCESS
 }

@@ -48,6 +48,10 @@ $ ssconverter-cli ./assets/projects ./extra_assets
 
 _Note: The `--out-dir` option is not available in batch mode._
 
+## Exit status
+
+In either mode, the run exits with a non-zero status when a path given does not exist or a project fails to convert. Every such path and project is named on stderr, and the projects that can be converted still are.
+
 # Installation
 
 ## Prebuilt binaries (recommended)
@@ -105,8 +109,8 @@ $ cargo build --release
 
 ## Test
 
-Run integration tests defined in `src/main.rs`.
+The tests in `tests/` run the built CLI and check its exit status. From the repository root:
 
 ```bash
-$ cargo test
+$ cargo test -p ssconverter-cli
 ```
