@@ -216,10 +216,6 @@ fn test_nines_tile_repeats_to_fill_the_part() {
 /// otherwise both parts merge into one batch and only one texture can ever be bound.
 #[test]
 fn texture_change_splits_batches_by_overridden_texture() {
-    fn fnv1a(text: &str) -> u32 {
-        text.bytes().fold(2166136261u32, |hash, b| (hash ^ b as u32).wrapping_mul(16777619))
-    }
-
     prepare();
     let ssab_path = get_test_base_path().join("tests/overall/overall/TextureChange.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("read TextureChange.ssab");
@@ -229,8 +225,8 @@ fn texture_change_splits_batches_by_overridden_texture() {
     context.bind_resource(&resource);
     context.setup_animation("anime_1").expect("setup");
 
-    let cellmap_hash = fnv1a("common");
-    let (common_png, common_2_png, box_png) = (fnv1a("common.png"), fnv1a("common_2.png"), fnv1a("box_00_00.png"));
+    let cellmap_hash = fnv1a_hash_str("common");
+    let (common_png, common_2_png, box_png) = (fnv1a_hash_str("common.png"), fnv1a_hash_str("common_2.png"), fnv1a_hash_str("box_00_00.png"));
 
     // Every texture a TCHG key names must be reversible hash -> name by the Player, including
     // names absent from the project's <ExternalTextures> list (`common.png`, `box_00_00.png`).

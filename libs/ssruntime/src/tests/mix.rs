@@ -35,7 +35,7 @@ fn build_mix_layer(parts: &[MixLayerPart]) -> LayerState<'static> {
 /// Resolve one `Mix` track at full alpha, with the primary's own pose as the
 /// floor — the shape every pre-track test was written against, so those tests
 /// keep asserting exactly what they did before the stack existed.
-fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx: usize, resolved_layer: &mut LayerState<'b>) {
+fn mix_single_track<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx: usize, resolved_layer: &mut LayerState<'b>) {
     mix_tracks(sources, layers, &[TrackState::new()], primary_idx, &[], resolved_layer);
 }
 
@@ -47,12 +47,12 @@ fn mix_source(weight: f32) -> SourceState {
 }
 
 #[test]
-fn mix_poses_single_source_passthrough() {
+fn mix_tracks_single_source_passthrough() {
     let layers = vec![build_mix_layer(&[(10.0, 20.0, 1.5, 2.0, 0.5, None)])];
     let sources = vec![mix_source(1.0)];
     let mut resolved = LayerState::new();
 
-    mix_poses(&sources, &layers, 0, &mut resolved);
+    mix_single_track(&sources, &layers, 0, &mut resolved);
 
     assert_eq!(resolved.parts_vec.len(), 1);
     let r = &resolved.parts_vec[0];
@@ -104,7 +104,7 @@ fn fully_attributed_part_state(bias: f32) -> runtime::framedata::ss::runtime::Pa
 /// primary verbatim. The narrower TRSA blend tests below would not notice a
 /// dropped skew or a pivot that stopped blending.
 #[test]
-fn mix_poses_blends_every_continuous_attribute() {
+fn mix_tracks_blends_every_continuous_attribute() {
     use runtime::framedata::ss::runtime::UpdateAttributeFlags;
 
     let mut primary_part = fully_attributed_part_state(0.0);
@@ -129,7 +129,7 @@ fn mix_poses_blends_every_continuous_attribute() {
 
     let sources = vec![mix_source(1.0), mix_source(1.0)];
     let mut resolved = LayerState::new();
-    mix_poses(&sources, &layers, 0, &mut resolved);
+    mix_single_track(&sources, &layers, 0, &mut resolved);
 
     // A 50/50 blend of `n` and `n + 100` is `n + 50`, exact in f32.
     let r = &resolved.parts_vec[0];
@@ -172,14 +172,14 @@ fn mix_poses_blends_every_continuous_attribute() {
 /// cover toward the origin: weights are renormalized over the sources that
 /// actually have the part.
 #[test]
-fn mix_poses_renormalizes_weights_per_part() {
+fn mix_tracks_renormalizes_weights_per_part() {
     let primary = build_mix_layer(&[(10.0, 20.0, 0.0, 1.0, 1.0, None), (70.0, 80.0, 0.0, 4.0, 0.25, None)]);
     let secondary = build_mix_layer(&[(50.0, 60.0, 0.0, 3.0, 0.0, None)]);
     let layers = vec![primary, secondary];
     let sources = vec![mix_source(1.0), mix_source(1.0)];
     let mut resolved = LayerState::new();
 
-    mix_poses(&sources, &layers, 0, &mut resolved);
+    mix_single_track(&sources, &layers, 0, &mut resolved);
 
     // Part 0 is covered by both: an ordinary 50/50 blend.
     let p0 = &resolved.parts_vec[0];
@@ -312,7 +312,7 @@ fn track_passes_through_attributes_it_does_not_animate() {
 /// `evaluate_part`'s hardcoded default and dragged the result halfway to a
 /// number that means nothing.
 #[test]
-fn mix_poses_excludes_sources_that_do_not_key_the_attribute() {
+fn mix_tracks_excludes_sources_that_do_not_key_the_attribute() {
     use runtime::framedata::ss::runtime::UpdateAttributeFlags as F;
 
     let mut primary = build_mix_layer(&[(100.0, 0.0, 0.0, 1.0, 0.25, None)]);
@@ -326,7 +326,7 @@ fn mix_poses_excludes_sources_that_do_not_key_the_attribute() {
     let sources = vec![mix_source(1.0), mix_source(1.0)];
     let mut resolved = LayerState::new();
 
-    mix_poses(&sources, &layers, 0, &mut resolved);
+    mix_single_track(&sources, &layers, 0, &mut resolved);
 
     let p = &resolved.parts_vec[0];
     // Only the primary covers these, so it owns them outright. A global
@@ -340,7 +340,7 @@ fn mix_poses_excludes_sources_that_do_not_key_the_attribute() {
 /// An attribute nobody animates keeps the primary's value rather than
 /// collapsing to a zero-weighted sum.
 #[test]
-fn mix_poses_uncovered_attribute_keeps_primary_value() {
+fn mix_tracks_uncovered_attribute_keeps_primary_value() {
     use runtime::framedata::ss::runtime::UpdateAttributeFlags as F;
 
     let mut primary = build_mix_layer(&[(10.0, 0.0, 0.0, 1.0, 1.0, None)]);
@@ -352,7 +352,7 @@ fn mix_poses_uncovered_attribute_keeps_primary_value() {
     let sources = vec![mix_source(1.0), mix_source(1.0)];
     let mut resolved = LayerState::new();
 
-    mix_poses(&sources, &layers, 0, &mut resolved);
+    mix_single_track(&sources, &layers, 0, &mut resolved);
 
     let p = &resolved.parts_vec[0];
     assert_eq!(p.position_x(), 50.0, "covered by both: an ordinary 50/50 blend");
@@ -364,7 +364,7 @@ fn mix_poses_uncovered_attribute_keeps_primary_value() {
 /// Weights still normalize among the sources that *do* cover an attribute,
 /// so an uneven split stays proportional.
 #[test]
-fn mix_poses_coverage_normalizes_among_covering_sources_only() {
+fn mix_tracks_coverage_normalizes_among_covering_sources_only() {
     use runtime::framedata::ss::runtime::UpdateAttributeFlags as F;
 
     let mut a = build_mix_layer(&[(0.0, 0.0, 0.0, 1.0, 1.0, None)]);
@@ -379,7 +379,7 @@ fn mix_poses_coverage_normalizes_among_covering_sources_only() {
     let sources = vec![mix_source(1.0), mix_source(3.0), mix_source(96.0)];
     let mut resolved = LayerState::new();
 
-    mix_poses(&sources, &layers, 0, &mut resolved);
+    mix_single_track(&sources, &layers, 0, &mut resolved);
 
     // 1:3 between the two covering sources => 75.0, not 3.0.
     assert_eq!(resolved.parts_vec[0].position_x(), 75.0);
@@ -388,7 +388,7 @@ fn mix_poses_coverage_normalizes_among_covering_sources_only() {
 /// When no active source covers a part, the mixer must leave the primary's
 /// pose alone rather than write zeroed accumulators over it.
 #[test]
-fn mix_poses_keeps_primary_pose_for_uncovered_parts() {
+fn mix_tracks_keeps_primary_pose_for_uncovered_parts() {
     let primary = build_mix_layer(&[(10.0, 20.0, 0.0, 1.0, 1.0, None), (70.0, 80.0, 0.0, 4.0, 0.25, None)]);
     let secondary = build_mix_layer(&[(50.0, 60.0, 0.0, 3.0, 0.5, None)]);
     let layers = vec![primary, secondary];
@@ -396,7 +396,7 @@ fn mix_poses_keeps_primary_pose_for_uncovered_parts() {
     let sources = vec![mix_source(0.0), mix_source(1.0)];
     let mut resolved = LayerState::new();
 
-    mix_poses(&sources, &layers, 0, &mut resolved);
+    mix_single_track(&sources, &layers, 0, &mut resolved);
 
     // Part 0: the secondary is the only contributor, at full weight.
     let p0 = &resolved.parts_vec[0];
@@ -414,14 +414,14 @@ fn mix_poses_keeps_primary_pose_for_uncovered_parts() {
 }
 
 #[test]
-fn mix_poses_50_50_blend_trsa() {
+fn mix_tracks_50_50_blend_trsa() {
     let layer_a = build_mix_layer(&[(10.0, 20.0, 0.0, 1.0, 1.0, None)]);
     let layer_b = build_mix_layer(&[(30.0, 40.0, ::core::f32::consts::FRAC_PI_2, 2.0, 0.5, None)]);
     let sources = vec![mix_source(1.0), mix_source(1.0)];
     let layers = vec![layer_a, layer_b];
     let mut resolved = LayerState::new();
 
-    mix_poses(&sources, &layers, 0, &mut resolved);
+    mix_single_track(&sources, &layers, 0, &mut resolved);
 
     let r = &resolved.parts_vec[0];
     assert!((r.position_x() - 20.0).abs() < 1e-6);
@@ -432,16 +432,16 @@ fn mix_poses_50_50_blend_trsa() {
 }
 
 #[test]
-fn mix_poses_auto_normalizes_weights() {
+fn mix_tracks_auto_normalizes_weights() {
     let layer_a = build_mix_layer(&[(0.0, 0.0, 0.0, 1.0, 1.0, None)]);
     let layer_b = build_mix_layer(&[(100.0, 100.0, 0.0, 1.0, 1.0, None)]);
     let layers = vec![layer_a, layer_b];
 
     let mut resolved_a = LayerState::new();
-    mix_poses(&[mix_source(0.7), mix_source(0.3)], &layers, 0, &mut resolved_a);
+    mix_single_track(&[mix_source(0.7), mix_source(0.3)], &layers, 0, &mut resolved_a);
 
     let mut resolved_b = LayerState::new();
-    mix_poses(&[mix_source(7.0), mix_source(3.0)], &layers, 0, &mut resolved_b);
+    mix_single_track(&[mix_source(7.0), mix_source(3.0)], &layers, 0, &mut resolved_b);
 
     // Same ratio → same mix outcome regardless of absolute magnitudes.
     assert!((resolved_a.parts_vec[0].position_x() - resolved_b.parts_vec[0].position_x()).abs() < 1e-5);
@@ -449,7 +449,7 @@ fn mix_poses_auto_normalizes_weights() {
 }
 
 #[test]
-fn mix_poses_inactive_animation_idx_skipped() {
+fn mix_tracks_inactive_animation_idx_skipped() {
     let layer_a = build_mix_layer(&[(10.0, 0.0, 0.0, 1.0, 1.0, None)]);
     let layer_b = build_mix_layer(&[(90.0, 0.0, 0.0, 1.0, 1.0, None)]);
     let layers = vec![layer_a, layer_b];
@@ -459,14 +459,14 @@ fn mix_poses_inactive_animation_idx_skipped() {
     let sources = vec![mix_source(1.0), src_b];
 
     let mut resolved = LayerState::new();
-    mix_poses(&sources, &layers, 0, &mut resolved);
+    mix_single_track(&sources, &layers, 0, &mut resolved);
 
     // Only source A contributes; resolved == primary verbatim.
     assert_eq!(resolved.parts_vec[0].position_x(), 10.0);
 }
 
 #[test]
-fn mix_poses_zero_weight_source_skipped() {
+fn mix_tracks_zero_weight_source_skipped() {
     let layer_a = build_mix_layer(&[(10.0, 0.0, 0.0, 1.0, 1.0, None)]);
     let layer_b = build_mix_layer(&[(90.0, 0.0, 0.0, 1.0, 1.0, None)]);
     let layers = vec![layer_a, layer_b];
@@ -474,13 +474,13 @@ fn mix_poses_zero_weight_source_skipped() {
     let sources = vec![mix_source(1.0), mix_source(0.0)];
 
     let mut resolved = LayerState::new();
-    mix_poses(&sources, &layers, 0, &mut resolved);
+    mix_single_track(&sources, &layers, 0, &mut resolved);
 
     assert_eq!(resolved.parts_vec[0].position_x(), 10.0);
 }
 
 #[test]
-fn mix_poses_total_weight_zero_uses_primary() {
+fn mix_tracks_total_weight_zero_uses_primary() {
     let layer_a = build_mix_layer(&[(7.0, 0.0, 0.0, 1.0, 1.0, None)]);
     let layer_b = build_mix_layer(&[(99.0, 0.0, 0.0, 1.0, 1.0, None)]);
     let layers = vec![layer_a, layer_b];
@@ -489,20 +489,20 @@ fn mix_poses_total_weight_zero_uses_primary() {
     let sources = vec![mix_source(0.0), mix_source(0.0)];
 
     let mut resolved = LayerState::new();
-    mix_poses(&sources, &layers, 0, &mut resolved);
+    mix_single_track(&sources, &layers, 0, &mut resolved);
 
     assert_eq!(resolved.parts_vec[0].position_x(), 7.0);
 }
 
 #[test]
-fn mix_poses_raw_vertex_deform_weighted() {
+fn mix_tracks_raw_vertex_deform_weighted() {
     let layer_a = build_mix_layer(&[(0.0, 0.0, 0.0, 1.0, 1.0, Some(([1.0, 2.0, 3.0, 4.0], [10.0, 20.0, 30.0, 40.0])))]);
     let layer_b = build_mix_layer(&[(0.0, 0.0, 0.0, 1.0, 1.0, Some(([5.0, 6.0, 7.0, 8.0], [50.0, 60.0, 70.0, 80.0])))]);
     let sources = vec![mix_source(1.0), mix_source(1.0)];
     let layers = vec![layer_a, layer_b];
 
     let mut resolved = LayerState::new();
-    mix_poses(&sources, &layers, 0, &mut resolved);
+    mix_single_track(&sources, &layers, 0, &mut resolved);
 
     let d = resolved.raw_vertex_deform[0].as_deref().unwrap();
     assert!(d.present);
@@ -513,7 +513,7 @@ fn mix_poses_raw_vertex_deform_weighted() {
 }
 
 #[test]
-fn mix_poses_update_flag_or_merged() {
+fn mix_tracks_update_flag_or_merged() {
     // Source A has AttributePosX set, source B has AttributeRotZ. The mixed
     // pose must report both so Stage B's `needs_center` and any consumer
     // logic see every attribute that contributed to the value.
@@ -526,7 +526,7 @@ fn mix_poses_update_flag_or_merged() {
     let layers = vec![layer_a, layer_b];
 
     let mut resolved = LayerState::new();
-    mix_poses(&sources, &layers, 0, &mut resolved);
+    mix_single_track(&sources, &layers, 0, &mut resolved);
 
     let f = resolved.parts_vec[0].update_flag();
     assert!(f.contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
