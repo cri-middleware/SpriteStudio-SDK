@@ -7,8 +7,8 @@ fn a_part_base_plus_its_changing_attributes_is_the_full_evaluation() {
     use crate::core::framedata::{IDX_ATTRIBUTEDEFORM, evaluate_part};
     use crate::core::{SsCoordinateSystem, SsOrigin, SsUnit};
     prepare();
-    for pack in ["tests/Ringo/Ringo/Ringo.ssab", "tests/overall/overall/Basic.ssab"] {
-        let input_buf = std::fs::read(get_test_base_path().join(pack)).expect("read pack");
+    for pack in ["Ringo/Ringo.ssab", "overall/Basic.ssab"] {
+        let input_buf = std::fs::read(fixture(pack)).expect("read pack");
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
         let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
         let mut constant = 0;
@@ -46,7 +46,7 @@ fn a_part_base_plus_its_changing_attributes_is_the_full_evaluation() {
 #[test]
 fn an_instance_keeps_a_cursor_per_keyed_attribute_only() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+    let ssab_path = fixture("Ringo/Ringo.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
@@ -71,7 +71,7 @@ fn a_mixed_pose_samples_the_primary_cell_for_its_uvs() {
     // the primary's by definition. The UVs must follow the cell the primary
     // shows on each frame, as they do when it plays alone.
     prepare();
-    let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+    let ssab_path = fixture("Ringo/Ringo.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
@@ -102,7 +102,7 @@ fn frame_data_starts_aligned_after_the_builder_is_resized() {
     // holds a u64: every frame has to start on an 8-byte boundary,
     // including the frames after the builder is re-sized to the largest.
     prepare();
-    let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+    let ssab_path = fixture("Ringo/Ringo.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
@@ -128,7 +128,7 @@ fn frame_data_starts_aligned_after_the_builder_is_resized() {
 #[test]
 fn static_mesh_buffers_are_shared_not_copied() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+    let ssab_path = fixture("Ringo/Ringo.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
@@ -183,7 +183,7 @@ fn rebinding_hands_out_no_mesh_buffers_until_the_next_frame() {
 #[test]
 fn the_frame_data_accessors_never_read_an_unfinished_buffer() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+    let ssab_path = fixture("Ringo/Ringo.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
@@ -215,8 +215,8 @@ fn the_frame_data_accessors_never_read_an_unfinished_buffer() {
 #[test]
 fn load_parts_of_ssab_files() {
     prepare();
-    TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
-        let ssab_dir = get_test_base_path().join(dir);
+    PROJECTS.iter().for_each(|&project| {
+        let ssab_dir = fixtures_dir().join(project);
         println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap());
         for entry in ssab_dir.read_dir().unwrap() {
             let f = entry.unwrap().path();
@@ -246,7 +246,7 @@ fn load_parts_of_ssab_files() {
 #[test]
 fn evaluate_animation_at_frame() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
+    let ssab_path = fixture("overall/Basic.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -317,7 +317,7 @@ fn evaluate_animation_at_frame() {
 #[test]
 fn get_frame_data_accepts_subframe_overshoot_at_animation_end() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
+    let ssab_path = fixture("overall/Basic.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
@@ -353,7 +353,7 @@ fn get_frame_data_accepts_subframe_overshoot_at_animation_end() {
 #[test]
 fn test_part_hierarchy_and_visibility() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
+    let ssab_path = fixture("overall/Basic.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -393,7 +393,7 @@ fn test_part_hierarchy_and_visibility() {
 #[test]
 fn test_world_matrices() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
+    let ssab_path = fixture("overall/Basic.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -421,7 +421,7 @@ fn test_world_matrices() {
 #[test]
 fn test_local_uvs() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
+    let ssab_path = fixture("overall/Basic.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -473,7 +473,7 @@ fn test_cell_meta_per_part() {
     // `[pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]`.
     // Cell-bearing parts populate it; the rest stay zero.
     prepare();
-    let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
+    let ssab_path = fixture("overall/Basic.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -508,7 +508,7 @@ fn test_cell_meta_per_part() {
 #[test]
 fn test_deform_animation() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/allAttributeV7/allAttributeV7/deform.ssab");
+    let ssab_path = fixture("allAttributeV7/deform.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read deform.ssab");
 
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -574,7 +574,7 @@ fn test_shape_default_size_64x64() {
     // keyframes, so the runtime must surface the SS6 default instead of the
     // cell-size fallback used for cell-bearing types.
     prepare();
-    let ssab_path = get_test_base_path().join("tests/allPartsV7/allPartsV7/shape.ssab");
+    let ssab_path = fixture("allPartsV7/shape.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read shape.ssab");
 
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");

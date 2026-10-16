@@ -8,7 +8,7 @@ use super::*;
 /// locally so the `resource` outlives its `Context`, matching drop order).
 fn load_basic_ssab() -> SsabData {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
+    let ssab_path = fixture("overall/Basic.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
     SsabData::load_copy(&input_buf).expect("Failed to load SsabData")
 }
@@ -199,7 +199,7 @@ fn override_color_normal_only() {
 #[test]
 fn override_color_priority_non_vs_now() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/overall/overall/PartsColor.ssab");
+    let ssab_path = fixture("overall/PartsColor.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("read PartsColor.ssab");
     let ssab_data = SsabData::load_copy(&input_buf).expect("load");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");
@@ -251,7 +251,7 @@ fn override_color_priority_non_vs_now() {
 #[test]
 fn override_non_reads_the_same_however_often_its_update_is_evaluated() {
     prepare();
-    let ssab_path = get_test_base_path().join("tests/overall/overall/PartsColor.ssab");
+    let ssab_path = fixture("overall/PartsColor.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("read PartsColor.ssab");
     let ssab_data = SsabData::load_copy(&input_buf).expect("load");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("resource");

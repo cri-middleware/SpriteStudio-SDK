@@ -10,7 +10,7 @@ fn track_zero_settings_read_back_before_an_animation_is_laid() {
     // selects an animation; the setters keep it on track 0 alone then, and
     // the getters must not read the default of a controller that has none.
     prepare();
-    let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+    let ssab_path = fixture("Ringo/Ringo.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");
@@ -46,7 +46,7 @@ fn the_hosts_playback_policy_survives_setup_animation() {
     // with it the controller. Asserting on the controller alone would pass
     // while the behaviour a Player sees stayed broken.
     prepare();
-    let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+    let ssab_path = fixture("Ringo/Ringo.ssab");
     let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
     let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.expect("Failed to load resource");

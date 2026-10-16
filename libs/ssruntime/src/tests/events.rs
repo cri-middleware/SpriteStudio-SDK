@@ -5,11 +5,7 @@ use super::*;
 #[test]
 fn test_event_collection_integration() {
     prepare();
-    let mut base = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    base.pop();
-    base.pop();
-    let path = base.join("tests/overall/overall/UserData.ssab");
-    let data = std::fs::read(path).expect("Failed to read test ssab file");
+    let data = std::fs::read(fixture("overall/UserData.ssab")).expect("Failed to read test ssab file");
 
     let ssab_data = SsabData::load_copy(&data).unwrap();
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.unwrap();
@@ -42,7 +38,7 @@ fn test_event_collection_integration() {
 #[test]
 fn an_overlay_fires_events_only_once_it_opts_in() {
     prepare();
-    let data = std::fs::read(get_test_base_path().join("tests/overall/overall/UserData.ssab")).expect("Failed to read UserData.ssab");
+    let data = std::fs::read(fixture("overall/UserData.ssab")).expect("Failed to read UserData.ssab");
     let ssab_data = SsabData::load_copy(&data).unwrap();
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.unwrap();
     let anim_name = resource.get_animation_names().first().cloned().expect("No animations found in SSAB");
@@ -79,7 +75,7 @@ fn an_overlay_fires_events_only_once_it_opts_in() {
 #[test]
 fn the_outgoing_side_fires_by_its_track_s_threshold() {
     prepare();
-    let data = std::fs::read(get_test_base_path().join("tests/overall/overall/UserData.ssab")).expect("Failed to read UserData.ssab");
+    let data = std::fs::read(fixture("overall/UserData.ssab")).expect("Failed to read UserData.ssab");
     let ssab_data = SsabData::load_copy(&data).unwrap();
     let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.unwrap();
     let anim_name = resource.get_animation_names().first().cloned().expect("No animations found in SSAB");
