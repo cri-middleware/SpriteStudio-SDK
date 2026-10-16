@@ -22,7 +22,7 @@ namespace SpriteStudio.SsConverter
         ///  The converter's version string.
         ///
         ///  **The caller owns the returned string** and must hand it to
-        ///  [`ss_converter_version_free`]. It is the one function here that transfers
+        ///  `ss_converter_version_free`. It is the one function here that transfers
         ///  ownership; every other `*const c_char` this ABI returns is borrowed from a
         ///  context and must not be freed.
         /// </summary>
@@ -30,9 +30,9 @@ namespace SpriteStudio.SsConverter
         public static extern byte* ss_converter_version();
 
         /// <summary>
-        ///  Release a string from [`ss_converter_version`]. Null is accepted and ignored.
+        ///  Release a string from `ss_converter_version`. Null is accepted and ignored.
         ///  Passing anything else — including a pointer from
-        ///  [`ss_converter_scan_result_at`] or [`ss_converter_get_error`] — is undefined.
+        ///  `ss_converter_scan_result_at` or `ss_converter_get_error` — is undefined.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_converter_version_free", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_converter_version_free(byte* s);
@@ -47,18 +47,18 @@ namespace SpriteStudio.SsConverter
         ///  A conversion context, or null if the allocation failed.
         ///
         ///  **A context runs one job at a time** — a conversion
-        ///  ([`ss_converter_convert`]) or a directory scan ([`ss_converter_scan_dir`]).
+        ///  (`ss_converter_convert`) or a directory scan (`ss_converter_scan_dir`).
         ///  Starting a conversion drops any earlier scan, because `is_running`,
         ///  `is_finished` and `abort` all answer about whichever job is current. Use two
         ///  contexts to run a scan and a conversion at once.
         ///
-        ///  Release it with [`ss_converter_destroy`].
+        ///  Release it with `ss_converter_destroy`.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_converter_create", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern Context* ss_converter_create();
 
         /// <summary>
-        ///  Release a context from [`ss_converter_create`]. Null is accepted and ignored.
+        ///  Release a context from `ss_converter_create`. Null is accepted and ignored.
         ///
         ///  Every borrowed pointer taken from this context — the scan results, the error
         ///  text — dies with it.
@@ -69,8 +69,8 @@ namespace SpriteStudio.SsConverter
         /// <summary>
         ///  Start converting one `.sspj` into `output_dir`, **on a worker thread**.
         ///
-        ///  Returns immediately. Poll [`ss_converter_is_finished`], then call
-        ///  [`ss_converter_get_result`] for the outcome and [`ss_converter_get_error`]
+        ///  Returns immediately. Poll `ss_converter_is_finished`, then call
+        ///  `ss_converter_get_result` for the outcome and `ss_converter_get_error`
         ///  for the text when it is not `Success`.
         ///
         ///  `callback` is invoked **on the worker thread** with a message that is only
@@ -78,14 +78,14 @@ namespace SpriteStudio.SsConverter
         ///  a UI toolkit from it.
         ///
         ///  Starting a conversion clears this context's previous result, error text and
-        ///  scan — see [`ss_converter_create`] on one job at a time.
+        ///  scan — see `ss_converter_create` on one job at a time.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_converter_convert", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_converter_convert(Context* ctx, byte* sspj, byte* output_dir, [MarshalAs(UnmanagedType.U1)] bool embedded, delegate* unmanaged[Cdecl]<byte*, void> callback);
 
         /// <summary>
         ///  Whether this context's current job is still going. The complement of
-        ///  [`ss_converter_is_finished`] for a job that has started; both are `false` on
+        ///  `ss_converter_is_finished` for a job that has started; both are `false` on
         ///  a context that has never been given one.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_converter_is_running", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
@@ -104,7 +104,7 @@ namespace SpriteStudio.SsConverter
         /// <summary>
         ///  Ask this context's current job to stop early. Returns immediately — the
         ///  worker notices at its next checkpoint, so keep polling
-        ///  [`ss_converter_is_finished`]. An aborted conversion reports `ErrorAborted`.
+        ///  `ss_converter_is_finished`. An aborted conversion reports `ErrorAborted`.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_converter_abort", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_converter_abort(Context* context);
@@ -112,7 +112,7 @@ namespace SpriteStudio.SsConverter
         /// <summary>
         ///  The outcome of the conversion started on this context.
         ///
-        ///  **Blocks until the worker finishes**, so call [`ss_converter_is_finished`]
+        ///  **Blocks until the worker finishes**, so call `ss_converter_is_finished`
         ///  first unless blocking the calling thread is acceptable — on an editor's UI
         ///  thread it is not.
         ///
@@ -123,7 +123,7 @@ namespace SpriteStudio.SsConverter
         public static extern CConverterError ss_converter_get_result(Context* context);
 
         /// <summary>
-        ///  The failure text behind a non-`Success` [`ss_converter_get_result`], as
+        ///  The failure text behind a non-`Success` `ss_converter_get_result`, as
         ///  UTF-8 with its length. Either out pointer may be null.
         ///
         ///  Writes a null pointer and a zero length when there is no error — including
@@ -138,13 +138,13 @@ namespace SpriteStudio.SsConverter
         /// <summary>
         ///  Start scanning `dir` for `.sspj` files, **on a worker thread**.
         ///
-        ///  Returns immediately; poll [`ss_converter_is_finished`]. The three budgets
+        ///  Returns immediately; poll `ss_converter_is_finished`. The three budgets
         ///  bound the walk — `max_depth` directories deep, `max_entries` entries, and
-        ///  `max_millis` of wall clock; [`ss_converter_scan_budget_exceeded`] reports
+        ///  `max_millis` of wall clock; `ss_converter_scan_budget_exceeded` reports
         ///  whether one of them cut the walk short, in which case the results are a
         ///  prefix rather than the whole tree.
         ///
-        ///  See [`ss_converter_create`] on one job at a time: a context scanning is not
+        ///  See `ss_converter_create` on one job at a time: a context scanning is not
         ///  a context converting.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_converter_scan_dir", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
@@ -158,13 +158,13 @@ namespace SpriteStudio.SsConverter
 
         /// <summary>
         ///  `.sspj` files the scan has found so far. Safe to poll while it runs, unlike
-        ///  [`ss_converter_scan_result_count`].
+        ///  `ss_converter_scan_result_count`.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_converter_scan_found", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern nuint ss_converter_scan_found(Context* ctx);
 
         /// <summary>
-        ///  Whether one of [`ss_converter_scan_dir`]'s budgets stopped the walk before
+        ///  Whether one of `ss_converter_scan_dir`'s budgets stopped the walk before
         ///  it reached the end of the tree. The results are still usable; they are just
         ///  not everything.
         /// </summary>
@@ -177,10 +177,10 @@ namespace SpriteStudio.SsConverter
         ///
         ///  Despite the name this rebuilds the context's result strings from the
         ///  scanner, which is what makes them readable by
-        ///  [`ss_converter_scan_result_at`] — so call it before the first read, and
+        ///  `ss_converter_scan_result_at` — so call it before the first read, and
         ///  again whenever you want newer results.
         ///
-        ///  **It invalidates every pointer a previous [`ss_converter_scan_result_at`]
+        ///  **It invalidates every pointer a previous `ss_converter_scan_result_at`
         ///  handed out.** Read the paths you want, or copy them, before calling this
         ///  again.
         /// </summary>
@@ -189,10 +189,10 @@ namespace SpriteStudio.SsConverter
 
         /// <summary>
         ///  One `.sspj` path from the scan, as UTF-8, or null when `index` is past the
-        ///  count that [`ss_converter_scan_result_count`] last reported.
+        ///  count that `ss_converter_scan_result_count` last reported.
         ///
         ///  **Borrowed from the context** — do not free it. It dies at the next
-        ///  [`ss_converter_scan_result_count`], the next [`ss_converter_convert`] on
+        ///  `ss_converter_scan_result_count`, the next `ss_converter_convert` on
         ///  this context, or the context's own destruction.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_converter_scan_result_at", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]

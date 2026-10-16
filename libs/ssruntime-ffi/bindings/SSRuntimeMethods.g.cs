@@ -71,9 +71,10 @@ namespace SpriteStudio.SsRuntime
         public static extern void ss_runtime_reset(void* context);
 
         /// <summary>
-        ///  Why the last call that tracks a reason failed, as the stable code from
-        ///  [`crate::error::SSRuntimeError::as_code`]. `0` means the last such call
-        ///  succeeded, and so does a null `context`.
+        ///  Why the last call that tracks a reason failed, as a stable code. The codes
+        ///  are listed with `SSRuntimeError` in
+        ///  &lt;https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/src/error.rs&gt;.
+        ///  `0` means the last such call succeeded, and so does a null `context`.
         ///
         ///  Every fallible entry point that has a context to write to clears this on
         ///  entry, so it always describes the most recent one rather than some earlier
@@ -89,7 +90,7 @@ namespace SpriteStudio.SsRuntime
         public static extern int ss_runtime_get_last_error(void* context);
 
         /// <summary>
-        ///  The wording behind a code from [`ss_runtime_get_last_error`], as
+        ///  The wording behind a code from `ss_runtime_get_last_error`, as
         ///  NUL-terminated UTF-8.
         ///
         ///  **Takes the code, not a context**, so it is a pure lookup: no lifetime to
@@ -99,7 +100,7 @@ namespace SpriteStudio.SsRuntime
         ///
         ///  The text carries no numbers. `InvalidVersion` reads "Invalid SSAB version";
         ///  a Player that wants to say *which* versions should compare
-        ///  [`ss_runtime_ssab_schema_version`] against the pack's own `version` field,
+        ///  `ss_runtime_ssab_schema_version` against the pack's own `version` field,
         ///  which gives it two integers rather than a sentence to parse.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_error_message", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
@@ -158,12 +159,6 @@ namespace SpriteStudio.SsRuntime
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_load_ssab_borrow(void* context, byte* ptr, nuint len);
 
-        /// <summary>
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
-        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_ssab", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_ssab(void* context, byte** out_data, nuint* out_len);
 
@@ -187,30 +182,12 @@ namespace SpriteStudio.SsRuntime
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_setup_animation_by_hash(void* context, uint name_hash);
 
-        /// <summary>
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
-        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_frame_data", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_frame_data(void* context, float frame_no, byte** out_data, nuint* out_len);
 
-        /// <summary>
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
-        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_world_matrices", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_world_matrices(void* context, float** out_data, nuint* out_len);
 
-        /// <summary>
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
-        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_local_uvs", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_local_uvs(void* context, float** out_data, nuint* out_len);
 
@@ -222,11 +199,6 @@ namespace SpriteStudio.SsRuntime
         ///  rectangle origin in the cellmap's texture pixel space, letting a
         ///  Player build a complete source rect (origin + size) without its own
         ///  cellmap lookup. Parts without a current cell carry zeros.
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_cell_meta", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_cell_meta(void* context, float** out_data, nuint* out_len);
@@ -241,11 +213,6 @@ namespace SpriteStudio.SsRuntime
         ///  flip, and per-frame vertex deformation. Parts without a current cell
         ///  carry zeros. Replaces `FrameData::vertices` for renderers that consume
         ///  pre-resolved SoA buffers.
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_local_vertices", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_local_vertices(void* context, float** out_data, nuint* out_len);
@@ -260,11 +227,6 @@ namespace SpriteStudio.SsRuntime
         ///  valid; remaining slots are zero-initialized. Non-shape parts carry zero
         ///  count and zero-filled vertex slots. When no part of the pack is a shape,
         ///  the buffer is empty, as is `ss_runtime_get_shape_vertex_box_coords`.
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_shape_vertices", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_shape_vertices(void* context, float** out_data, nuint* out_len);
@@ -277,11 +239,6 @@ namespace SpriteStudio.SsRuntime
         ///  corner, regardless of pivot offset or coordinate system. Players use
         ///  this to interpolate the four part-color corners without re-deriving the
         ///  box layout.
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_shape_vertex_box_coords", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_shape_vertex_box_coords(void* context, float** out_data, nuint* out_len);
@@ -290,11 +247,6 @@ namespace SpriteStudio.SsRuntime
         ///  Per-part valid vertex count for `ss_runtime_get_shape_vertices`. Indexed
         ///  by `part_index`. Zero for parts that are not shape parts (or shape
         ///  parts whose size collapsed to zero).
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_shape_vertex_counts", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_shape_vertex_counts(void* context, int** out_data, nuint* out_len);
@@ -305,11 +257,6 @@ namespace SpriteStudio.SsRuntime
         ///  ranges: part `p`'s vertices live at indices `offsets[p]..offsets[p + 1]`.
         ///  Non-mesh parts contribute an empty range. SceneGraph render mode leaves the
         ///  buffer empty (length 0).
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_mesh_vertices_x", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_mesh_vertices_x(void* context, float** out_data, nuint* out_len);
@@ -318,11 +265,6 @@ namespace SpriteStudio.SsRuntime
         ///  Mesh per-vertex Y coordinates. SoA companion to
         ///  `ss_runtime_get_mesh_vertices_x`; sliced identically via
         ///  `ss_runtime_get_mesh_vertex_offsets`.
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_mesh_vertices_y", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_mesh_vertices_y(void* context, float** out_data, nuint* out_len);
@@ -332,11 +274,6 @@ namespace SpriteStudio.SsRuntime
         ///  part's mesh vertices live inside `ss_runtime_get_mesh_vertices_x`
         ///  / `_y`. Part `p` occupies indices `[offsets[p], offsets[p + 1])`; non-mesh
         ///  parts have `offsets[p] == offsets[p + 1]`.
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_mesh_vertex_offsets", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_mesh_vertex_offsets(void* context, uint** out_data, nuint* out_len);
@@ -346,11 +283,6 @@ namespace SpriteStudio.SsRuntime
         ///  `[u, v, ...]`, concatenated across all parts. Static — resolved once from
         ///  each mesh part's frame-0 Cell. Sliced per-part by
         ///  `ss_runtime_get_mesh_vertex_offsets`, identically to the vertex buffers.
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_mesh_uvs", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_mesh_uvs(void* context, float** out_data, nuint* out_len);
@@ -359,11 +291,6 @@ namespace SpriteStudio.SsRuntime
         ///  Mesh triangle indices (part-local, 0-based), concatenated across all parts.
         ///  Static. Slice part `p`'s range via `ss_runtime_get_mesh_index_offsets`:
         ///  `[offsets[p], offsets[p + 1])`.
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_mesh_indices", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_mesh_indices(void* context, int** out_data, nuint* out_len);
@@ -372,11 +299,6 @@ namespace SpriteStudio.SsRuntime
         ///  CSR-style prefix sum (length = `num_parts + 1`) for the triangle indices in
         ///  `ss_runtime_get_mesh_indices`. Part `p` occupies `[offsets[p], offsets[p + 1])`;
         ///  non-mesh parts have an empty range.
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_mesh_index_offsets", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_mesh_index_offsets(void* context, uint** out_data, nuint* out_len);
@@ -393,11 +315,6 @@ namespace SpriteStudio.SsRuntime
         ///  `ss_runtime_get_local_vertices` — so a Player just multiplies them by the
         ///  part's world matrix. The grid is a 4x4 sheet for `nines_fill_mode == 0`
         ///  (stretch) and independent quads per repeat for `== 1` (tile).
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_nines_vertices", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_nines_vertices(void* context, float** out_data, nuint* out_len);
@@ -407,11 +324,6 @@ namespace SpriteStudio.SsRuntime
         ///  `[u, v, ...]`. Shares the vertex CSR of
         ///  `ss_runtime_get_nines_vertex_offsets`. Divide by the texture size to
         ///  normalize, the same as `ss_runtime_get_local_uvs`.
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_nines_uvs", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_nines_uvs(void* context, float** out_data, nuint* out_len);
@@ -425,11 +337,6 @@ namespace SpriteStudio.SsRuntime
         ///  grid — the same weighting `ss_runtime_get_shape_vertex_box_coords` provides
         ///  for Shape parts. A part flip is already folded in, so `fx` / `fy` always
         ///  describe the drawn box.
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_nines_box_coords", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_nines_box_coords(void* context, float** out_data, nuint* out_len);
@@ -439,11 +346,6 @@ namespace SpriteStudio.SsRuntime
         ///  `ss_runtime_get_nines_index_offsets`. Values are **part-local**
         ///  (`0..vertex_count`), so a Player passes them alongside the part's vertex
         ///  slice without rebasing. Each quad is wound `LT, RT, LB / LB, RT, RB`.
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_nines_indices", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_nines_indices(void* context, int** out_data, nuint* out_len);
@@ -453,11 +355,6 @@ namespace SpriteStudio.SsRuntime
         ///  `ss_runtime_get_nines_vertices` / `_uvs` / `_box_coords`. Part `p` occupies
         ///  vertices `[offsets[p], offsets[p + 1])` — multiply by 2 to index the
         ///  interleaved floats. Non-nines parts have an empty range.
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_nines_vertex_offsets", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_nines_vertex_offsets(void* context, uint** out_data, nuint* out_len);
@@ -466,11 +363,6 @@ namespace SpriteStudio.SsRuntime
         ///  CSR-style prefix sum (length = `num_parts + 1`) for the triangle indices in
         ///  `ss_runtime_get_nines_indices`. Part `p` occupies
         ///  `[offsets[p], offsets[p + 1])`; non-nines parts have an empty range.
-        ///
-        ///  # Safety
-        ///
-        ///  This function is unsafe because it dereferences raw pointers for output.
-        ///  The caller must ensure `out_data` and `out_len` are valid if they are not null.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_nines_index_offsets", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_nines_index_offsets(void* context, uint** out_data, nuint* out_len);
@@ -603,13 +495,13 @@ namespace SpriteStudio.SsRuntime
         ///  Idempotent: pausing an already-paused animation leaves it paused.
         ///  `ss_runtime_is_playing` stays true while held — a pause is a hold, not a
         ///  stop — so tell the two apart with `ss_runtime_is_pausing`. Lift the hold
-        ///  with [`ss_runtime_resume`]; `ss_runtime_play` rewinds and cannot resume.
+        ///  with `ss_runtime_resume`; `ss_runtime_play` rewinds and cannot resume.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_pause", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_pause(void* context);
 
         /// <summary>
-        ///  Lifts a [`ss_runtime_pause`], carrying on from the frame it stopped at.
+        ///  Lifts a `ss_runtime_pause`, carrying on from the frame it stopped at.
         ///
         ///  Idempotent, and a no-op on an animation that was never paused. It does not
         ///  start a stopped animation; use `ss_runtime_play` for that.

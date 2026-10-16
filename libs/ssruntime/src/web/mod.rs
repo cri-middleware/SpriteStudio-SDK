@@ -10,9 +10,11 @@
 //! `WebEffectEventInfo`) because wasm-bindgen cannot expose `#[repr(C)]`
 //! structs by value.
 //!
-//! Not yet exposed (deferred): `ss_runtime_set_log_callback` requires
-//! bridging a JS `Function` and a `js-sys` dependency, which is held off
-//! until the JS/TS Player needs it.
+//! Not yet exposed (deferred):
+//!
+//! - `ss_runtime_set_log_callback`, which requires bridging a JS `Function`
+//!   and a `js-sys` dependency, held off until the JS/TS Player needs it.
+//! - `ss_runtime_ssab_schema_version`.
 
 use crate::owning::{OwningContext, OwningEffectSlot};
 use crate::{SsabData, SsabResource};

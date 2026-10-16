@@ -1,5 +1,18 @@
 use std::env;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+/// The `//!` lines that open `path`, as a C block comment.
+fn module_doc(path: &Path) -> String {
+    let source = std::fs::read_to_string(path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+    let mut comment = String::from("/*\n");
+    for line in source.lines().map_while(|line| line.strip_prefix("//!")) {
+        comment.push_str(" *");
+        comment.push_str(line);
+        comment.push('\n');
+    }
+    comment.push_str(" */");
+    comment
+}
 
 fn main() {
     println!("cargo:rerun-if-changed=../ssconverter/src");
@@ -7,8 +20,10 @@ fn main() {
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let core_dir = PathBuf::from(&crate_dir).join("..").join("ssconverter");
 
+    // The `ffi` module doc is written for C readers, so it opens the header.
     let c_output_file = PathBuf::from(&crate_dir).join("target").join("ssconverter.h");
-    match cbindgen::Builder::new().with_crate(&core_dir).with_language(cbindgen::Language::C).with_cpp_compat(true).generate() {
+    let preamble = module_doc(&core_dir.join("src").join("ffi").join("mod.rs"));
+    match cbindgen::Builder::new().with_crate(&core_dir).with_language(cbindgen::Language::C).with_cpp_compat(true).with_header(preamble).with_include_guard("SSCONVERTER_H").generate() {
         Ok(bindings) => {
             bindings.write_to_file(&c_output_file);
         }

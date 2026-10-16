@@ -1,7 +1,20 @@
 // build.rs
 
 use std::env;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+/// The `//!` lines that open `path`, as a C block comment.
+fn module_doc(path: &Path) -> String {
+    let source = std::fs::read_to_string(path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+    let mut comment = String::from("/*\n");
+    for line in source.lines().map_while(|line| line.strip_prefix("//!")) {
+        comment.push_str(" *");
+        comment.push_str(line);
+        comment.push('\n');
+    }
+    comment.push_str(" */");
+    comment
+}
 
 fn main() {
     // Tell cargo to rerun this script if src directory changes
@@ -22,8 +35,26 @@ fn main() {
     //
     // This is the only header the SDK ships; no Player consumes a C++-only
     // variant.
+    //
+    // The `ffi` module doc is written for C readers and states the contract
+    // every entry point relies on, so it opens the header.
     let c_output_file = PathBuf::from(&crate_dir).join("target").join("ssruntime.h");
-    match cbindgen::Builder::new().with_crate(&core_dir).with_language(cbindgen::Language::C).with_cpp_compat(true).generate() {
+    let preamble = module_doc(&core_dir.join("src").join("ffi").join("mod.rs"));
+    match cbindgen::Builder::new()
+        .with_crate(&core_dir)
+        .with_language(cbindgen::Language::C)
+        .with_cpp_compat(true)
+        .with_header(preamble)
+        .with_include_guard("SSRUNTIME_H")
+        // Public in Rust, but internal to the evaluation: no Player needs them.
+        .exclude_item("SKEW_PROPAGATES")
+        .exclude_item("SEED_MAGIC")
+        .exclude_item("LIFE_EXTEND_SCALE")
+        .exclude_item("LIFE_EXTEND_MIN")
+        .exclude_item("NINES_MAX_TILE_DIV")
+        .exclude_item("NINES_MAX_TILE_QUADS")
+        .generate()
+    {
         Ok(bindings) => {
             bindings.write_to_file(&c_output_file);
         }

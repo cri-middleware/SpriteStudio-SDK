@@ -34,7 +34,7 @@
 //! // SAFETY: a pack the converter wrote, so a valid .ssab (see Limitations below).
 //! let resource = unsafe { AnimationResource::new(ssab_bytes) }?;
 //!
-//! // 2. A context holds the playback state of one animation instance.
+//! // 2. A context holds the playback state of one animated object.
 //! let mut ctx = Context::new();
 //! ctx.bind_resource(&resource);
 //! ctx.setup_animation("Wait")?;
