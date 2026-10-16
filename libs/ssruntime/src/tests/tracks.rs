@@ -82,7 +82,7 @@ fn second_track_alpha_controls_how_much_of_it_lands() {
 #[test]
 fn coverage_names_the_attributes_the_mix_blends() {
     let blended = MIX_ATTR_FLAGS.iter().fold(runtime::framedata::ss::runtime::UpdateAttributeFlags::empty(), |all, f| all | *f);
-    assert_eq!(blended, crate::core::framedata::MIXED_ATTRIBUTES);
+    assert_eq!(blended, crate::eval::framedata::MIXED_ATTRIBUTES);
 }
 
 /// Track 0 faded to alpha 0 resolves to the setup pose. This is what replaced
@@ -254,7 +254,7 @@ fn an_outgoing_animation_running_out_does_not_finish_the_character() {
 /// the fade began.
 #[test]
 fn a_crossfade_plays_the_incoming_animation_the_way_track_zero_is_played() {
-    use crate::core::playback_controller::{PlaybackDirection, PlaybackStyle};
+    use crate::eval::playback_controller::{PlaybackDirection, PlaybackStyle};
     let ssab = load_ringo_resource();
     let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
     let (mut ctx, _) = ringo_ctx(&resource, "walk");

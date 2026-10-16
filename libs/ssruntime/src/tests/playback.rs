@@ -19,13 +19,13 @@ fn track_zero_settings_read_back_before_an_animation_is_laid() {
     context.bind_resource(&resource);
     context.set_speed_scale(2.0);
     context.set_skip_frames(false);
-    context.set_playback_direction(core::playback_controller::PlaybackDirection::Backward, core::playback_controller::PlaybackStyle::PingPong);
+    context.set_playback_direction(eval::playback_controller::PlaybackDirection::Backward, eval::playback_controller::PlaybackStyle::PingPong);
     context.set_frame_rate(24);
 
     assert_eq!(context.get_speed_scale(), 2.0);
     assert!(!context.get_skip_frames());
-    assert!(context.get_playback_direction() == core::playback_controller::PlaybackDirection::Backward);
-    assert!(context.get_playback_style() == core::playback_controller::PlaybackStyle::PingPong);
+    assert!(context.get_playback_direction() == eval::playback_controller::PlaybackDirection::Backward);
+    assert!(context.get_playback_style() == eval::playback_controller::PlaybackStyle::PingPong);
     assert_eq!(context.get_frame_rate(), 24);
 
     // And the animation laid afterwards plays by them, reading the same.
@@ -33,8 +33,8 @@ fn track_zero_settings_read_back_before_an_animation_is_laid() {
     context.setup_animation(&names[0]).expect("Failed to setup animation");
     assert_eq!(context.get_speed_scale(), 2.0);
     assert!(!context.get_skip_frames());
-    assert!(context.get_playback_direction() == core::playback_controller::PlaybackDirection::Backward);
-    assert!(context.get_playback_style() == core::playback_controller::PlaybackStyle::PingPong);
+    assert!(context.get_playback_direction() == eval::playback_controller::PlaybackDirection::Backward);
+    assert!(context.get_playback_style() == eval::playback_controller::PlaybackStyle::PingPong);
     assert_eq!(context.get_frame_rate(), 24);
 }
 
@@ -61,7 +61,7 @@ fn the_hosts_playback_policy_survives_setup_animation() {
     let authored_fps = context.get_frame_rate();
     context.set_speed_scale(2.0);
     context.set_skip_frames(false);
-    context.set_playback_direction(core::playback_controller::PlaybackDirection::Backward, core::playback_controller::PlaybackStyle::PingPong);
+    context.set_playback_direction(eval::playback_controller::PlaybackDirection::Backward, eval::playback_controller::PlaybackStyle::PingPong);
     context.set_frame_rate(authored_fps + 17);
     context.set_loop_count(3);
 
@@ -71,8 +71,8 @@ fn the_hosts_playback_policy_survives_setup_animation() {
     assert!(!context.get_skip_frames(), "frame skip is the host's, and must survive the transition");
     assert_eq!(context.get_frame_rate(), authored_fps + 17, "the frame-rate override must survive the transition");
     assert_eq!(context.get_speed_scale(), 2.0, "the speed is the host's, and must survive the transition");
-    assert!(context.get_playback_direction() == core::playback_controller::PlaybackDirection::Backward, "the playback direction is the host's, and must survive the transition");
-    assert!(context.get_playback_style() == core::playback_controller::PlaybackStyle::PingPong, "so is the ping-pong style");
+    assert!(context.get_playback_direction() == eval::playback_controller::PlaybackDirection::Backward, "the playback direction is the host's, and must survive the transition");
+    assert!(context.get_playback_style() == eval::playback_controller::PlaybackStyle::PingPong, "so is the ping-pong style");
     assert_eq!(context.get_loop_count(), -1, "the loop count is per-transition and must reset");
 
     // Frame skip survived as `false`, which means fixed stepping: exactly one

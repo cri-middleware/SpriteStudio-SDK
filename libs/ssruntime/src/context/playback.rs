@@ -1,7 +1,7 @@
 //! The playhead, the playback state and settings, and the controls that drive the character's clock.
 
 use super::{CharacterClock, Context};
-use crate::core;
+use crate::eval;
 use crate::mix::TrackFade;
 
 impl<'a> Context<'a> {
@@ -95,12 +95,12 @@ impl<'a> Context<'a> {
     }
 
     /// Track 0's [`Self::get_track_playback_direction`].
-    pub fn get_playback_direction(&self) -> core::playback_controller::PlaybackDirection {
+    pub fn get_playback_direction(&self) -> eval::playback_controller::PlaybackDirection {
         self.instance.tracks[0].policy.playback_direction
     }
 
     /// Track 0's [`Self::get_track_playback_style`].
-    pub fn get_playback_style(&self) -> core::playback_controller::PlaybackStyle {
+    pub fn get_playback_style(&self) -> eval::playback_controller::PlaybackStyle {
         self.instance.tracks[0].policy.playback_style
     }
 
@@ -156,7 +156,7 @@ impl<'a> Context<'a> {
     }
 
     /// Track 0's [`Self::set_track_playback_direction`].
-    pub fn set_playback_direction(&mut self, direction: core::playback_controller::PlaybackDirection, style: core::playback_controller::PlaybackStyle) {
+    pub fn set_playback_direction(&mut self, direction: eval::playback_controller::PlaybackDirection, style: eval::playback_controller::PlaybackStyle) {
         self.instance.set_track_policy(
             0,
             |p| {
@@ -176,33 +176,33 @@ impl<'a> Context<'a> {
         self.instance.primary_source_mut().controller.set_animation_section(start_frame, end_frame);
     }
 
-    pub fn set_coordinate_system(&mut self, coordinate_system: crate::core::SsCoordinateSystem) {
+    pub fn set_coordinate_system(&mut self, coordinate_system: crate::eval::SsCoordinateSystem) {
         self.instance.coordinate_system = coordinate_system;
         // The part bases live in this space, so they have to move with it.
         self.prepare_part_bases();
     }
 
-    pub fn get_coordinate_system(&self) -> crate::core::SsCoordinateSystem {
+    pub fn get_coordinate_system(&self) -> crate::eval::SsCoordinateSystem {
         self.instance.coordinate_system
     }
 
-    pub fn set_origin(&mut self, origin: crate::core::SsOrigin) {
+    pub fn set_origin(&mut self, origin: crate::eval::SsOrigin) {
         self.instance.origin = origin;
         // The part bases live in this space, so they have to move with it.
         self.prepare_part_bases();
     }
 
-    pub fn get_origin(&self) -> crate::core::SsOrigin {
+    pub fn get_origin(&self) -> crate::eval::SsOrigin {
         self.instance.origin
     }
 
-    pub fn set_unit(&mut self, unit: crate::core::SsUnit) {
+    pub fn set_unit(&mut self, unit: crate::eval::SsUnit) {
         self.instance.unit = unit;
         // The part bases live in this space, so they have to move with it.
         self.prepare_part_bases();
     }
 
-    pub fn get_unit(&self) -> crate::core::SsUnit {
+    pub fn get_unit(&self) -> crate::eval::SsUnit {
         self.instance.unit
     }
 

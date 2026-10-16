@@ -4,8 +4,8 @@ use crate::error;
 use crate::resource::AnimationResource;
 
 pub struct EffectContext<'a> {
-    pub eval: crate::core::effect::instance::EffectEvaluationContext<'a>,
-    pub instance: crate::core::effect::instance::EffectInstanceState,
+    pub eval: crate::eval::effect::instance::EffectEvaluationContext<'a>,
+    pub instance: crate::eval::effect::instance::EffectInstanceState,
     seed: u32,
 }
 
@@ -15,12 +15,12 @@ impl<'a> EffectContext<'a> {
         let Some(effects) = ssab.effects() else {
             return Err(error::SSRuntimeError::AnimationNotFound);
         };
-        let Some(effect) = crate::core::ssab_lookup::find_effect(&effects, effect_name_hash) else {
+        let Some(effect) = crate::eval::ssab_lookup::find_effect(&effects, effect_name_hash) else {
             return Err(error::SSRuntimeError::AnimationNotFound);
         };
         // The effect was located by name_hash, but its data is malformed
         // (e.g. missing required `effect_node` table).
-        let Some((eval, instance)) = crate::core::effect::instance::EffectEvaluationContext::from_ssab(&effect, seed) else {
+        let Some((eval, instance)) = crate::eval::effect::instance::EffectEvaluationContext::from_ssab(&effect, seed) else {
             return Err(error::SSRuntimeError::MalformedEffect);
         };
         Ok(Self { eval, instance, seed })
@@ -50,7 +50,7 @@ impl<'a> EffectContext<'a> {
         self.instance.update(&self.eval, frame);
     }
 
-    pub fn get_draw_commands(&mut self) -> (&[crate::core::effect::instance::EmitterDrawCommand], &[crate::core::effect::types::ParticleDrawState]) {
+    pub fn get_draw_commands(&mut self) -> (&[crate::eval::effect::instance::EmitterDrawCommand], &[crate::eval::effect::types::ParticleDrawState]) {
         self.instance.get_draw_commands(&self.eval)
     }
 }
@@ -208,9 +208,9 @@ impl<'a> EffectSlot<'a> {
 
         if cellmap_hash != 0
             && let Some(cellmaps) = ssab.cellmaps()
-            && let Some(cellmap) = crate::core::ssab_lookup::find_cellmap(&cellmaps, cellmap_hash)
+            && let Some(cellmap) = crate::eval::ssab_lookup::find_cellmap(&cellmaps, cellmap_hash)
             && let Some(cells) = cellmap.cells()
-            && let Some(cell) = crate::core::ssab_lookup::find_cell(&cells, cell_hash)
+            && let Some(cell) = crate::eval::ssab_lookup::find_cell(&cells, cell_hash)
         {
             // SS6-style blend mapping: 0=Mix, 1=Add. Anything else falls back to Mix.
             entry.blend_byte = if blend_in == 1 { 1 } else { 0 };

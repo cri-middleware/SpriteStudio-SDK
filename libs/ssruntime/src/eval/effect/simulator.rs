@@ -1,6 +1,6 @@
 use super::state::*;
 use super::types::*;
-use crate::core::math::*;
+use crate::eval::math::*;
 use alloc::vec::Vec;
 use wide::f32x4;
 

@@ -24,8 +24,8 @@ fn build_mix_layer(parts: &[MixLayerPart]) -> LayerState<'static> {
         s.set_update_flag(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX);
         layer.parts_vec.push(s);
         let rvd = match p.5 {
-            Some((dx, dy)) => crate::core::framedata::RawVertexDeform { present: true, dx, dy },
-            None => crate::core::framedata::RawVertexDeform::default(),
+            Some((dx, dy)) => crate::eval::framedata::RawVertexDeform { present: true, dx, dy },
+            None => crate::eval::framedata::RawVertexDeform::default(),
         };
         layer.raw_vertex_deform.push(Some(alloc::boxed::Box::new(rvd)));
     }

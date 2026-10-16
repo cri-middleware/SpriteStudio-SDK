@@ -53,17 +53,17 @@
 //! ```
 //!
 //! Transport, loop count, ping-pong, playback range and FPS all live on the context and
-//! are backed by [`core::playback_controller::PlaybackController`].
+//! are backed by [`eval::playback_controller::PlaybackController`].
 //!
 //! Frame numbers are `f32`: the runtime interpolates between source keyframes, so
 //! playback stays smooth above and below the authored framerate.
 //!
 //! # Module map
 //!
-//! - [`core`] — the evaluation core: interpolation, matrices, geometry,
-//!   [`core::playback_controller`] (transport, loop, ping-pong, seek),
-//!   [`core::framedata`] (the per-frame FlatBuffer), [`core::override_layer`]
-//!   (per-part color / cell / visibility overrides), [`core::effect`] (particles).
+//! - [`eval`] — the evaluation core: interpolation, matrices, geometry,
+//!   [`eval::playback_controller`] (transport, loop, ping-pong, seek),
+//!   [`eval::framedata`] (the per-frame FlatBuffer), [`eval::override_layer`]
+//!   (per-part color / cell / visibility overrides), [`eval::effect`] (particles).
 //! - [`types`] — `#[repr(C)]` POD structs returned by value across API boundaries.
 //! - [`error`] — [`error::SSRuntimeError`] and its stable integer codes.
 //! - [`ffi`] — the C ABI surface (feature `ffi`).
@@ -154,10 +154,10 @@ extern crate libm;
 #[rustfmt::skip]
 /// cbindgen:ignore
 pub mod runtime;
-pub mod core;
 pub mod error;
+pub mod eval;
 
-pub use crate::core::SsCoordinateSystem;
+pub use crate::eval::SsCoordinateSystem;
 
 pub mod interpolate;
 

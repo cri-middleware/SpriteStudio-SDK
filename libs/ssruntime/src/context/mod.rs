@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 
 use crate::mix::{LayerState, NO_EVENT_THRESHOLD, SourceState, TrackBlend, TrackFade, TrackState, count_attribute_capacities, reserve_total};
 use crate::resource::{AnimationMetadata, AnimationResource, fnv1a_hash_str};
-use crate::{core, error};
+use crate::{error, eval};
 
 mod buffers;
 mod events;
@@ -17,8 +17,8 @@ mod tracks;
 /// World matrices, UVs, and shape vertices are composited from the resolved
 /// (post-mix) pose; they are not per-layer.
 pub(crate) struct GlobalBuffers {
-    world_matrices: Vec<crate::core::SsMatrix4x4>,
-    inheritance_matrices: Vec<crate::core::SsMatrix4x4>,
+    world_matrices: Vec<crate::eval::SsMatrix4x4>,
+    inheritance_matrices: Vec<crate::eval::SsMatrix4x4>,
     pub(crate) local_uvs: Vec<f32>,
     shape_vertices: Vec<f32>,
     shape_vertex_box_coords: Vec<f32>,
@@ -40,7 +40,7 @@ pub(crate) struct GlobalBuffers {
     /// Per-frame Nine-Slice grids, CSR-sliced per part. Written by
     /// `compose_frame_data` (the draw plan needs the counts), not by
     /// `resolve_global_state`.
-    nines: crate::core::framedata::NinesBuffers,
+    nines: crate::eval::framedata::NinesBuffers,
 }
 
 impl GlobalBuffers {
@@ -56,7 +56,7 @@ impl GlobalBuffers {
             mesh_vertices_y: Vec::new(),
             mesh_vertex_offsets: Vec::new(),
             mesh_layout: NO_MESH_LAYOUT,
-            nines: crate::core::framedata::NinesBuffers::default(),
+            nines: crate::eval::framedata::NinesBuffers::default(),
         }
     }
 }
@@ -161,7 +161,7 @@ pub(crate) struct InstanceState<'a> {
     pub(crate) layers: Vec<LayerState<'a>>,
     pub(crate) resolved_layer: LayerState<'a>,
     pub(crate) primary: u32,
-    z_order: crate::core::z_order::ZOrderTable,
+    z_order: crate::eval::z_order::ZOrderTable,
     pub(crate) globals: GlobalBuffers,
     collected_event_indices: Vec<i32>,
     /// Parallel to `collected_event_indices`: source handle that fired each
@@ -169,19 +169,19 @@ pub(crate) struct InstanceState<'a> {
     /// `primary` — "track 0's animation fires events". When other sources
     /// opt in (lower threshold), entries record the firing source.
     collected_event_source_handles: Vec<u32>,
-    pub(crate) coordinate_system: crate::core::SsCoordinateSystem,
-    pub(crate) origin: crate::core::SsOrigin,
-    pub(crate) unit: crate::core::SsUnit,
-    render_mode: crate::core::RenderMode,
+    pub(crate) coordinate_system: crate::eval::SsCoordinateSystem,
+    pub(crate) origin: crate::eval::SsOrigin,
+    pub(crate) unit: crate::eval::SsUnit,
+    render_mode: crate::eval::RenderMode,
     /// Per-part runtime Override Layer table. Dense by `part_index`,
     /// `None` = no override. Created at the part count by the first override
     /// set on the instance, and dropped again when a new animation leaves no
     /// override in it, so an instance that overrides nothing never allocates it.
-    pub(crate) part_overrides: Vec<Option<crate::core::override_layer::PartOverride>>,
+    pub(crate) part_overrides: Vec<Option<crate::eval::override_layer::PartOverride>>,
     /// Per-part resolved cell meta recorded by the seam when a cell override is
     /// applied, so `compute_local_uvs` samples the overridden cell (not just the
     /// geometry/texture channels). Empty when no override is active this frame.
-    override_cell_uv_meta: Vec<Option<crate::core::framedata::ResolvedCellMeta>>,
+    override_cell_uv_meta: Vec<Option<crate::eval::framedata::ResolvedCellMeta>>,
     /// How many times `Context::update` has run: the update an evaluation
     /// belongs to, which a NON override's first evaluation records.
     updates: u64,
@@ -196,14 +196,14 @@ impl<'a> InstanceState<'a> {
             layers: alloc::vec![LayerState::new()],
             resolved_layer: LayerState::new(),
             primary: 0,
-            z_order: crate::core::z_order::ZOrderTable::new(),
+            z_order: crate::eval::z_order::ZOrderTable::new(),
             globals: GlobalBuffers::new(),
             collected_event_indices: Vec::new(),
             collected_event_source_handles: Vec::new(),
-            coordinate_system: crate::core::SsCoordinateSystem::default(),
-            origin: crate::core::SsOrigin::default(),
-            unit: crate::core::SsUnit::default(),
-            render_mode: crate::core::RenderMode::default(),
+            coordinate_system: crate::eval::SsCoordinateSystem::default(),
+            origin: crate::eval::SsOrigin::default(),
+            unit: crate::eval::SsUnit::default(),
+            render_mode: crate::eval::RenderMode::default(),
             part_overrides: Vec::new(),
             override_cell_uv_meta: Vec::new(),
             updates: 0,
@@ -232,7 +232,7 @@ impl<'a> InstanceState<'a> {
     /// new part count (part identity is stable within an SSAB; parts beyond the
     /// new count are dropped by the resize — the PERMANENT re-validation).
     fn retain_permanent_overrides_on_setup(&mut self, num_parts: usize) {
-        use crate::core::override_layer::PriorityMode;
+        use crate::eval::override_layer::PriorityMode;
         if self.part_overrides.is_empty() {
             return;
         }
@@ -318,7 +318,7 @@ impl<'a> InstanceState<'a> {
     /// every source the track carries now (both sides of a crossfade included),
     /// so the policy and what is playing never disagree. The caller has made
     /// sure the track exists.
-    fn set_track_policy(&mut self, track: u32, policy: impl FnOnce(&mut core::playback_controller::PlaybackPolicy), controller: impl Fn(&mut core::playback_controller::PlaybackController)) {
+    fn set_track_policy(&mut self, track: u32, policy: impl FnOnce(&mut eval::playback_controller::PlaybackPolicy), controller: impl Fn(&mut eval::playback_controller::PlaybackController)) {
         policy(&mut self.tracks[track as usize].policy);
         for source in self.sources.iter_mut() {
             if source.track as u32 == track && source.has_real_animation() {
@@ -345,7 +345,7 @@ impl<'a> InstanceState<'a> {
     }
 
     /// The controller of the source carrying `track`'s animation.
-    fn track_main_controller(&self, track: u32) -> Option<&core::playback_controller::PlaybackController> {
+    fn track_main_controller(&self, track: u32) -> Option<&eval::playback_controller::PlaybackController> {
         let main = self.tracks.get(track as usize)?.main;
         let source = self.sources.get(main as usize)?;
         source.has_real_animation().then_some(&source.controller)
@@ -387,25 +387,25 @@ impl<'a> Context<'a> {
         self.instance.collapse_to_track_zero();
         // A teardown, not an animation change: the host's playback policy goes
         // with it, which `collapse_to_track_zero` alone would have carried over.
-        self.instance.tracks[0].policy = core::playback_controller::PlaybackPolicy::DEFAULT;
+        self.instance.tracks[0].policy = eval::playback_controller::PlaybackPolicy::DEFAULT;
         self.instance.tracks[0].outgoing_event_threshold = NO_EVENT_THRESHOLD;
         self.instance.primary_source_mut().controller.reset_setup();
         self.instance.layers[0].cursors.clear();
         self.instance.resolved_layer.cursors.clear();
-        self.instance.coordinate_system = crate::core::SsCoordinateSystem::default();
-        self.instance.origin = crate::core::SsOrigin::default();
-        self.instance.unit = crate::core::SsUnit::default();
-        self.instance.render_mode = crate::core::RenderMode::default();
-        self.instance.z_order = crate::core::z_order::ZOrderTable::new();
+        self.instance.coordinate_system = crate::eval::SsCoordinateSystem::default();
+        self.instance.origin = crate::eval::SsOrigin::default();
+        self.instance.unit = crate::eval::SsUnit::default();
+        self.instance.render_mode = crate::eval::RenderMode::default();
+        self.instance.z_order = crate::eval::z_order::ZOrderTable::new();
         self.instance.part_overrides.clear();
         self.instance.globals.mesh_layout = NO_MESH_LAYOUT;
     }
 
-    pub fn set_render_mode(&mut self, mode: crate::core::RenderMode) {
+    pub fn set_render_mode(&mut self, mode: crate::eval::RenderMode) {
         self.instance.render_mode = mode;
     }
 
-    pub fn render_mode(&self) -> crate::core::RenderMode {
+    pub fn render_mode(&self) -> crate::eval::RenderMode {
         self.instance.render_mode
     }
 
@@ -453,7 +453,7 @@ impl<'a> Context<'a> {
 
         let num_parts = metadata.cached_parts().len();
         let (cell_c, color_c, shader_c, deform_c) = count_attribute_capacities(metadata);
-        let cursor_c = crate::core::framedata::cursor_count(metadata.cached_parts());
+        let cursor_c = crate::eval::framedata::cursor_count(metadata.cached_parts());
 
         // A new setup plays one source alone, extracted straight into the
         // resolved layer; the source's own layer is sized when a mix needs it.
@@ -468,14 +468,14 @@ impl<'a> Context<'a> {
 
         let globals = &mut self.instance.globals;
         globals.world_matrices.clear();
-        globals.world_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
+        globals.world_matrices.resize(num_parts, crate::eval::SsMatrix4x4::IDENTITY);
         globals.inheritance_matrices.clear();
-        globals.inheritance_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
+        globals.inheritance_matrices.resize(num_parts, crate::eval::SsMatrix4x4::IDENTITY);
         globals.local_uvs.clear();
         globals.local_uvs.resize(num_parts * 10, 0.0);
         // Shape buffers keep their `part_index * SHAPE_VERTICES_STRIDE` layout, but
         // only a pack with a shape part has anything to put in them.
-        let shape_len = if metadata.cached_parts().iter().any(|p| p.shape_kind.is_some()) { num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE } else { 0 };
+        let shape_len = if metadata.cached_parts().iter().any(|p| p.shape_kind.is_some()) { num_parts * crate::eval::framedata::SHAPE_VERTICES_STRIDE } else { 0 };
         globals.shape_vertices = alloc::vec![0.0; shape_len];
         globals.shape_vertex_box_coords = alloc::vec![0.0; shape_len];
         globals.shape_vertex_counts.clear();
@@ -504,7 +504,7 @@ impl<'a> Context<'a> {
         // One vertex attribute per part that shows a cell, whether or not it
         // keys a vertex deform.
         resolved.vertex_vec.clear();
-        resolved.vertex_vec.reserve(parts.iter().filter(|p| p.run(crate::core::framedata::IDX_ATTRIBUTECELL).is_some()).count());
+        resolved.vertex_vec.reserve(parts.iter().filter(|p| p.run(crate::eval::framedata::IDX_ATTRIBUTECELL).is_some()).count());
         if resolved.mesh_deform.len() != num_parts {
             resolved.mesh_deform.resize_with(num_parts, || None);
         }
@@ -520,7 +520,7 @@ impl<'a> Context<'a> {
         // Room only: the static mesh buffers are still handed out from the
         // first frame on, and only a Direct instance positions mesh vertices.
         reserve_total(&mut globals.mesh_vertex_offsets, num_parts + 1);
-        if self.instance.render_mode == crate::core::RenderMode::Direct {
+        if self.instance.render_mode == crate::eval::RenderMode::Direct {
             let total_vertices = parts.iter().map(|p| p.mesh_cell.as_ref().map_or(0, |m| m.num_vertices())).sum();
             reserve_total(&mut globals.mesh_vertices_x, total_vertices);
             reserve_total(&mut globals.mesh_vertices_y, total_vertices);

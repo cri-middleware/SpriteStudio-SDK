@@ -1,4 +1,4 @@
-use crate::core::keyframes::{Key, KeyColumns, KeyRun};
+use crate::eval::keyframes::{Key, KeyColumns, KeyRun};
 use crate::interpolate::*;
 use crate::runtime;
 use alloc::vec::Vec;
@@ -76,7 +76,7 @@ fn evaluate_curve_value_f32(interpolation: InterpolationType, frame_no: f32, pre
 /// The key at or before `frame_no` and, between two keys, the one after it. A
 /// frame on a key reads that key alone, and a frame before the first key reads
 /// the first key alone. `hint` is the run's cursor, as
-/// [`Frames::locate`](crate::core::keyframes::Frames::locate) keeps it.
+/// [`Frames::locate`](crate::eval::keyframes::Frames::locate) keeps it.
 #[inline]
 pub fn search_prev_next<'c, 'a>(keys: &'c KeyColumns<'a>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<(Key<'c, 'a>, Option<Key<'c, 'a>>)> {
     let frames = keys.frames(run);
@@ -130,7 +130,7 @@ pub fn evaluate_int(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &m
             let next_index = next.index() as i32 as f32;
             let value = evaluate_curve_value_f32(interpolation, frame_no, prev_index, next_index, prev.int() as f32, next.int() as f32, prev.curve(), prev.easing_rate());
 
-            crate::core::math::roundf(value) as i32
+            crate::eval::math::roundf(value) as i32
         } else {
             prev.int()
         }
@@ -467,19 +467,19 @@ fn transfer_deform(source: &ssab::ssab::ss::format::PartAttributeDeform, coord_o
 
 #[inline]
 pub fn evaluate_bool(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<bool> {
-    let frame_no = crate::core::math::floorf(frame_no) as i32;
+    let frame_no = crate::eval::math::floorf(frame_no) as i32;
     search_prev(keys, run, frame_no, hint).map(|prev| prev.bool())
 }
 
 #[inline]
 pub fn evaluate_cell(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<u32> {
-    let frame_no = crate::core::math::floorf(frame_no) as i32;
+    let frame_no = crate::eval::math::floorf(frame_no) as i32;
     search_prev(keys, run, frame_no, hint).map(|prev| prev.cell())
 }
 
 #[inline]
 pub fn evaluate_texture(keys: &KeyColumns<'_>, run: &KeyRun, frame_no: f32, hint: &mut u32) -> Option<u32> {
-    let frame_no = crate::core::math::floorf(frame_no) as i32;
+    let frame_no = crate::eval::math::floorf(frame_no) as i32;
     search_prev(keys, run, frame_no, hint).map(|prev| prev.uint())
 }
 
