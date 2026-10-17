@@ -585,7 +585,7 @@ All enums have a 1:1 mapping between ss*e and ssab. Key enums:
 
 1. **Per-ssae conversion**: Each ssab corresponds to a single ssae animation pack, bundling only the ss*e resources (ssce, ssee, ssse, fnt) that the pack actually uses. The sspj project file is not represented in ssab.
 
-2. **Hash-based lookups**: All named entities include a `name_hash: uint32` field for O(1) lookup, avoiding string comparisons at runtime.
+2. **Hash-based lookups**: Named entities carry a `name_hash: uint32` (FNV-1a of the name), so a lookup compares integers, not strings. The tables whose `name_hash` is a `(key)` — cells, cell maps, effects, sounds, labels and the like — are written sorted by it, so they can be binary-searched; the runtime does so for cells, cell maps and effects, and finds an animation or a part by a linear scan.
 
 3. **Columnar keyframes**: Every key of the pack sits in one set of columns — frame, interpolation, curve, value — and a part's attribute names a run of them, so a key search walks contiguous memory and a key costs nine bytes. Runs, curves and compound values that repeat are stored once.
 
