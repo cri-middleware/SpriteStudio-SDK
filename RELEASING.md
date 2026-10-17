@@ -148,14 +148,15 @@ gh run watch "${RUN:?}" --exit-status             # RUN is empty until the run a
 
 ### 7. Merge back
 
-Merge `main` into `develop`. After a patch release this conflicts where `develop` has moved on: keep `develop`'s version and its `Unreleased` heading, with the patch's section below it. When the next version is decided, open it on `develop` the way step 2 does, under a `## [X.Y.Z] - Unreleased` heading.
+Merge `main` into `develop`. After a patch release this conflicts where `develop` has moved on: keep `develop`'s version and its `Unreleased` heading, with the patch's section below it. The block merges on a detached `origin/develop`, so it runs in a worktree whichever branch the other checkouts hold, and a conflict stops it there: resolve it, `git commit`, and run the block's two `git push` lines. When the next version is decided, open it on `develop` the way step 2 does, under a `## [X.Y.Z] - Unreleased` heading.
 
 ```bash
 git fetch origin --tags
 TAG=$(git describe --exact-match --tags --match 'v[0-9]*' origin/main)
-git switch develop && git pull --ff-only &&
-  git merge --no-ff origin/main && git push origin develop
-git push origin --delete "release/$(echo "${TAG:?}" | sed 's/^v//' | cut -d. -f1,2)"
+git switch --detach origin/develop &&
+  git merge --no-ff -m "Merge branch 'main' into develop" origin/main &&
+  git push origin HEAD:develop &&
+  git push origin --delete "release/$(echo "${TAG:?}" | sed 's/^v//' | cut -d. -f1,2)"
 ```
 
 If the button on its pull request already deleted the release branch, the last line only reports that the branch does not exist. Nothing needs it afterwards: the line's next release cuts it again in step 1.
@@ -347,14 +348,15 @@ gh run watch "${RUN:?}" --exit-status             # run が出るまで RUN は�
 
 ### 7. develop へ戻す
 
-`main` を `develop` へマージします。パッチリリースの後は、`develop` が先へ進んだ箇所で衝突します。`develop` のバージョンと `Unreleased` の見出しを残し、パッチの節をその下に置いてください。次のバージョンが決まったら、手順 2 と同じやり方で `develop` に `## [X.Y.Z] - Unreleased` の見出しを立てます。
+`main` を `develop` へマージします。パッチリリースの後は、`develop` が先へ進んだ箇所で衝突します。`develop` のバージョンと `Unreleased` の見出しを残し、パッチの節をその下に置いてください。ブロックは切り離した `origin/develop` の上でマージするので、ほかのチェックアウトがどのブランチにあっても worktree で実行できます。衝突したらそこで止まります。解決して `git commit` し、ブロックの 2 つの `git push` を実行してください。次のバージョンが決まったら、手順 2 と同じやり方で `develop` に `## [X.Y.Z] - Unreleased` の見出しを立てます。
 
 ```bash
 git fetch origin --tags
 TAG=$(git describe --exact-match --tags --match 'v[0-9]*' origin/main)
-git switch develop && git pull --ff-only &&
-  git merge --no-ff origin/main && git push origin develop
-git push origin --delete "release/$(echo "${TAG:?}" | sed 's/^v//' | cut -d. -f1,2)"
+git switch --detach origin/develop &&
+  git merge --no-ff -m "Merge branch 'main' into develop" origin/main &&
+  git push origin HEAD:develop &&
+  git push origin --delete "release/$(echo "${TAG:?}" | sed 's/^v//' | cut -d. -f1,2)"
 ```
 
 プルリクエストのページのボタンでリリースブランチを消してあれば、最後の行は「ブランチが無い」と出るだけです。同じ系統の次のリリースは手順 1 で切り直すので、この後ブランチが要ることはありません。
