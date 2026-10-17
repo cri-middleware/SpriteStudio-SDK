@@ -74,7 +74,7 @@ gh run watch "${RUN:?}" --exit-status
 
 A run from a `release/` branch or a `v*` tag needs the signing secrets: without one, the macOS or iOS job fails at its first step and names what is missing. No change on the branch fixes that: the organization's signing secrets are not reaching this repository. An organization owner decides which repositories they reach, and on GitHub Free they cannot reach a private one. Dispatch again once they do. A run from any other branch skips signing or notarization instead, says so in the log, and passes.
 
-Nothing builds the documentation site on a pull request, and `pages.yml` builds it from the tag after the Release is published, where a fault in a page cannot be fixed by re-running it. Build it here as `pages.yml` will:
+The release pull request's CI builds the documentation site, but `pages.yml` builds it again from the tag after the Release is published, where a fault in a page cannot be fixed by re-running it. Build it here as `pages.yml` will:
 
 ```bash
 scripts/build-pages.sh                            # both locales --strict, then rustdoc at /api/
@@ -274,7 +274,7 @@ gh run watch "${RUN:?}" --exit-status
 
 `release/` ブランチや `v*` タグからの実行には署名の Secret が必要です。欠けていると、macOS か iOS のジョブが最初のステップで失敗し、足りない Secret の名前を出します。ブランチをどう変えてもこれは直りません。組織の署名用 Secret がこのリポジトリに届いていません。どのリポジトリに届けるかは組織のオーナーが決めますが、GitHub Free では private のリポジトリには届けられません。届くようになったら実行し直してください。ほかのブランチからの実行では、署名や公証を飛ばし、その旨をログに出して成功します。
 
-プルリクエストではドキュメントサイトを誰もビルドしません。`pages.yml` がビルドするのは Release を公開した後で、しかもタグからなので、ページの不具合は再実行では直せません。ここで `pages.yml` と同じようにビルドしておきます。
+リリースのプルリクエストの CI もドキュメントサイトをビルドしますが、`pages.yml` は Release を公開した後にタグからもう一度ビルドするので、そこで見つかったページの不具合は再実行では直せません。ここで `pages.yml` と同じようにビルドしておきます。
 
 ```bash
 scripts/build-pages.sh                            # 両ロケールを --strict でビルドし、/api/ に rustdoc を置く

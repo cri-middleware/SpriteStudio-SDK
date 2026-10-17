@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 #
-# Run the checks a change has to pass before it is pushed: the ones a pull
-# request runs in .github/workflows/ci.yml, and on request the slower ones it
-# leaves out. PowerShell twin: check.ps1.
+# Run the checks a change has to pass before it is pushed: ci.yml's lint job
+# and its workspace tests, and on request the slower ones. PowerShell twin: check.ps1.
 #
 #   scripts/check.sh                # ci.yml's lint job and its workspace tests
 #   scripts/check.sh features=yes   # ... and ssruntime's feature sets, one at a time

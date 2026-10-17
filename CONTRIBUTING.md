@@ -62,10 +62,10 @@ cargo run -p ssconverter-cli -- <path_to_sspj>
 ```
 
 ### Checks
-`scripts/check.sh` (`scripts/check.ps1` in PowerShell) runs what CI runs on a pull request: `cargo fmt --check`, the license copies, `clippy` and `rustdoc` with warnings denied, and the workspace tests. Run it before you push.
+`scripts/check.sh` (`scripts/check.ps1` in PowerShell) runs `ci.yml`'s lint job and its workspace tests: `cargo fmt --check`, the license copies, `clippy` and `rustdoc` with warnings denied, and the tests. The wasm32 build, cargo-audit, Miri and the MSRV check run in CI as well (`msrv=yes` adds the last here). Run it before you push.
 
 ```bash
-scripts/check.sh                # what CI runs on a pull request
+scripts/check.sh                # ci.yml's lint job and its workspace tests
 scripts/check.sh features=yes   # ... and ssruntime's feature sets one at a time, native and wasm32
 scripts/check.sh msrv=yes       # ... and `cargo check` with the rust-version toolchain
 scripts/check.sh docs=yes       # ... and the Player Porting Guide in both locales
@@ -183,10 +183,10 @@ cargo run -p ssconverter-cli -- <path_to_sspj>
 ```
 
 ### チェック
-`scripts/check.sh`（PowerShell では `scripts/check.ps1`）は、プルリクエストで CI が実行するものを実行します。`cargo fmt --check`、ライセンスの写し、警告をエラーにした `clippy` と `rustdoc`、ワークスペースのテストです。プッシュする前に実行してください。
+`scripts/check.sh`（PowerShell では `scripts/check.ps1`）は、`ci.yml` の lint ジョブとワークスペースのテストを実行します。`cargo fmt --check`、ライセンスの写し、警告をエラーにした `clippy` と `rustdoc`、テストです。wasm32 のビルド、cargo-audit、Miri、MSRV の確認も CI で実行されます（最後のものは `msrv=yes` でここでも実行します）。プッシュする前に実行してください。
 
 ```bash
-scripts/check.sh                # プルリクエストで CI が実行するもの
+scripts/check.sh                # ci.yml の lint ジョブとワークスペースのテスト
 scripts/check.sh features=yes   # 加えて、ssruntime の feature の組み合わせを 1 つずつ（ネイティブと wasm32）
 scripts/check.sh msrv=yes       # 加えて、rust-version のツールチェーンで `cargo check`
 scripts/check.sh docs=yes       # 加えて、Player 移植ガイドを両ロケールでビルド

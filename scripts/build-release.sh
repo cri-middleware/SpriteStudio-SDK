@@ -27,7 +27,8 @@
 # and pretending otherwise would only produce a half-empty release. What it
 # replaces is the part that never needed a matrix in the first place: some two
 # hundred lines of `mv` and `zip` that decide the layout of every archive the
-# SDK ships -- and that six Players' scripts/download-sdk.sh read. Until this
+# SDK ships -- and that six Players download, five of them through
+# scripts/download-sdk.sh. Until this
 # script existed, the only way to try a change to that layout was to push it and
 # watch seven platforms rebuild; against a downloaded run the same check takes
 # seconds, because the artifacts are already built and the layout is all that is
