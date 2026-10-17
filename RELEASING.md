@@ -63,7 +63,7 @@ git push -u origin "${BRANCH:?}"
 gh pr create -B main -H "${BRANCH:?}" --title "Release v$(scripts/release-version.sh)" --body ""
 ```
 
-Then dispatch the release workflow from the branch. A run from a branch builds, signs and assembles all seven platforms exactly as the release will, keeps the zips on the run (`spritestudio-sdk-release-dist`), and creates no Release. Fix anything on the branch and run this block again, until the run, the pull request's CI and the documentation build below all pass.
+Then dispatch the release workflow from the branch. A run from a branch builds, signs and assembles every platform exactly as the release will, keeps the zips on the run (`spritestudio-sdk-release-dist`), and creates no Release. Fix anything on the branch and run this block again, until the run, the pull request's CI and the documentation build below all pass.
 
 ```bash
 BRANCH=$(git branch --show-current | grep '^release/')
@@ -135,7 +135,7 @@ Nothing passes the tag around: `build-release.sh` reads `GITHUB_REF_NAME`, or th
 
 ### 6. Publish
 
-**A person runs this step**: the notes are a judgment, and a published Release is permanent. Open the draft on the [Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) page, check that its nine assets are attached — the three `spritestudio-sdk-*-libs.zip`, the five `ssconverter-cli-*.zip` and `SHA256SUMS` — edit the notes, and **Publish release** as the draft is marked: `scripts/release-channel.sh` made it a pre-release when a full release is already tagged, and left it to become Latest otherwise. Only a Release that becomes Latest deploys the site.
+**A person runs this step**: the notes are a judgment, and a published Release is permanent. Open the draft on the [Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) page, check that `SHA256SUMS` and every file it lists are attached — the `spritestudio-sdk-*-libs.zip` and the `ssconverter-cli-*.zip` — edit the notes, and **Publish release** as the draft is marked: `scripts/release-channel.sh` made it a pre-release when a full release is already tagged, and left it to become Latest otherwise. Only a Release that becomes Latest deploys the site.
 
 Publishing also starts `pages.yml`, which deploys the [documentation site](https://cri-middleware.github.io/SpriteStudio-SDK/). Watch the run through, then open the site: a failed run leaves the Release published and the site as it was. Once the cause is fixed, re-run it with `gh run rerun "${RUN:?}"`; a re-run builds the same tag.
 
@@ -262,7 +262,7 @@ git push -u origin "${BRANCH:?}"
 gh pr create -B main -H "${BRANCH:?}" --title "Release v$(scripts/release-version.sh)" --body ""
 ```
 
-続けて、ブランチからリリースワークフローを実行します。ブランチからの実行では、7 プラットフォームすべてをリリースと同じようにビルド・署名・組み立てし、zip を run に残し（`spritestudio-sdk-release-dist`）、Release は作りません。問題があればブランチで直し、このブロックをもう一度実行します。run、プルリクエストの CI、下のドキュメントのビルドがすべて通るまで繰り返します。
+続けて、ブランチからリリースワークフローを実行します。ブランチからの実行では、すべてのプラットフォームをリリースと同じようにビルド・署名・組み立てし、zip を run に残し（`spritestudio-sdk-release-dist`）、Release は作りません。問題があればブランチで直し、このブロックをもう一度実行します。run、プルリクエストの CI、下のドキュメントのビルドがすべて通るまで繰り返します。
 
 ```bash
 BRANCH=$(git branch --show-current | grep '^release/')
@@ -334,7 +334,7 @@ gh run watch "${RUN:?}" --exit-status
 
 ### 6. 公開
 
-**この手順は人が行います。** リリースノートの中身は判断が要り、公開した Release は取り消せないためです。[Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) ページで下書きを開き、9 つのアセット（`spritestudio-sdk-*-libs.zip` が 3 つ、`ssconverter-cli-*.zip` が 5 つ、`SHA256SUMS`）が添付されていることを確かめ、リリースノートを編集し、下書きの印のまま **Publish release** を押します。`scripts/release-channel.sh` が、正式版のタグがすでにあれば pre-release にし、なければ Latest になるようにしてあります。サイトをデプロイするのは Latest になる Release だけです。
+**この手順は人が行います。** リリースノートの中身は判断が要り、公開した Release は取り消せないためです。[Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) ページで下書きを開き、`SHA256SUMS` と、それが列挙するファイル（`spritestudio-sdk-*-libs.zip` と `ssconverter-cli-*.zip`）がすべて添付されていることを確かめ、リリースノートを編集し、下書きの印のまま **Publish release** を押します。`scripts/release-channel.sh` が、正式版のタグがすでにあれば pre-release にし、なければ Latest になるようにしてあります。サイトをデプロイするのは Latest になる Release だけです。
 
 公開すると `pages.yml` が動き、[ドキュメントサイト](https://cri-middleware.github.io/SpriteStudio-SDK/) をデプロイします。run を最後まで見届けてから、サイトを開いて確かめます。run が失敗しても Release は公開されたままで、サイトは元のまま残ります。原因を直したら `gh run rerun "${RUN:?}"` で再実行します。再実行は同じタグをビルドします。
 
