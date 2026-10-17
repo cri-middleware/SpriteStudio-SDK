@@ -78,9 +78,9 @@ jobs:
           cache-dependency-path: docs/requirements.txt
 
       # Both steps below run the same scripts a contributor runs locally, rather than
-      # repeating the commands here. Nothing builds the docs on a pull request, so there is
-      # no PR run to catch a divergence between the two — the fewer places the build is
-      # spelled out, the better.
+      # repeating the commands here, and so does docs.yml, which builds the docs on a
+      # pull request. That build catches what this one would hit only while both run
+      # the scripts — the fewer places the build is spelled out, the better.
       #
       # prepare-docs.sh creates .venv and installs the pins from docs/requirements.txt;
       # build-pages.sh then finds zensical there. (It falls back to PATH when there is no
@@ -109,8 +109,8 @@ jobs:
       #   the English build wipes site/ on the way in, so the opposite order publishes a
       #   site with no Japanese pages at all. Both --strict, which fails on a broken link,
       #   a missing nav entry, or a heading anchor renamed out from under a
-      #   cross-reference. This run, ci.yml's weekly docs job and the local build are the
-      #   only gates there are.
+      #   cross-reference. This run, docs.yml and the local build are the only gates
+      #   there are.
       #
       #   Then `cargo doc --workspace --no-deps --all-features` grafted onto the site at
       #   /api/, with the redirect that covers anyone who trims the URL back to it —
