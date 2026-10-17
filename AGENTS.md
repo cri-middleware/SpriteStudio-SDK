@@ -9,7 +9,7 @@
 *   **Anything that exists twice changes twice** — a page and its translation, a `.sh` and its `.ps1`.
     Missing one half is this family's most common defect.
 *   **Never break a line between two Japanese characters**; Chrome renders the break as a space.
-*   **Finish with this repository's checks**: `scripts/check.sh`, what CI runs on a pull request. Add
+*   **Finish with this repository's checks**: `scripts/check.sh`, ci.yml's lint job and its workspace tests. Add
     `features=yes` when code behind a feature changed, and `docs=yes` when `libs/ssruntime/docs` did. Read
     its summary, not its exit code — a check whose prerequisite is missing skips itself.
 *   **Do not restate what another file owns**; the table below says which file. A fact no file owns goes
