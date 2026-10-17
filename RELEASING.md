@@ -37,7 +37,7 @@ git switch -C "$BRANCH" "${BASE:?}"
 
 ### 2. Version and changelog
 
-In one commit. Replace the previous version wherever it is written as a quoted string — the `[workspace.package]` line, the four `[workspace.dependencies]` requirements, the crate READMEs — and let cargo rewrite `Cargo.lock`, which CI builds `--locked`. `tests/` is left out: its SpriteStudio projects write the editor's version as a quoted string too, as in `editorVersion="7.1.0"`. `<version>` is the one from step 1.
+In one commit. Replace the previous version wherever it is written as a quoted string — the `[workspace.package]` line, the four `[workspace.dependencies]` requirements, the crate READMEs — and let cargo rewrite `Cargo.lock`, which CI builds `--locked`. `tests/` is left out: its SpriteStudio projects write the editor's version as a quoted string too, in their `editorVersion` attributes. `<version>` is the one from step 1.
 
 ```bash
 VERSION=<version>
@@ -268,7 +268,7 @@ git switch -C "$BRANCH" "${BASE:?}"
 
 ### 2. バージョンと CHANGELOG
 
-1 コミットで行います。前のバージョンが引用符付きの文字列として書かれている箇所 — `[workspace.package]` の行、`[workspace.dependencies]` の 4 つの要求、各クレートの README — をすべて置き換え、`Cargo.lock` を cargo に書き直させます（CI は `--locked` でビルドします）。`tests/` は対象から外します。そこにある SpriteStudio のプロジェクトも、`editorVersion="7.1.0"` のようにエディタのバージョンを引用符付きの文字列で書いているためです。`<version>` は手順 1 と同じものです。
+1 コミットで行います。前のバージョンが引用符付きの文字列として書かれている箇所 — `[workspace.package]` の行、`[workspace.dependencies]` の 4 つの要求、各クレートの README — をすべて置き換え、`Cargo.lock` を cargo に書き直させます（CI は `--locked` でビルドします）。`tests/` は対象から外します。そこにある SpriteStudio のプロジェクトも、`editorVersion` 属性にエディタのバージョンを引用符付きの文字列で書いているためです。`<version>` は手順 1 と同じものです。
 
 ```bash
 VERSION=<version>
