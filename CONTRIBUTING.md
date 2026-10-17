@@ -79,7 +79,7 @@ If you run a command by hand, keep its `--all-features`: the test modules sit be
 The `.fbs` schemas under `libs/ssab/fbs/` and `libs/ssruntime/fbs/` have generated Rust bindings: after changing one, run that library's `scripts/generate.sh` (or `.ps1`). The build generates the C headers and the C# bindings with `cbindgen` and `csbindgen`, which are build-dependencies, so neither needs installing; [FFI and C-API](#ffi-and-c-api) says where they are written and when to commit them.
 
 ### Documentation site
-The Player Porting Guide under `libs/ssruntime/docs` is published as a site, and [libs/ssruntime/docs/CONTRIBUTING.ja.md](./libs/ssruntime/docs/CONTRIBUTING.ja.md) (in Japanese) sets the rules for writing and translating its pages. If you edit a page there, build both locales before you finish, with `scripts/check.sh docs=yes` or the commands below: nothing builds the docs on a pull request, so that local build is the only gate before the merge (CI builds them weekly). Set the toolchain up once with `scripts/prepare-docs.sh`, then:
+The Player Porting Guide under `libs/ssruntime/docs` is published as a site, and [libs/ssruntime/docs/CONTRIBUTING.ja.md](./libs/ssruntime/docs/CONTRIBUTING.ja.md) (in Japanese) sets the rules for writing and translating its pages. If you edit a page there, build both locales before you finish, with `scripts/check.sh docs=yes` or the commands below. CI builds them too, both `--strict`, on a pull request that touches the site's sources, on the release PR and weekly. Set the toolchain up once with `scripts/prepare-docs.sh`, then:
 
 ```bash
 scripts/build-docs.sh              # generate the locale trees, build en then ja, both --strict
@@ -200,7 +200,7 @@ scripts/check.sh docs=yes       # 加えて、Player 移植ガイドを両ロケ
 `libs/ssab/fbs/` と `libs/ssruntime/fbs/` の `.fbs` スキーマには生成された Rust バインディングがあります。変更したら、そのライブラリの `scripts/generate.sh`（または `.ps1`）を実行してください。C ヘッダーと C# バインディングは、ビルドが build-dependency の `cbindgen` と `csbindgen` で生成するので、どちらもインストールは不要です。書き出す場所とコミットするタイミングは [FFI と C-API](#ffi-と-c-api) にあります。
 
 ### ドキュメントサイト
-`libs/ssruntime/docs` の Player 移植ガイドはサイトとして公開されます。ページの書き方と翻訳の規約は [libs/ssruntime/docs/CONTRIBUTING.ja.md](./libs/ssruntime/docs/CONTRIBUTING.ja.md) にあります。ページを編集したら、仕上げる前に、`scripts/check.sh docs=yes` か下のコマンドで両ロケールをビルドしてください。プルリクエストでは docs はビルドされないため、マージ前のゲートは手元のビルドだけです（CI がビルドするのは週次です）。`scripts/prepare-docs.sh` で一度ツールチェーンを用意してから、以下を実行してください。
+`libs/ssruntime/docs` の Player 移植ガイドはサイトとして公開されます。ページの書き方と翻訳の規約は [libs/ssruntime/docs/CONTRIBUTING.ja.md](./libs/ssruntime/docs/CONTRIBUTING.ja.md) にあります。ページを編集したら、仕上げる前に、`scripts/check.sh docs=yes` か下のコマンドで両ロケールをビルドしてください。CI も、サイトのソースに触れるプルリクエスト、リリースのプルリクエスト、週次の実行で、両ロケールを `--strict` でビルドします。`scripts/prepare-docs.sh` で一度ツールチェーンを用意してから、以下を実行してください。
 
 ```bash
 scripts/build-docs.sh              # ロケール別ツリーを生成し、en → ja の順に --strict でビルド
