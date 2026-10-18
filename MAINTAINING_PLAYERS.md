@@ -4,7 +4,7 @@
 
 The API conventions stop the same feature from growing a different name in every Player. But an aligned API loses most of its value **if the first five minutes are a different experience in every Player.** The shared vocabulary pays off for the reader moving to their second Player; the reader touching their first one meets the README.
 
-This document fixes what the first screen answers, and who it answers to. **What is shared is four questions, their order, and the two doors past them. How they are answered belongs to the host.** §5 then names the Player the others are read against when their behaviour parts, and §6 fixes the shape of their roadmaps.
+This document fixes what the first screen answers, and who it answers to. **What is shared is four questions, their order, what each step names, one tree for placement, and the two doors past them. The rest of how they are answered belongs to the host.** §5 then names the Player the others are read against when their behaviour parts, and §6 fixes the shape of their roadmaps.
 
 ---
 
@@ -21,6 +21,8 @@ This document fixes what the first screen answers, and who it answers to. **What
 
 **Question 4 is three kinds of link, not a link budget.** Getting started, basic playback, and the Player's own Limitations & Scope — the last because a reader deciding whether to adopt asks what it cannot do before they ask anything else, and because every Player publishes that page. Past those three, a link earns its place by answering a question a *reader of the README* has: how do I troubleshoot this, how do I migrate from the old Player. **A list that reproduces the documentation site's navigation has moved the nav rather than summarised it**, and the reader who needed the nav was already going to the site.
 
+**Past the first frame, a README links rather than restates**: using the Player is the documentation site's, and each repository's AGENTS.md table says so. This holds for every README a user meets — a crate's, an npm or pub.dev package's — each its own front door: what it is, how to install it, the smallest thing that runs, and a closing *Read next* line carrying question 4's links.
+
 When the distribution route is not the host's usual one, **put one sentence of reason right next to that line.** "Package Manager's Add package from URL does not work for this package, since the native binaries ship only in the tarball" is a good example. A detour with no reason beside it is indistinguishable from carelessness.
 
 ## 2. How they are answered belongs to the host
@@ -32,12 +34,21 @@ Players come in two shapes.
 
 **Say on the first screen which shape this Player is.** A Hello World snippet in an editor-first Player is unnatural for that host. And "you start without writing a script" is a selling point, not something to leave implicit in a numbered list — it is the first thing a reader arriving from that engine wants to know.
 
+### 2.1 What each step names
+
+**Each step names what the reader sees and types**: the archive's file names, menu and command labels as the host shows them (a Japanese README uses the labels the host shows in Japanese), and the host's most natural way to put a character on screen — Ren'Py's `show`, MZ's plugin command, a node or component placed in the editor. **Steps run in the order the reader runs them and use nothing before introducing it**; a manifest entry or a dev dependency the steps need is in the README, not only in the docs. Where the Player converts on its own — an importer, a test play, a launch — that is question 2's answer, and a converter the reader fetches is the alternative beside it.
+
+### 2.2 Placement is one tree
+
+**The Quick Start shows one tree**: where the Player itself goes, if the reader places files (a few real entries and `…`); where the SpriteStudio project goes, if the Player converts it (the `.sspj`, an image and `…`); and where the converted `.ssab` lands. The step that puts a character on screen uses that same path, and the tree and the steps use `Ringo` throughout (§3.1).
+
+An example does not stand in for the tree: converted assets are not committed (§3.3), so no example on GitHub shows the placed layout. **The tree speaks for itself** — it carries no notes about what readers get wrong; it is how a reader checks their own layout.
+
 ## 3. A first frame with nothing of the reader's own
 
-**A reader must reach a first frame without supplying a `.sspj` of their own.** A Player that does not manage this is asking them to author before they can try. How it gets there follows the shape (§2):
+**A reader must reach a first frame without supplying a `.sspj` of their own.** A Player that does not manage this is asking them to author before they can try. **In either shape (§2), the README's own steps, run on SpriteStudio's [official sample data](https://www.webtech.co.jp/help/ja/spritestudio7/download/sample/), are that first frame**: they convert the sample by the route the Player gives a user — the host's import, a test play, a launch, a conversion command — and put it on screen as §2.1 describes. The README names that data beside the steps and sends no one to a sample project, which would put a clone behind the first door (§4.1).
 
-- **Editor-first** — the host's own import converts any `.sspj`, so the README's own steps, run on SpriteStudio's [official sample data](https://www.webtech.co.jp/help/ja/spritestudio7/download/sample/), are the first frame. The README names that data beside the steps and sends no one to a sample project, which would put a clone behind the first door (§4.1). The repository's `examples/` serve whoever works on the Player, and CONTRIBUTING.md is where they are introduced.
-- **Code-first** — the bundled example is the first frame, since the smallest thing that runs is code.
+The repository's `examples/` and any live demo still have their readers. A demo shows the Player working before anything is installed, and an example is how someone working on the Player checks it. Opening an example from a checkout is behind the second door — the README's developer section or CONTRIBUTING.md (§3.3).
 
 ### 3.1 One character, and the same one wherever a Player can manage it
 
@@ -68,7 +79,7 @@ A separated project's file stays clean on its own.
 - **The host's own import, where it has one** — Godot's SS Importer dock, Unity's SS Importer window — converts with the `libssconverter` the Player already carries, so it needs nothing the Player did not.
 - **A `deploy-examples` script, in every Player,** converts every sample without the editor: for a test suite, for CI, for a reader without the host's editor at hand.
 
-The steps that open a sample — a code-first README's, an editor-first CONTRIBUTING.md's — name the route and what it needs. Where the sample's scenes hold references an import cannot restore — Unity's, by the GUID in a committed `.meta` — they also say when it has to run.
+The steps that open a sample — in a README's developer section or in CONTRIBUTING.md, never in the Quick Start — name the route and what it needs. Where the sample's scenes hold references an import cannot restore — Unity's, by the GUID in a committed `.meta` — they also say when it has to run.
 
 ## 4. Two doors, and what may not be behind the first one
 
