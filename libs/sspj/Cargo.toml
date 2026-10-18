@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Parser for SpriteStudio project files (.sspj / .ssae / .ssce / .ssee / .ssqe / .ssse)"
-keywords = ["spritestudio", "2d-animation", "gamedev", "parser", "xml"]
+keywords = ["spritestudio", "animation", "gamedev", "parser", "xml"]
 categories = ["parser-implementations", "game-development", "graphics"]
 
 [lib]

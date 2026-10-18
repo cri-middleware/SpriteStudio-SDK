@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Converts SpriteStudio projects into the .ssab / .ssqb runtime binaries"
-keywords = ["spritestudio", "2d-animation", "gamedev", "flatbuffers", "converter"]
+keywords = ["spritestudio", "animation", "gamedev", "flatbuffers", "converter"]
 categories = ["game-development", "graphics", "multimedia"]
 
 [lib]

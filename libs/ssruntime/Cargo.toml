@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "no_std playback engine for SpriteStudio animations — per-frame transforms, mesh deformation, and a cross-engine draw plan"
-keywords = ["spritestudio", "2d-animation", "gamedev", "skeletal", "no-std"]
+keywords = ["spritestudio", "animation", "gamedev", "skeletal", "no-std"]
 categories = ["game-development", "graphics", "no-std", "multimedia"]
 
 [dependencies]

@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "The .ssab / .ssqb binary format for SpriteStudio — the FlatBuffers schema shared by converter and runtime"
-keywords = ["spritestudio", "2d-animation", "gamedev", "flatbuffers", "no-std"]
+keywords = ["spritestudio", "animation", "gamedev", "flatbuffers", "no-std"]
 categories = ["game-development", "graphics", "encoding", "no-std"]
 
 [dependencies]
