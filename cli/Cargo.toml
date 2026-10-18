@@ -10,7 +10,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Command-line converter from SpriteStudio projects to .ssab / .ssqb runtime binaries"
-keywords = ["spritestudio", "2d-animation", "gamedev", "cli", "converter"]
+keywords = ["spritestudio", "animation", "gamedev", "cli", "converter"]
 categories = ["command-line-utilities", "game-development"]
 
 [dependencies]
