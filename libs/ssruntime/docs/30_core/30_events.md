@@ -105,6 +105,12 @@ A seek does not report the events between the origin and the destination. To not
 
 A seek, whether playing or stopped, makes the next `update` report the events of the destination frame (audio included). If you do not want a seek to play sounds, see [Audio §3](../50_features/50_audio.md#3-no-sound-on-seek).
 
+### 3-3. Ticks the Player does not run
+
+**Report nothing for a tick the Player does not run.** A tick that skipped evaluation because nothing moves, or that skipped a character off screen, calls no `ss_runtime_update`, so it has nothing to report. On such a tick, empty the previous tick's events and its loop, finish and start notifications. Left in place, the same event keeps playing a sound for as long as ticks are skipped, and the host keeps reading a loop or an end that was crossed long ago. When a tick may be skipped is in [Animation Mixing §1-6](../50_features/10_animation_mixing.md#1-6-skipping-ticks-when-nothing-moves).
+
+A Player that reports the start notification from a tick (for example as a pulse) must not lose a start from `ss_runtime_play` / `ss_runtime_play_with_start_frame` called while ticks are skipped or while the character is off screen: report it on the first tick that runs after the call.
+
 ## 4. When several animations are layered
 
 With animation mixing, by default only the events of the animation on track 0 are reported. To have the events of other sources reported too, lower that source's threshold; for the outgoing side of a crossfade, lower the track's outgoing threshold ([Animation Mixing §6](../50_features/10_animation_mixing.md#6-events)).

@@ -64,15 +64,19 @@ impl<'a> Context<'a> {
     /// `true` while the track stack would move the pose on a running clock for a
     /// reason other than track 0's own animation stepping: a fade on any track,
     /// or a source — other than track 0's main one — that plays, at a speed above
-    /// 0 and a weight above 0, on a track that is heard. A cleared, finished,
-    /// silenced or scrubbed track does not count, nor does a source a crossfade
-    /// has retired; one a cancelled crossfade left behind does.
+    /// 0 and a weight above 0, on a track that is heard. A cleared, finished or
+    /// silenced track does not count, nor does one at speed 0 moved by hand, nor
+    /// a source a crossfade has retired; one a cancelled crossfade left behind
+    /// does.
     ///
-    /// It does not read the clock: a Player gating its redraw combines it with
-    /// [`Self::is_clock_playing`] and [`Self::is_clock_pausing`], and compares
-    /// track 0's frame itself. With this, a Player keeps no copy of which tracks
-    /// and sources it has laid, which goes wrong the moment one is released
-    /// inside the runtime.
+    /// It does not read the clock: a Player that skips ticks while nothing moves
+    /// still runs one while the clock runs unheld ([`Self::is_clock_playing`]
+    /// and not [`Self::is_clock_pausing`]) and either track 0 plays
+    /// ([`Self::is_playing`]) or this holds. Read it before `update`: the
+    /// update a fade ends on clears the fade, so a read after it skips the
+    /// fade's last frame. With this, a Player keeps no copy of which tracks and
+    /// sources it has laid, which goes wrong the moment one is released inside
+    /// the runtime.
     pub fn is_stack_in_motion(&self) -> bool {
         let instance = &self.instance;
         if instance.tracks.iter().any(|t| t.fade.is_some()) {

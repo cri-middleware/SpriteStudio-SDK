@@ -151,9 +151,11 @@ When there are no overrides at all, the overwrite step is skipped entirely. A Pl
 
 ### 5-1. Caching by frame number blocks overrides
 
-Overrides **change the output without changing the frame number.** In a Player with the optimization "skip building when the frame number is the same as last time" (which pays off while paused, on still frames, and in low frame rate playback), `set` and `clear` do not update the vertices, and **the API looks as if it does not work.**
+Overrides **change the output without changing the frame number.** In a Player with the optimization "skip building when the frame number is the same as last time" (which pays off while paused, on still frames, and in low frame rate playback), `set` and `clear` do not update the vertices, and **the API looks as if it does not work.** The same happens in a Player that skips ticks when nothing moves ([Animation Mixing §1-6](./10_animation_mixing.md#1-6-skipping-ticks-when-nothing-moves)).
 
-When an override `set` / `clear` succeeds, invalidate the frame cache explicitly.
+A Player that skips building frames must request a rebuild every time a call succeeds that changes what the next frame shows without moving the clock: an override `set` / `clear`, and also track, source, fade and crossfade calls, seeks, section changes and animation changes. Make the request one-shot, withdrawn by the next frame built. Left as a sticky flag, it keeps that character from ever skipping a tick again.
+
+Player-side settings an engine typically writes every frame (how the character is placed, its visibility, opacity, color, the sub-frame switch and the like) must compare the new value with the old one and request a rebuild only when it changes. A request per write keeps that character from skipping ticks.
 
 ### 5-2. In `Direct` mode, FrameData has no `cells`
 
