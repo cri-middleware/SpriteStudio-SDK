@@ -196,7 +196,7 @@ writer が働くのは、次の **両方** を満たすときだけです。
 **マスクの DrawBatch（`DrawBatchKind::Mask`）が出るパーツ**（どれも `count = 1`、`vertex_count` / `index_count` は `0`）:
 
 - **マスクパーツ**（`PartTypeMask`）
-- **`draw_as_mask` でマスクにした描画パーツ**（シェイプ / 9 スライス）。マスクの DrawBatch と自分の色の DrawBatch が **同じ rank に両方** 出ます。純粋なマスクは色を描かないので、**色の DrawBatch は描かないでください。**
+- **`draw_as_mask` でマスクにした描画パーツ**（シェイプ / 9 スライス）。マスクの DrawBatch と自分の色の DrawBatch が **同じ rank に両方** 出ます。純粋なマスクは色を描かないので、**色の DrawBatch は描かないでください。** この組のマスクの DrawBatch は、`texture_hash` が常に `0` です。writer のカットアウト（§2-5）に使うテクスチャは、同じ rank の自分の色の DrawBatch か、パーツのセルから取ってください。マスクの DrawBatch の `texture_hash` で引くと、テクスチャが見つかりません。
 
 > [!IMPORTANT]
 > **クリッピング（`mask_write`）にはマスクの DrawBatch が出ません。** クリッピングは通常の描画の DrawBatch としてだけ出るので、`Mask` の DrawBatch だけを見る Player は **クリッピングをすべて取りこぼします。** writer は、PartData を読んで Player が決めてください（§1-3 の 3 つの式）。
