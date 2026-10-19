@@ -244,6 +244,10 @@ if ($opts.api -eq "yes") {
 }
 
 # --- serve ----------------------------------------------------------------
+# Bound to loopback, in the command it suggests as well. On every interface,
+# http.server announces http://[::]:PORT/, which is not a secure context, so
+# Copy as Markdown cannot copy there.
+#
 # py first: it is the Windows launcher, and what build-docs.ps1 already tells
 # people to serve with. python/python3 are the fallbacks elsewhere -- on Windows
 # a bare `python` can be the Store stub that does nothing.
@@ -264,7 +268,7 @@ if ($opts.serve -eq "yes") {
     Write-Host ""
     Push-Location $ROOT_DIR
     try {
-        & $PYTHON_CMD -m http.server $opts.port -d site
+        & $PYTHON_CMD -m http.server $opts.port --bind 127.0.0.1 -d site
     } finally {
         Pop-Location
     }
@@ -274,5 +278,5 @@ if ($opts.serve -eq "yes") {
     Write-Host "${APP}: serve it (one server over the whole tree, so the language selector and"
     Write-Host "${APP}: the nav's Rust API entry both resolve):"
     Write-Host "${APP}:   $APP serve=yes"
-    Write-Host "${APP}:   $shown -m http.server $($opts.port) -d site"
+    Write-Host "${APP}:   $shown -m http.server $($opts.port) --bind 127.0.0.1 -d site"
 }
