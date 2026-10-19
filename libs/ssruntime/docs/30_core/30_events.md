@@ -88,7 +88,7 @@ if (events != nullptr) {
 | :--- | :--- |
 | Normal playback | The frames passed since the previous `update` |
 | `ss_runtime_play` / `ss_runtime_play_with_start_frame` | The start frame (and the frames passed after it) |
-| `ss_runtime_set_frame_no` (seek) | The destination frame. **The frames between the origin and the destination are not reported** |
+| `ss_runtime_set_frame_no` (seek) | The destination frame, whether playing or stopped. **The frames between the origin and the destination are not reported** |
 | `ss_runtime_set_animation_section` | The frame at the start of the section (the end when backward) |
 
 The events of passed frames are reported in backward playback too.
@@ -103,7 +103,7 @@ The first `update` after `play` reports the start frame (frame 0, for example) a
 
 A seek does not report the events between the origin and the destination. To notify those events as well, have the Player call `update` in small steps instead of seeking, or read the events of the frames in between from the ssab and notify them.
 
-If you seek during playback, the next `update` reports the events of the destination frame (audio included). If you do not want a seek to play sounds, see [Audio §3](../50_features/50_audio.md#3-no-sound-on-seek).
+A seek, whether playing or stopped, makes the next `update` report the events of the destination frame (audio included). If you do not want a seek to play sounds, see [Audio §3](../50_features/50_audio.md#3-no-sound-on-seek).
 
 ## 4. When several animations are layered
 

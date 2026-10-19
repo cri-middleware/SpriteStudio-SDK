@@ -10,6 +10,8 @@ The texture to bind when drawing is always decided by `DrawBatch.texture_hash`. 
 
 **A cellmap name has no file extension.** The cellmap of `common.ssce` is named `common`, and its hash is `fnv1a("common")`. A texture change (`TCHG`), on the other hand, names a texture file (`common.png` and so on), so its hash is `fnv1a("common.png")`. The strings differ, so the two are entirely different values. **The Player's texture map must be keyed by both.** If you load both `cellmaps()` and `external_textures()`, every `texture_hash` is found. The converter guarantees that every texture name a `TCHG` points at is in `external_textures()`.
 
+**A texture hash is unique only within one ssab.** Both a cellmap hash and an external texture hash are made from the name alone and say nothing about which ssab they belong to, so two ssab files can use the same hash for different images (both have a cellmap named `common`, for example). A Player that loads more than one ssab must keep one texture map per ssab, or key the map by ssab and hash together. When drawing a DrawBatch, look it up in the map of the ssab bound to that Context.
+
 ## 2. Authored texture change
 
 SpriteStudio's "texture change" attribute (`TCHG`) **keeps the cell a part references and swaps only the texture it reads from**. It is used to prepare textures with the same layout but different colors or costumes, and to switch between them on the timeline.
@@ -83,6 +85,12 @@ void Player::set_cellmap_texture(const std::string& cellmap_name, Texture* overr
 `load_texture` / `resolve_path` are not real functions; they stand for the engine's texture loading and path resolution.
 
 A part under a texture change (`TCHG`) is bound through a different hash, only on those frames. If the key you replaced is not that hash, the replacement has no effect (the authored change wins).
+
+The steps and the example above are the form for a texture map that belongs to this Player alone and was built from one ssab.
+
+**A Player whose textures live in a table shared by several Players (one table for the device or the whole engine) must not overwrite the texture under a key.** Overwriting it changes the texture for every Player playing the same ssab. Instead, keep a redirect table per Player and point the hash you replace at a key of this Player's own, one that collides with no other texture's key, and register the replacement texture in the shared table under that key. When drawing, look the texture hash up in the redirect table first, and fall back to the hash itself in the shared table. Pass every hash that names a texture through the same table, not only `DrawBatch.texture_hash` but also the ones effects and mask cutouts read. To clear a replacement, point the hash back at its original key in the redirect table; the original texture in the shared table was never touched, so there is nothing to reload.
+
+Keep the redirect table per ssab as well (§1). An instance part's child built from another ssab looks its textures up in that ssab's table, so a replacement set on the parent's ssab does not reach it. To make it apply to the child too, set the replacement in the child ssab's table as well.
 
 ## 4. Referencing external ssabs
 

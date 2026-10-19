@@ -230,7 +230,7 @@ If the default for the same feature differs between Players, behavior changes si
 | Visibility override `cascade` | `false` | A keyframed hide in SpriteStudio does not extend to descendants, so cascading happens only when requested explicitly |
 | Color override `blendOp` | `Mix` | The zero value. The color's alpha carries the strength, so it means "plain" |
 | Part following when the part is hidden | Keep following | A part hidden for one frame does not take its follower away |
-| `isPlayingForward` when not playing | `true` | Forward is the resting state. Returning false would let the host's audio be gated off on the first frame |
+| `isPlayingForward` before any animation is set up | `true` | Forward is the resting state. Returning false would let the host's audio be gated off on the first frame. Once an animation is set up, it reports the actual direction of travel, also while stopped (false after stopping on a ping-pong return leg, or with `Backward` set; [Playback control §5-3](../30_core/20_playback_control.md#5-3-playback-direction)) |
 
 The defaults of `subFrameEnabled` and `frameSkipEnabled` may follow the host engine's conventions.
 

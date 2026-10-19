@@ -90,7 +90,7 @@ Have the display node **hold (1) and (2) as members, not inherit from them**. Th
 | Ren'Py | Python | ctypes | `SSInternalPlayer` (up to the draw plan) | (same as left) | `SSPlayer` (Displayable) | (1) and (2) combined; draws issued in (3) |
 | Flutter | Dart | ffigen | `SpriteStudioInternalPlayer` + `GeometryBuilder` | `SpriteStudioPlayer` | `SpriteStudioView` / `SpriteStudioAnimation` / Flame's `SpriteStudioComponent` | All three separate |
 | React Native | TypeScript + C++ | Nitro Modules | `HybridSsContext` (C++) / `SsInternalPlayer` | `SpriteStudioPlayer` | `SpriteStudioView` / `SpriteStudioSprite` / `SpriteStudioScene` | All three separate; the heavy work of (1) is in C++ |
-| Wgpu | Rust | the `ssruntime` crate directly | `SSPlayer` + `SSScene` + `SSRenderer` | `SSPlayer` | Bevy's `SsPlayer`, the Web's `SsPlayerWeb`, the C-API's `SsPlayer` | (1) and (2) combined; GPU drawing in a separate class |
+| Wgpu | Rust | the `ssruntime` crate directly | `SSPlayer` + `SSScene` + `SSRenderer` | `SSPlayer` | Bevy's `SsPlayer`, the Web's `SsPlayerWeb`, the C-API's `ss_player_t` | (1) and (2) combined; GPU drawing in a separate class |
 
 - **(1) and (2) may be combined** — when a thin wrapper over the C-API is enough for playback control.
 - **Separate (2) from (3)** — when the display node is recreated (Flutter widgets), or when several display nodes share one playback state.

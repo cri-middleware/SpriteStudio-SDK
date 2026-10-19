@@ -20,9 +20,7 @@ Audio part keys do not play sound inside the Brain; they are reported as `audios
 
 The Player plays a sound **only when playback passes its key** on the timeline. Unlike the SpriteStudio editor, it does not align the sound's playback position on a seek.
 
-However, a seek during playback makes the next `update` report the events (audio included) of the destination frame ([Events §3](../30_core/30_events.md#3-which-frames-are-reported)). If you do not want a seek to play sound, have the Player skip the destination frame's audio reported by the `update` right after the seek. The audio on the start frame right after `play` is played.
-
-Moving the frame while stopped (seeking while not playing) plays no sound, because `update` does not advance. Only a seek during playback needs attention.
+However, a seek, whether playing or stopped, makes the next `update` the Player runs report the events (audio included) of the destination frame ([Events §3](../30_core/30_events.md#3-which-frames-are-reported)). If you do not want seeks (scrubs) to play sound, have the Player not play the audio events reported by the first `update` after the seek. The audio on the start frame right after `play` is played.
 
 ## 4. The lifetime of a sound
 
