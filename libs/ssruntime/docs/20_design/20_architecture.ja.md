@@ -90,7 +90,7 @@ graph TD
 | Ren'Py | Python | ctypes | `SSInternalPlayer`（描画計画まで） | （同左） | `SSPlayer`（Displayable） | (1)(2) をまとめ、描画の発行は (3) |
 | Flutter | Dart | ffigen | `SpriteStudioInternalPlayer` ＋ `GeometryBuilder` | `SpriteStudioPlayer` | `SpriteStudioView` / `SpriteStudioAnimation` / Flame の `SpriteStudioComponent` | 3 つとも分ける |
 | React Native | TypeScript ＋ C++ | Nitro Modules | `HybridSsContext`（C++）/ `SsInternalPlayer` | `SpriteStudioPlayer` | `SpriteStudioView` / `SpriteStudioSprite` / `SpriteStudioScene` | 3 つとも分け、(1) の重い処理は C++ |
-| Wgpu | Rust | `ssruntime` クレートを直接 | `SSPlayer` ＋ `SSScene` ＋ `SSRenderer` | `SSPlayer` | Bevy の `SsPlayer`、Web の `SsPlayerWeb`、C-API の `SsPlayer` | (1)(2) をまとめ、GPU の描画は別のクラス |
+| Wgpu | Rust | `ssruntime` クレートを直接 | `SSPlayer` ＋ `SSScene` ＋ `SSRenderer` | `SSPlayer` | Bevy の `SsPlayer`、Web の `SsPlayerWeb`、C-API の `ss_player_t` | (1)(2) をまとめ、GPU の描画は別のクラス |
 
 - **(1) と (2) はまとめてよい** — 再生制御が C-API の薄い包みで足りる場合。
 - **(2) は (3) から分ける** — 表示ノードが作り直される場合（Flutter の Widget）や、複数の表示ノードで 1 つの再生状態を共有する場合。

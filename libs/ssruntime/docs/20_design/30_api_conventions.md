@@ -69,6 +69,8 @@ What `findPartIndex` returns when the part is not found is also up to the langua
 
 The third row is the one most easily gotten wrong. "The last update crossed a loop boundary" is a pulse that clears after one tick, so naming it `isLooped` makes it look like a state and invites the bug of reading it a tick late. For the same reason, `has…` is wrong for a pulse: it reads as "at some point, ever".
 
+`justStarted` is true for exactly one tick: the first update that runs after `play` / `play(startFrame)`. `resume` does not raise it; lifting a pause carries playback on, it does not start it.
+
 `isPausing` is used rather than `isPaused` to keep the same tense as its pair `isPlaying`; the Brain itself is `ss_runtime_is_pausing`.
 
 ### 3-1. Standard vocabulary
@@ -80,6 +82,7 @@ Use the same stem for the same concept. Casing and word separation follow each l
 | Whether playing (true while paused too) | `isPlaying` |
 | Whether held by a pause | `isPausing` |
 | Whether the configured loops have all played (state) | `isFinished` |
+| Whether the last update was the first after `play` (pulse) | `justStarted` |
 | Whether the last update crossed a loop (pulse) | `justLooped` |
 | Whether the last update finished playback (pulse) | `justFinished` |
 | Whether the actual direction of travel is forward | `isPlayingForward` |
@@ -184,7 +187,7 @@ A Player publishes six events. **How** they are delivered is left to the host's 
 
 The `on` prefix, the casing and the word separator follow the host: a Godot signal is `animation_finished`, a C# event `OnAnimationFinished`, a TypeScript subscription `onAnimationFinished`, a Python constructor argument `on_animation_finished`. What is unified is the **whole** stem. Shortening `animationFinished` to `finished` makes it a different name. On an object that also owns effects, instances, audio and textures, `finished` alone does not say what finished.
 
-The last three are concepts already named in §3-1's vocabulary table (`isFinished` / `justLooped`). **Keep paired names spelled the same.** Putting `onComplete` or `onAnimationEnd` next to `isFinished` calls one concept by two words.
+The last three are concepts already named in §3-1's vocabulary table (`justStarted` / `isFinished` / `justLooped`). **Keep paired names spelled the same.** Putting `onComplete` or `onAnimationEnd` next to `isFinished` calls one concept by two words.
 
 ### 4-2. The required set
 
@@ -206,7 +209,7 @@ Do, however, follow these two rules.
 
 **State how many listeners can be registered.** Whether it is one or many is left to the host (a Flutter widget callback and a React prop take one; a Godot signal and a C# event take many). A caller who assumed a second one could be added finds out only when the first one silently stops being called. Write down which you chose.
 
-**If a Player has no callback mechanism, publish the pulses.** Where the host polls rather than subscribes, there is no other way to catch the completion edge. In that case, publish `justFinished` alongside `justLooped`.
+**If a Player has no callback mechanism, publish the pulses.** Where the host polls rather than subscribes, there is no other way to catch the completion edge. In that case, publish `justStarted` and `justFinished` alongside `justLooped`.
 
 ---
 
@@ -230,7 +233,8 @@ If the default for the same feature differs between Players, behavior changes si
 | Visibility override `cascade` | `false` | A keyframed hide in SpriteStudio does not extend to descendants, so cascading happens only when requested explicitly |
 | Color override `blendOp` | `Mix` | The zero value. The color's alpha carries the strength, so it means "plain" |
 | Part following when the part is hidden | Keep following | A part hidden for one frame does not take its follower away |
-| `isPlayingForward` when not playing | `true` | Forward is the resting state. Returning false would let the host's audio be gated off on the first frame |
+| `isPlayingForward` before any animation is set up | `true` | Forward is the resting state. Returning false would let the host's audio be gated off on the first frame. Once an animation is set up, it reports the actual direction of travel, also while stopped (false after stopping on a ping-pong return leg, or with `Backward` set; [Playback control §5-3](../30_core/20_playback_control.md#5-3-playback-direction)) |
+| The `loopCount` the host set | Kept across `setAnimation` and every switch of track 0 | The host sets it once. The Brain's setup resets it, so the Player sets it again (§8-1) |
 
 The defaults of `subFrameEnabled` and `frameSkipEnabled` may follow the host engine's conventions.
 
@@ -321,7 +325,11 @@ There are three reasons to separate them.
 
 **Do not fold `resume` into `play`.** `play` always starts from the beginning, so using it to lift a pause sends the playhead back to the start. **Publish `isPausing` alongside `isPlaying`.** `isPlaying` stays true while paused.
 
-`ss_runtime_setup_animation` resets the loop count and the playback section to their defaults, so set them inside `setAnimation` or before `play`. Speed, the frame-rate override, frame skip and playback direction are kept across setups, so there is no need to set them again ([Playback control §3](../30_core/20_playback_control.md#3-what-setup-resets)).
+`ss_runtime_setup_animation` resets the playback section to its default, so set it inside `setAnimation` or before `play`.
+
+**The Player keeps the loop count the host set.** `ss_runtime_setup_animation` resets the loop count too, but in the Player's public API a `loopCount` the host set survives `setAnimation`. Hold the value the host last set, and set it again with `ss_runtime_set_loop_count` after `setAnimation` and after every call that switches track 0's animation (a `crossfade` or `setTrackAnimation` on track 0).
+
+Speed, the frame-rate override, frame skip and playback direction are kept across setups, so there is no need to set them again ([Playback control §3](../30_core/20_playback_control.md#3-what-setup-resets)).
 
 **A section named by labels is the same state.** `setAnimationSectionByLabel(startLabel, endLabel, startOffset = 0, endOffset = 0)` resolves each label to its frame in the animation's label table and sets the section the way `setAnimationSection` does; it does not play. The section runs from the start label's frame plus `startOffset` to the end label's frame plus `endOffset`, the rule an Instance part's start and end labels follow. Set it where any section is set: inside `setAnimation` or before `play`.
 

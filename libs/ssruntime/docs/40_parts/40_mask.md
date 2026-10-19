@@ -196,7 +196,7 @@ Only clipping carries over, and pure masks do not, because their scopes (§2-1) 
 **Parts that emit a mask DrawBatch (`DrawBatchKind::Mask`)** (all with `count = 1`, and `vertex_count` / `index_count` of `0`):
 
 - **Mask parts** (`PartTypeMask`)
-- **Drawn parts turned into masks by `draw_as_mask`** (shape / 9-slice). Both the mask DrawBatch and the DrawBatch of its own color are emitted **at the same rank**. A pure mask draws no color, so **do not draw the color DrawBatch.**
+- **Drawn parts turned into masks by `draw_as_mask`** (shape / 9-slice). Both the mask DrawBatch and the DrawBatch of its own color are emitted **at the same rank**. A pure mask draws no color, so **do not draw the color DrawBatch.** The mask DrawBatch of this pair always has a `texture_hash` of `0`. Take the texture for the writer's cutout (§2-5) from the part's own color DrawBatch at the same rank, or from the part's cell. Looking up the mask DrawBatch's `texture_hash` finds no texture.
 
 > [!IMPORTANT]
 > **Clipping (`mask_write`) emits no mask DrawBatch.** Clipping is emitted only as an ordinary drawing DrawBatch, so a Player that looks only at `Mask` DrawBatches **misses all clipping.** Decide the writers in the Player by reading PartData (the three expressions of §1-3).

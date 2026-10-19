@@ -93,6 +93,7 @@ Treat these as four operations. Do not fold `resume` into `play`.
 - **`play` is not resume.** It always starts from the start, so using it to release a pause sends the playhead back to the start.
 - **A pause is a "hold", not a "stop".** `ss_runtime_is_playing` is `true` while paused. `ss_runtime_is_pausing` is what tells the two apart.
 - **`stop` does not rewind.** To show a different position, seek.
+- **A negative value passed to `play_with_start_frame` starts from the section start (the end when backward), as `play` does.** A value of 0 or more is not clamped to the playback section, so pass a frame inside the section.
 - **They act on the whole character.** With [animation mixing](../50_features/10_animation_mixing.md#1-4-one-clock-for-the-whole-character), `pause` / `resume` / `stop` hold, release and stop every track and every fade. `play` rewinds track 0 only; the other tracks keep their playheads.
 
 ### 4-2. State transitions
@@ -182,7 +183,7 @@ The Player decides whether to use sub-frames. If it does, pass the frame number 
 - At the end and at loop boundaries, the playhead briefly takes a fractional value in `(last frame, last frame + 1)`. This range is **valid**, and returns the same pose as the last frame. Nothing is extrapolated past the end. **You do not need to clamp `frame_no` to the last frame.**
 - Out of range (less than the first frame, last frame + 1 or more, or `NaN`), the call fails without returning FrameData (`ss_runtime_get_last_error` is `InvalidParameter`). Nothing can be drawn for that frame, so every part disappears for a moment.
 
-This range is that of **the whole animation**. Even with a playback section set (§5-4), the Brain does not clamp to the section edges, and evaluates the keyframes at positions beyond the section. When you combine a playback section with sub-frames, clamp the `frame_no` used for drawing to the section edges in the Player.
+This range is that of **the whole animation**. Even with a playback section set (§5-4), the Brain does not clamp to the section edges. While the playhead is in the slot of the section's last frame, `(section's last frame, section's last frame + 1)` (with a backward, one-way (`Normal`) loop it also lands here right after crossing the section start), the pose returned is interpolated toward the key on the frame after the section. Put the same pose as the section start on that frame outside the section, and the loop seam also joins smoothly at sub-frame precision. When you cut one animation into playback sections and do not want keys outside the section to show, you may instead clamp the `frame_no` used for drawing to the section's last frame in the Player (not the value you hold as state; §6-2).
 
 ### 6-2. Do not discard the fraction
 
@@ -224,10 +225,11 @@ class MyPlayer {
 | Function | Meaning | Lifetime | How to handle it |
 | :--- | :--- | :--- | :--- |
 | `ss_runtime_just_looped` | In the latest `update`, the playhead returned to the start (completed one cycle) | **Pulse**. Cleared on every `update` | Notify as is |
-| `ss_runtime_is_finished` | All the set loops have been played | **State**. Stays `true` until the next `play` or setup | Notify **on the rising edge** |
+| `ss_runtime_is_finished` | All the set loops have been played | **State**. Stays `true` until the next `play`, setup, or replacement of track 0 (below) | Notify **on the rising edge** |
 
 - Even when one `update` completes several cycles (a large elapsed time with frame skip), `just_looped` is raised once.
 - `stop` does not raise `is_finished`. It is raised only when the set loop count has been played to the end.
+- Laying an animation on track 0 with `ss_runtime_crossfade` or `ss_runtime_set_track_animation` turns `is_finished` false again. From then on it reports the incoming animation's state ([Animation Mixing §1-1](../50_features/10_animation_mixing.md#1-1-track-0-is-special)).
 - With an infinite loop (the default), `is_finished` is never raised. For the end of an infinite loop, count `just_looped`, or decide it by having the Player call `stop`.
 
 ### 7-2. Common mistakes

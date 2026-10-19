@@ -50,8 +50,8 @@ Every track runs on one clock, the character's. An animation laid on a track pla
 
 - **Track 0 finishing does not stop the clock.** When a finite loop count runs out on track 0, the other tracks and the fades carry on. `is_playing`, `is_pausing` and `is_finished` describe track 0, so all three report the finish as usual; a `pause` after it still holds the other tracks, and `resume` releases them.
 - Fades advance with the clock: while it is held or stopped, a fade does not progress.
-- **The clock has its own pair of flags.** `ss_runtime_is_clock_playing` is `true` from `play` until `stop` or the next setup, and `ss_runtime_is_clock_pausing` while `pause` holds it; unlike `is_playing` and `is_pausing`, both read on after track 0 finishes. A Player that stops ticking a character with nothing left to move reads these rather than keeping its own copy of the transport calls, which goes wrong the moment it misses one: a setup stops the clock too.
-- **Whether anything beyond track 0 still moves.** `ss_runtime_is_stack_in_motion` is `true` while a fade runs on any track, or while a source other than track 0's main one still plays on a track that is heard, at a speed and a weight above 0. A cleared, finished, silenced or scrubbed track does not count; the outgoing side a cancelled crossfade left behind does. It does not read the clock. A Player that skips redrawing while track 0's frame stands still redraws anyway when this is `true` and the clock runs unheld (`ss_runtime_is_clock_playing` and not `ss_runtime_is_clock_pausing`), and keeps no copy of the tracks and sources it laid: the runtime releases some on its own, when a crossfade completes.
+- **The clock has its own pair of flags.** `ss_runtime_is_clock_playing` is `true` from `play` until `stop` or the next setup, and `ss_runtime_is_clock_pausing` while `pause` holds it; unlike `is_playing` and `is_pausing`, both read on after track 0 finishes. A Player that stops ticking a character with nothing left to move (§1-6) reads these rather than keeping its own copy of the transport calls, which goes wrong the moment it misses one: a setup stops the clock too.
+- **Whether anything beyond track 0 still moves.** `ss_runtime_is_stack_in_motion` is `true` while a fade runs on any track, or while a source other than track 0's main one plays on a track that is heard, with the track's speed and the source's weight both above 0. A cleared, finished or silenced track, or one at speed 0, does not count. A track at speed 0 moved by hand with `ss_runtime_set_track_frame` does not count either, while a track at a speed above 0 counts even when it is moved by hand. The outgoing side a cancelled crossfade left behind does count. It does not read the clock. How to use it is in §1-6.
 
 ### 1-5. A track's playback settings
 
@@ -67,8 +67,22 @@ The speed, the frame-rate override, frame skip and the playback direction belong
 
 - The **loop count** and the **playback section** are the exception: they belong to the animation, because they count and number its frames. Laying an animation starts it over at the whole section, looping indefinitely, so state the count after laying it. A Player that keeps the host's loop count re-applies it after every change of track 0's animation, a crossfade included, as it does after `ss_runtime_setup_animation`.
 - Track 0 keeps its settings across `ss_runtime_setup_animation`; `ss_runtime_reset` clears them. The other tracks lose theirs with the rest of the stack when `ss_runtime_setup_animation` collapses it.
-- A setting may be given to a track with nothing on it yet; the track is created for it. A loop count needs an animation on the track.
+- A setting may be given to a track with nothing on it yet; the track is created for it (which calls create a track is in §3). A loop count needs an animation on the track.
 - A track above 0 reports its own end and loop: `ss_runtime_is_track_finished` and `ss_runtime_track_just_looped`, as `is_finished` and `just_looped` do for track 0. A finished track **holds its last frame** and keeps mixing it in; the host decides when to fade or clear it. Only track 0 finishing ends the character's playback.
+
+### 1-6. Skipping ticks when nothing moves
+
+A Player may skip a tick, calling neither `ss_runtime_update` nor `ss_runtime_get_frame_data` and drawing the frame it built before, only when nothing moves. A Player that skips ticks must not skip one in any of these cases:
+
+- Track 0 is playing and the clock is not held (`ss_runtime_is_playing` is `true` and `ss_runtime_is_clock_pausing` is `false`)
+- The clock runs unheld (`ss_runtime_is_clock_playing` is `true` and `ss_runtime_is_clock_pausing` is `false`) and the stack is in motion (`ss_runtime_is_stack_in_motion` is `true`)
+- A rebuild has been requested ([Part Overrides §5-1](./20_part_overrides.md#5-1-caching-by-frame-number-blocks-overrides))
+
+While the clock is held (paused), a tick may be skipped unless a rebuild has been requested. A character with an independent instance or effect child ([Instance Parts §3](../40_parts/50_instance.md#3-independent-playback)), however, must keep ticking while paused.
+
+Decide whether to run the tick **before** `ss_runtime_update`. The update a fade ends on clears the fade, so reading `ss_runtime_is_stack_in_motion` after the update leaves the last frame of the fade unbuilt. Read these every time instead of keeping your own copy of the tracks and sources you laid: the runtime releases some on its own, when a crossfade completes.
+
+What a skipped tick reports is in [Events §3](../30_core/30_events.md#3-which-frames-are-reported).
 
 ## 2. Playing a single animation
 
@@ -89,7 +103,9 @@ ss_runtime_set_track_animation(ctx, 1, "look_around");
 ss_runtime_set_track_alpha(ctx, 1, 0.4f);           // layer it at 40%
 ```
 
-Tracks are created as needed (setting track 3 also creates tracks 1 and 2, empty). `alpha` is not clamped to 0–1. Above 1 it extrapolates, which layering sometimes wants.
+Tracks are created as needed. The calls that lay an animation (`ss_runtime_set_track_animation`, `ss_runtime_crossfade`, `ss_runtime_add_track_source`) and the settings for speed, frame-rate override, frame skip, playback direction, sync and the outgoing event threshold create a track that does not exist yet (laying on track 3 also creates tracks 1 and 2, empty). `ss_runtime_set_track_alpha`, `ss_runtime_set_track_blend` and `ss_runtime_fade_track` do not create a track and return `false` for one that does not exist, so create the track before calling them. No track above 0 can be created until an animation has been set up with `ss_runtime_setup_animation`. `alpha` is not clamped to 0–1. Above 1 it extrapolates, which layering sometimes wants.
+
+`ss_runtime_set_track_animation` replaces what the track carries. Every source on the track is released, including those added with `ss_runtime_add_track_source`, and any fade in flight on it is cancelled, an `alpha` fade included. A cancelled `alpha` stops at its current value.
 
 ### 3-1. Additive tracks
 
@@ -129,6 +145,7 @@ Everything already on the track fades out together as the **outgoing side**: the
 | `crossfade` on a track that is playing nothing | Starts playing at once, without a fade |
 | `crossfade` again on a track that is fading | The running fade is taken over **as it stands**: both its sides join the new outgoing side at their current weights, so the pose does not jump |
 | `crossfade` on a track carrying several sources | All of them fade out together |
+| `crossfade` on a track running an `alpha` fade | Replaces the `alpha` fade. `alpha` stops at its current value (§4-1) |
 | You want to stop a fade | `ss_runtime_cancel_track_fade`. `alpha` and `weight` stop at their current values; what is left fades out with the next `crossfade` |
 
 ### 4-1. Returning to the setup pose
@@ -138,6 +155,8 @@ The bottom of the stack is the setup pose, so fading a track out returns it stra
 ```cpp
 ss_runtime_fade_track(ctx, 0, 0.0f, 200.0f);   // to the setup pose over 200ms
 ```
+
+A track has a single fade, and an `alpha` fade and a crossfade share it. `ss_runtime_fade_track` on a track that is crossfading replaces the crossfade: as with `ss_runtime_cancel_track_fade`, the weights of both sides stop at their current values, and what is left fades out with the next `crossfade`. A `crossfade` during an `alpha` fade behaves as the table in §4 says.
 
 ## 5. Mixing animations with each other
 
@@ -181,7 +200,7 @@ ss_runtime_crossfade(ctx, 0, "run", 300.0f);   // run starts at the walk's phase
 
 ## 6. Events
 
-By default, only the animation on track 0 fires events. To make another source fire too, lower its threshold to its `weight` or below. Events are reported from sources where `weight >= threshold`. The default threshold is `+∞`, which no weight reaches, so the lone source of another track does not fire at weight 1 either.
+By default, only the animation on track 0 fires events. To make another source fire too, lower its threshold to its `weight` or below. Events are reported from sources where `weight >= threshold`. The default threshold is `+∞`, which no weight reaches, so the lone source of another track does not fire at weight 1 either. The threshold belongs to the source, so the new source that `ss_runtime_crossfade` or `ss_runtime_set_track_animation` lays on a track above 0 starts at the default `+∞` again. As with the loop count in §1-5, lower it again after every change of animation.
 
 ```cpp
 ss_runtime_set_source_event_threshold(ctx, run, 0.5f);   // fires when run's weight is 0.5 or more

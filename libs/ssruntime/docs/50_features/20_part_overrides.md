@@ -51,7 +51,7 @@ Parts color and cell conflict when the animation has keys on the same attribute.
 | `1` | `HoldUntilNextAnimation` | **The override wins for the rest of the current animation** (the usual choice) | Cleared |
 | `2` | `Permanent` | The override keeps winning and **survives switching animations** | Kept (re-checked against the part count) |
 
-Think of `0` as a temporary overwrite that "the next keyframe takes back", `1` as "a setting for this animation", and `2` as "a setting for as long as this ssab plays".
+Think of `0` as a temporary overwrite that "the next keyframe takes back", `1` as "a setting for this animation", and `2` as "a setting for as long as this ssab plays". An "animation" here runs from one `ss_runtime_setup_animation` to the next. What clears overrides is in §4.
 
 A keyframe "arrives" when playback passes through a frame on which the animation track 0 plays has a key for that attribute (Part Color or Cell) on that part. The frames `ss_runtime_update` passed through are checked when the next frame is built. Only frames the playhead actually visits count, so a play section, loops, reverse and ping-pong need no special handling, and a seek counts the frame it lands on. The frame the override was set on is not counted by the first frame built after setting it, nor by any other frame built before the next `ss_runtime_update`, so an override set on a keyframe wins that keyframe's segment however many times a frame is built. After `play` or a seek, the next `ss_runtime_update` passes the frame it starts on, so an override set there wins that frame's segment only if no frame is built between setting it and that update. A Player that builds one to answer a part read loses it ([Player API Conventions §9](../20_design/30_api_conventions.md#9-reading-a-part)). `PartState.update_flag` plays no part in it.
 
@@ -142,6 +142,7 @@ The override tables are arrays indexed by `part_index`, held by the Context. `pa
 | Trigger | Behavior |
 |---|---|
 | `ss_runtime_setup_animation` (another animation in the same ssab) | **All visibility overrides are cleared.** For color and cell, **only `Permanent` remains**; `OverwriteOnNextKeyframe` / `HoldUntilNextAnimation` are cleared. The remaining `Permanent` overrides are re-checked against the new part count (those out of range are discarded) |
+| `ss_runtime_crossfade` / `ss_runtime_set_track_animation` on track 0 (the [primary](./10_animation_mixing.md#1-1-track-0-is-special) changes) | **Nothing is cleared.** Visibility overrides and `OverwriteOnNextKeyframe` / `HoldUntilNextAnimation` overrides all remain |
 | `ss_runtime_bind_resource` (binding another ssab) | **All cleared** (the parts are no longer the same) |
 | `ss_runtime_reset` | All cleared |
 
@@ -151,9 +152,11 @@ When there are no overrides at all, the overwrite step is skipped entirely. A Pl
 
 ### 5-1. Caching by frame number blocks overrides
 
-Overrides **change the output without changing the frame number.** In a Player with the optimization "skip building when the frame number is the same as last time" (which pays off while paused, on still frames, and in low frame rate playback), `set` and `clear` do not update the vertices, and **the API looks as if it does not work.**
+Overrides **change the output without changing the frame number.** In a Player with the optimization "skip building when the frame number is the same as last time" (which pays off while paused, on still frames, and in low frame rate playback), `set` and `clear` do not update the vertices, and **the API looks as if it does not work.** The same happens in a Player that skips ticks when nothing moves ([Animation Mixing §1-6](./10_animation_mixing.md#1-6-skipping-ticks-when-nothing-moves)).
 
-When an override `set` / `clear` succeeds, invalidate the frame cache explicitly.
+A Player that skips building frames must request a rebuild every time a call succeeds that changes what the next frame shows without moving the clock: an override `set` / `clear`, and also track, source, fade and crossfade calls, seeks, section changes and animation changes. Make the request one-shot, withdrawn by the next frame built. Left as a sticky flag, it keeps that character from ever skipping a tick again.
+
+Player-side settings an engine typically writes every frame (how the character is placed, its visibility, opacity, color, the sub-frame switch and the like) must compare the new value with the old one and request a rebuild only when it changes. A request per write keeps that character from skipping ticks.
 
 ### 5-2. In `Direct` mode, FrameData has no `cells`
 

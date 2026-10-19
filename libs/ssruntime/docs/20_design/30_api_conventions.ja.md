@@ -69,6 +69,8 @@ C-API は `ss_runtime_set_part_color_override(context, part, blend_op, rgba, pri
 
 3 行目が最も間違えやすいところです。「直近の update でループ境界を跨いだ」は 1 tick で消えるパルスなので、`isLooped` と名付けると状態に見え、1 tick 遅れて読む誤りを招きます。同じ理由で、パルスを `has…` にするのも誤りです（「これまでに一度でも」と読めてしまいます）。
 
+`justStarted` は、`play` / `play(startFrame)` の後に最初に走った update で 1 tick だけ真になります。`resume` では立ちません。一時停止を解くのは続きの再生で、再生の開始ではありません。
+
 `isPaused` ではなく `isPausing` を使うのは、対になる `isPlaying` と時制を揃えるためで、Brain 自身も `ss_runtime_is_pausing` です。
 
 ### 3-1. 標準語彙
@@ -80,6 +82,7 @@ C-API は `ss_runtime_set_part_color_override(context, part, blend_op, rgba, pri
 | 再生中か（一時停止中も真） | `isPlaying` |
 | 一時停止で保持しているか | `isPausing` |
 | 設定回数を再生し終えたか（状態） | `isFinished` |
+| 直近の update が `play` の後の最初の update だったか（パルス） | `justStarted` |
 | 直近の update でループを跨いだか（パルス） | `justLooped` |
 | 直近の update で再生を終えたか（パルス） | `justFinished` |
 | 実際の進行方向が前向きか | `isPlayingForward` |
@@ -184,7 +187,7 @@ Player は 6 つのイベントを公開します。**届け方**はホストの
 
 `on` 接頭辞・大文字小文字・区切りはホストに従います。Godot のシグナルなら `animation_finished`、C# の event なら `OnAnimationFinished`、TypeScript の購読なら `onAnimationFinished`、Python のコンストラクタ引数なら `on_animation_finished` です。揃えるのは語幹の**全体**です。`animationFinished` を `finished` に縮めるのは別の名前になります。エフェクト・インスタンス・音声・テクスチャを持つオブジェクトの上で、`finished` だけでは何が終わったのか分かりません。
 
-後ろの 3 つは、§3-1 の語彙表で名前の決まっている概念です（`isFinished` / `justLooped`）。**対になる名前は綴りを揃えてください。** `isFinished` の隣に `onComplete` や `onAnimationEnd` を並べると、1 つの概念を 2 つの語で呼ぶことになります。
+後ろの 3 つは、§3-1 の語彙表で名前の決まっている概念です（`justStarted` / `isFinished` / `justLooped`）。**対になる名前は綴りを揃えてください。** `isFinished` の隣に `onComplete` や `onAnimationEnd` を並べると、1 つの概念を 2 つの語で呼ぶことになります。
 
 ### 4-2. 持つべき集合
 
@@ -206,7 +209,7 @@ Godot のシグナル、Unity の `event` と `UnityEvent`、TypeScript の「�
 
 **登録できるリスナーの数を明記してください。** 1 つか複数かはホストに任せます（Flutter の widget コールバックや React の prop は 1 つ、Godot のシグナルや C# の event は複数）。呼び出し側は、2 つめを足せると思っていたら、1 つめが黙って呼ばれなくなって初めて気づきます。どちらにしたかを書いてください。
 
-**コールバックの仕組みを持たない Player は、パルスを公開してください。** ホストが購読せずポーリングする場合、完了の立ち上がりを取る手段が他にありません。その場合は `justFinished` を `justLooped` と並べて公開します。
+**コールバックの仕組みを持たない Player は、パルスを公開してください。** ホストが購読せずポーリングする場合、完了の立ち上がりを取る手段が他にありません。その場合は `justStarted` と `justFinished` を `justLooped` と並べて公開します。
 
 ---
 
@@ -230,7 +233,8 @@ Godot のシグナル、Unity の `event` と `UnityEvent`、TypeScript の「�
 | 表示オーバーライドの `cascade` | `false` | SpriteStudio のキーフレームの非表示は子孫に及ばないので、波及は明示したときだけ |
 | カラーオーバーライドの `blendOp` | `Mix` | 零値。色のアルファが強度になるので「素のまま」を意味する |
 | パーツ追従の、パーツが非表示のときの挙動 | 追従を続ける | パーツが 1 フレーム隠れただけで追従対象を消さない |
-| 再生していないときの `isPlayingForward` | `true` | 前進が静止状態。偽を返すと、ホストの音声が最初のフレームで止められる |
+| アニメーションを 1 つもセットアップしていないときの `isPlayingForward` | `true` | 前進が静止状態。偽を返すと、ホストの音声が最初のフレームで止められる。セットアップの後は、停止中も含めて実際の進行方向を返す（往復の復路で止めたときや `Backward` を設定したときは偽。[再生制御 §5-3](../30_core/20_playback_control.ja.md#5-3-再生方向)） |
+| ホストが設定した `loopCount` | `setAnimation` と track 0 の切り替えをまたいで保つ | ホストは 1 回設定すれば済む。Brain のセットアップは既定値に戻すので、Player が設定し直す（§8-1） |
 
 `subFrameEnabled` と `frameSkipEnabled` の既定は、ホストのエンジンの慣習に合わせてかまいません。
 
@@ -321,7 +325,11 @@ C-API の再生制御の意味は [再生制御](../30_core/20_playback_control.
 
 **`resume` を `play` にまとめないでください。** `play` は常に先頭から始めるので、一時停止の解除に使うと再生ヘッドが先頭に戻ります。**`isPlaying` と並べて `isPausing` を公開してください。** 一時停止中も `isPlaying` は真のままです。
 
-ループ回数と再生区間は `ss_runtime_setup_animation` が既定値に戻すので、`setAnimation` の中か、`play` の前に設定してください。速度・フレームレートの上書き・フレームスキップ・再生方向はセットアップをまたいで保持されるので、設定し直す必要はありません（[再生制御 §3](../30_core/20_playback_control.ja.md#3-セットアップが戻す設定)）。
+再生区間は `ss_runtime_setup_animation` が既定値に戻すので、`setAnimation` の中か、`play` の前に設定してください。
+
+**ループ回数は、ホストが設定した値を Player が保ってください。** `ss_runtime_setup_animation` はループ回数も既定値に戻しますが、Player の公開 API では、ホストが設定した `loopCount` は `setAnimation` をまたいで残ります。Player はホストが最後に設定した値を持っておき、`setAnimation` の後と、track 0 のアニメーションを替える操作（track 0 への `crossfade` と `setTrackAnimation`）の後に、`ss_runtime_set_loop_count` で設定し直してください。
+
+速度・フレームレートの上書き・フレームスキップ・再生方向はセットアップをまたいで保持されるので、設定し直す必要はありません（[再生制御 §3](../30_core/20_playback_control.ja.md#3-セットアップが戻す設定)）。
 
 **ラベルで指定した区間も同じ状態です。** `setAnimationSectionByLabel(startLabel, endLabel, startOffset = 0, endOffset = 0)` は、アニメーションのラベル表から各ラベルのフレームを求め、`setAnimationSection` と同じく区間を設定します。再生はしません。区間は、開始ラベルのフレームに `startOffset` を足した位置から、終了ラベルのフレームに `endOffset` を足した位置までで、インスタンスパーツの開始・終了ラベルと同じ規則です。ほかの区間と同じく、`setAnimation` の中か、`play` の前に設定してください。
 

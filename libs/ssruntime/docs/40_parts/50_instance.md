@@ -73,7 +73,7 @@ When the child advances its own instance parts and effect parts (when it advance
 | :--- | :--- |
 | The parent's playhead | Pass `r.child_frame_no` as the parent's playhead from the child's point of view |
 | Whether the parent looped | Pass `r.child_looped`. An independently played child runs on its own elapsed time, not the parent's, so for the grandchild "the parent looped" is this value, not the parent animation's `ss_runtime_just_looped`. If you forget to pass it, the grandchild's playback key is not restarted when the child loops, and it does not play from the second cycle on |
-| Elapsed time | The same value as the parent |
+| Elapsed time | The parent's elapsed time multiplied by the absolute value of the instance key's speed (`speed` in `ss_event_instance_info`). The child runs at the key's speed, so the grandchildren run at that speed too. Passing the parent's value unchanged makes the grandchildren alone run at a different rate under a key whose speed is not 1. The child's own `ss_instance_slot_step` still takes the parent's elapsed time unchanged (the slot applies the speed itself) |
 | Sub-frame setting | Pass the child the same setting as the parent. Pass it both when the parent's setting changes and when the child is created. Otherwise the parent moves smoothly while only the child moves in whole frames |
 | Mask settings | Pass the composed settings ([Masks §2-6](./40_mask.md#2-6-composing-mask-settings-through-an-instance)) |
 
@@ -83,7 +83,7 @@ Draw the child at the DrawBatch (`kind == Instance`) that comes at the instance 
 
 - Build the child's FrameData by calling `ss_runtime_get_frame_data(child_ctx, frame)` on the child Context. `frame` is `r.child_frame_no` (truncated if you do not use sub-frames).
 - The child's world matrices are values within the child animation. **Multiply by the instance part's world matrix as the root transform of the whole child.**
-- **Multiply the whole child by the instance part's opacity (`PartState.alpha`).** The child is a separate Context, so the Brain does not pass the parent's opacity to the child.
+- **Multiply the whole child by the instance part's opacity (`PartState.alpha`).** The child is a separate Context, so the Brain does not pass the parent's opacity to the child. **Do not apply the instance part's own part color to the child.** Opacity is the only thing passed down.
 - Do not draw the child when `visible` is false, or when the instance part is hidden and has no DrawBatch.
 - Part overrides do not reach inside the child ([Part Overrides §3-3](../50_features/20_part_overrides.md#3-3-visibility-override)).
 
