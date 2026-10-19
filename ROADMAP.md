@@ -28,6 +28,9 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
 - [ ] **Per-part size override** — extend the Override Layer with `size_x` / `size_y`, so a host can stretch a Nines part to the box its layout gives it instead of scaling the player and distorting the border art. That is its only use, and none of the seven Players draws a Nines part yet. Blocked on: a Player drawing Nines parts.
   - **Open — the cascade.** A part's size is its children's `parent_size`, so a label anchored in a stretched panel moves with it, which makes this the one override that is not leaf-local. Decide whether a host can opt out, and document it either way.
   - **Open — which part kinds accept it.** Nines motivates it, but Shape and Normal parts build their geometry from the size too; pick "any part with a size" or "Nines only" rather than letting it fall out of the implementation.
+- [ ] **Merging draws across players** — under study, not yet planned: where a Player draws each player on its own, a crowd sharing one texture costs at least a draw call per player, and merging consecutive players until the texture, blend or stencil state changes would cut that. It complements Animation Instancing, which shares one evaluation among many instances, rather than depending on it; whether and how to build it is what the study decides.
+  - **Open — whether it pays.** How many draws and uploads it saves with many players on screen, in which Players, and which of them already merge or get it from their engine.
+  - **Open — how it is done.** Each Player baking the player transform into its vertices on the CPU, or the SDK emitting vertices already placed by it, and what the Player Porting Guide says about it.
 
 ## Design notes: Override / Mixing / State machine
 
