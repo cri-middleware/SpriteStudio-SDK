@@ -93,6 +93,7 @@ Treat these as four operations. Do not fold `resume` into `play`.
 - **`play` is not resume.** It always starts from the start, so using it to release a pause sends the playhead back to the start.
 - **A pause is a "hold", not a "stop".** `ss_runtime_is_playing` is `true` while paused. `ss_runtime_is_pausing` is what tells the two apart.
 - **`stop` does not rewind.** To show a different position, seek.
+- **A negative value passed to `play_with_start_frame` starts from the section start (the end when backward), as `play` does.** A value of 0 or more is not clamped to the playback section, so pass a frame inside the section.
 - **They act on the whole character.** With [animation mixing](../50_features/10_animation_mixing.md#1-4-one-clock-for-the-whole-character), `pause` / `resume` / `stop` hold, release and stop every track and every fade. `play` rewinds track 0 only; the other tracks keep their playheads.
 
 ### 4-2. State transitions

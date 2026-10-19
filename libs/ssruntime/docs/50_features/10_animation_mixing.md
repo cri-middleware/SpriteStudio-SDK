@@ -67,7 +67,7 @@ The speed, the frame-rate override, frame skip and the playback direction belong
 
 - The **loop count** and the **playback section** are the exception: they belong to the animation, because they count and number its frames. Laying an animation starts it over at the whole section, looping indefinitely, so state the count after laying it. A Player that keeps the host's loop count re-applies it after every change of track 0's animation, a crossfade included, as it does after `ss_runtime_setup_animation`.
 - Track 0 keeps its settings across `ss_runtime_setup_animation`; `ss_runtime_reset` clears them. The other tracks lose theirs with the rest of the stack when `ss_runtime_setup_animation` collapses it.
-- A setting may be given to a track with nothing on it yet; the track is created for it. A loop count needs an animation on the track.
+- A setting may be given to a track with nothing on it yet; the track is created for it (which calls create a track is in §3). A loop count needs an animation on the track.
 - A track above 0 reports its own end and loop: `ss_runtime_is_track_finished` and `ss_runtime_track_just_looped`, as `is_finished` and `just_looped` do for track 0. A finished track **holds its last frame** and keeps mixing it in; the host decides when to fade or clear it. Only track 0 finishing ends the character's playback.
 
 ### 1-6. Skipping ticks when nothing moves
@@ -103,7 +103,9 @@ ss_runtime_set_track_animation(ctx, 1, "look_around");
 ss_runtime_set_track_alpha(ctx, 1, 0.4f);           // layer it at 40%
 ```
 
-Tracks are created as needed (setting track 3 also creates tracks 1 and 2, empty). `alpha` is not clamped to 0–1. Above 1 it extrapolates, which layering sometimes wants.
+Tracks are created as needed. The calls that lay an animation (`ss_runtime_set_track_animation`, `ss_runtime_crossfade`, `ss_runtime_add_track_source`) and the settings for speed, frame-rate override, frame skip, playback direction, sync and the outgoing event threshold create a track that does not exist yet (laying on track 3 also creates tracks 1 and 2, empty). `ss_runtime_set_track_alpha`, `ss_runtime_set_track_blend` and `ss_runtime_fade_track` do not create a track and return `false` for one that does not exist, so create the track before calling them. No track above 0 can be created until an animation has been set up with `ss_runtime_setup_animation`. `alpha` is not clamped to 0–1. Above 1 it extrapolates, which layering sometimes wants.
+
+`ss_runtime_set_track_animation` replaces what the track carries. Every source on the track is released, including those added with `ss_runtime_add_track_source`, and any fade in flight on it is cancelled, an `alpha` fade included. A cancelled `alpha` stops at its current value.
 
 ### 3-1. Additive tracks
 
@@ -143,6 +145,7 @@ Everything already on the track fades out together as the **outgoing side**: the
 | `crossfade` on a track that is playing nothing | Starts playing at once, without a fade |
 | `crossfade` again on a track that is fading | The running fade is taken over **as it stands**: both its sides join the new outgoing side at their current weights, so the pose does not jump |
 | `crossfade` on a track carrying several sources | All of them fade out together |
+| `crossfade` on a track running an `alpha` fade | Replaces the `alpha` fade. `alpha` stops at its current value (§4-1) |
 | You want to stop a fade | `ss_runtime_cancel_track_fade`. `alpha` and `weight` stop at their current values; what is left fades out with the next `crossfade` |
 
 ### 4-1. Returning to the setup pose
@@ -152,6 +155,8 @@ The bottom of the stack is the setup pose, so fading a track out returns it stra
 ```cpp
 ss_runtime_fade_track(ctx, 0, 0.0f, 200.0f);   // to the setup pose over 200ms
 ```
+
+A track has a single fade, and an `alpha` fade and a crossfade share it. `ss_runtime_fade_track` on a track that is crossfading replaces the crossfade: as with `ss_runtime_cancel_track_fade`, the weights of both sides stop at their current values, and what is left fades out with the next `crossfade`. A `crossfade` during an `alpha` fade behaves as the table in §4 says.
 
 ## 5. Mixing animations with each other
 
@@ -195,7 +200,7 @@ ss_runtime_crossfade(ctx, 0, "run", 300.0f);   // run starts at the walk's phase
 
 ## 6. Events
 
-By default, only the animation on track 0 fires events. To make another source fire too, lower its threshold to its `weight` or below. Events are reported from sources where `weight >= threshold`. The default threshold is `+∞`, which no weight reaches, so the lone source of another track does not fire at weight 1 either.
+By default, only the animation on track 0 fires events. To make another source fire too, lower its threshold to its `weight` or below. Events are reported from sources where `weight >= threshold`. The default threshold is `+∞`, which no weight reaches, so the lone source of another track does not fire at weight 1 either. The threshold belongs to the source, so the new source that `ss_runtime_crossfade` or `ss_runtime_set_track_animation` lays on a track above 0 starts at the default `+∞` again. As with the loop count in §1-5, lower it again after every change of animation.
 
 ```cpp
 ss_runtime_set_source_event_threshold(ctx, run, 0.5f);   // fires when run's weight is 0.5 or more

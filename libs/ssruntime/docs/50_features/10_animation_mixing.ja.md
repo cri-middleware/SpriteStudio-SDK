@@ -67,7 +67,7 @@ track 0 が **構造** を受け持ちます。離散的なアトリビュート
 
 - **ループ回数**と**再生区間**は例外で、アニメーションの設定です。そのアニメーションのフレームを数えたり番号で指したりするものだからです。アニメーションを載せると、区間は全体に、ループは無限に戻るので、回数は載せた後で指定してください。ホストのループ回数を覚えている Player は、`ss_runtime_setup_animation` の後と同じく、クロスフェードを含めて track 0 のアニメーションが替わるたびに、それをかけ直します。
 - track 0 の設定は `ss_runtime_setup_animation` を越えて残り、`ss_runtime_reset` で消えます。他のトラックの設定は、`ss_runtime_setup_animation` がスタックをたたむときに、トラックごと消えます。
-- まだ何も載っていないトラックにも設定できます。そのトラックはこのために作られます。ループ回数だけは、トラックにアニメーションが載っている必要があります。
+- まだ何も載っていないトラックにも設定できます。そのトラックはこのために作られます（どの呼び出しがトラックを作るかは §3）。ループ回数だけは、トラックにアニメーションが載っている必要があります。
 - track 1 以降も、自分の終了とループを報告します。`ss_runtime_is_track_finished` と `ss_runtime_track_just_looped` で、track 0 の `is_finished` と `just_looped` にあたります。終わったトラックは**最後のフレームで止まり**、そのポーズを混ぜ続けます。フェードやクリアをいつするかはホストが決めます。キャラクターの再生を終わらせるのは、track 0 の終了だけです。
 
 ### 1-6. 動くものが無い tick を省く
@@ -103,7 +103,9 @@ ss_runtime_set_track_animation(ctx, 1, "look_around");
 ss_runtime_set_track_alpha(ctx, 1, 0.4f);           // 40% 重ねる
 ```
 
-トラックは必要に応じて作られます（track 3 を設定すると、track 1・2 も空のまま作られます）。`alpha` は 0〜1 の範囲に制限しません。1 を超えると外挿になり、重ねる用途ではそれが欲しい場合があります。
+トラックは必要に応じて作られます。アニメーションを載せる操作（`ss_runtime_set_track_animation`・`ss_runtime_crossfade`・`ss_runtime_add_track_source`）と、速度・フレームレートの上書き・フレームスキップ・再生方向・同期・出ていく側のイベントの閾値の設定が、まだ無いトラックを作ります（track 3 に載せると、track 1・2 も空のまま作られます）。`ss_runtime_set_track_alpha`・`ss_runtime_set_track_blend`・`ss_runtime_fade_track` はトラックを作らず、まだ無いトラックには `false` を返すので、トラックを作ってから呼んでください。track 1 以降は、`ss_runtime_setup_animation` でアニメーションをセットアップするまで作れません。`alpha` は 0〜1 の範囲に制限しません。1 を超えると外挿になり、重ねる用途ではそれが欲しい場合があります。
+
+`ss_runtime_set_track_animation` は、トラックの中身を置き換えます。そのトラックに載っていたソースは、`ss_runtime_add_track_source` で加えたものも含めてすべて解放され、進行中のフェードは `alpha` のフェードも含めて取り消されます。取り消された `alpha` は、その時点の値で止まります。
 
 ### 3-1. 加算のトラック
 
@@ -143,6 +145,7 @@ float progress = ss_runtime_get_track_fade_progress(ctx, 0);   // 0〜1。フェ
 | 何も再生していないトラックへの `crossfade` | フェードせず、すぐに再生を始める |
 | フェード中のトラックへもう一度 `crossfade` | 進行中のフェードを**その時点の状態のまま**引き取る。両側ともその時点の weight で新しい出ていく側に入るので、姿勢は飛ばない |
 | 複数のソースが載ったトラックへの `crossfade` | すべてまとめてフェードアウトする |
+| `alpha` のフェード中のトラックへの `crossfade` | `alpha` のフェードを置き換える。`alpha` はその時点の値で止まる（§4-1） |
 | フェードを止めたい | `ss_runtime_cancel_track_fade`。`alpha` と `weight` はその時点の値で止まる。残ったものは次の `crossfade` で一緒にフェードアウトする |
 
 ### 4-1. セットアップポーズへ戻す
@@ -152,6 +155,8 @@ float progress = ss_runtime_get_track_fade_progress(ctx, 0);   // 0〜1。フェ
 ```cpp
 ss_runtime_fade_track(ctx, 0, 0.0f, 200.0f);   // 200ms かけてセットアップポーズへ
 ```
+
+トラックのフェードは 1 つだけで、`alpha` のフェードとクロスフェードが同じ枠を使います。クロスフェード中のトラックへの `ss_runtime_fade_track` は、クロスフェードを置き換えます。`ss_runtime_cancel_track_fade` と同じく、両側の `weight` はその時点の値で止まり、残ったものは次の `crossfade` で一緒にフェードアウトします。`alpha` のフェード中に `crossfade` したときは §4 の表のとおりです。
 
 ## 5. アニメーションどうしを混ぜる
 
@@ -195,7 +200,7 @@ ss_runtime_crossfade(ctx, 0, "run", 300.0f);   // 走りは歩きと同じ位相
 
 ## 6. イベント
 
-既定では、track 0 のアニメーションだけがイベントを発火します。他のソースも発火させるには、そのソースの閾値を、その `weight` 以下に下げます。`weight >= 閾値` のソースのイベントが報告されます。閾値の既定値は `+∞` で、どの weight も届かないため、他のトラックに1つだけ載せたソースも weight 1 では発火しません。
+既定では、track 0 のアニメーションだけがイベントを発火します。他のソースも発火させるには、そのソースの閾値を、その `weight` 以下に下げます。`weight >= 閾値` のソースのイベントが報告されます。閾値の既定値は `+∞` で、どの weight も届かないため、他のトラックに1つだけ載せたソースも weight 1 では発火しません。閾値はソースの設定なので、track 1 以降で `ss_runtime_crossfade` や `ss_runtime_set_track_animation` が載せた新しいソースは、既定の `+∞` から始まります。§1-5 のループ回数と同じく、アニメーションを替えるたびに下げ直してください。
 
 ```cpp
 ss_runtime_set_source_event_threshold(ctx, run, 0.5f);   // run の weight が 0.5 以上なら発火する

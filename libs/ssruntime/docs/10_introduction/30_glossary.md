@@ -50,6 +50,7 @@ These are the terms used in this guide. Each concept has exactly one term. A ter
 | Sub-frame | Interpolating and drawing the state between integer frames. → [Playback Control §6](../30_core/20_playback_control.md#6-sub-frames) |
 | Frame skip | When drawing cannot keep up, advancing by skipping frames to match the elapsed time |
 | Track / source | The units of animation mixing. A track is a layer on which poses are stacked; a source is one animation placed on a track. → [Animation Mixing](../50_features/10_animation_mixing.md) |
+| Primary | Track 0's main animation. Discrete attributes, the default events and the playback state come from it. → [Animation Mixing §1-1](../50_features/10_animation_mixing.md#1-1-track-0-is-special) |
 | Override | The feature that overrides a part's color, cell and visibility at runtime, taking priority over keyframes. → [Part Overrides](../50_features/20_part_overrides.md) |
 | Rebuild request | A one-shot mark a Player that skips ticks raises after a call that changes what the next frame shows without moving the clock, withdrawn when it next builds a frame. → [Part Overrides §5-1](../50_features/20_part_overrides.md#5-1-caching-by-frame-number-blocks-overrides) |
 | writer | A part that writes into the stencil (or the coverage). Pure masks (such as mask parts) and drawing parts with clipping are writers. → [Mask §1](../40_parts/40_mask.md#1-concepts-and-part-roles) |
