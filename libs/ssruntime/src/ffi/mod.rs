@@ -1819,6 +1819,21 @@ pub unsafe extern "C" fn ss_instance_slot_is_independent(slot: *mut c_void) -> b
     slot.is_independent()
 }
 
+/// The speed the most recent `ss_instance_slot_step` drove the child at, `1.0`
+/// before the first or for a null slot. Usually the key's `speed`, but while
+/// the slot ignores the implicit frame-0 key it keeps the last real key's, so
+/// the event the host resolved says `1.0` when the child is not running at it.
+/// Scale the elapsed time handed to the child's own instance and effect slots
+/// by its absolute value, not by the resolved event's `speed`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_instance_slot_get_speed(slot: *mut c_void) -> f32 {
+    if slot.is_null() {
+        return 1.0;
+    }
+    let slot = unsafe { &*(slot as *const crate::InstanceSlot) };
+    slot.get_speed()
+}
+
 /// Set the render mode. `mode` is interpreted as:
 ///   0 = Direct       (pre-bake world matrices; default)
 ///   1 = SceneGraph   (skip world matrix pre-computation)

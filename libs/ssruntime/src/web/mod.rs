@@ -1123,6 +1123,14 @@ impl SSRuntimeInstanceSlot {
         self.inner.is_independent()
     }
 
+    /// The speed the last `step` drove the child at. Scale the elapsed time
+    /// handed to the child's own slots by its absolute value, not by the event's
+    /// `speed`, which reads `1.0` while the slot ignores the implicit key. Mirrors
+    /// the C-API `ss_instance_slot_get_speed`.
+    pub fn get_speed(&self) -> f32 {
+        self.inner.get_speed()
+    }
+
     /// Reset the slot's "last started key" memory to its just-created state
     /// without destroying it. Call on an explicit head-out (replay) so a
     /// re-played animation re-fires the instance child from scratch instead of

@@ -15,6 +15,9 @@ pub struct InstanceSlot {
     // Speed of the last real EventInstance — reused while the implicit frame-0
     // key is being ignored (independent playback across a parent loop).
     last_speed: f32,
+    // Speed the most recent `step` drove the child at: the key's, or
+    // `last_speed` while the implicit key is ignored.
+    speed: f32,
 }
 
 impl Default for InstanceSlot {
@@ -25,13 +28,27 @@ impl Default for InstanceSlot {
 
 impl InstanceSlot {
     pub const fn new() -> Self {
-        Self { last_event_frame: -1, last_is_synthetic: false, last_independent: false, last_speed: 1.0 }
+        Self { last_event_frame: -1, last_is_synthetic: false, last_independent: false, last_speed: 1.0, speed: 1.0 }
     }
 
     /// Whether the slot is currently driving its child independently of the
     /// parent's frame. Reflects the most recently seen `EventInstance.independent`.
     pub fn is_independent(&self) -> bool {
         self.last_independent
+    }
+
+    /// The speed the most recent [`Self::step`] drove the child at, `1.0`
+    /// before the first. Usually the key's `speed`, but while the slot ignores
+    /// the implicit frame-0 key it keeps the last real key's, so the event the
+    /// host resolved says `1.0` when the child is not running at it.
+    ///
+    /// Scale the elapsed time handed to the child's own instance and effect
+    /// slots by its absolute value: the child's sub-tree runs on the child's
+    /// clock. Scaling by the resolved event's `speed` instead runs the
+    /// grandchildren at the wrong rate every time the parent goes back before
+    /// the first real key of an independent child.
+    pub fn get_speed(&self) -> f32 {
+        self.speed
     }
 
     /// Reset the slot's "last started key" memory to its just-created state so
@@ -124,6 +141,7 @@ impl InstanceSlot {
         let child_looped = independent && delta_seconds > 0.0 && !transitioned && child_ctx.just_looped();
 
         self.last_independent = independent;
+        self.speed = speed;
 
         crate::types::ss_instance_step_result { visible: true, transitioned, independent, child_frame_no, child_looped }
     }

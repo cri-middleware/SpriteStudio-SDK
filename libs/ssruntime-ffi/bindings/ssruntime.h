@@ -1000,6 +1000,16 @@ struct ss_instance_step_result ss_instance_slot_step(void *slot,
 bool ss_instance_slot_is_independent(void *slot);
 
 /**
+ * The speed the most recent `ss_instance_slot_step` drove the child at, `1.0`
+ * before the first or for a null slot. Usually the key's `speed`, but while
+ * the slot ignores the implicit frame-0 key it keeps the last real key's, so
+ * the event the host resolved says `1.0` when the child is not running at it.
+ * Scale the elapsed time handed to the child's own instance and effect slots
+ * by its absolute value, not by the resolved event's `speed`.
+ */
+float ss_instance_slot_get_speed(void *slot);
+
+/**
  * Set the render mode. `mode` is interpreted as:
  *   0 = Direct       (pre-bake world matrices; default)
  *   1 = SceneGraph   (skip world matrix pre-computation)
