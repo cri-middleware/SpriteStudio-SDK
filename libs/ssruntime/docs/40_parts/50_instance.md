@@ -31,6 +31,7 @@ for (InstanceChild& c : instance_children) {
         // The slot configured the child for the new key (section, direction, loop count);
         // starting it is the host's. play() snaps it to the start of that section.
         ss_runtime_play(c.child_ctx);
+        reset_slots(*c.child);   // start the slots inside the child over too (§6)
         c.child->on_started();   // the host work that comes with the child starting (notifications and so on)
     }
     c.visible = r.visible;
@@ -47,7 +48,7 @@ for (InstanceChild& c : instance_children) {
 | Return value | Meaning |
 | :--- | :--- |
 | `visible` | Whether to draw the child in this frame |
-| `transitioned` | The slot met a new key and configured the child for it. **The slot does not start the child: call `ss_runtime_play` on it**, or an independently played child never advances |
+| `transitioned` | The slot met a new key and configured the child for it. **The slot does not start the child: call `ss_runtime_play` on it**, or an independently played child never advances. **Reset the slots inside the child too** (§6) |
 | `child_frame_no` | The frame number to draw the child at. **It includes a fraction. Use it without rounding** ([Playback Control §6-2](../30_core/20_playback_control.md#6-2-do-not-discard-the-fraction)). **Use it on a `transitioned` tick too.** The slot has already put the child at its section's first frame for the direction, which is where `ss_runtime_play` snaps it, and a synced child's value follows the parent. Reading the child's frame after the `play` instead would put a synced child back at its section start for that tick |
 | `child_looped` | An independently played child completed one cycle (§4) |
 | `independent` | Whether the child plays independently |
@@ -90,9 +91,26 @@ Draw the child at the DrawBatch (`kind == Instance`) that comes at the instance 
 
 ## 6. Restarting playback
 
-When you replay the parent from the start with `play`, **reset every slot to its initial state with `ss_instance_slot_reset` / `ss_effect_slot_reset`.** Reset the slots inside children recursively too.
+In these two cases, **reset slots to their initial state with `ss_instance_slot_reset` / `ss_effect_slot_reset`.**
 
-A slot remembers the key that last started playback (§3). If you do not reset it, the first key after the restart is treated as "the same key as last time", and independently played children and effects do not start.
+- **When you replay the parent from the start with `play`.** Reset every slot, and the slots inside children recursively too.
+- **When a slot starts its child (`transitioned`).** The child starts over from its section's start, so reset the slots inside the child (the grandchild instances and the child's effects) recursively. Do not reset the slot that started the child.
+
+A slot remembers the key that last started playback (§3). If you do not reset it, the first key after the restart is treated as "the same key as last time", and independently played children and effects do not start. If you do not reset them when the child starts, the child starts over from its section's start while the grandchildren and the child's effects carry on from where they were, instead of starting with it.
+
+```cpp
+// Reset the slots in a Player, and in its children recursively.
+// reset_slots, Player and EffectChild are the Player's own
+void reset_slots(Player& p) {
+    for (EffectChild& e : p.effect_children) {
+        ss_effect_slot_reset(e.slot);
+    }
+    for (InstanceChild& c : p.instance_children) {
+        ss_instance_slot_reset(c.slot);
+        reset_slots(*c.child);
+    }
+}
+```
 
 ## 7. The child ending and looping
 
