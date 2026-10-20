@@ -31,6 +31,7 @@ for (InstanceChild& c : instance_children) {
         // スロットは新しいキーに合わせて子を設定した（区間・向き・ループ回数）。
         // 始めるのはホストの役目。play() で子をその区間の先頭へ飛ばす
         ss_runtime_play(c.child_ctx);
+        reset_slots(*c.child);   // 子の中のスロットも初期状態に戻す（§6）
         c.child->on_started();   // 子の再生開始に伴うホストの処理（通知など）
     }
     c.visible = r.visible;
@@ -47,7 +48,7 @@ for (InstanceChild& c : instance_children) {
 | 戻り値 | 意味 |
 | :--- | :--- |
 | `visible` | このフレームで子を描くか |
-| `transitioned` | スロットが新しいキーに出会い、子をそれに合わせて設定した。**スロットは子を始めないので、子に `ss_runtime_play` を呼ぶ**。呼ばないと独立再生の子が進まない |
+| `transitioned` | スロットが新しいキーに出会い、子をそれに合わせて設定した。**スロットは子を始めないので、子に `ss_runtime_play` を呼ぶ**。呼ばないと独立再生の子が進まない。**子の中のスロットも初期状態に戻す**（§6） |
 | `child_frame_no` | 子の描画するフレーム番号。**小数を含む。丸めずに使う**（[再生制御 §6-2](../30_core/20_playback_control.ja.md#6-2-小数を捨てない)）。**`transitioned` のフレームでもこの値を使う。** スロットは子をすでに向きに応じた区間の先頭に置いており、`ss_runtime_play` が飛ばす先も同じフレームです。同期再生の子の値は親に追従しています。`play` の後に子のフレームを読み直すと、同期再生の子がそのフレームだけ区間の先頭に戻ります |
 | `child_looped` | 独立再生の子が 1 周した（§4） |
 | `independent` | 子が独立再生か |
@@ -90,9 +91,26 @@ for (InstanceChild& c : instance_children) {
 
 ## 6. 再生し直すとき
 
-親を `play` で先頭から再生し直すときは、**すべてのスロットを `ss_instance_slot_reset` / `ss_effect_slot_reset` で初期状態に戻してください。** 子の中のスロットも、再帰的に戻します。
+次の 2 つのときは、**スロットを `ss_instance_slot_reset` / `ss_effect_slot_reset` で初期状態に戻してください。**
 
-スロットは最後に再生を始めたキーを覚えています（§3）。戻さないと、再生し直した最初のキーが「前回と同じキー」とみなされ、独立再生の子やエフェクトが始まりません。
+- **親を `play` で先頭から再生し直すとき。** すべてのスロットを戻します。子の中のスロットも、再帰的に戻します。
+- **スロットが子を始めたとき（`transitioned`）。** 子は区間の先頭からやり直すので、子の中のスロット（孫のインスタンスと子のエフェクト）を、再帰的に戻します。子を始めたスロット自身は戻しません。
+
+スロットは最後に再生を始めたキーを覚えています（§3）。戻さないと、再生し直した最初のキーが「前回と同じキー」とみなされ、独立再生の子やエフェクトが始まりません。子を始めたときに戻さないと、子が区間の先頭からやり直しても、孫と子のエフェクトは前の続きのまま進み、子と一緒に始まりません。
+
+```cpp
+// Player の中のスロットを、子の中まで再帰的に戻す。
+// reset_slots と Player / EffectChild は、Player が用意するものです
+void reset_slots(Player& p) {
+    for (EffectChild& e : p.effect_children) {
+        ss_effect_slot_reset(e.slot);
+    }
+    for (InstanceChild& c : p.instance_children) {
+        ss_instance_slot_reset(c.slot);
+        reset_slots(*c.child);
+    }
+}
+```
 
 ## 7. 子の終了とループ
 
