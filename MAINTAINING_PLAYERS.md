@@ -4,7 +4,7 @@
 
 The API conventions stop the same feature from growing a different name in every Player. But an aligned API loses most of its value **if the first five minutes are a different experience in every Player.** The shared vocabulary pays off for the reader moving to their second Player; the reader touching their first one meets the README.
 
-This document fixes what the first screen answers, and who it answers to. **What is shared is four questions, their order, what each step names, one tree for placement, the two doors past them, and a guide behind the first that keeps its reader. The rest of how they are answered belongs to the host.** §5 then names the Player the others are read against when their behaviour parts, and §6 fixes the shape of their roadmaps.
+This document fixes what the first screen answers, and who it answers to. **What is shared is four questions, their order, what each step names, one tree for placement, the two doors past them, a guide behind the first that keeps its reader, and a shelf behind the second. The rest of how they are answered belongs to the host.** §5 then names the Player the others are read against when their behaviour parts, and §6 fixes the shape of their roadmaps.
 
 ---
 
@@ -128,12 +128,14 @@ fetches after it; a guide whose route differs from its README's gives question 2
 **The guide reaches the reader's path before any word about how the Player is built.** What the
 reader can observe of it — that animations keep the host's draw order, pause with the game, need no
 launch options — follows the path, in the host's terms. Renderer classes, registration hooks, bundle
-formats and bindings are behind the second door: the README's developer section, or the source.
+formats and bindings are behind the second door, on the shelf §4.4 describes.
 
-**A reason about how the Player is built stays where its maintainer works** — the source, and the
-commit that made the choice — rather than in the guide: what polling would cost, why a toast and not
-a dialog, how an importer compares with a sibling's. A reason that changes what the reader does stays
-beside the step, as §1 and §7 already ask.
+**A reason about how the Player is built moves behind the second door; it does not leave the
+documentation.** What polling would cost, why a toast and not a dialog, why a mobile library is
+embedded by hand, how an importer compares with a sibling's: each moves to the developer shelf
+(§4.4) in the change that takes it off the guide, together with any pointer that sent a developer to
+the guide for it. A reason that changes what the reader does stays beside the step, as §1 and §7
+already ask.
 
 **A step says what goes in, not what to keep out.** "It is the only download you need" does the work
 of "do not also install the ZIP" without assuming the reader will get it wrong — the rule §2.2 sets
@@ -141,6 +143,28 @@ for the tree, carried into the prose.
 
 **Text that ships inside the Player is the guide's twin**: a plugin's help, the readme in an
 archive, a registry package's README. It changes in the same change as the guide.
+
+### 4.4 The second door has a shelf
+
+**Every Player keeps a developer shelf on its documentation site, in both languages, reached from
+the README's developer section.** It is for whoever works on the Player or changes it for a project
+of their own — the same reader (§4) — and it may ask more of them than the guide asks of a user: a
+successor should be able to pick the Player up from it. It holds four things, in this order:
+
+1. **How the Player is put together** — a map from its layers and components to the files that hold
+   them: what calls the runtime, what draws, what converts, where the host hooks in.
+2. **Using a changed Player** — how a checkout gets into an app or a project, since the first door
+   gives only the released package.
+3. **Checking against the real host** — how to run the host the Player plugs into, and where the
+   host's labels are read from, so the guide's labels are checked rather than recalled (§4.3).
+4. **Why it is built the way it is** — the reasons that span files, each pointing at the code that
+   carries the detail.
+
+**The shelf is a map, not a mirror.** A detail that changes with one function lives in that
+function's comment, which changes with it, and the shelf says where. The shelf holds what no single
+file can: the route, the procedure, the reason across files. A commit message is not a shelf — a
+successor reads the Player, not its history. What every Player shares (playback, blending, audio,
+part tracking) is the porting guide's, once, and the shelf links it.
 
 ## 5. The reference Player
 
