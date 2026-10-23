@@ -104,5 +104,10 @@ An effect produces a separate command for each emitter. Drawing each command wit
 
 **When consecutive commands share the same `cellmap_hash` and `blend`, we recommend merging them into one vertex buffer and drawing them in one call.** When merging, the indices are values within each command, so **add the number of vertices merged so far to each index** as you write it.
 
+Each effect part becomes a DrawBatch of its own. **When `Effect` DrawBatches follow one another, consecutive commands with the same `cellmap_hash` and `blend` can be merged across parts as well** (the rules for joining are in [Render Loop §4-3](../30_core/40_render_loop.md#4-3-drawing-consecutive-drawbatches-as-one)). Apply each part's own world matrix and opacity (§3) to its vertices before joining them. Another way is to join only parts with the same opacity and apply the opacity per draw call.
+
+> [!NOTE]
+> **Measured (Web Player, WebGL):** in overall's Effect from the SDK tests, the draw calls per frame went from 8.8 on average to 1.
+
 ---
 [Back to contents](../README.md)
