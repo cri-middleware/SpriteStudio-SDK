@@ -39,7 +39,7 @@ The last point is a property of how the decomposition works, not a defect to fix
 
 ## 2. Drawing with DrawBatch
 
-The Brain outputs the parts in draw order (`draw_order`), and a list of DrawBatches (`draw_batches`) that cuts that order into runs that can be drawn in a row with the same texture, the same blend mode and the same kind. The Player switches the drawing state only once per DrawBatch, and can draw it with one draw call.
+The Brain outputs the parts in draw order (`draw_order`), and a list of DrawBatches (`draw_batches`) that cuts that order into runs that can be drawn in a row with the same texture, the same blend mode and the same kind. The Player switches the drawing state only once per DrawBatch, and can draw it with one draw call. Consecutive DrawBatches can also be drawn together in one draw call (§4-3).
 
 ```cpp
 // 1. Have the Brain compute FrameData
@@ -154,6 +154,20 @@ Values not in the SoA buffers, such as **`parts`** (part state) and **`parts_col
 > **"Zero copy", pointing the FlatBuffers `ByteBuffer` at native memory, does not solve this (it is slower instead).** What is heavy is not the copy but the per-element accessors themselves.
 
 A structure for direct reading must match the FlatBuffers struct layout exactly (alignment, padding, little endian). So that you notice if the layout drifts when you regenerate from the `.fbs`, we recommend adding a check that **compares, at startup, the values read through the generated accessors with the values read directly, for every field**. Comparing `sizeof` alone misses fields that swapped order while the size stayed the same.
+
+### 4-3. Drawing consecutive DrawBatches as one
+
+DrawBatches are cut where the kind (`kind`) changes, even when the texture and the blend mode stay the same. `kind` decides only where the vertices come from (§2-2), so in a character that mixes `Normal` and `Mesh` parts, vertices that could be drawn in one call arrive split over several DrawBatches.
+
+**When consecutive DrawBatches share the same texture and blend mode, we recommend joining their vertices into one buffer and drawing them in one draw call.**
+
+> [!NOTE]
+> **Measured (Web Player, WebGL):** over 191 animations of the SDK tests and the SpriteStudio samples, the total number of draw calls fell by about 20%. Ringo from the SDK tests went from 8 DrawBatches to one draw call.
+
+- Join **only consecutive DrawBatches**. Drawing in a different order changes how overlapping parts blend.
+- When something that changes the drawing state comes in between, draw what you have joined so far. Examples are the child animation of an instance part and parts with the shader attribute. Parts tested against a mask can be joined only while the stencil (or coverage) test settings stay the same.
+- Effect particles can be joined across consecutive `Effect` DrawBatches ([Effect Parts §4](../40_parts/60_effect.md#4-batching-commands)).
+- A Player that carries clipping out of an instance also has to follow [Mask §4-2](../40_parts/40_mask.md#4-2-restoring-the-stencil): do not join draws across the gap the deferred closing draws leave.
 
 ---
 [Back to contents](../README.md)
