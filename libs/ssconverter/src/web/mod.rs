@@ -11,6 +11,17 @@
 use crate::asset_provider::MemoryAssetProvider;
 use wasm_bindgen::prelude::*;
 
+/// How a failed conversion reaches JS: the converter's own wording, as the
+/// string of a JS exception.
+///
+/// `Display`, not `Debug`. `Debug` prints the Rust variant name, so a JS caller
+/// was handed `ConversionFailed("Asset not found: x.png")` — an identifier from
+/// a language they are not writing, which reaches their user through whatever
+/// the host shows. `ssruntime`'s wasm face reports the same way.
+fn js_error(e: crate::ConverterError) -> JsValue {
+    JsValue::from_str(&e.to_string())
+}
+
 /// Converter version string (`CARGO_PKG_VERSION` + short git sha).
 #[wasm_bindgen]
 pub fn version() -> String {
@@ -73,10 +84,10 @@ pub fn convert(files: &js_sys::Map, embedded: bool, debug: bool, split: bool, op
         collected.push((key, value.to_vec()));
     }
 
-    let provider = MemoryAssetProvider::from_files(collected).map_err(|e| JsValue::from_str(&format!("{:?}", e)))?;
+    let provider = MemoryAssetProvider::from_files(collected).map_err(js_error)?;
 
     let config = crate::ConvertConfig { embedded, debug, split, optimize };
-    let (sspj, output_map) = crate::convert_sspj_to_ssab_data(&provider, &config, &|_: &str| {}).map_err(|e| JsValue::from_str(&format!("{:?}", e)))?;
+    let (sspj, output_map) = crate::convert_sspj_to_ssab_data(&provider, &config, &|_: &str| {}).map_err(js_error)?;
 
     let output = js_sys::Map::new();
     for (name, data) in &output_map {
@@ -92,4 +103,17 @@ pub fn convert(files: &js_sys::Map, embedded: bool, debug: bool, split: bool, op
     }
 
     Ok(ConvertResult { output, assets })
+}
+
+#[cfg(test)]
+mod tests {
+    /// The wasm face reports through `js_error`, never by formatting an error
+    /// itself. `convert` needs a JS host to run, so what is pinned is the
+    /// source: no `Debug` formatting left in it.
+    #[test]
+    fn the_wasm_face_does_not_debug_format_an_error() {
+        let web = std::fs::read_to_string("src/web/mod.rs").expect("read web/mod.rs");
+        assert!(web.contains("fn js_error("), "js_error is gone; this test is pinning nothing");
+        assert!(!web.contains(concat!("{", ":?}")), "src/web/mod.rs formats something with Debug. A failed conversion reports through `js_error`.");
+    }
 }

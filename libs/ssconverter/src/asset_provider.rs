@@ -88,7 +88,7 @@ impl MemoryAssetProvider {
         for (path, data) in files {
             let rel = crate::utils::normalize_asset_path(&Path::new(&path).strip_prefix(&sspj_dir).map_err(|_| crate::ConverterError::ConversionFailed(format!("Failed to strip prefix '{}' from '{}'", sspj_dir, path)))?.to_string_lossy());
             if path.ends_with(".sspj") || path.ends_with(".ssae") || path.ends_with(".ssce") || path.ends_with(".ssee") || path.ends_with(".ssqe") || path.ends_with(".ssse") || path.ends_with(".fnt") {
-                let text = String::from_utf8(data).map_err(|e| crate::ConverterError::ConversionFailed(format!("Non-UTF8 text asset '{}': {:?}", path, e)))?;
+                let text = String::from_utf8(data).map_err(|e| crate::ConverterError::ConversionFailed(format!("Non-UTF8 text asset '{}': {}", path, e)))?;
                 sspj_map.insert(rel, text);
             } else {
                 binary_map.insert(rel, data);
@@ -140,6 +140,19 @@ mod web_test {
 
         assert!(provider.read_asset("./Doll.png").is_ok());
         assert!(provider.read_asset("./Doll.sspj").is_ok());
+    }
+
+    #[test]
+    fn a_text_asset_that_is_not_utf8_is_named_not_dumped() {
+        let mut ssae = b"<SpriteStudioAnimePack>".to_vec();
+        ssae.push(0xff);
+        let Err(e) = MemoryAssetProvider::from_files(vec![("Doll/Doll.sspj".to_string(), b"<SpriteStudioProject/>".to_vec()), ("Doll/Doll.ssae".to_string(), ssae)]) else {
+            panic!("a .ssae that is not UTF-8 was accepted");
+        };
+        let message = e.to_string();
+
+        assert!(message.contains("Doll/Doll.ssae"), "{message}");
+        assert!(!message.contains("FromUtf8Error"), "the file's bytes went into the message: {message}");
     }
 
     #[test]
