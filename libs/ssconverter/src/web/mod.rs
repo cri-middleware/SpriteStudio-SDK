@@ -67,7 +67,9 @@ impl ConvertResult {
 /// Convert a SpriteStudio project to `.ssab`.
 ///
 /// `files` is a `Map<string, Uint8Array>` of `path -> bytes` covering the
-/// whole project directory (it must include the `.sspj`). `embedded`, `debug`,
+/// whole project directory. It must include exactly one `.sspj`: a project
+/// folder that also holds another one, a backup beside it or a project in a
+/// subfolder, is refused, so leave the others out. `embedded`, `debug`,
 /// `split` and `optimize` mirror [`crate::ConvertConfig`].
 #[wasm_bindgen]
 pub fn convert(files: &js_sys::Map, embedded: bool, debug: bool, split: bool, optimize: bool) -> Result<ConvertResult, JsValue> {
