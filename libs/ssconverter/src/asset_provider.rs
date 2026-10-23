@@ -67,28 +67,28 @@ impl MemoryAssetProvider {
     /// re-bases every path on the `.sspj` directory, and classifies entries
     /// into text (XML / font) vs binary (images, ...) maps — mirroring how the
     /// project layout is interpreted on the filesystem.
+    ///
+    /// The list must hold exactly one `.sspj`. Nothing says which of several
+    /// the host meant, and picking one would convert a project nobody asked
+    /// for without a word.
     pub fn from_files(files: Vec<(String, Vec<u8>)>) -> Result<Self, crate::ConverterError> {
         use std::path::{Path, PathBuf};
 
-        let mut sspj_name = String::new();
-        let mut sspj_dir = String::new();
-        for (path, _) in &files {
-            if path.ends_with(".sspj") {
-                let pb = PathBuf::from(path);
-                sspj_name = pb.file_name().and_then(|n| n.to_str()).ok_or_else(|| crate::ConverterError::ConversionFailed("Invalid .sspj file name".to_string()))?.to_string();
-                sspj_dir = pb.parent().map(|p| p.to_string_lossy().to_string()).unwrap_or_default();
-            }
-        }
-        if sspj_name.is_empty() {
-            return Err(crate::ConverterError::ConversionFailed("SsProject (.sspj) file not found in the provided files".to_string()));
-        }
+        let sspjs: Vec<&str> = files.iter().map(|(path, _)| path.as_str()).filter(|path| path.ends_with(".sspj")).collect();
+        let sspj = match sspjs.as_slice() {
+            [] => return Err(crate::ConverterError::ConversionFailed("SsProject (.sspj) file not found in the provided files".to_string())),
+            [one] => PathBuf::from(one),
+            many => return Err(crate::ConverterError::ConversionFailed(format!("Found {} .sspj files ({}); a conversion takes exactly one", many.len(), many.join(", ")))),
+        };
+        let sspj_name = sspj.file_name().and_then(|n| n.to_str()).ok_or_else(|| crate::ConverterError::ConversionFailed("Invalid .sspj file name".to_string()))?.to_string();
+        let sspj_dir = sspj.parent().map(|p| p.to_string_lossy().to_string()).unwrap_or_default();
 
         let mut sspj_map = HashMap::new();
         let mut binary_map = HashMap::new();
         for (path, data) in files {
             let rel = crate::utils::normalize_asset_path(&Path::new(&path).strip_prefix(&sspj_dir).map_err(|_| crate::ConverterError::ConversionFailed(format!("Failed to strip prefix '{}' from '{}'", sspj_dir, path)))?.to_string_lossy());
             if path.ends_with(".sspj") || path.ends_with(".ssae") || path.ends_with(".ssce") || path.ends_with(".ssee") || path.ends_with(".ssqe") || path.ends_with(".ssse") || path.ends_with(".fnt") {
-                let text = String::from_utf8(data).map_err(|e| crate::ConverterError::ConversionFailed(format!("Non-UTF8 text asset '{}': {:?}", path, e)))?;
+                let text = String::from_utf8(data).map_err(|e| crate::ConverterError::ConversionFailed(format!("Non-UTF8 text asset '{}': {}", path, e)))?;
                 sspj_map.insert(rel, text);
             } else {
                 binary_map.insert(rel, data);
@@ -140,6 +140,29 @@ mod web_test {
 
         assert!(provider.read_asset("./Doll.png").is_ok());
         assert!(provider.read_asset("./Doll.sspj").is_ok());
+    }
+
+    #[test]
+    fn a_text_asset_that_is_not_utf8_is_named_not_dumped() {
+        let mut ssae = b"<SpriteStudioAnimePack>".to_vec();
+        ssae.push(0xff);
+        let Err(e) = MemoryAssetProvider::from_files(vec![("Doll/Doll.sspj".to_string(), b"<SpriteStudioProject/>".to_vec()), ("Doll/Doll.ssae".to_string(), ssae)]) else {
+            panic!("a .ssae that is not UTF-8 was accepted");
+        };
+        let message = e.to_string();
+
+        assert!(message.contains("Doll/Doll.ssae"), "{message}");
+        assert!(!message.contains("FromUtf8Error"), "the file's bytes went into the message: {message}");
+    }
+
+    #[test]
+    fn more_than_one_sspj_is_refused_and_named() {
+        let Err(e) = MemoryAssetProvider::from_files(vec![("Doll/Doll.sspj".to_string(), b"<SpriteStudioProject/>".to_vec()), ("Doll/Doll_old.sspj".to_string(), b"<SpriteStudioProject/>".to_vec()), ("Doll/Doll.png".to_string(), vec![0u8; 4])]) else {
+            panic!("two .sspj were accepted, and one of them would be converted unasked");
+        };
+        let message = e.to_string();
+
+        assert!(message.contains("Doll/Doll.sspj") && message.contains("Doll/Doll_old.sspj"), "{message}");
     }
 
     #[test]
