@@ -98,7 +98,7 @@ read something in order to find out that it was not for them.
 ```
 **Using it in your app?** Read on — install, convert, play. Everything after that
 (events, per-part overrides, textures) is the same path further in: <link>.
-**Working on the Player, or the runtime under it?** <link to CONTRIBUTING / from-source>.
+**Working on the Player, or the runtime under it?** <link to CONTRIBUTING and the Build Guide>.
 ```
 
 ### 4.1 Nothing behind the first door may need a clone
@@ -149,22 +149,30 @@ archive, a registry package's README. It changes in the same change as the guide
 **Every Player keeps a developer shelf on its documentation site, in both languages, reached from
 the README's developer section.** It is for whoever works on the Player or changes it for a project
 of their own — the same reader (§4) — and it may ask more of them than the guide asks of a user: a
-successor should be able to pick the Player up from it. It holds four things, in this order:
+successor should be able to pick the Player up from it. It holds four things:
 
-1. **How the Player is put together** — a map from its layers and components to the files that hold
-   them: what calls the runtime, what draws, what converts, where the host hooks in.
+1. **How the Player is put together** — its layers and parts, and what each is responsible for:
+   what drives the runtime, what draws, what converts, where the host hooks in.
 2. **Using a changed Player** — how a checkout gets into an app or a project, since the first door
    gives only the released package.
 3. **Checking against the real host** — how to run the host the Player plugs into, and where the
    host's labels are read from, so the guide's labels are checked rather than recalled (§4.3).
-4. **Why it is built the way it is** — the reasons that span files, each pointing at the code that
-   carries the detail.
+4. **Why it is built the way it is** — the reasons that span files.
 
-**The shelf is a map, not a mirror.** A detail that changes with one function lives in that
-function's comment, which changes with it, and the shelf says where. The shelf holds what no single
-file can: the route, the procedure, the reason across files. A commit message is not a shelf — a
-successor reads the Player, not its history. What every Player shares (playback, blending, audio,
-part tracking) is the porting guide's, once, and the shelf links it.
+**Every Player shelves them in the same place.** The documentation's `development/` folder holds
+two pages: `build.md`, the Build Guide — building from a checkout, then parts 2 and 3 — and
+`architecture.md`, How the Player Is Put Together — parts 1 and 4. They sit in a navigation section
+named For Player & SDK Developers (Player・SDK 開発者向けガイド), in that order; a page only one
+Player needs comes after them in the same folder.
+
+**The shelf explains; it does not index.** Files and functions are renamed with every refactor, and
+nothing checks a page that names them, so the shelf names a part by what it does. It names a file or
+a function only where a step cannot be followed without it — a script, a command, a public type, a
+setting the host shows, the host's own API — and a detail that changes with one function lives in
+that function's comment, which changes with it. The shelf holds what no single file can: the route,
+the procedure, the reason across files. A commit message is not a shelf — a successor reads the
+Player, not its history. What every Player shares (playback, blending, audio, part tracking) is the
+porting guide's, once, and the shelf links it.
 
 ## 5. The reference Player
 
