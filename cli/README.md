@@ -4,7 +4,21 @@
 
 The build-time tool of the [SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/README.md) workflow: parses SpriteStudio project files (`.sspj` and the referenced `.ssae` / `.ssee` / `.ssqe` / `.ssce`) and emits the runtime binaries the SDK plays back — `.ssab` (animation) and `.ssqb` (sequence pack).
 
-This CLI wraps [libssconverter](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssconverter) and exposes the same conversion pipeline that the SDK's release artifacts are built with. The runtime side lives in [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime).
+This CLI wraps [libssconverter](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssconverter) — the same converter the Players' built-in importers run. The runtime side lives in [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime).
+
+# Installation
+
+## Prebuilt binaries (recommended)
+
+Download a release for **Windows**, **macOS**, or **Linux** from the [GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) page. No build environment required.
+
+## Build from source
+
+Requires a Rust toolchain ([rustup](https://rustup.rs/)), version **1.99 or newer**. From the repository root:
+
+```bash
+$ cargo install --path cli
+```
 
 # Usage
 
@@ -52,20 +66,6 @@ _Note: The `--out-dir` option is not available in batch mode._
 
 In either mode, the run exits with a non-zero status when a path given does not exist or a project fails to convert. Every such path and project is named on stderr, and the projects that can be converted still are.
 
-# Installation
-
-## Prebuilt binaries (recommended)
-
-Download a release for **Windows**, **macOS**, or **Linux** from the [GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) page. No build environment required.
-
-## Build from source
-
-Requires a Rust toolchain ([rustup](https://rustup.rs/)), version **1.99 or newer**. From the repository root:
-
-```bash
-$ cargo install --path cli
-```
-
 # Examples
 
 **1. Basic Conversion**
@@ -95,7 +95,7 @@ For each `.sspj` converted, a directory is produced next to the source file (unl
 
 # Next Steps
 
-Once `.ssab` files are generated, load them into your engine via [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime). For integration guidance, see the [Player Porting Guide](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/docs/README.md).
+Once `.ssab` files are generated, hand them to your Player; its documentation says where they go. To bring them into an engine yourself, load them through [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime), with the [Player Porting Guide](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/docs/README.md) as the integration guidance.
 
 # For Developers
 ## Build

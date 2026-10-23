@@ -1,10 +1,10 @@
 # Maintaining the official Players
 
-**Who this is for: whoever maintains the official Players.** It is a working agreement about our own repositories — what their READMEs answer, and what their bundled samples have to do — not a requirement on anyone porting SpriteStudio to a new engine. The porting guide states what a Player has to be; this states how we keep the seven we ship consistent with each other. If you are writing your own Player, the document you want is the [Player API conventions](./libs/ssruntime/docs/20_design/30_api_conventions.md), which is about the artifact rather than about our repositories.
+**Who this is for: whoever maintains the official Players.** It is a working agreement about our own repositories — what their READMEs and the guides behind them answer, and what their bundled samples have to do — not a requirement on anyone porting SpriteStudio to a new engine. The porting guide states what a Player has to be; this states how we keep the seven we ship consistent with each other. If you are writing your own Player, the document you want is the [Player API conventions](./libs/ssruntime/docs/20_design/30_api_conventions.md), which is about the artifact rather than about our repositories.
 
 The API conventions stop the same feature from growing a different name in every Player. But an aligned API loses most of its value **if the first five minutes are a different experience in every Player.** The shared vocabulary pays off for the reader moving to their second Player; the reader touching their first one meets the README.
 
-This document fixes what the first screen answers, and who it answers to. **What is shared is four questions, their order, what each step names, one tree for placement, and the two doors past them. The rest of how they are answered belongs to the host.** §5 then names the Player the others are read against when their behaviour parts, and §6 fixes the shape of their roadmaps.
+This document fixes what the first screen answers, and who it answers to. **What is shared is four questions, their order, what each step names, one tree for placement, the two doors past them, and a guide behind the first that keeps its reader. The rest of how they are answered belongs to the host.** §5 then names the Player the others are read against when their behaviour parts, and §6 fixes the shape of their roadmaps.
 
 ---
 
@@ -116,6 +116,31 @@ the two doors are for.
 
 A Player whose documentation genuinely has a third shelf — SSPlayerForWeb's `customize/` — names it
 from the first door's line rather than growing a row for it.
+
+### 4.3 Behind the first door, the same reader
+
+**The guide a README's *Read next* lands on is written for the reader who came through the first
+door**, so §2.1 holds past the first screen. Every label is the host's — argument names, options and
+menus too — read from the host rather than recalled, with an internal id only in parentheses. Where
+the Player converts on its own, the guide leads with that route and puts a converter the reader
+fetches after it; a guide whose route differs from its README's gives question 2 two answers.
+
+**The guide reaches the reader's path before any word about how the Player is built.** What the
+reader can observe of it — that animations keep the host's draw order, pause with the game, need no
+launch options — follows the path, in the host's terms. Renderer classes, registration hooks, bundle
+formats and bindings are behind the second door: the README's developer section, or the source.
+
+**A reason about how the Player is built stays where its maintainer works** — the source, and the
+commit that made the choice — rather than in the guide: what polling would cost, why a toast and not
+a dialog, how an importer compares with a sibling's. A reason that changes what the reader does stays
+beside the step, as §1 and §7 already ask.
+
+**A step says what goes in, not what to keep out.** "It is the only download you need" does the work
+of "do not also install the ZIP" without assuming the reader will get it wrong — the rule §2.2 sets
+for the tree, carried into the prose.
+
+**Text that ships inside the Player is the guide's twin**: a plugin's help, the readme in an
+archive, a registry package's README. It changes in the same change as the guide.
 
 ## 5. The reference Player
 

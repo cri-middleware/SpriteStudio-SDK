@@ -4,7 +4,21 @@
 
 [SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/README.ja.md) のワークフローにおけるビルド時のツールです。SpriteStudio のプロジェクトファイル (`.sspj` と、そこから参照される `.ssae` / `.ssee` / `.ssqe` / `.ssce`) を解析し、SDK が再生するランタイムバイナリ — `.ssab`（アニメーション）と `.ssqb`（シーケンスパック） — を生成します。
 
-本 CLI は [libssconverter](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssconverter) のラッパーであり、SDK のリリース成果物のビルドに使われているのと同じ変換パイプラインを公開しています。ランタイム側は [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime) を参照してください。
+本 CLI は [libssconverter](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssconverter) のラッパーで、各 Player に組み込まれたインポーターと同じ変換を行います。ランタイム側は [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime) を参照してください。
+
+# インストール
+
+## ビルド済みバイナリ（推奨）
+
+[GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) ページから **Windows**、**macOS**、**Linux** 向けのリリースをダウンロードしてください。ビルド環境は不要です。
+
+## ソースからビルド
+
+Rust ツールチェイン（[rustup](https://rustup.rs/)）の **1.99 以降** が必要です。リポジトリのルートから:
+
+```bash
+$ cargo install --path cli
+```
 
 # 使い方
 
@@ -49,20 +63,6 @@ _注意: バッチモードでは `--out-dir` オプションは利用できま�
 
 どちらのモードでも、指定したパスが存在しないときや、プロジェクトの変換に失敗したときは、0 以外の終了ステータスで終わります。該当するパスとプロジェクトはすべて標準エラーに出力され、変換できるプロジェクトはそのまま変換されます。
 
-# インストール
-
-## ビルド済みバイナリ（推奨）
-
-[GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) ページから **Windows**、**macOS**、**Linux** 向けのリリースをダウンロードしてください。ビルド環境は不要です。
-
-## ソースからビルド
-
-Rust ツールチェイン（[rustup](https://rustup.rs/)）の **1.99 以降** が必要です。リポジトリのルートから:
-
-```bash
-$ cargo install --path cli
-```
-
 # 使用例
 
 **1. 基本的な変換**
@@ -92,7 +92,7 @@ $ ssconverter-cli my_game/project.sspj --embedded
 
 # 次のステップ
 
-`.ssab` ファイルが生成できたら、[libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime) を通じてゲームエンジンに組み込みます。実装手順は [Player 移植ガイド](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/docs/README.ja.md) を参照してください。
+`.ssab` ファイルが生成できたら、お使いの Player に渡します。置き場所はその Player のドキュメントにあります。ゲームエンジンに自分で組み込む場合は [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime) を通じて読み込みます。実装手順は [Player 移植ガイド](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/docs/README.ja.md) を参照してください。
 
 # 開発者向け
 ## ビルド
