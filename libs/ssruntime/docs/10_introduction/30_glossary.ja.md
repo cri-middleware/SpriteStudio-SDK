@@ -54,6 +54,8 @@
 | オーバーライド | パーツのカラー・セル・表示を、実行時にキーフレームより優先して上書きする機能。→ [パーツオーバーライド](../50_features/20_part_overrides.ja.md) |
 | 組み立て直しの要求 | tick を省く Player が、時計を進めずに見た目を変える呼び出しの後に立てる 1 回きりの印。次にフレームを組み立てたときに取り下げる。→ [パーツオーバーライド §5-1](../50_features/20_part_overrides.ja.md#5-1-フレーム番号でキャッシュしていると効かない) |
 | writer | ステンシル（または被覆）に書き込むパーツ。純粋なマスク（マスクパーツなど）と、クリッピングを持つ描画パーツがこれにあたる。→ [マスク §1](../40_parts/40_mask.ja.md#1-概念とパーツの役割) |
+| UI 状態 | UI の部品として使うアニメーションの状態（`normal`・`hover`・`pressed`・`disabled`・`focused`）。状態と同じ名前のラベルの区間を再生する。→ [UI 統合 §2](../50_features/80_ui_integration.ja.md#2-ui-状態) |
+| reduced motion | OS やアプリの「動きを減らす」設定。有効な間、UI 状態の区間を止める。→ [UI 統合 §3](../50_features/80_ui_integration.ja.md#3-reduced-motion) |
 
 ---
 [目次に戻る](../README.ja.md)

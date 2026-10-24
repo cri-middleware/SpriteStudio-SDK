@@ -54,6 +54,8 @@ These are the terms used in this guide. Each concept has exactly one term. A ter
 | Override | The feature that overrides a part's color, cell and visibility at runtime, taking priority over keyframes. → [Part Overrides](../50_features/20_part_overrides.md) |
 | Rebuild request | A one-shot mark a Player that skips ticks raises after a call that changes what the next frame shows without moving the clock, withdrawn when it next builds a frame. → [Part Overrides §5-1](../50_features/20_part_overrides.md#5-1-caching-by-frame-number-blocks-overrides) |
 | writer | A part that writes into the stencil (or the coverage). Pure masks (such as mask parts) and drawing parts with clipping are writers. → [Mask §1](../40_parts/40_mask.md#1-concepts-and-part-roles) |
+| UI state | The state of an animation used as a UI component (`normal`, `hover`, `pressed`, `disabled`, `focused`). It plays the section of the label named after the state. → [UI Integration §2](../50_features/80_ui_integration.md#2-ui-states) |
+| reduced motion | The OS's or app's setting to reduce motion. While it is on, the UI state's section is held. → [UI Integration §3](../50_features/80_ui_integration.md#3-reduced-motion) |
 
 ---
 [Back to contents](../README.md)

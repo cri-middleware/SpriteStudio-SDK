@@ -110,6 +110,8 @@ C-API は `ss_runtime_set_part_color_override(context, part, blend_op, rgba, pri
 | そのフレームのパーツの合成行列 | `partTransform` |
 | そのフレームでパーツが非表示か | `isPartHidden` |
 | パーツがスキンメッシュか | `isPartSkinnedMesh` |
+| 点が当たった一番手前のパーツ | `hitTestPart` |
+| 動きを減らす設定の入力 | `reducedMotion` |
 
 **`animationName` ではなく `currentAnimation`。** `animationName` は `animationNames` と 1 文字しか違わず、しかもこの 2 つはホストが組にして使います（一覧からピッカーを作り、選ばれているものを読み戻す）。Godot も `AnimationPlayer.current_animation` と呼んでいます。選ぶ操作は `setAnimation(name)` のままです。選択をプロパティで表すホストでは、そのプロパティが `currentAnimation` を名乗ります。
 
@@ -124,6 +126,8 @@ C-API は `ss_runtime_set_part_color_override(context, part, blend_op, rgba, pri
 **列挙子の名前は Brain のものをそのまま使います** — `Forward` / `Backward` と `Normal` / `PingPong`。大文字小文字と区切りはホストに従いますが、語幹は変えません。`Reverse` は `Backward` の綴り違いではなく同じ概念の 2 つめの語で、他の Player のドキュメントを読んだ人はそれを見つけられません。接頭辞の要る言語では、`PLAY_*` と `STYLE_*` ではなく `DIRECTION_*` と `STYLE_*` で対にしてください。
 
 オーバーライドの優先度も Brain の列挙子名をそのまま使います。`OverwriteOnNextKeyframe` / `HoldUntilNextAnimation` / `Permanent`。
+
+UI 状態の語（`normal` / `hover` / `pressed` / `disabled` / `focused`）は [UI 統合 §2-1](../50_features/80_ui_integration.ja.md#2-1-状態の語と優先順) にあります。
 
 ### 3-2. アニメーションミキシング
 
@@ -334,6 +338,13 @@ C-API の再生制御の意味は [再生制御](../30_core/20_playback_control.
 
 **ラベルで指定した区間も同じ状態です。** `setAnimationSectionByLabel(startLabel, endLabel, startOffset = 0, endOffset = 0)` は、アニメーションのラベル表から各ラベルのフレームを求め、`setAnimationSection` と同じく区間を設定します。再生はしません。区間は、開始ラベルのフレームに `startOffset` を足した位置から、終了ラベルのフレームに `endOffset` を足した位置までで、インスタンスパーツの開始・終了ラベルと同じ規則です。ほかの区間と同じく、`setAnimation` の中か、`play` の前に設定してください。
 
+`setAnimationSectionByLabel` は命令なので（§7-1）、次のときは `false` を返して 1 度だけ報告し、区間と再生ヘッドを変えないでください。インスタンスパーツは見つからないラベルを黙ってアニメーションの端に落としますが、この API はそうしません。
+
+- アニメーションに無いラベルを渡されたとき。報告には、無かったラベルだけを載せます。
+- ラベルとオフセットから求めたフレームが、`setAnimationSection` の受け付けない区間（両端がアニメーションの中で、終わりが始まりより前）になったとき。報告には、渡されたラベルと、それが指したフレームの両方を載せます。
+
+`_start` と `_end` は、ラベル表に無くても、アニメーション自身の最初と最後のフレームを指します（今の区間の端ではありません）。同じ名前の実際のラベルがあれば、そちらを使います。
+
 ### 8-2. 選択済みのアニメーションを指定されたら何もしない
 
 **`setAnimation(name)` は、`name` が既にセットアップ済みのアニメーションなら、C-API を呼ばずに戻ってください。**
@@ -360,7 +371,7 @@ player.setAnimation(state.clip);
 
 ## 9. パーツの読み出し
 
-`partTransform`・`isPartHidden` など、パーツ 1 つを読む API は、**直前の tick が組み立てたフレーム**から答えます。その tick の `ss_runtime_get_frame_data` が返した FrameData とワールド行列で、次の呼び出しまで有効です（[描画ループ §1](../30_core/40_render_loop.ja.md#1-soa-バッファ)）。**読み出しでフレームを組み立てることはしません。**
+`partTransform`・`isPartHidden`・`hitTestPart` など、パーツを読む API は、**直前の tick が組み立てたフレーム**から答えます。その tick の `ss_runtime_get_frame_data` が返した FrameData とワールド行列で、次の呼び出しまで有効です（[描画ループ §1](../30_core/40_render_loop.ja.md#1-soa-バッファ)）。**読み出しでフレームを組み立てることはしません。**
 
 | ホストが読むとき | 返るもの |
 |---|---|

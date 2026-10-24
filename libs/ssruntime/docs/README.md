@@ -78,6 +78,7 @@ The SDK's `tests/overall/overall.sspj` contains an animation for each feature. I
 | [Audio](./50_features/50_audio.md) | When to play a sound, and how long a sound lives |
 | [Editor Integration](./50_features/60_editor_integration.md) | Converting sspj in the engine's editor |
 | [Placement: Fit and Align](./50_features/70_placement.md) | Fitting the animation into a box the host laid out |
+| [UI Integration: Hit Testing, UI States and Reduced Motion](./50_features/80_ui_integration.md) | Making the animation a UI component, such as a button |
 
 ### 60. Troubleshooting
 
