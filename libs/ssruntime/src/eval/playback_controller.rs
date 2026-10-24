@@ -488,9 +488,12 @@ impl PlaybackController {
         self.recompute_update_interval();
     }
 
+    /// Narrows playback to `[start_frame, end_frame]`, both ends included, so
+    /// a section whose ends are one frame plays that frame. An end outside the
+    /// animation's own range (`-1`, say) is the animation's edge on that side.
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
-        self.start_frame = if start_frame >= 0 && start_frame < self.anime_data_end_frame { start_frame } else { self.anime_data_start_frame };
-        self.end_frame = if end_frame >= 0 && end_frame < self.anime_data_end_frame { end_frame } else { self.anime_data_end_frame };
+        self.start_frame = if start_frame >= 0 && start_frame <= self.anime_data_end_frame { start_frame } else { self.anime_data_start_frame };
+        self.end_frame = if end_frame >= 0 && end_frame <= self.anime_data_end_frame { end_frame } else { self.anime_data_end_frame };
 
         self.current_frame = if self.playback_direction == PlaybackDirection::Forward { self.start_frame as f32 } else { self.end_frame as f32 };
         self.needs_evaluation = true;
@@ -1190,6 +1193,30 @@ mod tests {
         collect_passed(&mut t, 1);
         t.set_animation_section(3, 3);
         assert_eq!(collect_passed(&mut t, 5), [3]);
+    }
+
+    #[test]
+    fn a_section_can_start_on_the_last_frame() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 9, 30);
+        t.set_animation_section(9, 9);
+        assert_eq!((t.get_start_frame(), t.get_end_frame()), (9, 9));
+        t.set_animation_section(9, -1);
+        assert_eq!((t.get_start_frame(), t.get_end_frame()), (9, 9));
+        t.set_loop_count(1);
+        t.set_skip_frames(false);
+        t.play();
+        assert_eq!(collect_passed(&mut t, 5), [9]);
+    }
+
+    #[test]
+    fn a_section_end_past_the_animation_is_its_last_frame() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 9, 30);
+        t.set_animation_section(10, 10);
+        assert_eq!((t.get_start_frame(), t.get_end_frame()), (0, 9));
+        t.set_animation_section(4, 10);
+        assert_eq!((t.get_start_frame(), t.get_end_frame()), (4, 9));
     }
 
     #[test]
