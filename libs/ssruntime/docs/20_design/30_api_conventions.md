@@ -110,6 +110,8 @@ Use the same stem for the same concept. Casing and word separation follow each l
 | A part's composed matrix for that frame | `partTransform` |
 | Whether a part is hidden on that frame | `isPartHidden` |
 | Whether a part is a skinned mesh | `isPartSkinnedMesh` |
+| The front-most part a point is on | `hitTestPart` |
+| The input for reducing motion | `reducedMotion` |
 
 **`currentAnimation`, not `animationName`.** `animationName` is one character away from `animationNames`, and those two are a pair a host uses together (build a picker from the list, read back which one is selected). Godot also calls it `AnimationPlayer.current_animation`. Selecting one stays `setAnimation(name)`. In a host that expresses the selection as a property, that property is named `currentAnimation`.
 
@@ -124,6 +126,8 @@ Playback direction is expressed as two enums, `playbackDirection` and `playbackS
 **Use the Brain's enumerator names as-is** — `Forward` / `Backward` and `Normal` / `PingPong`. Casing and word separation follow the host, but the stem does not change. `Reverse` is not a spelling of `Backward`; it is a second word for the same concept, and a reader who has read another Player's docs will not find it. In a language that needs prefixes, pair `DIRECTION_*` with `STYLE_*`, not `PLAY_*` with `STYLE_*`.
 
 Override priority also uses the Brain's enumerator names as-is: `OverwriteOnNextKeyframe` / `HoldUntilNextAnimation` / `Permanent`.
+
+The UI state words (`normal` / `hover` / `pressed` / `disabled` / `focused`) are in [UI Integration §2-1](../50_features/80_ui_integration.md#2-1-the-state-words-and-their-precedence).
 
 ### 3-2. Animation mixing
 
@@ -334,6 +338,13 @@ Speed, the frame-rate override, frame skip and playback direction are kept acros
 
 **A section named by labels is the same state.** `setAnimationSectionByLabel(startLabel, endLabel, startOffset = 0, endOffset = 0)` resolves each label to its frame in the animation's label table and sets the section the way `setAnimationSection` does; it does not play. The section runs from the start label's frame plus `startOffset` to the end label's frame plus `endOffset`, the rule an Instance part's start and end labels follow. Set it where any section is set: inside `setAnimation` or before `play`.
 
+`setAnimationSectionByLabel` is a command (§7-1), so in these cases return `false`, report it once, and leave the section and the playhead as they were. An Instance part quietly drops a label it cannot find to the edge of the animation; this API does not.
+
+- A label the animation does not have. The report names only the labels that are missing.
+- Labels and offsets that land on a section `setAnimationSection` refuses (both ends inside the animation, the end before the start). The report names both the labels given and the frames they landed on.
+
+`_start` and `_end` name the animation's own first and last frame even though the label table does not list them (not the ends of the current section). A real label of the same name, if there is one, is used instead.
+
 ### 8-2. Do nothing when the selected animation is specified again
 
 **If `name` is the animation already set up, return from `setAnimation(name)` without calling the C-API.**
@@ -360,7 +371,7 @@ All seven official Players behave this way. The internal layer that wraps the C-
 
 ## 9. Reading a part
 
-`partTransform`, `isPartHidden` and every other read of one part answer from **the frame the last tick built**: the world matrices and the FrameData that tick's `ss_runtime_get_frame_data` returned, which stay valid until the next call ([Render Loop §1](../30_core/40_render_loop.md#1-soa-buffers)). **A read does not build a frame.**
+`partTransform`, `isPartHidden`, `hitTestPart` and every other read of a part answer from **the frame the last tick built**: the world matrices and the FrameData that tick's `ss_runtime_get_frame_data` returned, which stay valid until the next call ([Render Loop §1](../30_core/40_render_loop.md#1-soa-buffers)). **A read does not build a frame.**
 
 | When the host reads | What it gets |
 |---|---|

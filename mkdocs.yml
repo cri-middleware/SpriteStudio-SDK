@@ -55,5 +55,6 @@ nav:
       - Audio: 50_features/50_audio.md
       - Editor Integration: 50_features/60_editor_integration.md
       - 'Placement: Fit & Align': 50_features/70_placement.md
+      - UI Integration: 50_features/80_ui_integration.md
   - 🛠️ Troubleshooting: 60_troubleshooting/10_troubleshooting.md
   - 📦 Rust API (rustdoc): api/ssruntime/index.html
