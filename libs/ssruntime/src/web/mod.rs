@@ -638,8 +638,10 @@ impl SSRuntimeContext {
         self.inner.set_speed_scale(speed_scale);
     }
 
-    pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
-        self.inner.set_animation_section(start_frame, end_frame);
+    /// Throws `Invalid parameter` when both ends are in range and the end is
+    /// before the start; the section and the playhead stay as they were.
+    pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) -> Result<(), JsValue> {
+        self.inner.set_animation_section(start_frame, end_frame).map_err(js_error)
     }
 
     pub fn set_coordinate_system(&mut self, coordinate_system: WebCoordinateSystem) {

@@ -168,7 +168,7 @@ Set it with `ss_runtime_set_playback_direction(ctx, direction, style)`.
 
 ### 5-4. Playback section
 
-`ss_runtime_set_animation_section(ctx, start_frame, end_frame)` limits the range to play, by frame number. Both ends are included, so a section whose ends are the same frame plays that one frame. If you pass an out-of-range value (such as `-1`), that side becomes the edge of the animation. Setting a section moves the playhead to the start of the section (the end when backward).
+`ss_runtime_set_animation_section(ctx, start_frame, end_frame)` limits the range to play, by frame number. Both ends are included, so a section whose ends are the same frame plays that one frame. If you pass an out-of-range value (such as `-1`), that side becomes the edge of the animation. An end before the start, both in range, is refused: the call returns `false` with `InvalidParameter`, and the section and the playhead stay as they were. Setting a section moves the playhead to the start of the section (the end when backward).
 
 ## 6. Sub-frames
 

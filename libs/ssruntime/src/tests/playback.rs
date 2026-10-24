@@ -417,3 +417,38 @@ fn the_current_animation_follows_track_zero_from_the_call_on() {
     ctx.set_track_animation(0, "dance").unwrap();
     assert_eq!(ctx.get_current_animation_index(), index("dance"));
 }
+
+// --- Playback section ---
+
+#[test]
+fn a_section_ending_before_it_starts_is_refused_and_changes_nothing() {
+    let ssab = load_ringo_resource();
+    let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+    let (mut ctx, _) = ringo_ctx(&resource, "walk");
+    ctx.set_animation_section(2, 5).expect("a forward section is taken");
+    let controller = &ctx.instance().primary_source().controller;
+    let before = (controller.get_start_frame(), controller.get_end_frame(), controller.get_frame_no());
+    assert!(matches!(ctx.set_animation_section(5, 2), Err(crate::error::SSRuntimeError::InvalidParameter)));
+    let controller = &ctx.instance().primary_source().controller;
+    assert_eq!((controller.get_start_frame(), controller.get_end_frame(), controller.get_frame_no()), before);
+}
+
+#[cfg(feature = "ffi")]
+#[test]
+fn a_section_ending_before_it_starts_is_refused_at_the_c_abi() {
+    use crate::ffi::*;
+    let ssab = load_ringo_resource();
+    let bytes = ssab.as_slice();
+    let ctx = ss_runtime_create();
+    assert!(unsafe { ss_runtime_load_ssab_copy(ctx, bytes.as_ptr(), bytes.len()) });
+    assert!(unsafe { ss_runtime_setup_animation_by_hash(ctx, fnv1a_hash_str("walk")) });
+    assert!(unsafe { ss_runtime_set_animation_section(ctx, 2, 5) });
+    assert_eq!(unsafe { ss_runtime_get_last_error(ctx) }, 0);
+    assert!(!unsafe { ss_runtime_set_animation_section(ctx, 5, 2) });
+    assert_eq!(unsafe { ss_runtime_get_last_error(ctx) }, crate::error::SSRuntimeError::InvalidParameter.as_code());
+    assert_eq!(unsafe { (ss_runtime_get_start_frame(ctx), ss_runtime_get_end_frame(ctx)) }, (2, 5));
+    // The next call that succeeds clears it.
+    assert!(unsafe { ss_runtime_set_animation_section(ctx, -1, -1) });
+    assert_eq!(unsafe { ss_runtime_get_last_error(ctx) }, 0);
+    unsafe { ss_runtime_destroy(ctx) };
+}

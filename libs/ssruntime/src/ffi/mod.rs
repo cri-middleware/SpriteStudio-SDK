@@ -1118,10 +1118,23 @@ pub unsafe extern "C" fn ss_runtime_set_speed_scale(context: *mut c_void, speed_
     }
 }
 
+/// Limits playback to `[start_frame, end_frame]`, both ends included. An end
+/// out of the animation's range (`-1`, say) is the animation's edge on that
+/// side. Returns `false`, with `InvalidParameter` for
+/// `ss_runtime_get_last_error`, when both ends are in range and the end is
+/// before the start; the section and the playhead stay as they were.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_runtime_set_animation_section(context: *mut c_void, start_frame: c_int, end_frame: c_int) {
-    if let Some(ffi_context) = unsafe { get_context(context) } {
-        ffi_context.ctx.set_animation_section(start_frame, end_frame);
+pub unsafe extern "C" fn ss_runtime_set_animation_section(context: *mut c_void, start_frame: c_int, end_frame: c_int) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
+        return false;
+    };
+    ffi_context.last_error = None;
+    match ffi_context.ctx.set_animation_section(start_frame, end_frame) {
+        Ok(()) => true,
+        Err(e) => {
+            ffi_context.fail("ss_runtime_set_animation_section", e);
+            false
+        }
     }
 }
 

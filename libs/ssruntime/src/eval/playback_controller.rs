@@ -491,12 +491,20 @@ impl PlaybackController {
     /// Narrows playback to `[start_frame, end_frame]`, both ends included, so
     /// a section whose ends are one frame plays that frame. An end outside the
     /// animation's own range (`-1`, say) is the animation's edge on that side.
-    pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
-        self.start_frame = if start_frame >= 0 && start_frame <= self.anime_data_end_frame { start_frame } else { self.anime_data_start_frame };
-        self.end_frame = if end_frame >= 0 && end_frame <= self.anime_data_end_frame { end_frame } else { self.anime_data_end_frame };
+    ///
+    /// Returns false, changing nothing, when both ends are in range and the end
+    /// is before the start: no section runs backwards.
+    pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) -> bool {
+        let in_range = |frame: i32| frame >= 0 && frame <= self.anime_data_end_frame;
+        if in_range(start_frame) && in_range(end_frame) && end_frame < start_frame {
+            return false;
+        }
+        self.start_frame = if in_range(start_frame) { start_frame } else { self.anime_data_start_frame };
+        self.end_frame = if in_range(end_frame) { end_frame } else { self.anime_data_end_frame };
 
         self.current_frame = if self.playback_direction == PlaybackDirection::Forward { self.start_frame as f32 } else { self.end_frame as f32 };
         self.needs_evaluation = true;
+        true
     }
 
     pub fn update(&mut self, delta: f32) -> f32 {
@@ -1207,6 +1215,26 @@ mod tests {
         t.set_skip_frames(false);
         t.play();
         assert_eq!(collect_passed(&mut t, 5), [9]);
+    }
+
+    #[test]
+    fn a_section_ending_before_it_starts_is_refused() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 9, 30);
+        assert!(t.set_animation_section(2, 5));
+        t.set_loop_count(1);
+        t.set_skip_frames(false);
+        t.play();
+        collect_passed(&mut t, 2);
+        let playhead = t.get_frame_no();
+        assert!(!t.set_animation_section(5, 2));
+        assert_eq!((t.get_start_frame(), t.get_end_frame()), (2, 5));
+        assert_eq!(t.get_frame_no(), playhead);
+        // An end out of range is the animation's edge, whatever its number.
+        assert!(t.set_animation_section(5, -1));
+        assert_eq!((t.get_start_frame(), t.get_end_frame()), (5, 9));
+        assert!(t.set_animation_section(20, 3));
+        assert_eq!((t.get_start_frame(), t.get_end_frame()), (0, 3));
     }
 
     #[test]

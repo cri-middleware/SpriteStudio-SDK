@@ -1,6 +1,7 @@
 //! The playhead, the playback state and settings, and the controls that drive the character's clock.
 
 use super::{CharacterClock, Context};
+use crate::error::SSRuntimeError;
 use crate::eval;
 use crate::mix::TrackFade;
 
@@ -176,8 +177,13 @@ impl<'a> Context<'a> {
         self.instance.set_track_policy(0, |p| p.set_speed_scale(speed_scale), |c| c.set_speed_scale(speed_scale));
     }
 
-    pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
-        self.instance.primary_source_mut().controller.set_animation_section(start_frame, end_frame);
+    /// Track 0's playback section, as
+    /// [`eval::playback_controller::PlaybackController::set_animation_section`]
+    /// sets it. An end before the start, both in range, is refused with
+    /// [`SSRuntimeError::InvalidParameter`], and the section and the playhead
+    /// stay as they were.
+    pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) -> Result<(), SSRuntimeError> {
+        if self.instance.primary_source_mut().controller.set_animation_section(start_frame, end_frame) { Ok(()) } else { Err(SSRuntimeError::InvalidParameter) }
     }
 
     pub fn set_coordinate_system(&mut self, coordinate_system: crate::eval::SsCoordinateSystem) {
