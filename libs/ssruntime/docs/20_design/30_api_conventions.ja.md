@@ -266,7 +266,7 @@ Godot のシグナル、Unity の `event` と `UnityEvent`、TypeScript の「�
 | 形 | 失敗したとき |
 |---|---|
 | `find…` — 失敗しうる検索 | 戻り値だけで伝える |
-| `setAnimation` / `load…` / `set…Override` — 何もしなかった命令 | 戻り値**と**報告で伝える |
+| `setAnimation` / `setAnimationSection` / `load…` / `set…Override` — 何もしなかった命令 | 戻り値**と**報告で伝える |
 
 `findPartIndex` が `-1` を返すのは「このパーツはあるか」への完全な答えです。一方、`setAnimation` が `false` を返しても、呼び出し側は効くと信じて命令を出しています。症状は「前のアニメーションを再生し続ける」か「何も描かない」です。**読まなくてもよい bool は報告になりません。**
 
@@ -281,6 +281,7 @@ Godot のシグナル、Unity の `event` と `UnityEvent`、TypeScript の「�
 | テクスチャの解決 | 探したファイルと、それが属するセルマップ |
 | `setPartCellOverride` | パックと、渡されたセルマップ名・セル名 |
 | パーツ名を取るオーバーライド | 渡されたパーツ名 |
+| `setAnimationSection` | 渡された開始と終了のフレーム |
 
 読み込みの行に原因が入っているのは、他に運ぶものが無いからです。版の不一致は「期待した版」と「届いた版」を知っており、報告がその数字を落とすと誰にも分からなくなります。
 

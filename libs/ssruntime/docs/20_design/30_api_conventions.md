@@ -266,7 +266,7 @@ If your Player has part following (an attachment / tracker / anchor), offer the 
 | Form | On failure |
 |---|---|
 | `find…` — a lookup that can fail | Report through the return value only |
-| `setAnimation` / `load…` / `set…Override` — a command that did nothing | Report through the return value **and** a report |
+| `setAnimation` / `setAnimationSection` / `load…` / `set…Override` — a command that did nothing | Report through the return value **and** a report |
 
 `findPartIndex` returning `-1` is a complete answer to "is this part here?". When `setAnimation` returns `false`, on the other hand, the caller issued the command believing it would take effect. The symptom is "keeps playing the previous animation" or "draws nothing". **A bool nobody has to read is not a report.**
 
@@ -281,6 +281,7 @@ If your Player has part following (an attachment / tracker / anchor), offer the 
 | Texture resolution | The file it looked for, and the cellmap it belongs to |
 | `setPartCellOverride` | The pack, and the cellmap name and cell name it was given |
 | An override that takes a part name | The part name it was given |
+| `setAnimationSection` | The start and end frames it was given |
 
 The cause is on the load row because nothing else carries it. A version mismatch knows the expected version and the version that arrived; if the report drops those numbers, nobody can find them out.
 

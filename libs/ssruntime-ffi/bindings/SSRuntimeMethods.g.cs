@@ -476,8 +476,16 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_speed_scale", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_set_speed_scale(void* context, float speed_scale);
 
+        /// <summary>
+        ///  Limits playback to `[start_frame, end_frame]`, both ends included. An end
+        ///  out of the animation's range (`-1`, say) is the animation's edge on that
+        ///  side. Returns `false`, with `InvalidParameter` for
+        ///  `ss_runtime_get_last_error`, when both ends are in range and the end is
+        ///  before the start; the section and the playhead stay as they were.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_animation_section", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void ss_runtime_set_animation_section(void* context, int start_frame, int end_frame);
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool ss_runtime_set_animation_section(void* context, int start_frame, int end_frame);
 
         [DllImport(__DllName, EntryPoint = "ss_runtime_update", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern float ss_runtime_update(void* context, float delta);

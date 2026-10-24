@@ -101,7 +101,8 @@ impl InstanceSlot {
             let dir = if ev.reverse { crate::eval::playback_controller::PlaybackDirection::Backward } else { crate::eval::playback_controller::PlaybackDirection::Forward };
             let style = if ev.pingpong { crate::eval::playback_controller::PlaybackStyle::PingPong } else { crate::eval::playback_controller::PlaybackStyle::Normal };
             child_ctx.set_playback_direction(dir, style);
-            child_ctx.set_animation_section(start_frame, end_frame);
+            // Never refused: the end was pulled up to the start above.
+            let _ = child_ctx.set_animation_section(start_frame, end_frame);
             child_ctx.set_loop_count(ev.loop_num);
 
             self.last_event_frame = ev.event_frame;
