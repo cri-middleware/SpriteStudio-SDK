@@ -112,7 +112,8 @@ A Player whose host's button component has a selection (a toggle's on and off) i
 
 - Selection is a boolean that combines with the five states of §2-1 (stem `selected`). It is not a sixth state, because a selected button can still be hovered or disabled.
 - A selected state's section comes from the label named after the state with `selected_` in front (`selected_normal`, `selected_hover` and so on). Where the section ends, and the sorting, are as in §2-2.
-- When there is no such label, look up the §2-3 fallbacks with `selected_` in front first, and without it after. A selected `hover` goes `selected_hover`, `selected_normal`, `hover`, `normal`, then the whole animation: the difference between on and off is kept over the passing response to hover.
+- When there is no such label, look up the §2-3 fallbacks with `selected_` in front first, and without it after. A selected `hover` goes `selected_hover`, `selected_normal`, `hover`, `normal`, then the whole animation: the difference between on and off is kept over the response to hover.
+- A selected `pressed` is the exception: look up `pressed` right after `selected_pressed`, then the rest in the same order (`selected_pressed`, `pressed`, `selected_hover`, `selected_normal`, `hover`, `normal`, then the whole animation). Being pressed lasts only while the button is held down, and tells the user the press was taken. On release the selected section comes back, so the difference between on and off is not lost.
 - Let the overrides of §2-4 be given under names such as `selected_hover` as well.
 
 ## 3. Reduced motion
