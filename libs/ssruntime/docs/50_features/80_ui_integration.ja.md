@@ -112,7 +112,8 @@ int hitTestPart(const ss::FrameData* frame, Point point, const std::set<int>* ta
 
 - 選択は、§2-1 の 5 つの状態と組み合わさる真偽値です（語幹 `selected`）。6 つ目の状態にはしません。選択中のボタンにも hover や無効があるからです。
 - 選択中の区間は、状態の名前に `selected_` を付けたラベル（`selected_normal`、`selected_hover` など）から引きます。区間の終わりと並べ直しは §2-2 のとおりです。
-- ラベルが無いときは、§2-3 の落とし先の列に `selected_` を付けたものを先に、付けないものを後に引いてください。選択中の `hover` は、`selected_hover`、`selected_normal`、`hover`、`normal`、アニメーション全体の順です。一時的な hover の反応より、オンとオフの区別を残します。
+- ラベルが無いときは、§2-3 の落とし先の列に `selected_` を付けたものを先に、付けないものを後に引いてください。選択中の `hover` は、`selected_hover`、`selected_normal`、`hover`、`normal`、アニメーション全体の順です。hover の反応より、オンとオフの区別を残します。
+- ただし選択中の `pressed` は、`selected_pressed` の次に `pressed` を引き、残りを同じ順に引いてください（`selected_pressed`、`pressed`、`selected_hover`、`selected_normal`、`hover`、`normal`、アニメーション全体）。押下は押している間だけの状態で、入力を受け付けたことを伝えます。離せば選択中の区間に戻るので、オンとオフの区別は失われません。
 - §2-4 の上書きは、`selected_hover` などの名前でも渡せるようにしてください。
 
 ## 3. Reduced motion
