@@ -112,6 +112,7 @@ C-API は `ss_runtime_set_part_color_override(context, part, blend_op, rgba, pri
 | パーツがスキンメッシュか | `isPartSkinnedMesh` |
 | 点が当たった一番手前のパーツ | `hitTestPart` |
 | 動きを減らす設定の入力 | `reducedMotion` |
+| 選択（トグルのオン・オフ）の入力 | `selected` |
 
 **`animationName` ではなく `currentAnimation`。** `animationName` は `animationNames` と 1 文字しか違わず、しかもこの 2 つはホストが組にして使います（一覧からピッカーを作り、選ばれているものを読み戻す）。Godot も `AnimationPlayer.current_animation` と呼んでいます。選ぶ操作は `setAnimation(name)` のままです。選択をプロパティで表すホストでは、そのプロパティが `currentAnimation` を名乗ります。
 
