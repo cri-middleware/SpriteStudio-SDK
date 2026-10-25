@@ -100,11 +100,20 @@ Resolving a state's section, fallbacks of §2-3 and overrides included, in one f
 
 ### 2-5. Switching
 
-- When the state changes, play the new section from its start **at once**. The section playing is dropped.
+- When the state or the selection (§2-6) changes, play the new section from its start **at once**. The section playing is dropped.
 - **The adapter owns** the section, the loop count (infinite) and play and stop. The host must not drive the same player alongside it.
-- When the same state is shown again with the same reduced motion, do nothing. The host may show the state every frame. After the pack is loaded again, show it again.
+- When the same state is shown again with the same selection and the same reduced motion, do nothing. The host may show the state every frame. After the pack is loaded again, show it again.
 
 On a host with no way to learn that a pack has loaded, the adapter shows the state again on every tick, doing nothing when the state, the pack and the animation are all unchanged. The state then appears on the tick after the pack arrives.
+
+### 2-6. The selected state
+
+A Player whose host's button component has a selection (a toggle's on and off) is recommended to implement the selected state: Ren'Py's styles prefixed `selected_`, Flutter's `WidgetState.selected`, uGUI's `Toggle.isOn` and the like. On a host without one (PixiJS's `@pixi/ui` `ButtonContainer`, for one), it is not implemented.
+
+- Selection is a boolean that combines with the five states of §2-1 (stem `selected`). It is not a sixth state, because a selected button can still be hovered or disabled.
+- A selected state's section comes from the label named after the state with `selected_` in front (`selected_normal`, `selected_hover` and so on). Where the section ends, and the sorting, are as in §2-2.
+- When there is no such label, look up the §2-3 fallbacks with `selected_` in front first, and without it after. A selected `hover` goes `selected_hover`, `selected_normal`, `hover`, `normal`, then the whole animation: the difference between on and off is kept over the passing response to hover.
+- Let the overrides of §2-4 be given under names such as `selected_hover` as well.
 
 ## 3. Reduced motion
 
@@ -113,7 +122,7 @@ Take the input as a boolean (stem `reducedMotion`). Reading the OS setting (`pre
 While it is true:
 
 - Hold the first frame of the current state's section, and when the state changes, the first frame of the new one.
-- If the animation has a `reduced_motion` label, `normal` (and the states that fall back to `normal`) loops that section instead, up to the frame before the next label. The other states stay held, so pressed and disabled still look it.
+- If the animation has a `reduced_motion` label, `normal` (and the states that fall back to `normal`) loops that section instead, up to the frame before the next label. The other states stay held, so pressed and disabled still look it. A section taken from a selected label (§2-6) stays held too, so on still looks it.
 - Do not deliver user data, sound or other events while held: hold with `stop`, not `pause`. While the `reduced_motion` section plays, its events are delivered as usual.
 
 ## 4. The accessibility default
@@ -126,10 +135,10 @@ While it is true:
 - **Action callbacks are not aligned.** Their names and timing follow the host's button component: a Flutter button's `onPressed` fires on release, while Flame's `ButtonComponent` has `onPressed` on press, `onReleased` and `onCancelled`. This convention fixes only the states and their sections.
 - **On a host without UI focus** (a game engine, say), `focused` is something the game sets: a menu driven by gamepad or keyboard sets it on the button it has selected. The game passes `disabled` and reduced motion in the same way.
 - **When the adapter is a separate package**, the core needs a way to publish an animation's label table, to resolve the sections of §2-2.
+- **On a Godot button in `toggle_mode`**, `get_draw_mode()` reports a toggle that is on as `DRAW_PRESSED` (`DRAW_HOVER_PRESSED` while hovered). On such a button, do not map that to `pressed`: read the selection from `button_pressed`.
 
 ## 6. What this convention leaves open
 
-- A selected state (a toggle's on and off).
 - A crossfade when the state switches.
 - Whether reduced motion is a property of the player or lives only in the adapter.
 

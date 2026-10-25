@@ -112,6 +112,7 @@ Use the same stem for the same concept. Casing and word separation follow each l
 | Whether a part is a skinned mesh | `isPartSkinnedMesh` |
 | The front-most part a point is on | `hitTestPart` |
 | The input for reducing motion | `reducedMotion` |
+| The input for being selected (a toggle's on and off) | `selected` |
 
 **`currentAnimation`, not `animationName`.** `animationName` is one character away from `animationNames`, and those two are a pair a host uses together (build a picker from the list, read back which one is selected). Godot also calls it `AnimationPlayer.current_animation`. Selecting one stays `setAnimation(name)`. In a host that expresses the selection as a property, that property is named `currentAnimation`.
 
