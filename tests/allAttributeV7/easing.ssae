@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<SpriteStudioAnimePack version="2.01.00" editorVersion="7.1.0">
+<SpriteStudioAnimePack version="2.03.00" editorVersion="7.6.0">
 	<settings>
 		<fps>30</fps>
 		<frameCount>11</frameCount>
@@ -28,7 +28,11 @@
 				<imagePivot>0 0</imagePivot>
 			</value>
 		</bgSettings>
-		<outStartNum>0</outStartNum>
+		<playArea.isON>0</playArea.isON>
+		<playArea.start>0</playArea.start>
+		<playArea.end>0</playArea.end>
+		<loop>1</loop>
+		<simulatePixelArtSize>0 0</simulatePixelArtSize>
 	</settings>
 	<name>easing</name>
 	<exportPath></exportPath>
@@ -41,6 +45,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>self</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -65,6 +71,8 @@
 				<type>text</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -100,6 +108,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -124,6 +134,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -148,6 +160,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -172,6 +186,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -196,6 +212,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -220,6 +238,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -244,6 +264,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -268,6 +290,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -292,6 +316,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -316,6 +342,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -340,6 +368,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -364,6 +394,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -388,6 +420,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -412,6 +446,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -436,6 +472,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -460,6 +498,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -484,6 +524,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -508,6 +550,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -532,6 +576,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -588,11 +634,16 @@
 						<imagePivot>0 0</imagePivot>
 					</value>
 				</bgSettings>
-				<outStartNum>0</outStartNum>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
 			<guidelines />
 			<isSetup>1</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -637,11 +688,16 @@
 						<imagePivot>0 0</imagePivot>
 					</value>
 				</bgSettings>
-				<outStartNum>0</outStartNum>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
 			<guidelines />
 			<isSetup>0</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>

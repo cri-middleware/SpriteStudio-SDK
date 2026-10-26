@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<SpriteStudioAnimePack version="2.00.01">
+<SpriteStudioAnimePack version="2.03.00" editorVersion="7.6.0">
 	<settings>
 		<fps>30</fps>
 		<frameCount>11</frameCount>
@@ -12,7 +12,27 @@
 		<ik_depth>3</ik_depth>
 		<startFrame>0</startFrame>
 		<endFrame>10</endFrame>
-		<outStartNum>0</outStartNum>
+		<bgSettings>
+			<value>
+				<imagePath></imagePath>
+				<imageDisp>1</imageDisp>
+				<imageOffset>0 0</imageOffset>
+				<imageCanvas>0 0</imageCanvas>
+				<imagePivot>0 0</imagePivot>
+			</value>
+			<value>
+				<imagePath></imagePath>
+				<imageDisp>1</imageDisp>
+				<imageOffset>0 0</imageOffset>
+				<imageCanvas>0 0</imageCanvas>
+				<imagePivot>0 0</imagePivot>
+			</value>
+		</bgSettings>
+		<playArea.isON>0</playArea.isON>
+		<playArea.start>0</playArea.start>
+		<playArea.end>0</playArea.end>
+		<loop>1</loop>
+		<simulatePixelArtSize>0 0</simulatePixelArtSize>
 	</settings>
 	<name>Action02_Body</name>
 	<exportPath></exportPath>
@@ -25,6 +45,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>self</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -41,6 +63,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Alignment</name>
@@ -49,6 +72,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -65,6 +90,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Body</name>
@@ -73,6 +99,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -89,6 +117,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Belly</name>
@@ -97,6 +126,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -113,6 +144,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Breast</name>
@@ -121,6 +153,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -137,6 +171,7 @@
 				<colorLabel>Blue</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Head</name>
@@ -145,6 +180,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -161,6 +198,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Face</name>
@@ -169,6 +207,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -185,6 +225,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Head-Upper</name>
@@ -193,6 +234,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -209,6 +252,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Head-Gloss</name>
@@ -217,6 +261,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -233,6 +279,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Head-Lower</name>
@@ -241,6 +288,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -257,6 +306,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Eye-R</name>
@@ -265,6 +315,8 @@
 				<type>instance</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -283,6 +335,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Eye-Gloss-R</name>
@@ -291,6 +344,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -307,6 +362,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Eye-L</name>
@@ -315,6 +371,8 @@
 				<type>instance</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -333,6 +391,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Eye-Gloss-L</name>
@@ -341,6 +400,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -357,6 +418,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Shoulder-R</name>
@@ -365,6 +427,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -381,6 +445,7 @@
 				<colorLabel>Blue</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>ArmUpper-R</name>
@@ -389,6 +454,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -405,6 +472,7 @@
 				<colorLabel>Blue</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Elbow-R</name>
@@ -413,6 +481,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -429,6 +499,7 @@
 				<colorLabel>Blue</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Elbow2-R</name>
@@ -437,6 +508,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -453,6 +526,7 @@
 				<colorLabel>Blue</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>ArmLower-R</name>
@@ -461,6 +535,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -477,6 +553,7 @@
 				<colorLabel>Blue</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Shoulder-L</name>
@@ -485,6 +562,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -501,6 +580,7 @@
 				<colorLabel>Blue</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>ArmUpper-L</name>
@@ -509,6 +589,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -525,6 +607,7 @@
 				<colorLabel>Blue</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Elbow-L</name>
@@ -533,6 +616,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -549,6 +634,7 @@
 				<colorLabel>Blue</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Elbow2-L</name>
@@ -557,6 +643,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -573,6 +661,7 @@
 				<colorLabel>Blue</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>ArmLower-L</name>
@@ -581,6 +670,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -597,6 +688,7 @@
 				<colorLabel>Blue</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Breast-Gloss</name>
@@ -605,6 +697,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -621,6 +715,7 @@
 				<colorLabel>Blue</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Waist</name>
@@ -629,6 +724,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -645,6 +742,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>LegUpper-R</name>
@@ -653,6 +751,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -669,6 +769,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Knee-R</name>
@@ -677,6 +778,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -693,6 +796,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>LegLower-R</name>
@@ -701,6 +805,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -717,6 +823,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>LegUpper-L</name>
@@ -725,6 +832,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -741,6 +850,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>Knee-L</name>
@@ -749,6 +859,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -765,6 +877,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>LegLower-L</name>
@@ -773,6 +886,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -789,6 +904,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>effect_1</name>
@@ -797,6 +913,8 @@
 				<type>effect</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -814,6 +932,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>effect_2</name>
@@ -822,6 +941,8 @@
 				<type>effect</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -839,6 +960,7 @@
 				<colorLabel>Red</colorLabel>
 				<refCellTag></refCellTag>
 				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 		</partList>
 		<boneList />
@@ -863,10 +985,32 @@
 				<ik_depth>3</ik_depth>
 				<startFrame>0</startFrame>
 				<endFrame>19</endFrame>
-				<outStartNum>0</outStartNum>
+				<bgSettings>
+					<value>
+						<imagePath></imagePath>
+						<imageDisp>1</imageDisp>
+						<imageOffset>0 0</imageOffset>
+						<imageCanvas>0 0</imageCanvas>
+						<imagePivot>0 0</imagePivot>
+					</value>
+					<value>
+						<imagePath></imagePath>
+						<imageDisp>1</imageDisp>
+						<imageOffset>0 0</imageOffset>
+						<imageCanvas>0 0</imageCanvas>
+						<imagePivot>0 0</imagePivot>
+					</value>
+				</bgSettings>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
+			<guidelines />
 			<isSetup>0</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -1307,10 +1451,32 @@
 				<ik_depth>3</ik_depth>
 				<startFrame>0</startFrame>
 				<endFrame>19</endFrame>
-				<outStartNum>0</outStartNum>
+				<bgSettings>
+					<value>
+						<imagePath></imagePath>
+						<imageDisp>1</imageDisp>
+						<imageOffset>0 0</imageOffset>
+						<imageCanvas>0 0</imageCanvas>
+						<imagePivot>0 0</imagePivot>
+					</value>
+					<value>
+						<imagePath></imagePath>
+						<imageDisp>1</imageDisp>
+						<imageOffset>0 0</imageOffset>
+						<imageCanvas>0 0</imageCanvas>
+						<imagePivot>0 0</imagePivot>
+					</value>
+				</bgSettings>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
+			<guidelines />
 			<isSetup>0</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -1635,7 +1801,7 @@
 								<value>0.25</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>0.400000005960464</value>
+								<value>0.40000001</value>
 							</key>
 						</attribute>
 						<attribute tag="LSCY">
@@ -1643,7 +1809,7 @@
 								<value>0.25</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>0.600000023841858</value>
+								<value>0.60000002</value>
 							</key>
 						</attribute>
 						<attribute tag="LALP">
@@ -1705,7 +1871,7 @@
 								<value>0.25</value>
 							</key>
 							<key time="19" ipType="linear">
-								<value>0.400000005960464</value>
+								<value>0.40000001</value>
 							</key>
 						</attribute>
 						<attribute tag="LSCY">
@@ -1713,7 +1879,7 @@
 								<value>0.25</value>
 							</key>
 							<key time="19" ipType="linear">
-								<value>0.600000023841858</value>
+								<value>0.60000002</value>
 							</key>
 						</attribute>
 						<attribute tag="LALP">
@@ -1766,10 +1932,32 @@
 				<ik_depth>3</ik_depth>
 				<startFrame>0</startFrame>
 				<endFrame>0</endFrame>
-				<outStartNum>0</outStartNum>
+				<bgSettings>
+					<value>
+						<imagePath></imagePath>
+						<imageDisp>1</imageDisp>
+						<imageOffset>0 0</imageOffset>
+						<imageCanvas>0 0</imageCanvas>
+						<imagePivot>0 0</imagePivot>
+					</value>
+					<value>
+						<imagePath></imagePath>
+						<imageDisp>1</imageDisp>
+						<imageOffset>0 0</imageOffset>
+						<imageCanvas>0 0</imageCanvas>
+						<imagePivot>0 0</imagePivot>
+					</value>
+				</bgSettings>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
+			<guidelines />
 			<isSetup>1</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -2066,7 +2254,7 @@
 						</attribute>
 						<attribute tag="LALP">
 							<key time="0">
-								<value>0.100000001490116</value>
+								<value>0.1</value>
 							</key>
 						</attribute>
 						<attribute tag="PRIO">
@@ -2149,7 +2337,7 @@
 						</attribute>
 						<attribute tag="LSCX">
 							<key time="0">
-								<value>0.800000011920929</value>
+								<value>0.80000001</value>
 							</key>
 						</attribute>
 						<attribute tag="PRIO">
@@ -2192,12 +2380,12 @@
 						</attribute>
 						<attribute tag="LSCX">
 							<key time="0">
-								<value>0.300000011920929</value>
+								<value>0.30000001</value>
 							</key>
 						</attribute>
 						<attribute tag="LSCY">
 							<key time="0">
-								<value>0.300000011920929</value>
+								<value>0.30000001</value>
 							</key>
 						</attribute>
 						<attribute tag="PRIO">
@@ -2232,7 +2420,7 @@
 						</attribute>
 						<attribute tag="LSCX">
 							<key time="0">
-								<value>0.800000011920929</value>
+								<value>0.80000001</value>
 							</key>
 						</attribute>
 						<attribute tag="PRIO">
@@ -2275,12 +2463,12 @@
 						</attribute>
 						<attribute tag="LSCX">
 							<key time="0">
-								<value>0.300000011920929</value>
+								<value>0.30000001</value>
 							</key>
 						</attribute>
 						<attribute tag="LSCY">
 							<key time="0">
-								<value>0.300000011920929</value>
+								<value>0.30000001</value>
 							</key>
 						</attribute>
 						<attribute tag="PRIO">
@@ -2416,7 +2604,7 @@
 						</attribute>
 						<attribute tag="LSCY">
 							<key time="0">
-								<value>0.129999995231628</value>
+								<value>0.13</value>
 							</key>
 						</attribute>
 						<attribute tag="PRIO">
@@ -2645,7 +2833,7 @@
 						</attribute>
 						<attribute tag="LSCY">
 							<key time="0">
-								<value>0.129999995231628</value>
+								<value>0.13</value>
 							</key>
 						</attribute>
 						<attribute tag="PRIO">
@@ -2781,7 +2969,7 @@
 						</attribute>
 						<attribute tag="LSCX">
 							<key time="0">
-								<value>0.349999994039536</value>
+								<value>0.34999999</value>
 							</key>
 						</attribute>
 						<attribute tag="LSCY">
@@ -2791,7 +2979,7 @@
 						</attribute>
 						<attribute tag="LALP">
 							<key time="0">
-								<value>0.0599999986588955</value>
+								<value>0.059999999</value>
 							</key>
 						</attribute>
 						<attribute tag="PRIO">
@@ -3219,10 +3407,32 @@
 				<ik_depth>3</ik_depth>
 				<startFrame>0</startFrame>
 				<endFrame>59</endFrame>
-				<outStartNum>0</outStartNum>
+				<bgSettings>
+					<value>
+						<imagePath></imagePath>
+						<imageDisp>1</imageDisp>
+						<imageOffset>0 0</imageOffset>
+						<imageCanvas>0 0</imageCanvas>
+						<imagePivot>0 0</imagePivot>
+					</value>
+					<value>
+						<imagePath></imagePath>
+						<imageDisp>1</imageDisp>
+						<imageOffset>0 0</imageOffset>
+						<imageCanvas>0 0</imageCanvas>
+						<imagePivot>0 0</imagePivot>
+					</value>
+				</bgSettings>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
+			<guidelines />
 			<isSetup>0</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>

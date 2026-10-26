@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<SpriteStudioAnimePack version="2.00.04" edition="Professional">
+<SpriteStudioAnimePack version="2.03.00" editorVersion="7.6.0">
 	<settings>
 		<fps>30</fps>
 		<frameCount>11</frameCount>
@@ -28,7 +28,11 @@
 				<imagePivot>0 0</imagePivot>
 			</value>
 		</bgSettings>
-		<outStartNum>0</outStartNum>
+		<playArea.isON>0</playArea.isON>
+		<playArea.start>0</playArea.start>
+		<playArea.end>0</playArea.end>
+		<loop>1</loop>
+		<simulatePixelArtSize>0 0</simulatePixelArtSize>
 	</settings>
 	<name>e011</name>
 	<exportPath></exportPath>
@@ -41,6 +45,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -56,6 +62,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>011a</name>
@@ -64,6 +71,8 @@
 				<type>effect</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -80,6 +89,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>011b</name>
@@ -88,6 +98,8 @@
 				<type>effect</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -104,6 +116,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>hexagon1_c</name>
@@ -112,6 +125,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -127,6 +142,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>hexagon1_c_1</name>
@@ -135,6 +151,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -150,6 +168,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 		</partList>
 		<boneList />
@@ -190,10 +209,16 @@
 						<imagePivot>0 0</imagePivot>
 					</value>
 				</bgSettings>
-				<outStartNum>0</outStartNum>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
+			<guidelines />
 			<isSetup>1</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -238,10 +263,16 @@
 						<imagePivot>0 0</imagePivot>
 					</value>
 				</bgSettings>
-				<outStartNum>0</outStartNum>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
+			<guidelines />
 			<isSetup>0</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -369,7 +400,7 @@
 								<value>0</value>
 							</key>
 							<key time="24" ipType="linear">
-								<value>348.387084960938</value>
+								<value>348.38708</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLX">
@@ -393,10 +424,10 @@
 								<value>0</value>
 							</key>
 							<key time="7" ipType="linear">
-								<value>0.589999973773956</value>
+								<value>0.58999997</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>0.800000011920929</value>
+								<value>0.80000001</value>
 							</key>
 							<key time="24" ipType="linear">
 								<value>0</value>
@@ -447,7 +478,7 @@
 								<value>0</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>-348.390014648438</value>
+								<value>-348.39001</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLX">
@@ -471,10 +502,10 @@
 								<value>0</value>
 							</key>
 							<key time="13" ipType="linear">
-								<value>0.589999973773956</value>
+								<value>0.58999997</value>
 							</key>
 							<key time="22" ipType="linear">
-								<value>0.800000011920929</value>
+								<value>0.80000001</value>
 							</key>
 							<key time="30" ipType="linear">
 								<value>0</value>

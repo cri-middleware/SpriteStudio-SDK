@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<SpriteStudioAnimePack version="2.00.04" edition="Professional">
+<SpriteStudioAnimePack version="2.03.00" editorVersion="7.6.0">
 	<settings>
 		<fps>30</fps>
 		<frameCount>11</frameCount>
@@ -28,7 +28,11 @@
 				<imagePivot>0 0</imagePivot>
 			</value>
 		</bgSettings>
-		<outStartNum>0</outStartNum>
+		<playArea.isON>0</playArea.isON>
+		<playArea.start>0</playArea.start>
+		<playArea.end>0</playArea.end>
+		<loop>1</loop>
+		<simulatePixelArtSize>0 0</simulatePixelArtSize>
 	</settings>
 	<name>e024</name>
 	<exportPath></exportPath>
@@ -41,6 +45,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -56,6 +62,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>part_1</name>
@@ -64,6 +71,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -79,6 +88,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>024a</name>
@@ -87,6 +97,8 @@
 				<type>effect</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -103,6 +115,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>024b</name>
@@ -111,6 +124,8 @@
 				<type>effect</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -127,6 +142,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>024c</name>
@@ -135,6 +151,8 @@
 				<type>effect</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -151,6 +169,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>wheellight2_c</name>
@@ -159,6 +178,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -174,6 +195,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 		</partList>
 		<boneList />
@@ -214,10 +236,16 @@
 						<imagePivot>0 0</imagePivot>
 					</value>
 				</bgSettings>
-				<outStartNum>0</outStartNum>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
+			<guidelines />
 			<isSetup>1</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -262,10 +290,16 @@
 						<imagePivot>0 0</imagePivot>
 					</value>
 				</bgSettings>
-				<outStartNum>0</outStartNum>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
+			<guidelines />
 			<isSetup>0</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -380,10 +414,10 @@
 								<value>1</value>
 							</key>
 							<key time="50" ipType="linear">
-								<value>1.10000002384186</value>
+								<value>1.1</value>
 							</key>
 							<key time="59" ipType="linear">
-								<value>1.20000004768372</value>
+								<value>1.2</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLY">
@@ -391,10 +425,10 @@
 								<value>1</value>
 							</key>
 							<key time="50" ipType="linear">
-								<value>1.10000002384186</value>
+								<value>1.1</value>
 							</key>
 							<key time="59" ipType="linear">
-								<value>1.20000004768372</value>
+								<value>1.2</value>
 							</key>
 						</attribute>
 						<attribute tag="HIDE">
@@ -499,7 +533,7 @@
 								<value>0</value>
 							</key>
 							<key time="5" ipType="linear">
-								<value>0.429999977350235</value>
+								<value>0.42999998</value>
 							</key>
 							<key time="12" ipType="linear">
 								<value>0</value>
