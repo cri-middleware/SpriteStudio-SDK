@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<SpriteStudioAnimePack version="2.00.04" edition="Professional">
+<SpriteStudioAnimePack version="2.03.00" editorVersion="7.6.0">
 	<settings>
 		<fps>30</fps>
 		<frameCount>11</frameCount>
@@ -28,7 +28,11 @@
 				<imagePivot>0 0</imagePivot>
 			</value>
 		</bgSettings>
-		<outStartNum>0</outStartNum>
+		<playArea.isON>0</playArea.isON>
+		<playArea.start>0</playArea.start>
+		<playArea.end>0</playArea.end>
+		<loop>1</loop>
+		<simulatePixelArtSize>0 0</simulatePixelArtSize>
 	</settings>
 	<name>e003</name>
 	<exportPath></exportPath>
@@ -41,6 +45,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -56,6 +62,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>part_1</name>
@@ -64,6 +71,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -79,6 +88,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>comet2_c</name>
@@ -87,6 +97,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -102,6 +114,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>comet2_c_1</name>
@@ -110,6 +123,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -125,6 +140,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>comet2_c_1_1</name>
@@ -133,6 +149,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -148,6 +166,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>comet2_c_1_1_1</name>
@@ -156,6 +175,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -171,6 +192,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>003a</name>
@@ -179,6 +201,8 @@
 				<type>effect</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -195,6 +219,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>003a_1</name>
@@ -203,6 +228,8 @@
 				<type>effect</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -219,6 +246,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 		</partList>
 		<boneList />
@@ -259,10 +287,16 @@
 						<imagePivot>0 0</imagePivot>
 					</value>
 				</bgSettings>
-				<outStartNum>0</outStartNum>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
+			<guidelines />
 			<isSetup>1</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -307,10 +341,16 @@
 						<imagePivot>0 0</imagePivot>
 					</value>
 				</bgSettings>
-				<outStartNum>0</outStartNum>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
+			<guidelines />
 			<isSetup>0</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -365,37 +405,37 @@
 						</attribute>
 						<attribute tag="POSX">
 							<key time="0" ipType="linear">
-								<value>99.8333358764648</value>
+								<value>99.833336</value>
 							</key>
 							<key time="3" ipType="linear">
-								<value>214.833343505859</value>
+								<value>214.83334</value>
 							</key>
 							<key time="6" ipType="linear">
-								<value>96.8333435058594</value>
+								<value>96.833344</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>217.833343505859</value>
+								<value>217.83334</value>
 							</key>
 							<key time="12" ipType="linear">
-								<value>93.8333435058594</value>
+								<value>93.833344</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>211.833343505859</value>
+								<value>211.83334</value>
 							</key>
 							<key time="18" ipType="linear">
-								<value>97.2333374023438</value>
+								<value>97.233337</value>
 							</key>
 							<key time="21" ipType="linear">
-								<value>212.966674804688</value>
+								<value>212.96667</value>
 							</key>
 							<key time="24" ipType="linear">
-								<value>96.7000122070313</value>
+								<value>96.700012</value>
 							</key>
 							<key time="27" ipType="linear">
-								<value>213.433349609375</value>
+								<value>213.43335</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>128.233337402344</value>
+								<value>128.23334</value>
 							</key>
 						</attribute>
 						<attribute tag="POSY">
@@ -418,24 +458,24 @@
 								<value>3.5</value>
 							</key>
 							<key time="18" ipType="linear">
-								<value>-0.450000047683716</value>
+								<value>-0.45000005</value>
 							</key>
 							<key time="21" ipType="linear">
-								<value>8.43333339691162</value>
+								<value>8.4333334</value>
 							</key>
 							<key time="24" ipType="linear">
-								<value>7.31666660308838</value>
+								<value>7.3166666</value>
 							</key>
 							<key time="27" ipType="linear">
-								<value>3.70000004768372</value>
+								<value>3.7</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>-0.199999988079071</value>
+								<value>-0.19999999</value>
 							</key>
 						</attribute>
 						<attribute tag="ROTZ">
 							<key time="0" ipType="linear">
-								<value>-90.9290466308594</value>
+								<value>-90.929047</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLX">
@@ -443,34 +483,34 @@
 								<value>1</value>
 							</key>
 							<key time="3" ipType="linear">
-								<value>1.26336324214935</value>
+								<value>1.2633632</value>
 							</key>
 							<key time="6" ipType="linear">
 								<value>1</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>1.26336324214935</value>
+								<value>1.2633632</value>
 							</key>
 							<key time="12" ipType="linear">
 								<value>1</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>1.26336324214935</value>
+								<value>1.2633632</value>
 							</key>
 							<key time="18" ipType="linear">
 								<value>1</value>
 							</key>
 							<key time="21" ipType="linear">
-								<value>1.26336324214935</value>
+								<value>1.2633632</value>
 							</key>
 							<key time="24" ipType="linear">
 								<value>1</value>
 							</key>
 							<key time="27" ipType="linear">
-								<value>1.26336324214935</value>
+								<value>1.2633632</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>1.06584084033966</value>
+								<value>1.0658408</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLY">
@@ -478,34 +518,34 @@
 								<value>1</value>
 							</key>
 							<key time="3" ipType="linear">
-								<value>2.31628060340881</value>
+								<value>2.3162806</value>
 							</key>
 							<key time="6" ipType="linear">
 								<value>1</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>2.31628060340881</value>
+								<value>2.3162806</value>
 							</key>
 							<key time="12" ipType="linear">
 								<value>1</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>2.31628060340881</value>
+								<value>2.3162806</value>
 							</key>
 							<key time="18" ipType="linear">
 								<value>1</value>
 							</key>
 							<key time="21" ipType="linear">
-								<value>2.31628060340881</value>
+								<value>2.3162806</value>
 							</key>
 							<key time="24" ipType="linear">
 								<value>1</value>
 							</key>
 							<key time="27" ipType="linear">
-								<value>2.31628060340881</value>
+								<value>2.3162806</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>1.32907009124756</value>
+								<value>1.3290701</value>
 							</key>
 						</attribute>
 						<attribute tag="ALPH">
@@ -538,7 +578,7 @@
 						</attribute>
 						<attribute tag="POSX">
 							<key time="0" ipType="linear">
-								<value>165.833343505859</value>
+								<value>165.83334</value>
 							</key>
 						</attribute>
 						<attribute tag="POSY">
@@ -548,77 +588,77 @@
 						</attribute>
 						<attribute tag="ROTZ">
 							<key time="0" ipType="linear">
-								<value>-90.9290466308594</value>
+								<value>-90.929047</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLX">
 							<key time="0" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="3" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="6" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="12" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="18" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="21" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="24" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="27" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>0.352263212203979</value>
+								<value>0.35226321</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLY">
 							<key time="0" ipType="linear">
-								<value>1.69208383560181</value>
+								<value>1.6920838</value>
 							</key>
 							<key time="3" ipType="linear">
-								<value>0.810157537460327</value>
+								<value>0.81015754</value>
 							</key>
 							<key time="6" ipType="linear">
-								<value>1.69208383560181</value>
+								<value>1.6920838</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>0.810157537460327</value>
+								<value>0.81015754</value>
 							</key>
 							<key time="12" ipType="linear">
-								<value>1.69208383560181</value>
+								<value>1.6920838</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>0.810157537460327</value>
+								<value>0.81015754</value>
 							</key>
 							<key time="18" ipType="linear">
-								<value>1.69208383560181</value>
+								<value>1.6920838</value>
 							</key>
 							<key time="21" ipType="linear">
-								<value>0.810157537460327</value>
+								<value>0.81015754</value>
 							</key>
 							<key time="24" ipType="linear">
-								<value>1.69208383560181</value>
+								<value>1.6920838</value>
 							</key>
 							<key time="27" ipType="linear">
-								<value>0.810157537460327</value>
+								<value>0.81015754</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>1.47160220146179</value>
+								<value>1.4716022</value>
 							</key>
 						</attribute>
 						<attribute tag="ALPH">
@@ -651,31 +691,31 @@
 						</attribute>
 						<attribute tag="POSX">
 							<key time="0" ipType="linear">
-								<value>91.8333358764648</value>
+								<value>91.833336</value>
 							</key>
 							<key time="3" ipType="linear">
-								<value>87.023811340332</value>
+								<value>87.023811</value>
 							</key>
 							<key time="6" ipType="linear">
-								<value>89.2142868041992</value>
+								<value>89.214287</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>91.4047622680664</value>
+								<value>91.404762</value>
 							</key>
 							<key time="12" ipType="linear">
-								<value>87.7619018554688</value>
+								<value>87.761902</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>92.1190490722656</value>
+								<value>92.119049</value>
 							</key>
 							<key time="18" ipType="linear">
-								<value>89.9761962890625</value>
+								<value>89.976196</value>
 							</key>
 							<key time="21" ipType="linear">
-								<value>89.8333358764648</value>
+								<value>89.833336</value>
 							</key>
 							<key time="24" ipType="linear">
-								<value>91.1666717529297</value>
+								<value>91.166672</value>
 							</key>
 							<key time="27" ipType="linear">
 								<value>95</value>
@@ -689,139 +729,139 @@
 								<value>48.5</value>
 							</key>
 							<key time="3" ipType="linear">
-								<value>82.7476196289063</value>
+								<value>82.74762</value>
 							</key>
 							<key time="6" ipType="linear">
-								<value>56.9952392578125</value>
+								<value>56.995239</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>85.2428588867188</value>
+								<value>85.242859</value>
 							</key>
 							<key time="12" ipType="linear">
-								<value>55.1571426391602</value>
+								<value>55.157143</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>89.0714263916016</value>
+								<value>89.071426</value>
 							</key>
 							<key time="18" ipType="linear">
-								<value>57.2857131958008</value>
+								<value>57.285713</value>
 							</key>
 							<key time="21" ipType="linear">
 								<value>87.5</value>
 							</key>
 							<key time="24" ipType="linear">
-								<value>56.8333358764648</value>
+								<value>56.833336</value>
 							</key>
 							<key time="27" ipType="linear">
-								<value>87.1666717529297</value>
+								<value>87.166672</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>58.1666679382324</value>
+								<value>58.166668</value>
 							</key>
 						</attribute>
 						<attribute tag="ROTZ">
 							<key time="0" ipType="linear">
-								<value>-58.7566528320313</value>
+								<value>-58.756653</value>
 							</key>
 							<key time="3" ipType="linear">
-								<value>-45.2930145263672</value>
+								<value>-45.293015</value>
 							</key>
 							<key time="6" ipType="linear">
-								<value>-58.7566528320313</value>
+								<value>-58.756653</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>-45.2930145263672</value>
+								<value>-45.293015</value>
 							</key>
 							<key time="12" ipType="linear">
-								<value>-58.7566528320313</value>
+								<value>-58.756653</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>-45.2930145263672</value>
+								<value>-45.293015</value>
 							</key>
 							<key time="18" ipType="linear">
-								<value>-58.7566528320313</value>
+								<value>-58.756653</value>
 							</key>
 							<key time="21" ipType="linear">
-								<value>-45.2930145263672</value>
+								<value>-45.293015</value>
 							</key>
 							<key time="24" ipType="linear">
-								<value>-58.7566528320313</value>
+								<value>-58.756653</value>
 							</key>
 							<key time="27" ipType="linear">
-								<value>-45.2930145263672</value>
+								<value>-45.293015</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>-55.3907432556152</value>
+								<value>-55.390743</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLX">
 							<key time="0" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="3" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="6" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="12" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="18" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="21" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="24" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="27" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>0.352263212203979</value>
+								<value>0.35226321</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLY">
 							<key time="0" ipType="linear">
-								<value>1.07598268985748</value>
+								<value>1.0759827</value>
 							</key>
 							<key time="3" ipType="linear">
-								<value>1.22468090057373</value>
+								<value>1.2246809</value>
 							</key>
 							<key time="6" ipType="linear">
-								<value>1.07598268985748</value>
+								<value>1.0759827</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>1.22468090057373</value>
+								<value>1.2246809</value>
 							</key>
 							<key time="12" ipType="linear">
-								<value>1.07598268985748</value>
+								<value>1.0759827</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>1.22468090057373</value>
+								<value>1.2246809</value>
 							</key>
 							<key time="18" ipType="linear">
-								<value>1.07598268985748</value>
+								<value>1.0759827</value>
 							</key>
 							<key time="21" ipType="linear">
-								<value>1.22468090057373</value>
+								<value>1.2246809</value>
 							</key>
 							<key time="24" ipType="linear">
-								<value>1.07598268985748</value>
+								<value>1.0759827</value>
 							</key>
 							<key time="27" ipType="linear">
-								<value>1.22468090057373</value>
+								<value>1.2246809</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>1.11315727233887</value>
+								<value>1.1131573</value>
 							</key>
 						</attribute>
 						<attribute tag="ALPH">
@@ -854,37 +894,37 @@
 						</attribute>
 						<attribute tag="POSX">
 							<key time="0" ipType="linear">
-								<value>91.8333358764648</value>
+								<value>91.833336</value>
 							</key>
 							<key time="3" ipType="linear">
-								<value>88.8333358764648</value>
+								<value>88.833336</value>
 							</key>
 							<key time="6" ipType="linear">
-								<value>87.3333358764648</value>
+								<value>87.333336</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>91.8333358764648</value>
+								<value>91.833336</value>
 							</key>
 							<key time="12" ipType="linear">
-								<value>86.8333358764648</value>
+								<value>86.833336</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>89.8333358764648</value>
+								<value>89.833336</value>
 							</key>
 							<key time="18" ipType="linear">
-								<value>87.8333358764648</value>
+								<value>87.833336</value>
 							</key>
 							<key time="21" ipType="linear">
-								<value>89.8333358764648</value>
+								<value>89.833336</value>
 							</key>
 							<key time="24" ipType="linear">
-								<value>87.8333358764648</value>
+								<value>87.833336</value>
 							</key>
 							<key time="27" ipType="linear">
-								<value>97.8333358764648</value>
+								<value>97.833336</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>93.3333358764648</value>
+								<value>93.333336</value>
 							</key>
 						</attribute>
 						<attribute tag="POSY">
@@ -924,107 +964,107 @@
 						</attribute>
 						<attribute tag="ROTZ">
 							<key time="0" ipType="linear">
-								<value>-123.985145568848</value>
+								<value>-123.98515</value>
 							</key>
 							<key time="3" ipType="linear">
-								<value>-135.82975769043</value>
+								<value>-135.82976</value>
 							</key>
 							<key time="6" ipType="linear">
-								<value>-123.985145568848</value>
+								<value>-123.98515</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>-135.82975769043</value>
+								<value>-135.82976</value>
 							</key>
 							<key time="12" ipType="linear">
-								<value>-123.985145568848</value>
+								<value>-123.98515</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>-135.82975769043</value>
+								<value>-135.82976</value>
 							</key>
 							<key time="18" ipType="linear">
-								<value>-123.985145568848</value>
+								<value>-123.98515</value>
 							</key>
 							<key time="21" ipType="linear">
-								<value>-135.82975769043</value>
+								<value>-135.82976</value>
 							</key>
 							<key time="24" ipType="linear">
-								<value>-123.985145568848</value>
+								<value>-123.98515</value>
 							</key>
 							<key time="27" ipType="linear">
-								<value>-135.82975769043</value>
+								<value>-135.82976</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>-126.946296691895</value>
+								<value>-126.9463</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLX">
 							<key time="0" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="3" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="6" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="12" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="18" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="21" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="24" ipType="linear">
-								<value>0.381390690803528</value>
+								<value>0.38139069</value>
 							</key>
 							<key time="27" ipType="linear">
-								<value>0.264880806207657</value>
+								<value>0.26488081</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>0.352263212203979</value>
+								<value>0.35226321</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLY">
 							<key time="0" ipType="linear">
-								<value>1.07598268985748</value>
+								<value>1.0759827</value>
 							</key>
 							<key time="3" ipType="linear">
-								<value>1.27440059185028</value>
+								<value>1.2744006</value>
 							</key>
 							<key time="6" ipType="linear">
-								<value>1.07598268985748</value>
+								<value>1.0759827</value>
 							</key>
 							<key time="9" ipType="linear">
-								<value>1.27440059185028</value>
+								<value>1.2744006</value>
 							</key>
 							<key time="12" ipType="linear">
-								<value>1.07598268985748</value>
+								<value>1.0759827</value>
 							</key>
 							<key time="15" ipType="linear">
-								<value>1.27440059185028</value>
+								<value>1.2744006</value>
 							</key>
 							<key time="18" ipType="linear">
-								<value>1.07598268985748</value>
+								<value>1.0759827</value>
 							</key>
 							<key time="21" ipType="linear">
-								<value>1.27440059185028</value>
+								<value>1.2744006</value>
 							</key>
 							<key time="24" ipType="linear">
-								<value>1.07598268985748</value>
+								<value>1.0759827</value>
 							</key>
 							<key time="27" ipType="linear">
-								<value>1.27440059185028</value>
+								<value>1.2744006</value>
 							</key>
 							<key time="30" ipType="linear">
-								<value>1.12558722496033</value>
+								<value>1.1255872</value>
 							</key>
 						</attribute>
 						<attribute tag="ALPH">
@@ -1070,7 +1110,7 @@
 						</attribute>
 						<attribute tag="SCLX">
 							<key time="0" ipType="linear">
-								<value>0.200000002980232</value>
+								<value>0.2</value>
 							</key>
 							<key time="22" ipType="linear">
 								<value>1.5</value>
@@ -1078,7 +1118,7 @@
 						</attribute>
 						<attribute tag="SCLY">
 							<key time="0" ipType="linear">
-								<value>0.200000002980232</value>
+								<value>0.2</value>
 							</key>
 							<key time="22" ipType="linear">
 								<value>1.5</value>
@@ -1128,7 +1168,7 @@
 						</attribute>
 						<attribute tag="SCLX">
 							<key time="9" ipType="linear">
-								<value>0.200000002980232</value>
+								<value>0.2</value>
 							</key>
 							<key time="30" ipType="linear">
 								<value>1.5</value>
@@ -1136,7 +1176,7 @@
 						</attribute>
 						<attribute tag="SCLY">
 							<key time="9" ipType="linear">
-								<value>0.200000002980232</value>
+								<value>0.2</value>
 							</key>
 							<key time="30" ipType="linear">
 								<value>1.5</value>

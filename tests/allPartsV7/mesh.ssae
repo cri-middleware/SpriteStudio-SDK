@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<SpriteStudioAnimePack version="2.00.01">
+<SpriteStudioAnimePack version="2.03.00" editorVersion="7.6.0">
 	<settings>
 		<fps>30</fps>
 		<frameCount>11</frameCount>
@@ -12,7 +12,27 @@
 		<ik_depth>3</ik_depth>
 		<startFrame>0</startFrame>
 		<endFrame>10</endFrame>
-		<outStartNum>0</outStartNum>
+		<bgSettings>
+			<value>
+				<imagePath></imagePath>
+				<imageDisp>1</imageDisp>
+				<imageOffset>0 0</imageOffset>
+				<imageCanvas>0 0</imageCanvas>
+				<imagePivot>0 0</imagePivot>
+			</value>
+			<value>
+				<imagePath></imagePath>
+				<imageDisp>1</imageDisp>
+				<imageOffset>0 0</imageOffset>
+				<imageCanvas>0 0</imageCanvas>
+				<imagePivot>0 0</imagePivot>
+			</value>
+		</bgSettings>
+		<playArea.isON>0</playArea.isON>
+		<playArea.start>0</playArea.start>
+		<playArea.end>0</playArea.end>
+		<loop>1</loop>
+		<simulatePixelArtSize>0 0</simulatePixelArtSize>
 	</settings>
 	<name>mesh</name>
 	<exportPath></exportPath>
@@ -25,6 +45,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>self</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -40,6 +62,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>joint_1</name>
@@ -48,6 +71,8 @@
 				<type>joint</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -63,6 +88,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>bone_1</name>
@@ -71,6 +97,8 @@
 				<type>armature</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -90,6 +118,7 @@
 				<bonePosition>0 0</bonePosition>
 				<boneRotation>90</boneRotation>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>bone_2</name>
@@ -98,6 +127,8 @@
 				<type>armature</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -117,6 +148,7 @@
 				<bonePosition>64 0</bonePosition>
 				<boneRotation>0</boneRotation>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>bone_3</name>
@@ -125,6 +157,8 @@
 				<type>armature</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -144,6 +178,7 @@
 				<bonePosition>64 0</bonePosition>
 				<boneRotation>0</boneRotation>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>bone_4</name>
@@ -152,6 +187,8 @@
 				<type>armature</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -171,6 +208,7 @@
 				<bonePosition>64 0</bonePosition>
 				<boneRotation>0</boneRotation>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>NewCell_17</name>
@@ -179,6 +217,8 @@
 				<type>mesh</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<meshWeightType>0</meshWeightType>
 				<meshWeightStrong>3</meshWeightStrong>
 				<ineheritRates>
@@ -196,6 +236,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>joint_2</name>
@@ -204,6 +245,8 @@
 				<type>joint</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -219,6 +262,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>bone_5</name>
@@ -227,6 +271,8 @@
 				<type>armature</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -246,6 +292,7 @@
 				<bonePosition>0 0</bonePosition>
 				<boneRotation>90</boneRotation>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>bone_6</name>
@@ -254,6 +301,8 @@
 				<type>armature</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -273,6 +322,7 @@
 				<bonePosition>64 0</bonePosition>
 				<boneRotation>0</boneRotation>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>bone_7</name>
@@ -281,6 +331,8 @@
 				<type>armature</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -300,6 +352,7 @@
 				<bonePosition>64 0</bonePosition>
 				<boneRotation>0</boneRotation>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>bone_8</name>
@@ -308,6 +361,8 @@
 				<type>armature</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -327,6 +382,7 @@
 				<bonePosition>64 0</bonePosition>
 				<boneRotation>0</boneRotation>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>NewCell_18</name>
@@ -335,6 +391,8 @@
 				<type>mesh</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<meshWeightType>0</meshWeightType>
 				<meshWeightStrong>3</meshWeightStrong>
 				<ineheritRates>
@@ -352,6 +410,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>joint_3</name>
@@ -360,6 +419,8 @@
 				<type>joint</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -375,6 +436,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>NewCell_19</name>
@@ -383,6 +445,8 @@
 				<type>mesh</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<meshWeightType>0</meshWeightType>
 				<meshWeightStrong>3</meshWeightStrong>
 				<ineheritRates>
@@ -400,6 +464,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 		</partList>
 		<boneList>
@@ -415,7 +480,7 @@
 		<meshList>
 			<value>4 0 58 1.67 130.33 1 28 -62.33 130.33 2 10 -126.33 130.33 3 4 -190.33 130.33,4 0 21 86.54 61.62 1 65 22.54 61.62 2 12 -41.46 61.62 3 2 -105.46 61.62,2 0 99 1.67 1.00 1 1 -62.33 1.00,4 0 15 131.00 130.33 1 33 67.00 130.33 2 35 3.00 130.33 3 17 -61.00 130.33,4 0 1 199.71 65.67 1 6 135.71 65.67 2 38 71.71 65.67 3 55 7.71 65.67,3 1 15 71.04 5.04 2 84 7.04 5.04 3 1 -56.96 5.04,4 0 19 86.54 -55.58 1 70 22.54 -55.58 2 10 -41.46 -55.58 3 1 -105.46 -55.58,4 0 59 1.67 -128.33 1 27 -62.33 -128.33 2 10 -126.33 -128.33 3 4 -190.33 -128.33,4 0 15 131.00 -128.33 1 33 67.00 -128.33 2 35 3.00 -128.33 3 17 -61.00 -128.33,4 0 1 199.71 -55.58 1 4 135.71 -55.58 2 36 71.71 -55.58 3 59 7.71 -55.58,4 0 4 260.33 -128.33 1 10 196.33 -128.33 2 27 132.33 -128.33 3 59 68.33 -128.33,2 2 2 132.33 1.00 3 98 68.33 1.00,4 0 4 260.33 130.33 1 10 196.33 130.33 2 27 132.33 130.33 3 59 68.33 130.33,</value>
 			<value>4 4 58 1.67 130.33 5 28 -62.33 130.33 6 10 -126.33 130.33 7 4 -190.33 130.33,4 4 21 86.54 61.62 5 65 22.54 61.62 6 12 -41.46 61.62 7 2 -105.46 61.62,2 4 99 1.67 1.00 5 1 -62.33 1.00,4 4 15 131.00 130.33 5 33 67.00 130.33 6 35 3.00 130.33 7 17 -61.00 130.33,4 4 1 199.71 65.67 5 6 135.71 65.67 6 38 71.71 65.67 7 55 7.71 65.67,3 5 15 71.04 5.04 6 84 7.04 5.04 7 1 -56.96 5.04,4 4 19 86.54 -55.58 5 70 22.54 -55.58 6 10 -41.46 -55.58 7 1 -105.46 -55.58,4 4 59 1.67 -128.33 5 27 -62.33 -128.33 6 10 -126.33 -128.33 7 4 -190.33 -128.33,4 4 15 131.00 -128.33 5 33 67.00 -128.33 6 35 3.00 -128.33 7 17 -61.00 -128.33,4 4 1 199.71 -55.58 5 4 135.71 -55.58 6 36 71.71 -55.58 7 59 7.71 -55.58,4 4 4 260.33 -128.33 5 10 196.33 -128.33 6 27 132.33 -128.33 7 59 68.33 -128.33,2 6 2 132.33 1.00 7 98 68.33 1.00,4 4 4 260.33 130.33 5 10 196.33 130.33 6 27 132.33 130.33 7 59 68.33 130.33,</value>
-			<value>0,0,0,0,0,0,0,0,0,0,0,0,0,</value>
+			<value />
 		</meshList>
 	</Model>
 	<cellmapNames>
@@ -437,10 +502,32 @@
 				<ik_depth>3</ik_depth>
 				<startFrame>0</startFrame>
 				<endFrame>0</endFrame>
-				<outStartNum>0</outStartNum>
+				<bgSettings>
+					<value>
+						<imagePath></imagePath>
+						<imageDisp>1</imageDisp>
+						<imageOffset>0 0</imageOffset>
+						<imageCanvas>0 0</imageCanvas>
+						<imagePivot>0 0</imagePivot>
+					</value>
+					<value>
+						<imagePath></imagePath>
+						<imageDisp>1</imageDisp>
+						<imageOffset>0 0</imageOffset>
+						<imageCanvas>0 0</imageCanvas>
+						<imagePivot>0 0</imagePivot>
+					</value>
+				</bgSettings>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
+			<guidelines />
 			<isSetup>1</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -457,12 +544,12 @@
 					<attributes>
 						<attribute tag="POSX">
 							<key time="0">
-								<value>-289.666656494141</value>
+								<value>-289.66666</value>
 							</key>
 						</attribute>
 						<attribute tag="POSY">
 							<key time="0">
-								<value>-1.66666793823242</value>
+								<value>-1.6666679</value>
 							</key>
 						</attribute>
 						<attribute tag="ROTZ">
@@ -570,12 +657,12 @@
 						</attribute>
 						<attribute tag="SCLX">
 							<key time="0">
-								<value>4.04166698455811</value>
+								<value>4.041667</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLY">
 							<key time="0">
-								<value>4.04166698455811</value>
+								<value>4.041667</value>
 							</key>
 						</attribute>
 						<attribute tag="PRIO">
@@ -595,12 +682,12 @@
 					<attributes>
 						<attribute tag="POSX">
 							<key time="0">
-								<value>267.333343505859</value>
+								<value>267.33334</value>
 							</key>
 						</attribute>
 						<attribute tag="POSY">
 							<key time="0">
-								<value>-0.666667938232422</value>
+								<value>-0.66666794</value>
 							</key>
 						</attribute>
 						<attribute tag="ROTZ">
@@ -708,12 +795,12 @@
 						</attribute>
 						<attribute tag="SCLX">
 							<key time="0">
-								<value>4.04166698455811</value>
+								<value>4.041667</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLY">
 							<key time="0">
-								<value>4.04166698455811</value>
+								<value>4.041667</value>
 							</key>
 						</attribute>
 						<attribute tag="PRIO">
@@ -813,10 +900,32 @@
 				<ik_depth>3</ik_depth>
 				<startFrame>0</startFrame>
 				<endFrame>59</endFrame>
-				<outStartNum>0</outStartNum>
+				<bgSettings>
+					<value>
+						<imagePath></imagePath>
+						<imageDisp>1</imageDisp>
+						<imageOffset>0 0</imageOffset>
+						<imageCanvas>0 0</imageCanvas>
+						<imagePivot>0 0</imagePivot>
+					</value>
+					<value>
+						<imagePath></imagePath>
+						<imageDisp>1</imageDisp>
+						<imageOffset>0 0</imageOffset>
+						<imageCanvas>0 0</imageCanvas>
+						<imagePivot>0 0</imagePivot>
+					</value>
+				</bgSettings>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
+			<guidelines />
 			<isSetup>0</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -876,7 +985,7 @@
 								<value>0</value>
 							</key>
 							<key time="59" ipType="linear">
-								<value>-29.1119689941406</value>
+								<value>-29.111969</value>
 							</key>
 						</attribute>
 						<attribute tag="PRIO">
@@ -909,7 +1018,7 @@
 								<value>0</value>
 							</key>
 							<key time="59" ipType="linear">
-								<value>-38.9464950561523</value>
+								<value>-38.946495</value>
 							</key>
 						</attribute>
 						<attribute tag="PRIO">
@@ -942,7 +1051,7 @@
 								<value>0</value>
 							</key>
 							<key time="59" ipType="linear">
-								<value>-49.1447525024414</value>
+								<value>-49.144753</value>
 							</key>
 						</attribute>
 						<attribute tag="PRIO">
@@ -980,7 +1089,7 @@
 								<value>1</value>
 							</key>
 							<key time="59" ipType="linear">
-								<value>0.588107645511627</value>
+								<value>0.58810765</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLY">
@@ -1026,7 +1135,7 @@
 								<value>1</value>
 							</key>
 							<key time="59" ipType="linear">
-								<value>0.477430582046509</value>
+								<value>0.47743058</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLY">
@@ -1072,7 +1181,7 @@
 								<value>1</value>
 							</key>
 							<key time="59" ipType="linear">
-								<value>2.39090895652771</value>
+								<value>2.390909</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLY">
@@ -1126,7 +1235,7 @@
 								<value>1</value>
 							</key>
 							<key time="59" ipType="linear">
-								<value>3.87152647972107</value>
+								<value>3.8715265</value>
 							</key>
 						</attribute>
 						<attribute tag="PRIO">

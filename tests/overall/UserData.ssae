@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<SpriteStudioAnimePack version="2.02.00" editorVersion="7.5.0">
+<SpriteStudioAnimePack version="2.03.00" editorVersion="7.6.0">
 	<settings>
 		<fps>30</fps>
 		<frameCount>11</frameCount>
@@ -32,6 +32,7 @@
 		<playArea.start>0</playArea.start>
 		<playArea.end>0</playArea.end>
 		<loop>1</loop>
+		<simulatePixelArtSize>0 0</simulatePixelArtSize>
 	</settings>
 	<name>UserData</name>
 	<order>20</order>
@@ -133,6 +134,7 @@
 				<playArea.start>0</playArea.start>
 				<playArea.end>0</playArea.end>
 				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
 			<guidelines />
@@ -186,6 +188,7 @@
 				<playArea.start>0</playArea.start>
 				<playArea.end>0</playArea.end>
 				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
 			<guidelines />
