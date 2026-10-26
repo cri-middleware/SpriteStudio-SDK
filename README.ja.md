@@ -9,7 +9,7 @@
 
 ## 🎯 対応バージョン
 
-SpriteStudio-SDK `7.x.x` は **SpriteStudio 7.5 以上**で作成されたプロジェクトに対応しています。
+SpriteStudio-SDK `7.x.x` は **SpriteStudio 7.6 以上**で作成されたプロジェクトに対応しています。
 
 ## 🔄 ワークフロー
 

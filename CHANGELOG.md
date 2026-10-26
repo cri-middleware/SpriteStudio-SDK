@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [7.0.0-beta.1] - Unreleased
 
 ### Added
-- **Initial Public Release**: SpriteStudio-SDK (`ssconverter-cli` + `libssruntime`), supporting projects authored in SpriteStudio 7.5 or later.
+- **Initial Public Release**: SpriteStudio-SDK (`ssconverter-cli` + `libssruntime`), supporting projects authored in SpriteStudio 7.6 or later.
 - **Core Runtime**: Engine-agnostic, `#![no_std]` brain with zero-math integration and SIMD (f32x4) state computation.
 - **Features**: Supports Mesh Deformation, Particles (SSEE), Instances, and SS7.1 parts (Skew, 9-Slice, Shape).
 - **Integrations**: C-API and Web (WASM) ready.

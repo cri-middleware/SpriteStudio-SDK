@@ -10,7 +10,7 @@ This SDK allows you to easily implement and play **raster-based 2D animations** 
 
 ## 🎯 Compatibility
 
-SpriteStudio-SDK `7.x.x` supports projects authored in **SpriteStudio 7.5 or later**.
+SpriteStudio-SDK `7.x.x` supports projects authored in **SpriteStudio 7.6 or later**.
 
 ## 🔄 The Workflow (How it works)
 
