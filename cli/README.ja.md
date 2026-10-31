@@ -12,6 +12,24 @@
 
 [GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) ページから **Windows**、**macOS**、**Linux** 向けのリリースをダウンロードしてください。ビルド環境は不要です。
 
+各リリースにはプラットフォームごとの zip が固定の名前で入っているため、最新版は常に同じ URL で取得できます。
+
+| プラットフォーム | アーカイブ |
+|---|---|
+| macOS（Apple silicon・Intel） | `ssconverter-cli-macos.zip` |
+| Windows x64 | `ssconverter-cli-windows.zip` |
+| Windows ARM64 | `ssconverter-cli-windows-arm64.zip` |
+| Linux x64 | `ssconverter-cli-linux.zip` |
+| Linux ARM64 | `ssconverter-cli-linux-aarch64.zip` |
+
+```bash
+$ curl -fsSLO https://github.com/cri-middleware/SpriteStudio-SDK/releases/latest/download/ssconverter-cli-macos.zip
+$ unzip ssconverter-cli-macos.zip -d ssconverter-cli
+$ ./ssconverter-cli/ssconverter-cli --version
+```
+
+版を固定するには `latest/download` を `download/<tag>` に置き換えてください。同じリリースの `SHA256SUMS` で zip を検証できます。
+
 ## ソースからビルド
 
 Rust ツールチェイン（[rustup](https://rustup.rs/)）の **1.99 以降** が必要です。リポジトリのルートから:
