@@ -79,6 +79,42 @@ mod tests {
         assert!(checked > 0, "no packs were emitted, so nothing was checked");
     }
 
+    /// The log says what each written binary holds, by full path: the animation names
+    /// of an `.ssab`, the sequence names of an `.ssqb`. A script or a coding assistant
+    /// reads the names to play from there instead of from the project's XML.
+    #[test]
+    fn the_log_names_what_each_written_binary_holds() {
+        let out_dir = get_test_base_path().join("target").join("ssab_contents_test_output");
+        if out_dir.exists() {
+            std::fs::remove_dir_all(&out_dir).unwrap();
+        }
+        std::fs::create_dir_all(&out_dir).unwrap();
+
+        let mut config = ConverterConfig::default();
+        config.output = Some(out_dir.as_os_str().to_os_string());
+        let log = std::sync::Mutex::new(Vec::new());
+        convert_sspj_to_ssab_files(&get_test_base_path().join("tests/Ringo/Ringo.sspj"), &config, &|msg: &str| log.lock().unwrap().push(msg.to_string())).expect("conversion failed");
+        let log = log.into_inner().unwrap();
+
+        let mut checked = 0;
+        for entry in std::fs::read_dir(&out_dir).unwrap() {
+            let path = entry.unwrap().path();
+            let buf = match path.extension().and_then(|e| e.to_str()) {
+                Some("ssab") | Some("ssqb") => std::fs::read(&path).unwrap(),
+                _ => continue,
+            };
+            let (kind, names) = match path.extension().unwrap().to_str().unwrap() {
+                "ssab" => ("animations", ssab::ssab::ss::format::root_as_ss_anime_binary(&buf).expect("not a readable .ssab").animations().iter().map(|a| a.name().to_string()).collect::<Vec<_>>()),
+                _ => ("sequences", ssab::ssqb::ss::format::root_as_ss_sequence_binary(&buf).expect("not a readable .ssqb").sequence_list().iter().map(|s| s.name().to_string()).collect::<Vec<_>>()),
+            };
+            assert!(!names.is_empty(), "{} holds no {kind}, so the fixture no longer exercises the list", path.display());
+            let want = format!("Wrote {} ({kind}: {})", path.display(), names.join(", "));
+            assert!(log.contains(&want), "the log has no line {want:?}:\n{log:#?}");
+            checked += 1;
+        }
+        assert!(checked >= 2, "expected an .ssab and an .ssqb, checked {checked}");
+    }
+
     /// `canvas_size` is the authored canvas, not the canvas minus the pivot.
     ///
     /// The two used to share one `Rect`, so every reader computed the size as

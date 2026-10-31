@@ -18,6 +18,14 @@ impl Default for ConvertConfig {
     }
 }
 
+// What each emitted binary holds, by file name: the animation names of an `.ssab`, the
+// sequence names of an `.ssqb`.
+pub(crate) type Contents = HashMap<String, Vec<String>>;
+
+// A converted project: the project itself, each binary's bytes by file name, and their
+// `Contents`.
+pub(crate) type Converted = (sspj::sspj::SsProject, HashMap<String, Vec<u8>>, Contents);
+
 // The in-memory conversion core. Crate-private because `AssetProvider` is: an
 // external caller could never name the parameter type. The entry points the crate
 // actually exposes are `convert_sspj_to_ssab_files*` (native) and the `web` bindings.
@@ -25,19 +33,14 @@ impl Default for ConvertConfig {
 // The uncancellable wrapper only has a caller under `web`; native paths thread a
 // real `should_stop` through so the GUI can abort a long conversion.
 #[cfg(feature = "web")]
-pub(crate) fn convert_sspj_to_ssab_data<F>(asset_provider: &dyn crate::asset_provider::AssetProvider, config: &ConvertConfig, on_log: &F) -> Result<(sspj::sspj::SsProject, HashMap<String, Vec<u8>>), crate::converter::converter_error::ConverterError>
+pub(crate) fn convert_sspj_to_ssab_data<F>(asset_provider: &dyn crate::asset_provider::AssetProvider, config: &ConvertConfig, on_log: &F) -> Result<Converted, crate::converter::converter_error::ConverterError>
 where
     F: Fn(&str) + Sync + Send,
 {
     convert_sspj_to_ssab_data_cancellable(asset_provider, config, on_log, &AtomicBool::new(false))
 }
 
-pub(crate) fn convert_sspj_to_ssab_data_cancellable<F>(
-    asset_provider: &dyn crate::asset_provider::AssetProvider,
-    config: &ConvertConfig,
-    on_log: &F,
-    should_stop: &AtomicBool,
-) -> Result<(sspj::sspj::SsProject, HashMap<String, Vec<u8>>), crate::converter::converter_error::ConverterError>
+pub(crate) fn convert_sspj_to_ssab_data_cancellable<F>(asset_provider: &dyn crate::asset_provider::AssetProvider, config: &ConvertConfig, on_log: &F, should_stop: &AtomicBool) -> Result<Converted, crate::converter::converter_error::ConverterError>
 where
     F: Fn(&str) + Sync + Send,
 {
@@ -69,7 +72,7 @@ where
         .collect::<Result<Vec<ssab::ssqb::ss::format::SsSequenceBinaryT>, _>>()?;
 
     // convert ssab structures to binary data
-    let mut ssab_bin_map = par_iter!(ssab_model_list)
+    let ssab_bins = par_iter!(ssab_model_list)
         .zip(par_iter!(sspj.animepack_names))
         .map(|(anime_binary_t, f)| {
             if should_stop.load(Ordering::Relaxed) {
@@ -93,12 +96,13 @@ where
                 .ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Invalid UTF-8 in file stem".into()))?
                 .to_string();
             let output_file = [file_stem, ssab::ssab::ss::format::SS_ANIME_BINARY_EXTENSION.to_string()].join(".");
-            Ok::<_, crate::converter::converter_error::ConverterError>((output_file, buf.to_vec()))
+            let names = anime_binary_t.animations.iter().map(|animation| animation.name.clone()).collect::<Vec<_>>();
+            Ok::<_, crate::converter::converter_error::ConverterError>((output_file, buf.to_vec(), names))
         })
-        .collect::<Result<HashMap<String, Vec<u8>>, _>>()?;
+        .collect::<Result<Vec<_>, _>>()?;
 
     // convert ssqb structures to binary data
-    let ssqb_bin_map = par_iter!(ssqb_model_list)
+    let ssqb_bins = par_iter!(ssqb_model_list)
         .zip(par_iter!(sspj.sequencepack_names))
         .map(|(sequence_binary_t, f)| {
             if should_stop.load(Ordering::Relaxed) {
@@ -121,12 +125,18 @@ where
                 .ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Invalid UTF-8 in file stem".into()))?
                 .to_string();
             let output_file = [file_stem, ssab::ssqb::ss::format::SS_SEQUENCE_BINARY_EXTENSION.to_string()].join(".");
-            Ok::<_, crate::converter::converter_error::ConverterError>((output_file, buf.to_vec()))
+            let names = sequence_binary_t.sequence_list.iter().map(|sequence| sequence.name.clone()).collect::<Vec<_>>();
+            Ok::<_, crate::converter::converter_error::ConverterError>((output_file, buf.to_vec(), names))
         })
-        .collect::<Result<HashMap<String, Vec<u8>>, _>>()?;
+        .collect::<Result<Vec<_>, _>>()?;
 
-    ssab_bin_map.extend(ssqb_bin_map);
-    Ok((sspj, ssab_bin_map))
+    let mut bin_map = HashMap::new();
+    let mut contents = Contents::new();
+    for (output_file, data, names) in ssab_bins.into_iter().chain(ssqb_bins) {
+        contents.insert(output_file.clone(), names);
+        bin_map.insert(output_file, data);
+    }
+    Ok((sspj, bin_map, contents))
 }
 
 #[derive(Debug, Clone, Default)]
@@ -149,7 +159,7 @@ where
     F: Fn(&str) + Sync + Send,
 {
     let asset_provider = crate::asset_provider::create_asset_provider(path)?;
-    let (sspj, convert_result) = convert_sspj_to_ssab_data_cancellable(asset_provider.as_ref(), &config.convert_config, on_log, should_stop)?;
+    let (sspj, convert_result, contents) = convert_sspj_to_ssab_data_cancellable(asset_provider.as_ref(), &config.convert_config, on_log, should_stop)?;
 
     let outdir_path = match &config.output {
         Some(out_dir) => std::path::PathBuf::from(&out_dir),
@@ -179,6 +189,16 @@ where
             Err(e) => Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("write: {}: {:?}", output_path.as_os_str().to_string_lossy(), e)))),
         }
     })?;
+
+    // One line per binary, by full path so that a batch's interleaved logs still say
+    // which project each came from, naming what a player can be asked to play.
+    let mut written = contents.iter().collect::<Vec<_>>();
+    written.sort();
+    for (name, names) in written {
+        let kind = if name.ends_with(ssab::ssqb::ss::format::SS_SEQUENCE_BINARY_EXTENSION) { "sequences" } else { "animations" };
+        let held = if names.is_empty() { "none".to_string() } else { names.join(", ") };
+        on_log(&format!("Wrote {} ({}: {})", outdir_path.join(name).display(), kind, held));
+    }
 
     if !config.convert_config.embedded {
         let assets = crate::utils::get_assets_of_ssab_files(&convert_result, &sspj);

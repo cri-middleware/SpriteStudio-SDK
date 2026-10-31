@@ -89,7 +89,7 @@ pub fn convert(files: &js_sys::Map, embedded: bool, debug: bool, split: bool, op
     let provider = MemoryAssetProvider::from_files(collected).map_err(js_error)?;
 
     let config = crate::ConvertConfig { embedded, debug, split, optimize };
-    let (sspj, output_map) = crate::convert_sspj_to_ssab_data(&provider, &config, &|_: &str| {}).map_err(js_error)?;
+    let (sspj, output_map, _) = crate::convert_sspj_to_ssab_data(&provider, &config, &|_: &str| {}).map_err(js_error)?;
 
     let output = js_sys::Map::new();
     for (name, data) in &output_map {
