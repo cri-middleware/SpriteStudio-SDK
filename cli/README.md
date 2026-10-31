@@ -108,8 +108,10 @@ For each `.sspj` converted, a directory is produced next to the source file (unl
 
 | Mode | Output directory | Contents |
 |---|---|---|
-| Default | `<name>/` | `.ssab` (one per animation), `.ssqb` (per sequence pack, if `.ssqe` is referenced), and copies of referenced textures |
+| Default | `<name>/` | `.ssab` (one per animation pack, `.ssae`), `.ssqb` (per sequence pack, if `.ssqe` is referenced), and copies of referenced textures |
 | `--embedded` | `<name>_emb/` | Same as above, but referenced assets are inlined into each `.ssab` (no separate texture copies) |
+
+The run prints a line for each binary it wrote, `Wrote <path> (animations: …)` or, for an `.ssqb`, `(sequences: …)`: the names a player can be asked to play.
 
 # Next Steps
 
