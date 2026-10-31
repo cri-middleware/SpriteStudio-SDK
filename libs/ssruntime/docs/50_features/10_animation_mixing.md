@@ -315,6 +315,7 @@ const done = ctx.is_track_finished(2);
 - **Phases are not aligned.** Sources of different lengths advance on their own clocks. For unrelated cycles (breathing and blinking) that is the correct behavior. To keep a 30-frame walk and a 60-frame run in step, seek them in the Player.
 - **There are no per-part masks.** The range a track affects is decided by where its animation has keys (§1-2).
 - **One ssab only.** Animations from another ssab cannot be stacked.
+- **Instance and Effect parts are not mixed.** Their slots belong to the parts of the ssab, not to one animation, so a crossfade on track 0 does not set them up again: the child animation or the effect keeps running across the switch. Their keys are discrete attributes and come from track 0's main animation, and a slot acts on the incoming animation's key only when it sees a new key, which it detects by the frame the key sits on. Where the outgoing and incoming animations key the part on the same frame, the slot sees no change, and the part carries on with the outgoing animation's setting.
 
 ## 10. Performance
 
