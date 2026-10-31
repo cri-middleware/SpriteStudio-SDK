@@ -57,7 +57,9 @@ plugins:
         introduction, design, core playback (`30_core`), parts (`40_parts`), features
         (`50_features`) and troubleshooting (`60_troubleshooting`), which is organised by
         symptom. The Rust API of `ssruntime` is rustdoc HTML at `api/ssruntime/` under the site
-        root; it is not part of this file.
+        root; it is not part of this file. The converter CLI, `ssconverter-cli`, is documented in
+        `cli/README.md` (https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/cli/README.md),
+        with a fixed download URL per platform.
       sections:
         Docs:
           - "*.md"
