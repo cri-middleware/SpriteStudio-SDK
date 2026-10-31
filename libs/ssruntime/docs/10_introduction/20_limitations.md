@@ -68,6 +68,7 @@ The mode that embeds assets in the ssab has these constraints:
 - Discrete attributes such as cell, parts color and hide follow track 0's main animation, and switch to the incoming one when a crossfade on track 0 begins.
 - The phases of sources with different lengths are not synchronized.
 - There is no per-part mask. The range a track affects is the range its animation has keys on.
+- Instance and Effect parts are not mixed. Their slots belong to the parts, not to an animation, so a crossfade does not set them up again, and where the outgoing and incoming animations key such a part on the same frame, it carries on with the outgoing animation's setting.
 
 → [Animation Mixing §9](../50_features/10_animation_mixing.md#9-constraints)
 
@@ -76,6 +77,12 @@ The mode that embeds assets in the ssab has these constraints:
 Many audio APIs do not support playing audio in reverse, so do not play sounds while playback is moving backward. The events themselves arrive whatever the direction.
 
 → [Audio §2](../50_features/50_audio.md#2-conditions-for-playing)
+
+## 10. A skinned mesh part cannot be followed by its transform
+
+A mesh part bound to bones is drawn from the world-space vertices the bones deform ([Mesh](../40_parts/20_mesh.md)). The part's own transform, which `partTransform` returns, does not move with those vertices: it stays where the part's own keys put it, usually at its setup position near the character's root. Part following that reads it puts the follower there, not on the visible art. Follow a null or bone part placed at that spot instead; the artist adds one in SpriteStudio.
+
+→ [Player API Conventions §9](../20_design/30_api_conventions.md#9-reading-a-part)
 
 ---
 [Back to contents](../README.md)
