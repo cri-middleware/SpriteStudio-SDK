@@ -4,7 +4,7 @@
 
 The API conventions stop the same feature from growing a different name in every Player. But an aligned API loses most of its value **if the first five minutes are a different experience in every Player.** The shared vocabulary pays off for the reader moving to their second Player; the reader touching their first one meets the README.
 
-This document fixes what the first screen answers, and who it answers to. **What is shared is four questions, their order, what each step names, one tree for placement, the two doors past them, a guide behind the first that keeps its reader, and a shelf behind the second. The rest of how they are answered belongs to the host.** §5 then names the Player the others are read against when their behaviour parts, and §6 fixes the shape of their roadmaps.
+This document fixes what the first screen answers, and who it answers to. **What is shared is a short why, the four questions after it, their order, what each step names, one tree for placement, the two doors past them, a guide behind the first that keeps its reader, and a shelf behind the second. The rest of how they are answered belongs to the host.** §5 then names the Player the others are read against when their behaviour parts, and §6 fixes the shape of their roadmaps.
 
 ---
 
@@ -17,7 +17,7 @@ This document fixes what the first screen answers, and who it answers to. **What
 | 3 | How do I get it on screen? | Place the node / component / element, assign the `.ssab`, play |
 | 4 | Where do I read next? | Getting started, basic playback, and what this Player cannot do |
 
-**The order is part of the convention.** Do not put concept explanations, architecture diagrams or feature lists before question 1. Whoever is reading there has not decided to use this Player yet.
+**The order is part of the convention.** Whoever is reading above question 1 has not decided to use this Player yet, so the one thing written for them comes first: a short list of why someone in this host would animate with SpriteStudio. Each item is a gain they can recognise in their host's terms — a node in the scene, a widget, one more `show`, a crossfade instead of a cut — and how the Player works earns a clause only as the reason for a gain, as a SIMD core is why it stays light on mobile. Concept explanations, architecture diagrams and checklists of supported parts serve a reader who has already decided; they go behind the doors (§4), not ahead of question 1.
 
 **Question 4 is three kinds of link, not a link budget.** Getting started, basic playback, and the Player's own Limitations & Scope — the last because a reader deciding whether to adopt asks what it cannot do before they ask anything else, and because every Player publishes that page. Past those three, a link earns its place by answering a question a *reader of the README* has: how do I troubleshoot this, how do I migrate from the old Player. **A list that reproduces the documentation site's navigation has moved the nav rather than summarised it**, and the reader who needed the nav was already going to the site.
 
