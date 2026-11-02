@@ -17,7 +17,7 @@ Calling `ss_runtime_get_frame_data` writes the values for every part of that fra
 | Local UVs | `ss_runtime_get_local_uvs` | 10 floats | The UVs for the 5 vertices above. They are **pixel coordinates on the cellmap texture**, so normalize them by dividing by the texture size |
 | Cell info | `ss_runtime_get_cell_meta` | 6 floats | `[origin x, origin y, width, height, left, top]`. Left and top are the position on the cellmap texture |
 
-The values of a part with no cell are 0. Mesh, shape and 9-slice parts pass their vertices through dedicated buffers ([Mesh](../40_parts/20_mesh.md), [9-slice, Shape and Text](../40_parts/30_special_parts.md)).
+The values of a part with no cell are 0. Mesh, shape and 9-slice parts pass their vertices through dedicated buffers ([Mesh](../40_parts/20_mesh.md), [9-Slice, Shape, and Text](../40_parts/30_special_parts.md)).
 
 UV animation (moving, rotating and scaling the cut-out region) and part and cell flips (`flip_h` / `flip_v` / `img_flip_h` / `img_flip_v`) are already reflected in the local vertices and local UVs. The Player does not need to flip coordinates or UVs.
 
@@ -85,9 +85,9 @@ The values in `draw_order` are indices into `FrameData.parts`, and the SoA buffe
 | :--- | :--- | :--- |
 | `Normal` | Local vertices (§1) and world matrices | This page, [Parts Color](../40_parts/10_parts_color.md) |
 | `Mesh` | The mesh SoA buffer | [Mesh](../40_parts/20_mesh.md) |
-| `Shape` | The shape SoA buffer | [9-slice, Shape and Text §2](../40_parts/30_special_parts.md#2-shape) |
-| `Nines` | The 9-slice SoA buffer | [9-slice, Shape and Text §1](../40_parts/30_special_parts.md#1-9-slice) |
-| `Text` | No vertices. The Player builds the glyphs from the ssab | [9-slice, Shape and Text §3](../40_parts/30_special_parts.md#3-text) |
+| `Shape` | The shape SoA buffer | [9-Slice, Shape, and Text §2](../40_parts/30_special_parts.md#2-shape) |
+| `Nines` | The 9-slice SoA buffer | [9-Slice, Shape, and Text §1](../40_parts/30_special_parts.md#1-9-slice) |
+| `Text` | No vertices. The Player builds the glyphs from the ssab | [9-Slice, Shape, and Text §3](../40_parts/30_special_parts.md#3-text) |
 | `Mask` | Writes only to the stencil (or coverage). Draws no color | [Mask](../40_parts/40_mask.md) |
 | `Instance` | Draws a child animation at that position | [Instance Parts](../40_parts/50_instance.md) |
 | `Effect` | Draws the effect's particles at that position | [Effect Parts](../40_parts/60_effect.md) |

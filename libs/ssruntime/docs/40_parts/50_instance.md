@@ -77,7 +77,7 @@ When the child advances its own instance parts and effect parts (when it advance
 | Whether the parent looped | Pass `r.child_looped`. An independently played child runs on its own elapsed time, not the parent's, so for the grandchild "the parent looped" is this value, not the parent animation's `ss_runtime_just_looped`. If you forget to pass it, the grandchild's playback key is not restarted when the child loops, and it does not play from the second cycle on |
 | Elapsed time | The parent's elapsed time multiplied by the absolute value of the speed `ss_instance_slot_get_speed` reads after `ss_instance_slot_step`. The child runs at that speed, so the grandchildren run at that speed too. Passing the parent's value unchanged makes the grandchildren alone run at a different rate under a key whose speed is not 1. Do not use `speed` in `ss_event_instance_info`. When the parent goes back before an independent child's first explicit key, that holds the implicit key's 1, but the slot ignores the implicit key and keeps running the child at the previous key's speed (§3), so the grandchildren alone run at a different rate. The child's own `ss_instance_slot_step` still takes the parent's elapsed time unchanged (the slot applies the speed itself) |
 | Sub-frame setting | Pass the child the same setting as the parent. Pass it both when the parent's setting changes and when the child is created. Otherwise the parent moves smoothly while only the child moves in whole frames |
-| Mask settings | Pass the composed settings ([Masks §2-6](./40_mask.md#2-6-composing-mask-settings-through-an-instance)) |
+| Mask settings | Pass the composed settings ([Mask §2-6](./40_mask.md#2-6-composing-mask-settings-through-an-instance)) |
 
 ## 5. Drawing the child
 

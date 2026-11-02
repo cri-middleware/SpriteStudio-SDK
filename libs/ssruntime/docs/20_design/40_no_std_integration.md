@@ -1,6 +1,6 @@
 > [日本語](./40_no_std_integration.ja.md) | **English**
 
-# Integrating into no_std environments
+# Integrating into no_std Environments
 
 The Brain runs as `#![no_std]`. It can be integrated into embedded environments without a filesystem or threads, into game consoles, and into engines that use their own memory allocator. Every native binary the SDK distributes (iOS / Android / macOS / Linux / Windows) is built as `no_std`. Read this page if you build it yourself, or if you want to use the engine's allocator.
 
@@ -178,7 +178,7 @@ Numbers you verify in a `std` build may differ from the distributed build by a f
 |---|---|---|
 | On panic | Prints a message and a backtrace to stderr, then aborts | Calls `abort()` immediately (no message) |
 
-Both are built with `panic = "abort"`, so unwinding never occurs. In the distributed build the reason for a panic is not logged, so catching `SIGABRT` in the Player does not tell you the cause. **Do not swallow panics in the Player layer.** You would no longer be able to trace where it stopped. Instead, validate the arguments you pass to the Brain on the Player side, and send the reason for a failed call to the log ([Loading and initialization §4](../30_core/10_initialization.md#4-logs-and-errors)).
+Both are built with `panic = "abort"`, so unwinding never occurs. In the distributed build the reason for a panic is not logged, so catching `SIGABRT` in the Player does not tell you the cause. **Do not swallow panics in the Player layer.** You would no longer be able to trace where it stopped. Instead, validate the arguments you pass to the Brain on the Player side, and send the reason for a failed call to the log ([Loading and Initialization §4](../30_core/10_initialization.md#4-logs-and-errors)).
 
 ### 5-3. Global allocator
 

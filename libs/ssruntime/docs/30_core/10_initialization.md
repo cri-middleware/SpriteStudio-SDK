@@ -2,7 +2,7 @@
 
 # Loading and Initialization
 
-This page covers how to hand an ssab to the Brain and make it ready to play, and how to destroy it. Decide first who holds the ssab memory (borrow / copy), in [Player Design §2](../20_design/20_architecture.md#2-how-ssab-memory-is-held).
+This page covers how to hand an ssab to the Brain and make it ready to play, and how to destroy it. Decide first who holds the ssab memory (borrow / copy), in [Player Design Approach §2](../20_design/20_architecture.md#2-how-ssab-memory-is-held).
 
 ## 1. Resource and Context
 

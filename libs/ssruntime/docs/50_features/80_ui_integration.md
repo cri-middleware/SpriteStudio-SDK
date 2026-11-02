@@ -21,7 +21,7 @@ This page is what a Player that offers UI integration keeps the same as the othe
 
 The point is taken in the space the Player reports part outlines in. The space of `partTransform` is recommended.
 
-Like the other APIs that read one part, **answer from the frame the last tick built** ([API Conventions §9](../20_design/30_api_conventions.md#9-reading-a-part)). Do not build a frame to answer.
+Like the other APIs that read one part, **answer from the frame the last tick built** ([Player API Conventions §9](../20_design/30_api_conventions.md#9-reading-a-part)). Do not build a frame to answer.
 
 A FrameData's `draw_order` leaves hidden parts out (unless they draw as a mask), so the first part hit walking `draw_order` from the back is the front-most.
 
@@ -96,7 +96,7 @@ When a state has no label, fall back in this order.
 Let code replace the default for a state with an animation name, or with a section between labels.
 
 - An override also applies to the states that fall back to it. Override `hover`, and a `pressed` with no label plays that section too.
-- Report an override that names an animation or label the pack does not have once ([API Conventions §7](../20_design/30_api_conventions.md#7-reporting-failure)), and treat that state as having no override.
+- Report an override that names an animation or label the pack does not have once ([Player API Conventions §7](../20_design/30_api_conventions.md#7-reporting-failure)), and treat that state as having no override.
 
 Resolving a state's section, fallbacks of §2-3 and overrides included, in one function is recommended. If the same function also returns the reduced-motion decision (§3), every branch can be tested with neither a runtime nor a display node.
 

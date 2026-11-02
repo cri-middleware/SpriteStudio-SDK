@@ -8,7 +8,7 @@ Before you start writing a Player, check that the Brain can be used on your targ
 
 The Brain is a C-API library written in Rust, and its per-frame output is a FlatBuffers buffer. Check the following three points for your target engine and language.
 
-1. **Can Rust build for the platform?** Check that your target CPU architecture and platform are listed in [Rust's platform support](https://doc.rust-lang.org/beta/rustc/platform-support.html). If the SDK release has no library for that platform, build it yourself ([no_std Integration §1](./40_no_std_integration.md#1-build-configuration)).
+1. **Can Rust build for the platform?** Check that your target CPU architecture and platform are listed in [Rust's platform support](https://doc.rust-lang.org/beta/rustc/platform-support.html). If the SDK release has no library for that platform, build it yourself ([Integrating into no_std Environments §1](./40_no_std_integration.md#1-build-configuration)).
 2. **Can the engine's language call C functions (or WebAssembly)?** Check that the engine can load a native library or WebAssembly, and that its language can bind and call the functions.
 3. **Does FlatBuffers code generation support the language?** Check [the languages FlatBuffers supports](https://flatbuffers.dev/support/).
 

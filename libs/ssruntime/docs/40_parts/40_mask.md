@@ -1,6 +1,6 @@
 > [日本語](./40_mask.ja.md) | **English**
 
-# Masks
+# Mask
 
 How to implement SpriteStudio's "mask" and "clipping". Both are built on the same mechanism, the stencil, but **they are different features**. The Brain provides the draw order and the mask DrawBatches. The Player decides which parts each mask affects, and writes to the stencil (or the coverage bitmap).
 

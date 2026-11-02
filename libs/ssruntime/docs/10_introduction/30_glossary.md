@@ -38,7 +38,7 @@ These are the terms used in this guide. Each concept has exactly one term. A ter
 | Brain | `libssruntime`. It computes animation state and outputs the draw plan. → [Overview §2](./10_overview.md#2-division-of-work-between-brain-and-player) |
 | Player | The implementation that wraps the Brain and does loading, drawing, event notification and sound playback on the engine |
 | ssconverter | The converter that reads an sspj and generates ssab. It comes as a library (`libssconverter`) and a CLI (`ssconverter-cli`) |
-| Resource | Read-only data created by loading an ssab. A resource handle in the C-API, `AnimationResource` in Rust. Several Contexts can share it. → [Loading & Initialization §1](../30_core/10_initialization.md#1-resource-and-context) |
+| Resource | Read-only data created by loading an ssab. A resource handle in the C-API, `AnimationResource` in Rust. Several Contexts can share it. → [Loading and Initialization §1](../30_core/10_initialization.md#1-resource-and-context) |
 | Context | The playback state and computation buffers for one animated object. You use it by binding a resource to it |
 | FrameData | The FlatBuffers buffer that the Brain outputs every frame. It contains the part states, the draw plan, parts color and more |
 | PartData | The static definition of a part stored in the ssab (the ssab's `parts`). It does not change from frame to frame |

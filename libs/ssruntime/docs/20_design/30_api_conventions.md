@@ -1,6 +1,6 @@
 > [日本語](./30_api_conventions.ja.md) | **English**
 
-# Player API conventions
+# Player API Conventions
 
 A Player's public API is written in its host's language. This page draws the line between what every Player unifies and what is left to each language's conventions.
 

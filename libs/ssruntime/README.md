@@ -27,7 +27,7 @@ A Rust dependent takes the crate as it comes — nothing is on by default:
 ssruntime = "7.0.0-beta.1"
 ```
 
-The binary deliverables are built from `ssruntime-ffi`, the sibling crate that emits this one as a `staticlib` / `cdylib`. The feature set for each target, and the command that builds it, are in [Integrating into no_std environments §1](./docs/20_design/40_no_std_integration.md#1-build-configuration).
+The binary deliverables are built from `ssruntime-ffi`, the sibling crate that emits this one as a `staticlib` / `cdylib`. The feature set for each target, and the command that builds it, are in [Integrating into no_std Environments §1](./docs/20_design/40_no_std_integration.md#1-build-configuration).
 
 *Note: An allocator (`alloc` crate) is still required even in `no_std` mode — animation state and metadata are heap-allocated.*
 

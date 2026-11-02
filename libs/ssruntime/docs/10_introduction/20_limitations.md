@@ -19,7 +19,7 @@ Text has these further constraints:
 - Kerning is not stored in the ssab.
 - Bitmap-font glyphs are looked up by a 16-bit character code, so characters above U+FFFF are not supported.
 
-→ [9-Slice, Shape and Text §3](../40_parts/30_special_parts.md#3-text) / [Audio](../50_features/50_audio.md)
+→ [9-Slice, Shape, and Text §3](../40_parts/30_special_parts.md#3-text) / [Audio](../50_features/50_audio.md)
 
 ## 2. WebAssembly comes in SIMD and non-SIMD builds
 
@@ -43,7 +43,7 @@ When you move the playback position with `ss_runtime_set_frame_no`, the events (
 
 For processing speed and binary size, the Brain does not validate the structure of the input ssab. Passing a corrupted or crafted ssab can make it read out-of-bounds memory and crash. If your Player receives an ssab from the network or from user input, validate it before passing it to the Brain.
 
-→ [Loading & Initialization §2](../30_core/10_initialization.md#2-validating-an-ssab-before-passing-it)
+→ [Loading and Initialization §2](../30_core/10_initialization.md#2-validating-an-ssab-before-passing-it)
 
 ## 6. The Player keeps the bytes of a borrowed ssab alive
 
@@ -51,7 +51,7 @@ A resource created with `ss_resource_create_borrow` refers directly to the ssab 
 
 Resources and Contexts can be destroyed in any order. A resource is reference-counted, and calling `ss_resource_destroy` while a Context has it bound does not free it.
 
-→ [Loading & Initialization §1](../30_core/10_initialization.md#1-resource-and-context)
+→ [Loading and Initialization §1](../30_core/10_initialization.md#1-resource-and-context)
 
 ## 7. ssab in embedded mode
 

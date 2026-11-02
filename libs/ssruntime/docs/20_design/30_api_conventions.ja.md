@@ -243,7 +243,7 @@ Godot のシグナル、Unity の `event` と `UnityEvent`、TypeScript の「�
 
 `subFrameEnabled` と `frameSkipEnabled` の既定は、ホストのエンジンの慣習に合わせてかまいません。
 
-配置（`fit` / `align`）には独自の既定値があり、契約の残りと一緒に[配置：fit と align](../50_features/70_placement.ja.md)にまとめています。こちらも Player が選ぶものではありません。
+配置（`fit` / `align`）には独自の既定値があり、契約の残りと一緒に[配置: fit と align](../50_features/70_placement.ja.md)にまとめています。こちらも Player が選ぶものではありません。
 
 ### 6-1. パーツ追従のオプション
 

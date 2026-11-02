@@ -75,8 +75,8 @@ SDK の `tests/overall/overall.sspj` には、機能ごとのアニメーショ�
 | [シーケンス](./50_features/40_sequence.ja.md) | 複数のアニメーションを順に再生する |
 | [オーディオ](./50_features/50_audio.ja.md) | 音を鳴らす条件と、音の寿命 |
 | [エディタ統合](./50_features/60_editor_integration.ja.md) | エンジンのエディタで sspj を変換する |
-| [配置：fit と align](./50_features/70_placement.ja.md) | ホストがレイアウトした箱にアニメーションを収める |
-| [UI 統合：当たり判定・UI 状態・reduced motion](./50_features/80_ui_integration.ja.md) | アニメーションをボタンなどの UI の部品にする |
+| [配置: fit と align](./50_features/70_placement.ja.md) | ホストがレイアウトした箱にアニメーションを収める |
+| [UI 統合: 当たり判定・UI 状態・reduced motion](./50_features/80_ui_integration.ja.md) | アニメーションをボタンなどの UI の部品にする |
 
 ### 60. トラブルシューティング
 
