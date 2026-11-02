@@ -18,7 +18,7 @@ void MyPlayer::tick(float delta_seconds) {
 
     // 4. そのフレームの状態を計算させる（§6）
     float draw_frame = sub_frame_enabled ? frame_no : floorf(frame_no);
-    const uint8_t* fd; size_t fd_len;
+    const uint8_t* fd; uintptr_t fd_len;
     ss_runtime_get_frame_data(ctx, draw_frame, &fd, &fd_len);
 
     // 5. インスタンスパーツ・エフェクトパーツの子を進め、描画する（描画ループのページ）
@@ -74,7 +74,7 @@ ss_runtime_play(ctx);
 
 セットアップは、再生の状態も **Stopped** に戻し、一時停止の保持も解きます（§4）。
 
-track 0 のアニメーションを替える残りの 2 つの方法、track 0 への `ss_runtime_crossfade` と `ss_runtime_set_track_animation` も、同じ表に従います。保持する設定は track 0 のもので、載せたアニメーションに効きます。再生区間とループ回数は戻ります。セットアップと違い、再生の状態はそのままです（クロスフェードは再生を続けます）。[アニメーションミキシング §1-5](../50_features/10_animation_mixing.ja.md) を参照してください。
+track 0 のアニメーションを替える残りの 2 つの方法、track 0 への `ss_runtime_crossfade` と `ss_runtime_set_track_animation` も、同じ表に従います。保持する設定は track 0 のもので、載せたアニメーションに効きます。再生区間とループ回数は戻ります。セットアップと違い、再生の状態はそのままです（クロスフェードは再生を続けます）。[アニメーションミキシング §1-5](../50_features/10_animation_mixing.ja.md#1-5-トラックの再生設定) を参照してください。
 
 ## 4. 再生の状態
 

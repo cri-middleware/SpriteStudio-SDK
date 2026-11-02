@@ -37,7 +37,7 @@ use sspj::sspj::SsProject;
 use sspj::ssloader::SsLoader;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-let path = Path::new("path/to/project.sspj");
+    let path = Path::new("path/to/project.sspj");
 
     // Load the project and all referenced files
     let project = SsProject::load_from_file(path)?;
@@ -64,14 +64,20 @@ let path = Path::new("path/to/project.sspj");
 # Features
 
 - **Full Type Support**: Maps SpriteStudio internal types (Interpolation types, Blend modes, Attributes) to Rust enums and structs.
-- **Parallel Loading**: Uses `rayon` to load referenced external files (like `.ssae`, `.ssce`) concurrently for faster startup times.
+- **Parallel Loading**: Uses `rayon` (enabled by the default `parallel` Cargo feature) to load referenced external files (like `.ssae`, `.ssce`) concurrently for faster startup times. Disable default features (`default-features = false`) for sequential loading on targets without threads such as `wasm32-unknown-unknown`.
 - **Serde Integration**: All data structures derive `Deserialize`, allowing for easy integration with other serde-compatible tools.
 
 # Architecture
 
 - `sspj::sspj`: Defines the root `SsProject` struct.
 - `sspj::ssae`: Definitions for animation data, parts, and keyframes.
-- `sspj::ssattribute`: specific attribute definitions (Position, Rotation, Scale, User Data, etc.).
+- `sspj::ssattribute`: Specific attribute definitions (Position, Rotation, Scale, User Data, etc.).
 - `sspj::ssce`: Cell map and cell definitions.
 - `sspj::ssee`: Effect node and particle behavior definitions.
+- `sspj::ssqe`: Sequence pack and sequence definitions.
+- `sspj::ssse`: Sound effect list definitions.
+- `sspj::sscharmap`: Bitmap font (`.fnt`) character map parser and definitions.
+- `sspj::ssloader`: The `SsLoader` trait for loading XML and `.fnt` files.
+- `sspj::sstypes`: Shared primitive types and enums (blend modes, interpolation types, etc.).
+- `sspj::sspj_error`: Error types returned during loading and parsing.
 

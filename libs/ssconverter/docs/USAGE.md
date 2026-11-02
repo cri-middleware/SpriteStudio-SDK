@@ -1,3 +1,5 @@
+[**日本語**](./USAGE.ja.md) | [**English**](./USAGE.md)
+
 # libssconverter Integration Guide
 
 `libssconverter` is a C-compatible library for converting SpriteStudio project files (`.sspj`) into a runtime-optimized binary format (`.ssab`).
@@ -82,7 +84,7 @@ void on_conversion_complete(Context* ctx) {
         ss_converter_get_error(ctx, &err_msg, &len);
         if (err_msg) {
             printf("Error: %.*s\n", (int)len, err_msg);
-            // Memory obtained via ss_converter_get_error is freed by ss_converter_destroy
+            // The buffer returned by ss_converter_get_error remains valid until the next conversion starts on this Context or ss_converter_destroy is called
         }
     }
 
@@ -118,5 +120,5 @@ For the implementation patterns, and for concrete Godot and Unity code, see the 
 ## 5. Notes
 
 - **Memory Management**: Always destroy contexts created with `ss_converter_create` using `ss_converter_destroy`.
-- **Thread Safety**: While conversion happens in an internal thread, do not call `ss_converter_convert` multiple times simultaneously on the same `Context`.
+- **Thread Safety**: A `Context` runs one job at a time; while a job is running in its internal thread, do not start another `ss_converter_convert` or `ss_converter_scan_dir` on the same `Context`.
 - **Path Format**: It is recommended to use absolute paths when passing them to the library.

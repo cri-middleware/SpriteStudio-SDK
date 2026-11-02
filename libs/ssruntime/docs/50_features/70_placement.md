@@ -59,3 +59,6 @@ A Player may also measure the box from the geometry it draws and offer that as `
 ## 4. Coordinates
 
 The solved origin is in **view coordinates**, with `(0, 0)` at the view's top-left and Y pointing down. The unfitted origin is therefore the view's centre, not `(0, 0)`. If the Player's own placement call measures from somewhere else, such as the view's centre, convert on the way in. Getting that wrong looks like a correct fit displaced by half the view.
+
+---
+[Back to contents](../README.md)

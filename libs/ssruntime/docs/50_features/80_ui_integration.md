@@ -27,7 +27,7 @@ A FrameData's `draw_order` leaves hidden parts out (unless they draw as a mask),
 
 ```cpp
 // partOutline() and contains() are the Player's functions for the outlines of §1-2 (not in the C-API)
-int hitTestPart(const ss::FrameData* frame, Point point, const std::set<int>* targets) {
+int hitTestPart(const ss::runtime::FrameData* frame, Point point, const std::set<int>* targets) {
     auto order = frame->draw_order();
     for (int rank = int(order->size()) - 1; rank >= 0; --rank) {
         int p = order->Get(rank);

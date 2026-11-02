@@ -43,13 +43,13 @@ Brain は、描画する順に並べたパーツ（`draw_order`）と、それ�
 
 ```cpp
 // 1. FrameData を計算させる
-const uint8_t* fd_ptr; size_t fd_len;
+const uint8_t* fd_ptr; uintptr_t fd_len;
 ss_runtime_get_frame_data(ctx, frame_no, &fd_ptr, &fd_len);
 auto frame_data = ss::runtime::GetFrameData(fd_ptr);
 
 // 2. SoA バッファを受け取る
 const float *world_matrices, *local_vertices;
-size_t m_len, v_len;
+uintptr_t m_len, v_len;
 ss_runtime_get_world_matrices(ctx, &world_matrices, &m_len);
 ss_runtime_get_local_vertices(ctx, &local_vertices, &v_len);
 

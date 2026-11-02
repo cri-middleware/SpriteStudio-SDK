@@ -5,7 +5,7 @@
 [SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/README.ja.md) のワークフローにおける再生の **Brain（中枢）** です。[ssconverter-cli](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/cli/README.ja.md) が生成した `.ssab` バイナリを読み込み、レンダラーがフレーム毎に必要とするすべて — パーツの状態（トランスフォーム、メッシュ変形、カラー）、エンジン非依存の `DrawBatch` プラン、イベント信号 — を出力します。
 
 > **エンジン非依存設計**
-> `libssruntime` 自体は描画を一切行いません。各「Player」（エンジン / プラットフォーム統合）が出力された状態を受け取り、ネイティブの描画 API で実際の描画を行います。この分離設計こそが、エンジン間で一貫した再生結果を生む根拠です — 詳細はトップ README の「[なぜこの SDK を選ぶべきか？](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/README.ja.md)」を参照してください。
+> `libssruntime` 自体は描画を一切行いません。各「Player」（エンジン / プラットフォーム統合）が出力された状態を受け取り、ネイティブの描画 API で実際の描画を行います。この分離設計こそが、エンジン間で一貫した再生結果を生む根拠です — 詳細はトップ README の「[なぜこの SDK を選ぶべきか？](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/README.ja.md#-なぜこの-sdk-を選ぶべきか)」を参照してください。
 
 # 主な機能
 
@@ -19,7 +19,7 @@
 
 # `no_std` サポート
 
-`libssruntime` は `no_std` 環境と互換性があるように設計されており、組み込みシステムやカスタムゲームエンジンのコアでの利用に適しています。
+`libssruntime` は `no_std` ファーストで設計されています。`std` は開発時の利便性のためだけのオプトインであり、リリース用のスクリプトでは一切使用されません。
 
 Rust から依存する場合は、そのまま追加します。デフォルトで有効になる機能はありません：
 
@@ -116,13 +116,10 @@ void play_animation(const uint8_t* ssab_data, size_t size) {
         
         // 6. 描画情報の取得
         const uint8_t* data;
-        size_t len;
-        // フレーム番号は浮動小数で管理・取得されます（サブフレーム対応）
+        uintptr_t len;
+        // フレーム番号は浮動小数で管理・取得されます（サブフレーム対応）。
+        // 整数フレームのみで再生したい場合は frame の代わりに floorf(frame) を渡します。
         ss_runtime_get_frame_data(ctx, frame, &data, &len);
-        
-        // オプション: 整数フレームとして扱いたい場合は Player 側で切り捨て（floor）を行ってください。
-        // float decimal = ss_runtime_get_frame_no(ctx) - floor(ss_runtime_get_frame_no(ctx));
-        // render_parts(data, len, decimal);
     }
 
     // リソースとコンテキストの破棄
@@ -146,24 +143,6 @@ void play_animation(const uint8_t* ssab_data, size_t size) {
 
 # 開発・コード生成 (fbsファイルの更新)
 
-`fbs` フォルダ内の `.fbs` ファイルを変更・更新した場合、Rust コードを再生成する必要があります。再生成には `flatc` コマンド (Google FlatBuffers Compiler) がインストールされている必要があります。
-
-## 更新手順
-
-1. `flatc` (Google FlatBuffers Compiler) をインストールします。使うバージョンは [CONTRIBUTING](../../CONTRIBUTING.md#前提条件) を参照してください。
-2. `fbs/` フォルダ内の `.fbs` ファイルを更新・編集します。
-3. 以下のスクリプトを実行し、Rust コードを再生成します。
-
-### Windows (PowerShell)
-
-```powershell
-./scripts/generate.ps1
-```
-
-### macOS / Linux (Bash)
-
-```bash
-./scripts/generate.sh
-```
+`fbs/` 内の `.fbs` ファイルを変更した場合は、`./scripts/generate.sh`（Windows では `./scripts/generate.ps1`）を実行して `src/generated/` の Rust コードを再生成してください。必要な `flatc` のバージョンや手順の詳細は [CONTRIBUTING.md](../../CONTRIBUTING.md#generated-code) を参照してください。
 
 

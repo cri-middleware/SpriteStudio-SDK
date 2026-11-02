@@ -80,13 +80,15 @@ The following table shows exactly which fields of SSAB's `PartAnimationData` are
 
 Complex attributes are stored in pools within `FrameData` to avoid duplicating large data structures. They are referenced by `short` indices in `PartState`. An index of `-1` means "no entry for this attribute on this frame."
 
-| PartState Index Field | Source: SSAB `PartAnimationData` Field | Table in FrameData | Description |
+> **Note (`RenderMode`):** In `Direct` mode (the default), `cells`, `vertices`, and `deforms` are omitted (`None`) from `FrameData` because they are served through the SoA buffers (`ss_runtime_get_local_vertices`, `ss_runtime_get_local_uvs`, `ss_runtime_get_mesh_vertices_x/y`, etc.). They are populated in `FrameData` only in `SceneGraph` mode (`parts_color` and `shaders` are populated in both modes). See [Render Loop §3](./docs/30_core/40_render_loop.md#3-rendermode).
+
+| PartState Index Field | Source: SSAB `PartAnimationData` Field | Pool in FrameData | Description |
 |:---|:---|:---|:---|
-| `cell` | `cell_keys` | `cells` | Reference to cell map and cell name hash. Normal drawing texture is derived from this attribute. |
-| `part_color` | `part_color_keys` | `parts_color` | Per-vertex color and blend type. **The RGBA `a` channel is pre-multiplied with the part's hierarchical `alpha`**, so the Player can write the color directly without a second alpha multiply. |
-| `shader` | `shader_keys` | `shaders` | Interpolated shader parameters and map IDs. |
-| `vertex` | `vertex_keys` | `vertices` | **Pre-computed local vertex coordinates** for the part's quad. The four corners (`lt`/`rt`/`lb`/`rb`) are always populated with `pivot`, `size`, `img_flip_h/v`, and the interpolated raw deform offsets all applied; the Player consumes them directly through the world matrix. The fifth `center` vertex is populated **only when** `update_flag` has `AttributeVertex` or `AttributePartColor` set — those cases want a triangle fan from the center for smoother per-vertex deform / colour gradients. Otherwise `center` is `(0, 0)` and the Player should render the quad as two triangles from the four corners only. The raw deform offsets are not exposed; the `AttributeVertex` flag still indicates whether the part actually has deform animation in the source SSAB. |
-| `deform` | `deform_keys` | `deforms` | Interpolated mesh deformation coordinates. |
+| `cell` | `cell_keys` | `cells` (`[PartAttributeCell]` struct vector; `SceneGraph` mode only) | Reference to cell map and cell name hash. Normal drawing texture is derived from this attribute. |
+| `part_color` | `part_color_keys` | `parts_color` (`[PartAttributePartColor]` struct vector) | Per-vertex color and blend type. **The RGBA `a` channel is pre-multiplied with the part's hierarchical `alpha`**, so the Player can write the color directly without a second alpha multiply. |
+| `shader` | `shader_keys` | `shaders` (`[PartAttributeShader]` struct vector) | Interpolated shader parameters and map IDs. |
+| `vertex` | `vertex_keys` | `vertices` (`[PartAttributeVertex]` struct vector; `SceneGraph` mode only) | **Pre-computed local vertex coordinates** for the part's quad. The four corners (`lt`/`rt`/`lb`/`rb`) are always populated with `pivot`, `size`, `img_flip_h/v`, and the interpolated raw deform offsets all applied; the Player consumes them directly through the world matrix. The fifth `center` vertex is populated **only when** `update_flag` has `AttributeVertex` or `AttributePartColor` set — those cases want a triangle fan from the center for smoother per-vertex deform / colour gradients. Otherwise `center` is `(0, 0)` and the Player should render the quad as two triangles from the four corners only. The raw deform offsets are not exposed; the `AttributeVertex` flag still indicates whether the part actually has deform animation in the source SSAB. |
+| `deform` | `deform_keys` | `deforms` (`[PartAttributeDeform]` table vector; `SceneGraph` mode only) | Interpolated mesh deformation coordinates. |
 
 ---
 
@@ -119,7 +121,7 @@ Inline `struct` (fixed-size, no vtable) keyed by position in `draw_batches`:
 
 | Variant | Geometry source per part |
 |:---|:---|
-| `Normal` | Standard sprite quad — driven by `vertex` pool + `cell` pool (texture from `texture_hash`: `cellmap_name_hash`, or the TCHG texture name when overridden). |
+| `Normal` | Standard sprite quad — driven by the `local_vertices` / `local_uvs` SoA buffers in `Direct` mode (or the `vertices` + `cells` pools in `SceneGraph` mode; texture from `texture_hash`: `cellmap_name_hash`, or the TCHG texture name when overridden). |
 | `Shape` | Procedural shape from `PartTypeShape` (no texture). |
 | `Instance` | Sub-anime instance slot — see [Player Porting Guide](./docs/README.md) for slot pulling. |
 | `Effect` | Particle quads from the matching `EffectSlot` (see `effect_draw_plan.fbs`). |

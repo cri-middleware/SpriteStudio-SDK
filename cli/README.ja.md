@@ -40,7 +40,7 @@ $ cargo install --path cli
 
 # 使い方
 
-`ssconverter-cli` には、**シングルモード** と **バッチモード** の2つの動作モードがあります。
+`ssconverter-cli` は、渡されたパスから `.sspj` ファイルを収集し（ディレクトリは再帰的に探索）、対象が 1 プロジェクトなら**シングルモード**、2 プロジェクト以上なら並列の**バッチモード**で動作します。
 
 ## シングルモード (Single Mode)
 
@@ -58,10 +58,11 @@ $ ssconverter-cli project.sspj -o ./output_folder
 - `-e`, `--embedded`: 参照されているアセット（画像など）を生成される `.ssab` ファイル内に直接埋め込みます。
 - `-o`, `--out-dir <directory>`: 生成ファイルの出力先ディレクトリを指定します。
 - `-h`, `--help`: ヘルプを表示します。
+- `-V`, `--version`: バージョン情報を表示します。
 
 ## バッチモード (Batch Mode)
 
-複数の `.sspj` プロジェクトをまとめて変換します。複数の file パス、またはディレクトリを指定することができます（ディレクトリ内の `.sspj` は再帰的に検索されます）。このモードでは `--out-dir` オプションは無視され、出力は各 `.sspj` の隣に `<name>/` として生成されます。
+複数の `.sspj` プロジェクトをまとめて変換します。複数のファイルパス、またはディレクトリを指定することができます（ディレクトリ内の `.sspj` は再帰的に検索されます）。このモードでは `--out-dir` オプションは無視され、出力は各 `.sspj` の隣に `<name>/`（`--embedded` 指定時は `<name>_emb/`）として生成されます。
 
 ```bash
 # 特定の複数ファイルを変換
@@ -74,6 +75,7 @@ $ ssconverter-cli ./assets/projects ./extra_assets
 ### オプション (バッチモード)
 - `-e`, `--embedded`: アセットを `.ssab` ファイル内に埋め込みます。
 - `-h`, `--help`: ヘルプを表示します。
+- `-V`, `--version`: バージョン情報を表示します。
 
 _注意: バッチモードでは `--out-dir` オプションは利用できません。_
 
@@ -115,18 +117,8 @@ $ ssconverter-cli my_game/project.sspj --embedded
 `.ssab` ファイルが生成できたら、お使いの Player に渡します。置き場所はその Player のドキュメントにあります。ゲームエンジンに自分で組み込む場合は [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime) を通じて読み込みます。実装手順は [Player 移植ガイド](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/docs/README.ja.md) を参照してください。
 
 # 開発者向け
-## ビルド
 
-Rust 環境が必要です。
-
-```bash
-$ cargo build --release
-# バイナリは ./target/release/ssconverter-cli に生成されます
-```
-
-## テスト
-
-`tests/` のテストは、ビルドした CLI を実行して終了ステータスを確かめます。リポジトリのルートで次を実行します。
+ビルド・テスト・コントリビュートの手順は [CONTRIBUTING.md](../CONTRIBUTING.md) を参照してください。このクレートの統合テスト（`cli/tests/`）だけを実行するには、リポジトリのルートで次を実行します。
 
 ```bash
 $ cargo test -p ssconverter-cli

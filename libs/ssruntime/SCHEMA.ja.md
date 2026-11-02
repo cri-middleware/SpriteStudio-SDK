@@ -80,13 +80,15 @@ FrameData (FFI を介したメモリバッファ)
 
 複雑なデータ構造の重複を避けるため、複雑な属性は `FrameData` 内のプールに格納されます。これらは `PartState` 内で `short` 型のインデックスとして参照されます。インデックスが `-1` の場合は「このフレームにこの属性のエントリは無い」ことを意味します。
 
-| PartState 参照フィールド | ソース: SSAB `PartAnimationData` フィールド | FrameData 内のテーブル | 説明 |
+> **注 (`RenderMode`):** 既定の `Direct` モードでは、頂点や UV などは SoA バッファ（`ss_runtime_get_local_vertices`、`ss_runtime_get_local_uvs`、`ss_runtime_get_mesh_vertices_x/y` など）で渡されるため、`FrameData` の `cells`・`vertices`・`deforms` は省略（`None`）されます。これらが `FrameData` に載るのは `SceneGraph` モードのときだけです（`parts_color` と `shaders` は両モードで載ります）。詳細は [描画ループ §3](./docs/30_core/40_render_loop.ja.md#3-rendermode) を参照してください。
+
+| PartState 参照フィールド | ソース: SSAB `PartAnimationData` フィールド | FrameData 内のプール | 説明 |
 |:---|:---|:---|:---|
-| `cell` | `cell_keys` | `cells` | セルマップとセル名ハッシュへの参照。通常描画に使用されるテクスチャはここから取得されます。 |
-| `part_color` | `part_color_keys` | `parts_color` | 4 頂点ぶんのカラーとブレンドタイプ。**RGBA の `a` チャンネルにはパーツの階層的 `alpha` が事前合成済み** なので、Player 側で再度アルファを掛ける必要はありません。 |
-| `shader` | `shader_keys` | `shaders` | 補間済みのシェーダーパラメータとマップ ID。 |
-| `vertex` | `vertex_keys` | `vertices` | **算出済みのローカル頂点座標**。4 隅 (`lt`/`rt`/`lb`/`rb`) は常に `pivot` / `size` / `img_flip_h/v` および補間済みの raw deform オフセット適用済みで、Player はそのままワールド行列を掛けて描画できます。5 番目の `center` 頂点は **`update_flag` に `AttributeVertex` か `AttributePartColor` が立っているときのみ** 設定されます (頂点変形やパーツカラーのグラデーションを center 起点の三角形ファンで滑らかに描画するため)。それ以外のケースでは `center = (0, 0)` で、Player は 4 隅から 2 三角形を組むだけで描画できます。生の deform オフセットは公開されません。`update_flag` 内の `AttributeVertex` フラグは、ソース SSAB に実際に頂点変形アニメがあるかどうかを引き続き示します。 |
-| `deform` | `deform_keys` | `deforms` | 補間済みのメッシュ変形座標。 |
+| `cell` | `cell_keys` | `cells`（`[PartAttributeCell]` struct ベクタ、`SceneGraph` モードのみ） | セルマップとセル名ハッシュへの参照。通常描画に使用されるテクスチャはここから取得されます。 |
+| `part_color` | `part_color_keys` | `parts_color`（`[PartAttributePartColor]` struct ベクタ） | 4 頂点ぶんのカラーとブレンドタイプ。**RGBA の `a` チャンネルにはパーツの階層的 `alpha` が事前合成済み** なので、Player 側で再度アルファを掛ける必要はありません。 |
+| `shader` | `shader_keys` | `shaders`（`[PartAttributeShader]` struct ベクタ） | 補間済みのシェーダーパラメータとマップ ID。 |
+| `vertex` | `vertex_keys` | `vertices`（`[PartAttributeVertex]` struct ベクタ、`SceneGraph` モードのみ） | **算出済みのローカル頂点座標**。4 隅 (`lt`/`rt`/`lb`/`rb`) は常に `pivot` / `size` / `img_flip_h/v` および補間済みの raw deform オフセット適用済みで、Player はそのままワールド行列を掛けて描画できます。5 番目の `center` 頂点は **`update_flag` に `AttributeVertex` か `AttributePartColor` が立っているときのみ** 設定されます (頂点変形やパーツカラーのグラデーションを center 起点の三角形ファンで滑らかに描画するため)。それ以外のケースでは `center = (0, 0)` で、Player は 4 隅から 2 三角形を組むだけで描画できます。生の deform オフセットは公開されません。`update_flag` 内の `AttributeVertex` フラグは、ソース SSAB に実際に頂点変形アニメがあるかどうかを引き続き示します。 |
+| `deform` | `deform_keys` | `deforms`（`[PartAttributeDeform]` table ベクタ、`SceneGraph` モードのみ） | 補間済みのメッシュ変形座標。 |
 
 ---
 
@@ -119,7 +121,7 @@ FrameData (FFI を介したメモリバッファ)
 
 | バリアント | パーツごとのジオメトリソース |
 |:---|:---|
-| `Normal` | 標準スプライト矩形 — `vertex` プール + `cell` プール（テクスチャは `texture_hash` 経由: `cellmap_name_hash`、または上書き時は TCHG のテクスチャ名）。 |
+| `Normal` | 標準スプライト矩形 — `Direct` モードでは `local_vertices` / `local_uvs` SoA バッファ（`SceneGraph` モードでは `vertices` + `cells` プール。テクスチャは `texture_hash` 経由: `cellmap_name_hash`、または上書き時は TCHG のテクスチャ名）。 |
 | `Shape` | `PartTypeShape` から生成される手続き的シェイプ（テクスチャ無し）。 |
 | `Instance` | サブアニメのインスタンススロット — スロット pull の詳細は [Player 移植ガイド](./docs/README.ja.md) を参照。 |
 | `Effect` | 該当 `EffectSlot` のパーティクル矩形（`effect_draw_plan.fbs` 参照）。 |

@@ -89,7 +89,7 @@ In ssae, the part type is a simple enum (`SsPartType`) and type-specific data (e
 | `PartTypeNull` | `SsPartType::Null` | None |
 | `PartTypeNormal` | `SsPartType::Normal` | None |
 | `PartTypeShape` | `SsPartType::Shape` | `shape_type` |
-| `PartTypeText` | `SsPartType::Text` | `text`, `text_bitmap`, `text_family`, etc. |
+| `PartTypeText` | `SsPartType::Text` | `text`, `text_bitmap`, `text_family`, `text_char_map`, `text_size`, `text_space`, `text_smooth`, `text_width`, `text_height`, `e_anchor` |
 | `PartTypeNines` | `SsPartType::Nines` | `nines_margin_l/r/t/b`, `nines_fill_mode` |
 | `PartTypeInstance` | `SsPartType::Instance` | `ref_anime_pack` + `ref_anime_pack_hash`, `ref_anime_name` + `ref_anime_name_hash` (ssae: `ref_anime_pack` + `ref_anime` as strings) |
 | `PartTypeArmature` | `SsPartType::Armature` | None |
@@ -487,12 +487,12 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | `name_hash` | — | Hash for fast lookup |
 | `name` | — | Font name |
 | `name_face` | `info.face` | Font face name |
-| `size` | — | Font size |
-| `padding_l/r/u/d` | — | Padding values |
+| `size` | — | Fixed `0` (not carried from `.fnt`; see [9-slice, Shape and Text §3-2](../ssruntime/docs/40_parts/30_special_parts.md#3-2-bitmap-fonts)) |
+| `padding_l/r/u/d` | — | Fixed `0` (not carried from `.fnt`) |
 | `base` | `common.base` | Baseline |
 | `height_line` | `common.line_height` | Line height |
-| `scale` | `common.scale_w/h` | Texture scale |
-| `spacing` | `info.spacing` | Glyph spacing (x, y) |
+| `scale` | — | Fixed `(1.0, 1.0)` (not carried from `.fnt`) |
+| `spacing` | — | Fixed `(0.0, 0.0)` (not carried from `.fnt`; use `PartTypeText.text_space` for letter spacing) |
 | `size_texture_original` | — | Original texture size |
 | `name_texture` | `pages[*].file` | Texture file names |
 | `name_texture_hash` | — | Hash array of texture file names |
@@ -508,7 +508,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | `width_advance` | `xadvance` | Horizontal advance width |
 | `text` | — | Character text (derived from id in fnt) |
 | `page` | `page` | Texture page index |
-| `channel` | — | Channel index |
+| `channel` | — | Fixed `0` (not carried from `.fnt`) |
 
 ---
 

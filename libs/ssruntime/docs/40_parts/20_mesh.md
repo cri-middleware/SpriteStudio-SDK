@@ -24,7 +24,7 @@ A mesh part changes shape through bone skinning and vertex deformation. The Brai
 const float    *v_x, *v_y, *uvs;
 const uint32_t *v_offsets, *i_offsets;
 const int32_t  *indices;
-size_t v_x_len, v_y_len, v_offsets_len, uvs_len, indices_len, i_offsets_len;
+uintptr_t v_x_len, v_y_len, v_offsets_len, uvs_len, indices_len, i_offsets_len;
 
 ss_runtime_get_mesh_vertices_x(ctx, &v_x, &v_x_len);
 ss_runtime_get_mesh_vertices_y(ctx, &v_y, &v_y_len);

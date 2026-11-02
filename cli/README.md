@@ -40,7 +40,7 @@ $ cargo install --path cli
 
 # Usage
 
-`ssconverter-cli` operates in two main modes: **Single Mode** and **Batch Mode**.
+`ssconverter-cli` collects all `.sspj` files from the paths you pass (walking directories recursively) and runs in **Single Mode** when that resolves to 1 project, or **Batch Mode** in parallel when it resolves to 2 or more projects.
 
 ## Single Mode
 
@@ -59,12 +59,13 @@ $ ssconverter-cli project.sspj -o ./output_folder
 - `-e`, `--embedded`: Embed referenced assets (images, etc.) directly into the generated `.ssab` file.
 - `-o`, `--out-dir <directory>`: Specify the output directory for generated files.
 - `-h`, `--help`: Print help information.
+- `-V`, `--version`: Print version information.
 
 ## Batch Mode
 
 Converts multiple `.sspj` projects at once.
 You can pass multiple file paths or directories containing `.sspj` files.
-In this mode, the `--out-dir` option is ignored; each output is written next to its source `.sspj` in `<name>/`.
+In this mode, the `--out-dir` option is ignored; each output is written next to its source `.sspj` in `<name>/` (or `<name>_emb/` with `--embedded`).
 
 ```bash
 # Convert multiple specific files
@@ -77,6 +78,7 @@ $ ssconverter-cli ./assets/projects ./extra_assets
 ### Options (Batch Mode)
 - `-e`, `--embedded`: Embed referenced assets directly into the generated `.ssab` files.
 - `-h`, `--help`: Print help information.
+- `-V`, `--version`: Print version information.
 
 _Note: The `--out-dir` option is not available in batch mode._
 
@@ -118,18 +120,8 @@ The run prints a line for each binary it wrote, `Wrote <path> (animations: …)`
 Once `.ssab` files are generated, hand them to your Player; its documentation says where they go. To bring them into an engine yourself, load them through [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime), with the [Player Porting Guide](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/docs/README.md) as the integration guidance.
 
 # For Developers
-## Build
 
-You need Rust installed.
-
-```bash
-$ cargo build --release
-# The binary will be at ./target/release/ssconverter-cli
-```
-
-## Test
-
-The tests in `tests/` run the built CLI and check its exit status. From the repository root:
+For build, test, and contribution instructions, see [CONTRIBUTING.md](../CONTRIBUTING.md). To run only this crate's integration tests (`cli/tests/`):
 
 ```bash
 $ cargo test -p ssconverter-cli

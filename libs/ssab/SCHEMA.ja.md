@@ -89,7 +89,7 @@ ssae ではパーツタイプは単純な列挙型 (`SsPartType`) であり、�
 | `PartTypeNull` | `SsPartType::Null` | なし |
 | `PartTypeNormal` | `SsPartType::Normal` | なし |
 | `PartTypeShape` | `SsPartType::Shape` | `shape_type` |
-| `PartTypeText` | `SsPartType::Text` | `text`, `text_bitmap`, `text_family` 等 |
+| `PartTypeText` | `SsPartType::Text` | `text`, `text_bitmap`, `text_family`, `text_char_map`, `text_size`, `text_space`, `text_smooth`, `text_width`, `text_height`, `e_anchor` |
 | `PartTypeNines` | `SsPartType::Nines` | `nines_margin_l/r/t/b`, `nines_fill_mode` |
 | `PartTypeInstance` | `SsPartType::Instance` | `ref_anime_pack` + `ref_anime_pack_hash`、`ref_anime_name` + `ref_anime_name_hash` (ssae: `ref_anime_pack` + `ref_anime` を文字列で保持) |
 | `PartTypeArmature` | `SsPartType::Armature` | なし |
@@ -487,12 +487,12 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | `name_hash` | — | 高速検索用ハッシュ |
 | `name` | — | フォント名 |
 | `name_face` | `info.face` | フォントフェイス名 |
-| `size` | — | フォントサイズ |
-| `padding_l/r/u/d` | — | パディング値 |
+| `size` | — | 固定値 `0`（`.fnt` からは引き継がれない。[9 スライス・シェイプ・テキスト §3-2](../ssruntime/docs/40_parts/30_special_parts.ja.md#3-2-ビットマップフォント) 参照） |
+| `padding_l/r/u/d` | — | 固定値 `0`（`.fnt` からは引き継がれない） |
 | `base` | `common.base` | ベースライン |
 | `height_line` | `common.line_height` | 行の高さ |
-| `scale` | `common.scale_w/h` | テクスチャスケール |
-| `spacing` | `info.spacing` | グリフのスペーシング (x, y) |
+| `scale` | — | 固定値 `(1.0, 1.0)`（`.fnt` からは引き継がれない） |
+| `spacing` | — | 固定値 `(0.0, 0.0)`（`.fnt` からは引き継がれない。字間には `PartTypeText.text_space` を使う） |
 | `size_texture_original` | — | 元のテクスチャサイズ |
 | `name_texture` | `pages[*].file` | テクスチャファイル名 |
 | `name_texture_hash` | — | テクスチャファイル名のハッシュ配列 |
@@ -508,7 +508,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | `width_advance` | `xadvance` | 水平方向の送り幅 |
 | `text` | — | 文字テキスト（fnt では id から導出） |
 | `page` | `page` | テクスチャページインデックス |
-| `channel` | — | チャンネルインデックス |
+| `channel` | — | 固定値 `0`（`.fnt` からは引き継がれない） |
 
 ---
 

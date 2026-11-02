@@ -82,7 +82,7 @@ cargo rustc -p ssruntime-ffi --release --features "custom_alloc,panic-handler" -
 
 ### 4-2. Defining the functions
 
-In the C / C++ project you link against, define the following three `extern "C"` functions, with the types `ssruntime.h` declares them with, so the same file can include it. C runtime functions such as `memcpy` / `memset` / `memmove` / `memcmp` / `strlen` are also needed at the final link, but the engine's CRT usually provides them (on bare metal, supply them separately).
+In the C / C++ project you link against, define the following three `extern "C"` functions (`ssruntime.h` declares `ss_custom_alloc` and `ss_custom_free` with these types, so the same file can include it). C runtime functions such as `memcpy` / `memset` / `memmove` / `memcmp` / `strlen` are also needed at the final link, but the engine's CRT usually provides them (on bare metal, supply them separately).
 
 ```cpp
 #include <stddef.h>

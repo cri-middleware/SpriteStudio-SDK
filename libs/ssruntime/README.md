@@ -116,13 +116,10 @@ void play_animation(const uint8_t* ssab_data, size_t size) {
 
         // 6. Get rendering information
         const uint8_t* data;
-        size_t len;
+        uintptr_t len;
         // The frame number is managed as a float (Sub-frame support).
+        // Pass floorf(frame) instead of frame when playing on integer frames only.
         ss_runtime_get_frame_data(ctx, frame, &data, &len);
-
-        // Optional: you can implement integer frame management by truncating the decimal point
-        // float decimal = ss_runtime_get_frame_no(ctx) - floor(ss_runtime_get_frame_no(ctx));
-        // render_parts(data, len, decimal);
     }
 
     ss_resource_destroy(res);
@@ -145,25 +142,6 @@ This guide covers everything from basic architecture to advanced features like m
 
 # Development & Code Generation (Updating fbs files)
 
-If you modify or update the `.fbs` files in the `fbs` folder, you need to regenerate the Rust code.
-Regeneration requires the `flatc` command (Google FlatBuffers Compiler) to be installed.
-
-## Update Procedure
-
-1. Install `flatc` (Google FlatBuffers Compiler), the version [CONTRIBUTING](../../CONTRIBUTING.md#prerequisites) says to use.
-2. Update or modify the `.fbs` files in the `fbs/` folder.
-3. Run the following script to regenerate the Rust code.
-
-### Windows (PowerShell)
-
-```powershell
-./scripts/generate.ps1
-```
-
-### macOS / Linux (Bash)
-
-```bash
-./scripts/generate.sh
-```
+When you edit `.fbs` files under `fbs/`, regenerate the committed Rust bindings in `src/generated/` with `./scripts/generate.sh` (or `./scripts/generate.ps1` on Windows). For the required `flatc` version and workflow details, see [CONTRIBUTING.md](../../CONTRIBUTING.md#generated-code).
 
 

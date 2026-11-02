@@ -27,7 +27,7 @@ FrameData の `draw_order` には非表示のパーツが入らない（マス�
 
 ```cpp
 // partOutline() と contains() は §1-2 の輪郭を扱う Player の関数（C-API には無い）
-int hitTestPart(const ss::FrameData* frame, Point point, const std::set<int>* targets) {
+int hitTestPart(const ss::runtime::FrameData* frame, Point point, const std::set<int>* targets) {
     auto order = frame->draw_order();
     for (int rank = int(order->size()) - 1; rank >= 0; --rank) {
         int p = order->Get(rank);

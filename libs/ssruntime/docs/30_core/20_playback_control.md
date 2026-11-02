@@ -18,7 +18,7 @@ void MyPlayer::tick(float delta_seconds) {
 
     // 4. Have the Brain compute the state of that frame (§6)
     float draw_frame = sub_frame_enabled ? frame_no : floorf(frame_no);
-    const uint8_t* fd; size_t fd_len;
+    const uint8_t* fd; uintptr_t fd_len;
     ss_runtime_get_frame_data(ctx, draw_frame, &fd, &fd_len);
 
     // 5. Advance the children of instance parts and effect parts, and draw (the Render Loop page)
@@ -74,7 +74,7 @@ What is kept is the playback direction setting, not **the heading partway throug
 
 Setup also returns the playback state to **Stopped** and releases any pause hold (§4).
 
-The other two ways to change track 0's animation, `ss_runtime_crossfade` and `ss_runtime_set_track_animation` on track 0, follow the same table: the kept settings belong to track 0 and reach the animation laid there, and the section and the loop count start over. Unlike setup, they leave the playback state as it is — a crossfade carries on playing. See [Animation Mixing §1-5](../50_features/10_animation_mixing.md).
+The other two ways to change track 0's animation, `ss_runtime_crossfade` and `ss_runtime_set_track_animation` on track 0, follow the same table: the kept settings belong to track 0 and reach the animation laid there, and the section and the loop count start over. Unlike setup, they leave the playback state as it is — a crossfade carries on playing. See [Animation Mixing §1-5](../50_features/10_animation_mixing.md#1-5-a-tracks-playback-settings).
 
 ## 4. Playback state
 

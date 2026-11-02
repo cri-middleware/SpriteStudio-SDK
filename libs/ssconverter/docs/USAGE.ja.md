@@ -1,3 +1,5 @@
+[**English**](./USAGE.md) | [**日本語**](./USAGE.ja.md)
+
 # libssconverter 組み込みガイド
 
 `libssconverter` は、SpriteStudio のプロジェクトファイル (`.sspj`) をランタイム向けの最適化バイナリ形式 (`.ssab`) に変換するための C 互換ライブラリです。自作のゲームエンジンやツール、開発用エディタにインプロセスでのコンバート機能を組み込む際に利用します。
@@ -80,7 +82,7 @@ void on_conversion_complete(Context* ctx) {
         ss_converter_get_error(ctx, &err_msg, &len);
         if (err_msg) {
             printf("エラー: %.*s\n", (int)len, err_msg);
-            // ss_converter_get_error で得られたメモリは ss_converter_destroy で解放されます
+            // ss_converter_get_error で得られたバッファは、同一 Context で次の変換を開始するか ss_converter_destroy を呼ぶまで有効です
         }
     }
 
@@ -116,5 +118,5 @@ ss_converter_abort(ctx);
 ## 5. 注意事項
 
 - **メモリ管理**: `ss_converter_create` で作成したコンテキストは、必ず `ss_converter_destroy` で破棄してください。
-- **スレッドセーフ**: 変換処理は内部スレッドで行われますが、同一の `Context` に対して複数の `ss_converter_convert` を同時に呼び出さないでください。
+- **スレッドセーフ**: 1 つの `Context` が同時に実行できるジョブは 1 つだけです。内部スレッドでジョブが実行されている間は、同一の `Context` に対して新たな `ss_converter_convert` や `ss_converter_scan_dir` を呼び出さないでください。
 - **パスの形式**: ライブラリに渡すパスは、絶対パスを使用することを推奨します。
