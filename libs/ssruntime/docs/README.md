@@ -18,7 +18,7 @@ The SDK's `tests/overall/overall.sspj` contains an animation for each feature. I
 
 | Stage | Animation to check | What to check | Pages to read |
 | :--- | :--- | :--- | :--- |
-| 0. Preparation | — | The build passes, and you can read animation names from the ssab | [Preliminary Checks](./20_design/10_preparation.md), [Design Approach](./20_design/20_architecture.md) |
+| 0. Preparation | — | The build passes, and you can read animation names from the ssab | [Preliminary Checks](./20_design/10_preparation.md), [Design Approach](./20_design/20_architecture.md), [Loading and Initialization §5](./30_core/10_initialization.md#5-listing-animation-names) |
 | 1. Basic drawing | `Basic.ssae` | Children follow the parent's movement, rotation and scaling. Lowering the parent's opacity also fades the children | [Loading & Initialization](./30_core/10_initialization.md), [Playback Control](./30_core/20_playback_control.md), [Render Loop](./30_core/40_render_loop.md) |
 | 2. Blending and color | `BlendMode.ssae`, `PartsColor.ssae` | Additive and multiply blending composite correctly over the background. Tinting of the whole part and per vertex matches | [Parts Color](./40_parts/10_parts_color.md) |
 | 3. Structure and deformation | `Mesh.ssae`, `Instance.ssae`, `Mask.ssae` | Mesh deformation and bone following are smooth. Child animations play. Only the area inside the mask is shown | [Mesh](./40_parts/20_mesh.md), [Instance Parts](./40_parts/50_instance.md), [Mask](./40_parts/40_mask.md) |

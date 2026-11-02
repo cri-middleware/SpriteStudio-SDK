@@ -8,7 +8,7 @@ Each FrameData field is defined in the [FrameData schema](https://github.com/cri
 
 ## 1. SoA buffers
 
-Calling `ss_runtime_get_frame_data` writes the values for every part of that frame into the SoA buffers. The Player receives a pointer and a length, and reads directly by part index. A buffer stays valid until the next call to `ss_runtime_get_frame_data`.
+Calling `ss_runtime_get_frame_data` writes the values for every part of that frame into the SoA buffers (§3 lists the ones `SceneGraph` mode leaves unwritten). The Player receives a pointer and a length, and reads directly by part index. A buffer stays valid until the next call to `ss_runtime_get_frame_data`.
 
 | Buffer | Function | Per part | Contents |
 | :--- | :--- | :--- | :--- |
@@ -43,7 +43,7 @@ The Brain outputs the parts in draw order (`draw_order`), and a list of DrawBatc
 
 ```cpp
 // 1. Have the Brain compute FrameData
-const uint8_t* fd_ptr; uintptr_t fd_len;
+const uint8_t* fd_ptr = nullptr; uintptr_t fd_len = 0;   // left as is on failure (Playback Control §6-1)
 ss_runtime_get_frame_data(ctx, frame_no, &fd_ptr, &fd_len);
 auto frame_data = ss::runtime::GetFrameData(fd_ptr);
 
@@ -107,7 +107,7 @@ Bit `0x01` of `DrawBatch.flags` means that the parts in that run have `mask_infl
 | Mode | Value | Contents |
 | :--- | :--- | :--- |
 | **`Direct`** (default, recommended) | `0` | Numeric values such as vertices are passed only through the SoA buffers. FrameData does not carry `cells` / `vertices` / `deforms`, so there is less computation and allocation. The examples on this page assume this mode |
-| **`SceneGraph`** | `1` | For Players that create an engine node per part. FrameData carries all of `cells` / `vertices` / `deforms`. The mesh SoA buffer is empty |
+| **`SceneGraph`** | `1` | For Players that create an engine node per part. FrameData carries all of `cells` / `vertices` / `deforms`. World matrices are not computed, so the values of `ss_runtime_get_world_matrices` cannot be used. Mesh vertices are not computed either, and the mesh SoA buffer is empty |
 
 `parts_color` is in FrameData in both modes. If `cells` or `vertices` in FrameData is `null`, check whether you are reading in `Direct` mode.
 
@@ -138,7 +138,7 @@ In engines that update animation on one thread and build vertices and draw on an
 
 ### 4-2. Reading FrameData vectors directly
 
-Values not in the SoA buffers, such as **`parts`** (part state) and **`parts_color`** (vertex colors), are passed as FlatBuffers vectors in FrameData. Reading them with per-element accessors, as in `frame_data->parts_color()->Get(i)->lt()->rgba()->r()`, is heavier than you would expect, because it builds accessor objects, checks bounds on every field and dereferences the buffer indirectly. **In high-level languages such as C#, JavaScript and Python, this can become the heaviest work in scenes with many parts.**
+Values not in the SoA buffers, such as **`parts`** (part state) and **`parts_color`** (vertex colors), are passed as FlatBuffers vectors in FrameData. Reading them with per-element accessors, as in `frame_data->parts_color()->Get(i)->lt().rgba().r()`, is heavier than you would expect, because it builds accessor objects, checks bounds on every field and dereferences the buffer indirectly. **In high-level languages such as C#, JavaScript and Python, this can become the heaviest work in scenes with many parts.**
 
 > [!WARNING]
 > **Measured (Unity / C#, 100 characters):** reading `parts` and `parts_color` with per-element accessors every frame took **about 7ms / frame** (about 72% of the work of ingesting FrameData). Switching to the method below brought it down to **about 0.27ms** (about 26x).

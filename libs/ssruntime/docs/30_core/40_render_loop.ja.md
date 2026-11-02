@@ -8,7 +8,7 @@ FrameData の各フィールドの定義は [FrameData スキーマ](https://git
 
 ## 1. SoA バッファ
 
-`ss_runtime_get_frame_data` を呼ぶと、そのフレームの全パーツ分の値が SoA バッファに書かれます。Player はポインタと長さを受け取り、パーツのインデックスで直接読みます。バッファは、次に `ss_runtime_get_frame_data` を呼ぶまで有効です。
+`ss_runtime_get_frame_data` を呼ぶと、そのフレームの全パーツ分の値が SoA バッファに書かれます（`SceneGraph` モードで書かれないバッファは §3）。Player はポインタと長さを受け取り、パーツのインデックスで直接読みます。バッファは、次に `ss_runtime_get_frame_data` を呼ぶまで有効です。
 
 | バッファ | 関数 | 1 パーツあたり | 内容 |
 | :--- | :--- | :--- | :--- |
@@ -43,7 +43,7 @@ Brain は、描画する順に並べたパーツ（`draw_order`）と、それ�
 
 ```cpp
 // 1. FrameData を計算させる
-const uint8_t* fd_ptr; uintptr_t fd_len;
+const uint8_t* fd_ptr = nullptr; uintptr_t fd_len = 0;   // 失敗したときは書き換えられない（再生制御 §6-1）
 ss_runtime_get_frame_data(ctx, frame_no, &fd_ptr, &fd_len);
 auto frame_data = ss::runtime::GetFrameData(fd_ptr);
 
@@ -107,7 +107,7 @@ for (auto batch : *frame_data->draw_batches()) {
 | モード | 値 | 内容 |
 | :--- | :--- | :--- |
 | **`Direct`**（既定・推奨） | `0` | 頂点などの数値は SoA バッファだけで渡す。FrameData に `cells` / `vertices` / `deforms` を載せないので、計算とメモリ確保が少ない。このページの例はこのモードを前提にしている |
-| **`SceneGraph`** | `1` | パーツごとにエンジンのノードを作る Player 向け。FrameData に `cells` / `vertices` / `deforms` をすべて載せる。メッシュの SoA バッファは空になる |
+| **`SceneGraph`** | `1` | パーツごとにエンジンのノードを作る Player 向け。FrameData に `cells` / `vertices` / `deforms` をすべて載せる。ワールド行列を計算しないので、`ss_runtime_get_world_matrices` の値は使えない。メッシュの頂点も計算せず、メッシュの SoA バッファは空になる |
 
 `parts_color` はどちらのモードでも FrameData に載ります。FrameData の `cells` や `vertices` が `null` になる場合は、`Direct` モードで読んでいないかを確かめてください。
 
@@ -138,7 +138,7 @@ Unity の Job System、Godot のマルチスレッドの RenderingServer、Unrea
 
 ### 4-2. FrameData のベクタを直接読む
 
-SoA バッファに無い値、たとえば **`parts`**（パーツの状態）と **`parts_color`**（頂点の色）は、FrameData の FlatBuffers のベクタで渡されます。これを `frame_data->parts_color()->Get(i)->lt()->rgba()->r()` のように要素ごとのアクセサで読むと、思った以上に重くなります。アクセサのオブジェクトを作り、フィールドごとに境界を確かめ、バッファを間接参照するためです。**C#・JavaScript・Python のような高水準の言語では、ここがパーツの多い場面で一番重い処理になりえます。**
+SoA バッファに無い値、たとえば **`parts`**（パーツの状態）と **`parts_color`**（頂点の色）は、FrameData の FlatBuffers のベクタで渡されます。これを `frame_data->parts_color()->Get(i)->lt().rgba().r()` のように要素ごとのアクセサで読むと、思った以上に重くなります。アクセサのオブジェクトを作り、フィールドごとに境界を確かめ、バッファを間接参照するためです。**C#・JavaScript・Python のような高水準の言語では、ここがパーツの多い場面で一番重い処理になりえます。**
 
 > [!WARNING]
 > **実測（Unity / C#、100 体）:** `parts` と `parts_color` を要素ごとのアクセサで毎フレーム読む処理が、**約 7ms / フレーム**（FrameData を取り込む処理の約 72%）を占めていました。下の方法に変えると **約 0.27ms** になりました（約 26 倍）。

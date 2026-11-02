@@ -18,6 +18,7 @@
 ss_runtime_update(ctx, delta_ms);
 
 // track 0 が再生しているアニメーションのイベント表。ミキシングを使う場合はイベントごとに引く（§4）
+const auto* current_animation = binary->animations()->Get(ss_runtime_get_current_animation_index(ctx));  // binary は ssab のルート（ロードと初期化 §5）
 const auto* events = current_animation->events();
 if (events != nullptr) {
     int count = ss_runtime_get_passed_event_count(ctx);

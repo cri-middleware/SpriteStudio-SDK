@@ -27,9 +27,9 @@ The Brain is a C-API library written in Rust, and its per-frame output is a Flat
 
 ## 3. Prepare a test ssab
 
-1. Get `ssconverter-cli`.
-2. Convert the SDK's `tests/overall/overall.sspj` to ssab. This project has an animation for each feature ([“Implementation steps” in the contents](../README.md#1-implementation-steps)).
-3. Place the converted ssab in the project as an asset.
+1. Get `ssconverter-cli` from [GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) ([ssconverter-cli README](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/cli/README.md)).
+2. In the SDK repository, run `ssconverter-cli tests/overall/overall.sspj` to convert it to ssab. This project has an animation for each feature ([“Implementation steps” in the contents](../README.md#1-implementation-steps)).
+3. Place the converted ssab (written to `tests/overall/overall/`) in the project as an asset.
 
 ---
 [Back to contents](../README.md)

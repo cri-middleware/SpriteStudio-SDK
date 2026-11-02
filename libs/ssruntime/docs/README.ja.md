@@ -16,7 +16,7 @@ SDK の `tests/overall/overall.sspj` には、機能ごとのアニメーショ�
 
 | 段階 | 確かめるアニメーション | 確かめること | 読むページ |
 | :--- | :--- | :--- | :--- |
-| 0. 準備 | — | ビルドが通り、ssab からアニメーション名を読める | [事前確認](./20_design/10_preparation.ja.md)、[設計方針](./20_design/20_architecture.ja.md) |
+| 0. 準備 | — | ビルドが通り、ssab からアニメーション名を読める | [事前確認](./20_design/10_preparation.ja.md)、[設計方針](./20_design/20_architecture.ja.md)、[ロードと初期化 §5](./30_core/10_initialization.ja.md#5-アニメーション名の一覧) |
 | 1. 基本の描画 | `Basic.ssae` | 親の移動・回転・拡縮に子が付いていく。親の不透明度を下げると子も薄くなる | [ロードと初期化](./30_core/10_initialization.ja.md)、[再生制御](./30_core/20_playback_control.ja.md)、[描画ループ](./30_core/40_render_loop.ja.md) |
 | 2. 合成と色 | `BlendMode.ssae`、`PartsColor.ssae` | 加算や乗算が背景に正しく重なる。パーツ全体や頂点ごとの着色が合う | [パーツカラー](./40_parts/10_parts_color.ja.md) |
 | 3. 構造と変形 | `Mesh.ssae`、`Instance.ssae`、`Mask.ssae` | メッシュの変形とボーンの追従が滑らか。子アニメーションが再生される。マスクの範囲だけが表示される | [メッシュ](./40_parts/20_mesh.ja.md)、[インスタンスパーツ](./40_parts/50_instance.ja.md)、[マスク](./40_parts/40_mask.ja.md) |

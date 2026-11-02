@@ -16,6 +16,7 @@
 | ssqe | シーケンスのファイル。複数のアニメーションを順に再生する設定を持つ |
 | charmap | ビットマップフォントの定義ファイル（`.fnt`） |
 | ssab | ssconverter が 1 つの ssae から生成する再生用バイナリ。その ssae が使うセルマップ・エフェクト・サウンド・charmap の情報を含む。スキーマは FlatBuffers |
+| パック | 読み込んだ 1 つの ssab を、そこに入っているアニメーションの集まりとして指す語（`frameScope` の `pack` など） |
 | ssqb | ssconverter が ssqe から生成するシーケンス用バイナリ |
 
 ## 2. SpriteStudio の概念
@@ -42,7 +43,7 @@
 | FrameData | Brain が 1 フレームごとに出力する FlatBuffers のバッファ。パーツの状態・描画計画・パーツカラーなどを含む |
 | PartData | ssab に入っているパーツの静的な定義（ssab の `parts`）。フレームによって変わらない |
 | SoA バッファ | ワールド行列や頂点のように、全パーツ分の値を 1 本の配列に並べて渡すバッファ。ポインタで直接読む。→ [描画ループ §1](../30_core/40_render_loop.ja.md#1-soa-バッファ) |
-| DrawBatch | 同じテクスチャ・同じ合成モードで続けて描けるパーツのまとまり。Player は 1 つの DrawBatch を 1 回のドローコールで描ける。→ [描画ループ §2](../30_core/40_render_loop.ja.md#2-drawbatch-による描画) |
+| DrawBatch | 同じ種類（`kind`）・同じテクスチャ・同じ合成モードで続けて描けるパーツのまとまり。Player は 1 つの DrawBatch を 1 回のドローコールで描ける。→ [描画ループ §2](../30_core/40_render_loop.ja.md#2-drawbatch-による描画) |
 | `draw_order` / rank | `draw_order` は描画する順に並べたパーツのインデックス列。rank はその中の位置 |
 | スロット | インスタンスパーツ・エフェクトパーツごとに Player が持つ、子の再生状態。`ss_instance_slot_*` / `ss_effect_slot_*` で操作する |
 | 再生ヘッド | 現在の再生位置（フレーム番号）。サブフレーム再生では小数になる |
