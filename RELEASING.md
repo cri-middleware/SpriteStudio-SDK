@@ -35,6 +35,13 @@ BASE=$(git -c versionsort.suffix=- tag --list "v${BRANCH#release/}.*" --sort=-v:
 git switch -C "$BRANCH" "${BASE:?}"
 ```
 
+Then bring the dependencies up to date, in a commit of its own: `cargo update` moves `Cargo.lock`, which the release binaries are built from, to the newest versions the manifests' ranges allow. A new major version changes code, and goes in an ordinary pull request into `develop` of its own rather than here.
+
+```bash
+cargo update
+git commit -m "chore(deps): update within their ranges" -- Cargo.lock   # nothing to commit when nothing moved
+```
+
 ### 2. Version and changelog
 
 In one commit. Replace the previous version wherever it is written as a quoted string — the `[workspace.package]` line, the four `[workspace.dependencies]` requirements, the crate READMEs — and let cargo rewrite `Cargo.lock`, which CI builds `--locked`. `tests/` is left out: its SpriteStudio projects write the editor's version as a quoted string too, in their `editorVersion` attributes. `<version>` is the one from step 1.
@@ -263,6 +270,13 @@ BRANCH=release/$(echo "${VERSION:?}" | cut -d. -f1,2)
 git fetch origin --tags
 BASE=$(git -c versionsort.suffix=- tag --list "v${BRANCH#release/}.*" --sort=-v:refname | head -n 1)   # その系統の最新のタグ
 git switch -C "$BRANCH" "${BASE:?}"
+```
+
+続けて依存を最新にし、単独のコミットにします。`cargo update` は、リリースのバイナリのビルドに使う `Cargo.lock` を、マニフェストの範囲が許すいちばん新しい版に上げます。メジャーバージョンを上げるのはコードの変更なので、ここではなく`develop` への通常のプルリクエストで行います。
+
+```bash
+cargo update
+git commit -m "chore(deps): update within their ranges" -- Cargo.lock   # 何も動かなければコミットするものは無い
 ```
 
 ### 2. バージョンと CHANGELOG
