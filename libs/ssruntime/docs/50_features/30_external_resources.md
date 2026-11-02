@@ -41,7 +41,7 @@ In other words, **a texture change draws correctly with the usual render loop th
 
 FrameData's `parts[].texture` holds the same value too (the hash of the texture name, or `0` with no replacement). It is valid only while `AttributeTexture` in `update_flag` is set.
 
-A Player that draws with DrawBatches does not need to read it. Refer to it only in implementations that do not use DrawBatches, such as a Player in `SceneGraph` mode that creates an engine node per part.
+A Player that draws with DrawBatches does not need to read it. Refer to it only in implementations that do not use DrawBatches, such as a Player in `SceneGraph` mode ([Render Loop §3](../30_core/40_render_loop.md#3-rendermode)) that creates an engine node per part.
 
 ### 2-4. Caveats
 

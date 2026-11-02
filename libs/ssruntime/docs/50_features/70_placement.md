@@ -2,7 +2,7 @@
 
 # Placement: Fit and Align
 
-A Player draws the animation at its authored scale into whatever target the host gives it. A host that lays out a box — a UI view, a node with a size, an editor preview — needs the animation fitted into that box instead. The Brain has no part in this. It is arithmetic over a box and a view size, so it belongs in the Player's portable core, where every face and every engine adapter inherits it and it can be tested without a renderer.
+A Player draws the animation at its authored scale into whatever target the host gives it. A host that lays out a box — a UI view, a node with a size, an editor preview — needs the animation fitted into that box instead. The Brain has no part in this. It is arithmetic over a box and a view size, so it belongs in the Player's portable core, where every API the Player exposes (a C API, a JavaScript API and so on) and every engine adapter inherits it and it can be tested without a renderer.
 
 This page is what a Player that offers placement ports: the names, the defaults and the arithmetic. How it reaches the host's API — a prop, a node property, a function — is the host's.
 
@@ -17,15 +17,15 @@ This page is what a Player that offers placement ports: the names, the defaults 
 | `scale` | A multiplier | `1` | Multiplies the fit's scale. It does not replace it |
 | `flipX`, `flipY` | Booleans | `false` | Mirrors. They change which end of the box the alignment anchors to |
 
-`fit` takes `<Image resizeMode>`'s words, because those are the ones UI hosts already have. A host with its own vocabulary — CSS `object-fit` / `object-position`, Godot's `stretch_mode` — may spell it that way on its own surface, over these three values. Rotation is not part of the placement: pass through whatever the caller already had.
+`fit` takes `<Image resizeMode>`'s words, because those are the ones UI hosts already have. A host with its own vocabulary — CSS `object-fit` / `object-position`, Godot's `stretch_mode` — may spell it that way in its own API, over these three values. Rotation is not part of the placement: pass through whatever the caller already had.
 
 `align` decomposes into two independent axes, each `-1`, `0` or `1`. **On the vertical axis, `-1` is the top of the view** — screen terms, not maths terms.
 
 ## 2. Where the box comes from
 
-**When the caller supplies no `frame`, the box is the animation's authored canvas**: its canvas size, placed against the origin by its pivot. It costs nothing, it holds still while the animation plays, and it is the frame the artist composed in. It is the playing animation's own canvas, and one pack's animations may differ: in `Ringo`, `dead` is 1300×600 and the others 800×600. A host that wants one scale across a pack reads the canvas once, after its first `setAnimation`, and passes it as `frame` from then on.
+**When the caller supplies no `frame`, the box is the animation's authored canvas**: its canvas size, placed against the origin by its pivot. It costs nothing, it holds still while the animation plays, and it is the frame the artist composed in. It is the playing animation's own canvas, and one pack's animations may differ: in `Ringo`, `dead` is 1300×600, `slipdown`, `slipdown_wait` and `wakeup` are 900×600, and the others 800×600. A host that wants one scale across a pack reads the canvas once, after its first `setAnimation`, and passes it as `frame` from then on.
 
-Both come from the animation in the ssab: `canvas_size` and `pivot` on `AnimationData`. The Brain does not apply the pivot, and it is not in the runtime's animation metadata, so read both from the ssab. The pivot is normalized from the canvas centre, in editor space (Y-up). In a Y-down player-local space the box is:
+Both come from the animation in the ssab: `canvas_size` and `pivot` on `AnimationData`. The Brain does not apply the pivot, and it is not in the runtime's animation metadata, so read both from the ssab. The pivot is normalized from the canvas centre, in editor space (Y-up). In a Y-down player-local space the box is as follows (with the defaults, the origin at the centre and the unit in pixels; with `ss_runtime_set_origin` at the top-left or `ss_runtime_set_unit` normalized, the Brain shifts the root parts or divides coordinates by the canvas size, and the formula changes with it):
 
 ```
 x = -pivot.x * width - width / 2

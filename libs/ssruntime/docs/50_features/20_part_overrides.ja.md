@@ -99,7 +99,7 @@ C-API はパーツを **インデックス**（`part_index`）で指定します
 - **単色と 4 隅**: `ss_runtime_set_part_color_override` は 1 つの色を 4 隅すべてに使います。グラデーションにするには `ss_runtime_set_part_color_override_corners` を使います。**4 隅の順は `lt, rt, lb, rb`**（左上・右上・左下・右下）です。
 - **`rate` は常に `1.0`** です。
 - **アルファを二重に掛けないでください。** 指定した色のアルファには、キーフレームのパーツカラーと同じく、パーツの不透明度が掛けられます（[パーツカラー §3](../40_parts/10_parts_color.ja.md#3-パーツカラーを読む)）。
-- **色は 8 bit の sRGB の値として扱われます。** Brain は色の計算をすべて 8 bit の sRGB の整数で行い、リニアやガンマや PMA の変換はしません。リニアへの変換が必要な Player は、キーフレームのパーツカラーと同じく、シェーダの入出力の関数（`ss_input_texture()` / `ss_output_color()`）でまとめて行ってください。オーバーライドのためだけに別の色の処理を作ると、変換が二重になります。
+- **色は 8 bit の sRGB の値として扱われます。** Brain は色の計算をすべて 8 bit の sRGB の整数で行い、リニアやガンマや PMA の変換はしません。リニアへの変換が必要な Player は、キーフレームのパーツカラーと同じく、シェーダの入出力の関数（`ss_input_texture()` / `ss_output_color()`。[パーツカラー §6](../40_parts/10_parts_color.ja.md#6-シェーダの例)）でまとめて行ってください。オーバーライドのためだけに別の色の処理を作ると、変換が二重になります。
 
 **キーフレームにパーツカラーを持たないパーツ**にカラーのオーバーライドを設定すると、そのパーツはパーツカラーを持つパーツとして出力されます（`update_flag` の `AttributePartColor` が立ち、FrameData にパーツカラーが載ります）。パーツカラーの有無で描き方を分けている Player は、この切り替わりを前提にしてください（[パーツカラー §5](../40_parts/10_parts_color.ja.md#5-パーツカラーが無いパーツ) のとおり描き方を分けていなければ、何もする必要はありません）。
 
@@ -160,7 +160,7 @@ C-API はパーツを **インデックス**（`part_index`）で指定します
 
 ### 5-2. `Direct` モードでは FrameData に `cells` が無い
 
-`Direct` モード（既定）では、FrameData に `cells` / `vertices` / `deforms` を載せません（SoA バッファで渡すため）。`parts_color` は載ります。
+`Direct` モード（既定。[描画ループ §3](../30_core/40_render_loop.ja.md#3-rendermode)）では、FrameData に `cells` / `vertices` / `deforms` を載せません（SoA バッファで渡すため）。`parts_color` は載ります。
 
 そのため、**`FrameData.cells` を見ても、セルのオーバーライドが効いたかは分かりません**（「載っていない = 効いていない」と誤解しがちです）。`Direct` モードで確かめるには、次を見てください。
 
@@ -176,7 +176,7 @@ C-API はパーツを **インデックス**（`part_index`）で指定します
 | `ss_runtime_find_part_index(ctx, part_name)` | — | `int32_t`。見つからない、またはセットアップしていなければ `-1` |
 | `ss_runtime_hash_string(str)` | — | `uint32_t`。`NULL` か UTF-8 でない文字列なら `0` |
 | `ss_runtime_set_part_color_override(ctx, part, blend_op, rgba, priority_mode)` | `blend_op`: `0` = Mix `1` = Mul `2` = Add `3` = Sub<br>`rgba`: `0xRRGGBBAA` | 1 つの色を 4 隅に使う。通常のパーツだけ |
-| `ss_runtime_set_part_color_override_corners(ctx, part, blend_op, rgba_ltrtlbrb, priority_mode)` | `rgba_ltrtlbrb`: `uint32_t` × 4（**`lt, rt, lb, rb` の順**） | 4 隅を別々に指定する |
+| `ss_runtime_set_part_color_override_corners(ctx, part, blend_op, rgba_ltrtlbrb, priority_mode)` | `rgba_ltrtlbrb`: `const uint32_t*`（4 要素の配列。**`lt, rt, lb, rb` の順**）。`NULL` なら `false` | 4 隅を別々に指定する |
 | `ss_runtime_clear_part_color_override(ctx, part)` | — | |
 | `ss_runtime_set_part_cell_override(ctx, part, cellmap_name_hash, cell_name_hash, priority_mode)` | セルマップ名とセル名のハッシュ | `(0, 0)` で解除。見つからなければ `false`。通常のパーツとマスクパーツだけ |
 | `ss_runtime_clear_part_cell_override(ctx, part)` | — | |

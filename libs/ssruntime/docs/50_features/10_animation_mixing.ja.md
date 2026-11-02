@@ -51,7 +51,7 @@ track 0 が **構造** を受け持ちます。離散的なアトリビュート
 - **track 0 が終わっても時計は止まりません。** track 0 で有限のループ回数を使い切っても、他のトラックとフェードは進み続けます。`is_playing`・`is_pausing`・`is_finished` は track 0 の状態を表すので、3 つとも通常どおり終了を報告します。終了後の `pause` は他のトラックを止め、`resume` で再開します。
 - フェードは時計と一緒に進みます。一時停止中や停止中は、フェードも進みません。
 - **時計には専用のフラグが 2 つあります。** `ss_runtime_is_clock_playing` は `play` から `stop` または次のセットアップまで `true`、`ss_runtime_is_clock_pausing` は `pause` で保持している間 `true` です。`is_playing` や `is_pausing` と違い、どちらも track 0 が終わった後も時計の状態を返します。動くものが無いキャラクターの tick を止める Player（§1-6）は、再生の操作を自前で写さず、これを読んでください。写しは 1 つ取りこぼすと食い違います。セットアップでも時計は止まります。
-- **track 0 以外に動くものがあるかも返せます。** `ss_runtime_is_stack_in_motion` は、いずれかのトラックでフェードが進んでいる間、または聞こえるトラックで track 0 のメイン以外のソースが再生中で、トラックの速度とソースの重みがどちらも 0 より大きい間、`true` を返します。クリアした・終わった・無音にした・速度 0 にしたトラックは数えません。速度 0 のトラックを `ss_runtime_set_track_frame` で手動で動かしても数えず、0 より大きい速度のトラックなら、手動で動かしていても数えます。途中で取り消したクロスフェードの出ていく側は数えます。時計は読みません。使い方は §1-6 にあります。
+- **track 0 以外に動くものがあるかも返せます。** `ss_runtime_is_stack_in_motion` は、いずれかのトラックでフェードが進んでいる間、または `alpha` が 0 より大きいトラックで主役以外のソースが再生中で、トラックの速度とソースの重みがどちらも 0 より大きい間、`true` を返します。クリアした・終わった・`alpha` を 0 にした・速度 0 にしたトラックは数えません。速度 0 のトラックを `ss_runtime_set_track_frame` で手動で動かしても数えず、0 より大きい速度のトラックなら、手動で動かしていても数えます。途中で取り消したクロスフェードの出ていく側は数えます。時計は読みません。使い方は §1-6 にあります。
 
 ### 1-5. トラックの再生設定
 
@@ -117,10 +117,11 @@ ss_runtime_set_track_blend(ctx, 1, SS_RUNTIME_TRACK_BLEND_ADDITIVE);
 ss_runtime_set_track_alpha(ctx, 1, 0.6f);           // 歩きの上に、傾きを 60%
 ```
 
-連続した値で動かす軸にはこれを使います。軸のアニメーションは**中央のフレームがセットアップポーズと同じ**になるように作り、再生するか、フレームを直接動かしてください。
+連続した値で動かす軸にはこれを使います。軸のアニメーションは**中央のフレームがセットアップポーズと同じ**になるように作り、再生するか、速度を 0 にしてフレームを直接動かしてください。トラックに載せたアニメーションは再生を始めるので、速度を 0 にしないと、次の `update` が設定したフレームから進めてしまいます。
 
 ```cpp
-// 再生せず、トラッキングの値でフレームを動かす
+// 再生せず、トラッキングの値でフレームを動かす（軸は 0〜60 フレーム、yaw は -1〜1 の例）
+ss_runtime_set_track_speed(ctx, 1, 0.0f);
 ss_runtime_set_track_frame(ctx, 1, 30.0f + yaw * 30.0f);
 ```
 
@@ -145,7 +146,7 @@ float progress = ss_runtime_get_track_fade_progress(ctx, 0);   // 0〜1。フェ
 | 何も再生していないトラックへの `crossfade` | フェードせず、すぐに再生を始める |
 | フェード中のトラックへもう一度 `crossfade` | 進行中のフェードを**その時点の状態のまま**引き取る。両側ともその時点の weight で新しい出ていく側に入るので、姿勢は飛ばない |
 | 複数のソースが載ったトラックへの `crossfade` | すべてまとめてフェードアウトする |
-| `alpha` のフェード中のトラックへの `crossfade` | `alpha` のフェードを置き換える。`alpha` はその時点の値で止まる（§4-1） |
+| `alpha` のフェード中のトラックへの `crossfade` | `alpha` のフェードを置き換える。`alpha` はその時点の値で止まる |
 | フェードを止めたい | `ss_runtime_cancel_track_fade`。`alpha` と `weight` はその時点の値で止まる。残ったものは次の `crossfade` で一緒にフェードアウトする |
 
 ### 4-1. セットアップポーズへ戻す
@@ -173,7 +174,7 @@ ss_runtime_set_source_weight(ctx, run, 0.3f);
 ss_runtime_set_source_frame(ctx, run, 0.0f);
 ```
 
-`ss_runtime_get_track_main_source` は、`ss_runtime_set_track_animation`・`ss_runtime_crossfade`（か `ss_runtime_setup_animation`）がそのトラックに載せたアニメーションのハンドルを返します。`weight` は 1 から始まります。
+`ss_runtime_get_track_main_source` は、`ss_runtime_set_track_animation`・`ss_runtime_crossfade`（か `ss_runtime_setup_animation`）がそのトラックに載せたアニメーションのハンドルを返します。何も載っていないトラックに `ss_runtime_add_track_source` で最初に足したソースも、そのトラックの主になります。`weight` は 1 から始まります。
 
 `weight` は絶対値ではなく比率です（`(0.7, 0.3)` と `(7, 3)` は同じ結果）。ソースはそれぞれ自分の再生ヘッドを持ち、`ss_runtime_update` がすべてを進めます。**尺の違うソースの位相はそろいません。** track 0 と同じ位相から始めるにはトラックの同期（§5-1）を使います。そろえ続けたい場合は、Player がシークしてください。
 
@@ -200,7 +201,7 @@ ss_runtime_crossfade(ctx, 0, "run", 300.0f);   // 走りは歩きと同じ位相
 
 ## 6. イベント
 
-既定では、track 0 のアニメーションだけがイベントを発火します。他のソースも発火させるには、そのソースの閾値を、その `weight` 以下に下げます。`weight >= 閾値` のソースのイベントが報告されます。閾値の既定値は `+∞` で、どの weight も届かないため、他のトラックに1つだけ載せたソースも weight 1 では発火しません。閾値はソースの設定なので、track 1 以降で `ss_runtime_crossfade` や `ss_runtime_set_track_animation` が載せた新しいソースは、既定の `+∞` から始まります。§1-5 のループ回数と同じく、アニメーションを替えるたびに下げ直してください。
+既定では、主役（track 0 の主のアニメーション）だけがイベントを発火します。track 0 に `ss_runtime_add_track_source` で足したソースも、他のソースと同じく発火しません。他のソースも発火させるには、そのソースの閾値を、その `weight` 以下に下げます。`weight >= 閾値` のソースのイベントが報告されます。閾値の既定値は `+∞` で、どの weight も届かないため、他のトラックに 1 つだけ載せたソースも weight 1 では発火しません。閾値はソースの設定なので、track 1 以降で `ss_runtime_crossfade` や `ss_runtime_set_track_animation` が載せた新しいソースは、既定の `+∞` から始まります。§1-5 のループ回数と同じく、アニメーションを替えるたびに下げ直してください。
 
 ```cpp
 ss_runtime_set_source_event_threshold(ctx, run, 0.5f);   // run の weight が 0.5 以上なら発火する
@@ -286,7 +287,7 @@ for (int i = 0; i < n; ++i) {
 
 ## 8. WebAssembly
 
-WebAssembly のバインディングは C-API と 1 対 1 です。失敗は例外で伝わり、値の無い `float` は `undefined` になります。
+WebAssembly のバインディングは C-API と 1 対 1 です。失敗は例外で伝わります。値の無い読み取りは、`float` に限らず整数・真偽値・ハンドルも `undefined` になり、C-API の `NaN`・`-1`・`SS_RUNTIME_INVALID_HANDLE` は使いません。
 
 ```typescript
 ctx.setup_animation("idle");

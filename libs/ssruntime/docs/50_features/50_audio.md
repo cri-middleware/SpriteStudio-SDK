@@ -6,12 +6,12 @@ Audio part keys do not play sound inside the Brain; they are reported as `audios
 
 ## 1. Preparation
 
-- **Load ahead of time.** Loading and decoding an audio file takes time. Loading when the event arrives delays the sound, so load and decode the audio in the ssab ahead of time, for example when you set up the animation.
+- **Load ahead of time.** Loading and decoding an audio file takes time. Loading when the event arrives delays the sound, so load and decode the audio the ssab's `sound_lists()` refers to ahead of time, for example when you set up the animation.
 - **Do not start audio until it is needed.** So that a project with no sound does not start the audio system (such as the Web Audio API's `AudioContext`) and spend resources on it, start it only when you find that the ssab contains audio.
 
 ## 2. Conditions for playing
 
-- Play the sound named by the `audios` event's `sound_name`.
+- Look up the sound an `audios` event names by the pair `sound_list_name_hash` and `sound_name_hash`. In the ssab's `sound_lists()`, find the `SoundList` whose `name_hash` equals `sound_list_name_hash`, then the `SoundFile` in its `table_data` whose `name_hash` equals `sound_name_hash`, and play the audio at its `file_path` (in embedded mode, look it up in `embedded_assets()` by `file_path_hash`). `sound_name` is the `SoundFile`'s alias, and the same alias can occur in another `SoundList`, so the name alone does not identify a sound.
 - **Do not play sound while playback runs in reverse.** Many audio APIs do not support playing audio backwards. Use `ss_runtime_is_playing_forward()` to decide. It returns the current direction of travel, reflecting the return leg of a ping-pong and the reverse setting. Speed never takes a negative value ([Playback Control §5-1](../30_core/20_playback_control.md#5-1-speed)), so there is no need to look at the sign of the speed.
 - **What you suppress is the sound, not the notification.** Notify the host of `audios` events whatever the direction of travel. The audio handling decides whether to play. Events are also used for things other than playing sound (subtitles, vibration, logging). Suppressing the event itself hides that key from consumers other than sound as well. SSPlayerForGodot, SSPlayerForUnity and SSPlayerForRenPy all always emit the notification and suppress only their built-in playback.
 - `loop_num` is named as a loop count, but it is **the number of times to play**. It is 1 or more, and the sound plays that many times. SpriteStudio audio has no infinite loop.

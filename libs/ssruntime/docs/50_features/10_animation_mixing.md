@@ -51,7 +51,7 @@ Every track runs on one clock, the character's. An animation laid on a track pla
 - **Track 0 finishing does not stop the clock.** When a finite loop count runs out on track 0, the other tracks and the fades carry on. `is_playing`, `is_pausing` and `is_finished` describe track 0, so all three report the finish as usual; a `pause` after it still holds the other tracks, and `resume` releases them.
 - Fades advance with the clock: while it is held or stopped, a fade does not progress.
 - **The clock has its own pair of flags.** `ss_runtime_is_clock_playing` is `true` from `play` until `stop` or the next setup, and `ss_runtime_is_clock_pausing` while `pause` holds it; unlike `is_playing` and `is_pausing`, both read on after track 0 finishes. A Player that stops ticking a character with nothing left to move (§1-6) reads these rather than keeping its own copy of the transport calls, which goes wrong the moment it misses one: a setup stops the clock too.
-- **Whether anything beyond track 0 still moves.** `ss_runtime_is_stack_in_motion` is `true` while a fade runs on any track, or while a source other than track 0's main one plays on a track that is heard, with the track's speed and the source's weight both above 0. A cleared, finished or silenced track, or one at speed 0, does not count. A track at speed 0 moved by hand with `ss_runtime_set_track_frame` does not count either, while a track at a speed above 0 counts even when it is moved by hand. The outgoing side a cancelled crossfade left behind does count. It does not read the clock. How to use it is in §1-6.
+- **Whether anything beyond track 0 still moves.** `ss_runtime_is_stack_in_motion` is `true` while a fade runs on any track, or while a source other than the primary plays on a track whose `alpha` is above 0, with the track's speed and the source's weight both above 0. A cleared or finished track, one at `alpha` 0, or one at speed 0 does not count. A track at speed 0 moved by hand with `ss_runtime_set_track_frame` does not count either, while a track at a speed above 0 counts even when it is moved by hand. The outgoing side a cancelled crossfade left behind does count. It does not read the clock. How to use it is in §1-6.
 
 ### 1-5. A track's playback settings
 
@@ -117,10 +117,11 @@ ss_runtime_set_track_blend(ctx, 1, SS_RUNTIME_TRACK_BLEND_ADDITIVE);
 ss_runtime_set_track_alpha(ctx, 1, 0.6f);           // the lean at 60%, on top of the walk
 ```
 
-Use this for an axis driven by a continuous value. Author the axis animation so that **its middle frame matches the setup pose**, then play it or move its frame directly.
+Use this for an axis driven by a continuous value. Author the axis animation so that **its middle frame matches the setup pose**, then play it, or set its speed to 0 and move its frame directly. An animation laid on a track starts playing, so unless its speed is 0 the next `update` advances it from the frame you set.
 
 ```cpp
-// move the frame from a tracking value instead of playing it
+// move the frame from a tracking value instead of playing it (an axis of frames 0 to 60, yaw from -1 to 1)
+ss_runtime_set_track_speed(ctx, 1, 0.0f);
 ss_runtime_set_track_frame(ctx, 1, 30.0f + yaw * 30.0f);
 ```
 
@@ -145,7 +146,7 @@ Everything already on the track fades out together as the **outgoing side**: the
 | `crossfade` on a track that is playing nothing | Starts playing at once, without a fade |
 | `crossfade` again on a track that is fading | The running fade is taken over **as it stands**: both its sides join the new outgoing side at their current weights, so the pose does not jump |
 | `crossfade` on a track carrying several sources | All of them fade out together |
-| `crossfade` on a track running an `alpha` fade | Replaces the `alpha` fade. `alpha` stops at its current value (§4-1) |
+| `crossfade` on a track running an `alpha` fade | Replaces the `alpha` fade. `alpha` stops at its current value |
 | You want to stop a fade | `ss_runtime_cancel_track_fade`. `alpha` and `weight` stop at their current values; what is left fades out with the next `crossfade` |
 
 ### 4-1. Returning to the setup pose
@@ -173,7 +174,7 @@ ss_runtime_set_source_weight(ctx, run, 0.3f);
 ss_runtime_set_source_frame(ctx, run, 0.0f);
 ```
 
-`ss_runtime_get_track_main_source` returns the handle of the animation that `ss_runtime_set_track_animation`, `ss_runtime_crossfade` (or `ss_runtime_setup_animation`) put on the track. `weight` starts at 1.
+`ss_runtime_get_track_main_source` returns the handle of the animation that `ss_runtime_set_track_animation`, `ss_runtime_crossfade` (or `ss_runtime_setup_animation`) put on the track. The first source `ss_runtime_add_track_source` adds to a track with nothing on it also becomes the track's main source. `weight` starts at 1.
 
 `weight` is a ratio, not an absolute value (`(0.7, 0.3)` and `(7, 3)` give the same result). Each source has its own playhead, and `ss_runtime_update` advances them all. **Sources of different lengths do not stay in phase.** To start one in phase with track 0, use track sync (§5-1); to keep them aligned, seek them in the Player.
 
@@ -200,7 +201,7 @@ ss_runtime_crossfade(ctx, 0, "run", 300.0f);   // run starts at the walk's phase
 
 ## 6. Events
 
-By default, only the animation on track 0 fires events. To make another source fire too, lower its threshold to its `weight` or below. Events are reported from sources where `weight >= threshold`. The default threshold is `+∞`, which no weight reaches, so the lone source of another track does not fire at weight 1 either. The threshold belongs to the source, so the new source that `ss_runtime_crossfade` or `ss_runtime_set_track_animation` lays on a track above 0 starts at the default `+∞` again. As with the loop count in §1-5, lower it again after every change of animation.
+By default, only the primary (track 0's main animation) fires events. A source added to track 0 with `ss_runtime_add_track_source` does not fire either, like any other source. To make another source fire too, lower its threshold to its `weight` or below. Events are reported from sources where `weight >= threshold`. The default threshold is `+∞`, which no weight reaches, so the lone source of another track does not fire at weight 1 either. The threshold belongs to the source, so the new source that `ss_runtime_crossfade` or `ss_runtime_set_track_animation` lays on a track above 0 starts at the default `+∞` again. As with the loop count in §1-5, lower it again after every change of animation.
 
 ```cpp
 ss_runtime_set_source_event_threshold(ctx, run, 0.5f);   // fires when run's weight is 0.5 or more
@@ -286,7 +287,7 @@ Get the reason for a failure with `ss_runtime_get_last_error(ctx)`. Functions th
 
 ## 8. WebAssembly
 
-The WebAssembly bindings map one to one onto the C-API. Failures are thrown as exceptions, and a `float` with no value becomes `undefined`.
+The WebAssembly bindings map one to one onto the C-API. Failures are thrown as exceptions. A read with no value is `undefined` whatever its type (`float`, integer, boolean or handle); the C-API's `NaN`, `-1` and `SS_RUNTIME_INVALID_HANDLE` are not used.
 
 ```typescript
 ctx.setup_animation("idle");
