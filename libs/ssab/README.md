@@ -111,5 +111,5 @@ fn create_ssab() {
 
 # Development & Code Generation (Updating fbs files)
 
-When you edit `.fbs` files under `fbs/`, regenerate the committed Rust bindings in `src/runtime/` and `src/converter/` with `./scripts/generate.sh` (or `./scripts/generate.ps1` on Windows). For the required `flatc` version and workflow details, see [CONTRIBUTING.md](../../CONTRIBUTING.md#generated-code).
+When you edit `.fbs` files under `fbs/`, regenerate the committed Rust bindings in `src/runtime/` and `src/converter/` with `./scripts/generate.sh` (or `./scripts/generate.ps1` on Windows). The `flatc` release to use is in [CONTRIBUTING.md](../../CONTRIBUTING.md#prerequisites).
 

@@ -75,7 +75,7 @@ void convert() {
 - **`converter`**: Core logic for mapping `sspj` data structures to `ssab` FlatBuffers schemas.
 - **`cache`**: Implements caching and deduplication logic for FlatBuffers objects to reduce file size.
 - **`scan`**: Bounded directory traversal for batch `.sspj` discovery (`scan` feature).
-- **`utility`**: Path collection helpers used by `ssconverter-cli` (`native` feature).
+- **`utility`**: Path collection helpers used by `ssconverter-cli` (`scan` feature).
 - **`ffi`**: C-API wrapper functions (`ffi` feature).
 - **`web`**: `wasm-bindgen` entry points for in-browser conversion (`web` feature).
 

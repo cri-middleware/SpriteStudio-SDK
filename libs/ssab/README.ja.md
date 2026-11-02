@@ -109,6 +109,6 @@ fn create_ssab() {
 
 # 開発・コード生成 (fbsファイルの更新)
 
-`fbs/` 内の `.fbs` ファイルを変更した場合は、`./scripts/generate.sh`（Windows では `./scripts/generate.ps1`）を実行して `src/runtime/` と `src/converter/` の Rust コードを再生成してください。必要な `flatc` のバージョンや手順の詳細は [CONTRIBUTING.md](../../CONTRIBUTING.md#generated-code) を参照してください。
+`fbs/` 内の `.fbs` ファイルを変更した場合は、`./scripts/generate.sh`（Windows では `./scripts/generate.ps1`）を実行して `src/runtime/` と `src/converter/` の Rust コードを再生成してください。使う `flatc` のバージョンは [CONTRIBUTING.md](../../CONTRIBUTING.md#前提条件) にあります。
 
 

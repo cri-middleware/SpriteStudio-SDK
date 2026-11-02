@@ -487,13 +487,13 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | `name_hash` | — | 高速検索用ハッシュ |
 | `name` | — | フォント名 |
 | `name_face` | `info.face` | フォントフェイス名 |
-| `size` | — | 固定値 `0`（`.fnt` からは引き継がれない。[9 スライス・シェイプ・テキスト §3-2](../ssruntime/docs/40_parts/30_special_parts.ja.md#3-2-ビットマップフォント) 参照） |
+| `size` | — | 固定値 `0`（`.fnt` からは引き継がれない。[9 スライス・シェイプ・テキスト §3-2](../ssruntime/docs/40_parts/30_special_parts.ja.md#fontbitmap--fontglyphbitmap-ビットマップフォントのグリフの表) 参照） |
 | `padding_l/r/u/d` | — | 固定値 `0`（`.fnt` からは引き継がれない） |
 | `base` | `common.base` | ベースライン |
 | `height_line` | `common.line_height` | 行の高さ |
 | `scale` | — | 固定値 `(1.0, 1.0)`（`.fnt` からは引き継がれない） |
 | `spacing` | — | 固定値 `(0.0, 0.0)`（`.fnt` からは引き継がれない。字間には `PartTypeText.text_space` を使う） |
-| `size_texture_original` | — | 元のテクスチャサイズ |
+| `size_texture_original` | `common.scale_w/h` | 元のテクスチャサイズ |
 | `name_texture` | `pages[*].file` | テクスチャファイル名 |
 | `name_texture_hash` | — | テクスチャファイル名のハッシュ配列 |
 | `table_data` | `chars` | グリフデータ |

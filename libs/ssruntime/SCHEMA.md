@@ -121,7 +121,7 @@ Inline `struct` (fixed-size, no vtable) keyed by position in `draw_batches`:
 
 | Variant | Geometry source per part |
 |:---|:---|
-| `Normal` | Standard sprite quad — driven by the `local_vertices` / `local_uvs` SoA buffers in `Direct` mode (or the `vertices` + `cells` pools in `SceneGraph` mode; texture from `texture_hash`: `cellmap_name_hash`, or the TCHG texture name when overridden). |
+| `Normal` | Standard sprite quad — the `local_vertices` / `local_uvs` SoA buffers in `Direct` mode, the `vertices` + `cells` pools in `SceneGraph` mode. Texture from `texture_hash` (`cellmap_name_hash`, or the TCHG texture name when overridden). |
 | `Shape` | Procedural shape from `PartTypeShape` (no texture). |
 | `Instance` | Sub-anime instance slot — see [Player Porting Guide](./docs/README.md) for slot pulling. |
 | `Effect` | Particle quads from the matching `EffectSlot` (see `effect_draw_plan.fbs`). |

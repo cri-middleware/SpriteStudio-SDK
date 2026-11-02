@@ -62,7 +62,7 @@ $ ssconverter-cli project.sspj -o ./output_folder
 
 ## バッチモード (Batch Mode)
 
-複数の `.sspj` プロジェクトをまとめて変換します。複数のファイルパス、またはディレクトリを指定することができます（ディレクトリ内の `.sspj` は再帰的に検索されます）。このモードでは `--out-dir` オプションは無視され、出力は各 `.sspj` の隣に `<name>/`（`--embedded` 指定時は `<name>_emb/`）として生成されます。
+複数の `.sspj` プロジェクトをまとめて変換します。複数のファイルパス、またはディレクトリを指定することができます（ディレクトリ内の `.sspj` は再帰的に検索されます）。このモードでは `--out-dir` オプションは無視され、出力は各 `.sspj` の隣に生成されます（[出力](#出力) を参照）。
 
 ```bash
 # 特定の複数ファイルを変換
@@ -118,7 +118,7 @@ $ ssconverter-cli my_game/project.sspj --embedded
 
 # 開発者向け
 
-ビルド・テスト・コントリビュートの手順は [CONTRIBUTING.md](../CONTRIBUTING.md) を参照してください。このクレートの統合テスト（`cli/tests/`）だけを実行するには、リポジトリのルートで次を実行します。
+ビルド・テスト・コントリビュートの手順は [CONTRIBUTING.md](../CONTRIBUTING.md#開発環境のセットアップ) を参照してください。このクレートの統合テスト（`cli/tests/`）だけを実行するには、リポジトリのルートで次を実行します。
 
 ```bash
 $ cargo test -p ssconverter-cli

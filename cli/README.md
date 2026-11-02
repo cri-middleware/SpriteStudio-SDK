@@ -65,7 +65,7 @@ $ ssconverter-cli project.sspj -o ./output_folder
 
 Converts multiple `.sspj` projects at once.
 You can pass multiple file paths or directories containing `.sspj` files.
-In this mode, the `--out-dir` option is ignored; each output is written next to its source `.sspj` in `<name>/` (or `<name>_emb/` with `--embedded`).
+In this mode, the `--out-dir` option is ignored; each output is written next to its source `.sspj`, as [Output](#output) describes.
 
 ```bash
 # Convert multiple specific files
@@ -121,7 +121,7 @@ Once `.ssab` files are generated, hand them to your Player; its documentation sa
 
 # For Developers
 
-For build, test, and contribution instructions, see [CONTRIBUTING.md](../CONTRIBUTING.md). To run only this crate's integration tests (`cli/tests/`):
+For build, test, and contribution instructions, see [CONTRIBUTING.md](../CONTRIBUTING.md#development-environment). To run only this crate's integration tests (`cli/tests/`):
 
 ```bash
 $ cargo test -p ssconverter-cli

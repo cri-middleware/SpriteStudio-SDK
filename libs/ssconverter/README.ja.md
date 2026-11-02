@@ -72,7 +72,7 @@ void convert() {
 - **`converter`**: `sspj` のデータ構造を `ssab` の FlatBuffers スキーマにマッピングするコアロジック。
 - **`cache`**: FlatBuffers オブジェクトのキャッシュと重複排除ロジックを実装し、ファイルサイズを削減します。
 - **`scan`**: バッチ変換向けに `.sspj` を探索する上限付きディレクトリ走査（`scan` feature）。
-- **`utility`**: `ssconverter-cli` が使用するパス収集ヘルパー（`native` feature）。
+- **`utility`**: `ssconverter-cli` が使用するパス収集ヘルパー（`scan` feature）。
 - **`ffi`**: C-API のラッパー関数群（`ffi` feature）。
 - **`web`**: ブラウザ内変換向けの `wasm-bindgen` エントリポイント（`web` feature）。
 

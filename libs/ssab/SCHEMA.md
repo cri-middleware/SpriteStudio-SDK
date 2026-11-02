@@ -487,13 +487,13 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | `name_hash` | — | Hash for fast lookup |
 | `name` | — | Font name |
 | `name_face` | `info.face` | Font face name |
-| `size` | — | Fixed `0` (not carried from `.fnt`; see [9-slice, Shape and Text §3-2](../ssruntime/docs/40_parts/30_special_parts.md#3-2-bitmap-fonts)) |
+| `size` | — | Fixed `0` (not carried from `.fnt`; see [9-Slice, Shape, and Text §3-2](../ssruntime/docs/40_parts/30_special_parts.md#fontbitmap--fontglyphbitmap-the-bitmap-font-glyph-table)) |
 | `padding_l/r/u/d` | — | Fixed `0` (not carried from `.fnt`) |
 | `base` | `common.base` | Baseline |
 | `height_line` | `common.line_height` | Line height |
 | `scale` | — | Fixed `(1.0, 1.0)` (not carried from `.fnt`) |
 | `spacing` | — | Fixed `(0.0, 0.0)` (not carried from `.fnt`; use `PartTypeText.text_space` for letter spacing) |
-| `size_texture_original` | — | Original texture size |
+| `size_texture_original` | `common.scale_w/h` | Original texture size |
 | `name_texture` | `pages[*].file` | Texture file names |
 | `name_texture_hash` | — | Hash array of texture file names |
 | `table_data` | `chars` | Glyph data |

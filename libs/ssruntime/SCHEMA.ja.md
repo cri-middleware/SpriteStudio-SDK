@@ -121,7 +121,7 @@ FrameData (FFI を介したメモリバッファ)
 
 | バリアント | パーツごとのジオメトリソース |
 |:---|:---|
-| `Normal` | 標準スプライト矩形 — `Direct` モードでは `local_vertices` / `local_uvs` SoA バッファ（`SceneGraph` モードでは `vertices` + `cells` プール。テクスチャは `texture_hash` 経由: `cellmap_name_hash`、または上書き時は TCHG のテクスチャ名）。 |
+| `Normal` | 標準スプライト矩形 — `Direct` モードでは `local_vertices` / `local_uvs` SoA バッファ、`SceneGraph` モードでは `vertices` + `cells` プール。テクスチャは `texture_hash` 経由（`cellmap_name_hash`、または上書き時は TCHG のテクスチャ名）。 |
 | `Shape` | `PartTypeShape` から生成される手続き的シェイプ（テクスチャ無し）。 |
 | `Instance` | サブアニメのインスタンススロット — スロット pull の詳細は [Player 移植ガイド](./docs/README.ja.md) を参照。 |
 | `Effect` | 該当 `EffectSlot` のパーティクル矩形（`effect_draw_plan.fbs` 参照）。 |

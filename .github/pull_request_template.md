@@ -16,17 +16,13 @@ that is useful information, not a problem.
 実行した確認と環境。実行できなかった場合はその旨をお書きください。
 -->
 
-- [ ] `scripts/check.sh` (add `features=yes` when code behind a feature changed, `docs=yes` when `libs/ssruntime/docs` changed)
-- [ ] `cargo fmt --all -- --check`
-- [ ] `cargo clippy --workspace --all-targets --all-features -- -D warnings`
-- [ ] `cargo test --workspace --all-features` — without `--all-features` the `std`-gated tests do not run, and it still passes
+- [ ] `scripts/check.sh` (`check.ps1` in PowerShell), with `features=yes` when code behind a feature changed and `docs=yes` when `libs/ssruntime/docs` changed — the verdict is its summary, not the exit code
 - [ ] Converted a real project: `cargo run -p ssconverter-cli -- <project.sspj>`
-- [ ] `scripts/build-docs.sh`, if the porting guide changed
 - [ ] Not run — see notes below / 未実行（理由は下記）
 
 **Environment / 環境:** OS, Rust version, target
 
-## Checklist / チェックリスト
+## Checklist
 
 - [ ] Scoped to one thing. Unrelated fixes are easier to review as their own PR.
 - [ ] Follows the style of the files it touches.
