@@ -35,6 +35,7 @@ No C-API returns the parts color. Read it from `parts_color` in FrameData.
 - The part's `PartState.part_color` is the index into `parts_color`. `-1` means the part has no parts color (§5).
 - A parts color has a blend type, `blend_type`, and a color for each of the four corners (`lt` / `rt` / `lb` / `rb`). Each corner has a color, `rgba`, and a blend strength, `rate`.
 - **`rgba.a` already has the part's opacity (including the opacity inherited from its parents) multiplied in.** Do not multiply it by `PartState.alpha` again in the Player.
+- `rgba` is a `U8Color`, laid out in memory as `a, r, g, b` (one byte each). Read them in this order when you read the struct directly ([Render Loop §4-2](../30_core/40_render_loop.md#4-2-reading-framedata-vectors-directly)).
 
 ## 4. Rules per part type
 
@@ -120,7 +121,8 @@ The coefficients `x` / `y` / `z` are, in order, "the adjustment to the texture c
 
 ```glsl
 void vertex() {
-    int idx = clamp(int(CUSTOM0.y + 0.5), 0, 3);   // keep blend_type within 0..3
+    int b = int(CUSTOM0.y + 0.5);
+    int idx = (b >= 0 && b <= 3) ? b : 0;   // outside 0..3 is Mix (§2)
     vec4 c = _PartColorCoef[idx];
     float rate = CUSTOM0.x;
     partcolor_varg = vec4(

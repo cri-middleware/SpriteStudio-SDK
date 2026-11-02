@@ -15,8 +15,8 @@ A mesh part changes shape through bone skinning and vertex deformation. The Brai
 | `ss_runtime_get_mesh_index_offsets` | Prefix sum of length `num_parts + 1`. The indices of part `p` are `[offsets[p], offsets[p + 1])` |
 
 - A part that is not a mesh has an empty range (`offsets[p] == offsets[p + 1]`).
-- **UVs and indices do not change from frame to frame.** The UVs are computed from the mesh part's cell at frame 0 (a mesh part cannot change its cell partway through). The Player may cache them.
-- In `SceneGraph` mode, these buffers are empty. Mesh vertices are passed in FrameData's `vertices` ([Render Loop §3](../30_core/40_render_loop.md#3-rendermode)).
+- **UVs and indices do not change from frame to frame while an animation plays.** The UVs are computed from the mesh part's cell at frame 0 (a mesh part cannot change its cell partway through). The Player may cache them, but read them again whenever the animation changes (track 0 included). Within one ssab, mesh parts that show different cells give different vertex ranges, UVs and indices.
+- In `SceneGraph` mode, these buffers are empty and the Brain does not compute mesh vertices (FrameData's `vertices` holds only the cell's rectangle, and `deforms` only the deform offsets). A Player that draws meshes uses `Direct` mode ([Render Loop §3](../30_core/40_render_loop.md#3-rendermode)).
 
 ## 2. Slicing out a part's vertices
 

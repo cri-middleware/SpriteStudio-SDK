@@ -49,7 +49,7 @@ for (InstanceChild& c : instance_children) {
 | :--- | :--- |
 | `visible` | Whether to draw the child in this frame |
 | `transitioned` | The slot met a new key and configured the child for it. **The slot does not start the child: call `ss_runtime_play` on it**, or an independently played child never advances. **Reset the slots inside the child too** (§6) |
-| `child_frame_no` | The frame number to draw the child at. **It includes a fraction. Use it without rounding** ([Playback Control §6-2](../30_core/20_playback_control.md#6-2-do-not-discard-the-fraction)). **Use it on a `transitioned` tick too.** The slot has already put the child at its section's first frame for the direction, which is where `ss_runtime_play` snaps it, and a synced child's value follows the parent. Reading the child's frame after the `play` instead would put a synced child back at its section start for that tick |
+| `child_frame_no` | The frame number to draw the child at. **It includes a fraction. Use it without rounding** ([Playback Control §6-2](../30_core/20_playback_control.md#6-2-do-not-discard-the-fraction)). **Use it on a `transitioned` tick too.** The slot has already put the child at its section's first frame for the direction, which is where `ss_runtime_play` snaps it, and the value of a child that follows the parent's frame (a child without independent playback) follows the parent. Reading the child's frame after the `play` instead would put such a child back at its section start for that tick |
 | `child_looped` | An independently played child completed one cycle (§4) |
 | `independent` | Whether the child plays independently |
 
@@ -57,7 +57,7 @@ for (InstanceChild& c : instance_children) {
 
 ## 3. Independent playback
 
-Instance parts and effect parts have an "independent playback" setting, which advances on the part's own elapsed time regardless of the parent's playback speed or pause. `ss_instance_slot_is_independent` / `ss_effect_slot_is_independent` (or `independent` in the step's return value) tells you whether a part plays independently.
+Instance parts and effect parts have an "independent playback" setting, which advances on the part's own elapsed time regardless of the parent's playback speed or pause. `ss_instance_slot_is_independent` / `ss_effect_slot_is_independent` tells you whether a part plays independently (for an instance part, `independent` in the return value of `ss_instance_slot_step` does too).
 
 - **Keep calling `step` even while the parent is paused, and even when a seek leaves the parent's frame unchanged.** Otherwise the result looks unnatural, for example particles freezing in mid-air.
 - Only **explicitly placed playback keys** (`EventInstance` / `EventEffect`) can start or restart independent playback. When the current frame has no explicit key (for example, when none was placed at the start of the animation), the Brain uses an implicit key that starts from frame 0, but an independently played child does not restart on this implicit key, even when the parent loops.
