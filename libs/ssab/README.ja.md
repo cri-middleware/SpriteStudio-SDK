@@ -75,7 +75,7 @@ fn main() {
 
 ## データの作成/書き出し (Converter)
 
-`converter` feature を有効にする必要があります。
+`converter` feature を有効にする必要があります。この例は `flatbuffers` クレートも直接使います。`ssab` は再エクスポートしないので、SDK のルートの `Cargo.toml` と同じバージョンの `flatbuffers` を `[dependencies]` に加えてください。
 
 ```rust
 #[cfg(feature = "converter")]
@@ -94,6 +94,8 @@ fn create_ssab() {
     // `SsAnimeBinaryT` がルートで、パーツとアニメーション一覧を保持します。
     let mut binary = SsAnimeBinaryT::default();
     binary.name = "MyProject".to_string();
+    // version が一致しないパックはランタイムが読み込みません。
+    binary.version = ssab::SSAB_SCHEMA_VERSION;
     binary.animations = vec![anime];
 
     // FlatBufferBuilder でシリアライズ。ヘルパーが "SSAB" ファイル識別子を

@@ -1,8 +1,8 @@
 [**English**](./SCHEMA.md) | [**日本語**](./SCHEMA.ja.md)
 
-# SS-Runtime FrameData Schema Documentation
+# libssruntime FrameData Schema Documentation
 
-This document describes the `FrameData` schema (`framedata.fbs`) used in the SS-Runtime. `FrameData` acts as the primary **data exchange interface** between the SS-Runtime core and the Player (rendering engine) via FFI.
+This document describes the `FrameData` schema (`framedata.fbs`) used in `libssruntime`. `FrameData` acts as the primary **data exchange interface** between the `libssruntime` core and the Player (rendering engine) via FFI.
 
 ## Overview: When and What Data is Generated
 
@@ -24,7 +24,7 @@ Specifically, `FrameData` takes the `AnimationData` from an `.ssab` file, evalua
  │
  ＋  Current Frame Number (e.g., Frame 15)
  │
- ▼  (SS-Runtime: Interpolation & Coordinate Conversion)
+ ▼  (libssruntime: Interpolation & Coordinate Conversion)
  │
 FrameData (Memory Buffer via FFI)
  └─ parts: [PartState] (Evaluated result for Frame 15: position_x, rotation_z, etc.)

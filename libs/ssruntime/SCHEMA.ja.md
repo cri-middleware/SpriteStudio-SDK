@@ -1,8 +1,8 @@
 [**English**](./SCHEMA.md) | [**日本語**](./SCHEMA.ja.md)
 
-# SS-Runtime FrameData スキーマ解説
+# libssruntime FrameData スキーマ解説
 
-このドキュメントでは、SS-Runtime で使用される `FrameData` スキーマ (`framedata.fbs`) について解説します。`FrameData` は、SS-Runtime コアとプレイヤー（レンダリングエンジン）の間で、FFI を介してデータをやり取りするための主要な**データ交換インターフェース**として機能します。
+このドキュメントでは、`libssruntime` で使用される `FrameData` スキーマ (`framedata.fbs`) について解説します。`FrameData` は、`libssruntime` のコアとプレイヤー（レンダリングエンジン）の間で、FFI を介してデータをやり取りするための主要な**データ交換インターフェース**として機能します。
 
 ## 概要: データが生成されるタイミングと内容
 
@@ -24,7 +24,7 @@
  │
  ＋  現在のフレーム番号 (例: Frame 15)
  │
- ▼  (SS-Runtime: 補間計算 & 座標系変換)
+ ▼  (libssruntime: 補間計算 & 座標系変換)
  │
 FrameData (FFI を介したメモリバッファ)
  └─ parts: [PartState] (Frame 15 における評価結果: position_x, rotation_z など)

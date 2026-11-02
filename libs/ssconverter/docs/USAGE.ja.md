@@ -2,16 +2,16 @@
 
 # libssconverter 組み込みガイド
 
-`libssconverter` は、SpriteStudio のプロジェクトファイル (`.sspj`) をランタイム向けの最適化バイナリ形式 (`.ssab`) に変換するための C 互換ライブラリです。自作のゲームエンジンやツール、開発用エディタにインプロセスでのコンバート機能を組み込む際に利用します。
+`libssconverter` は、SpriteStudio のプロジェクトファイル (`.sspj`) をランタイム向けの最適化バイナリ形式 (`.ssab`, `.ssqb`) に変換するための C 互換ライブラリです。自作のゲームエンジンやツール、開発用エディタにインプロセスでのコンバート機能を組み込む際に利用します。
 
 ## 1. 準備
 
 ### ライブラリのリンク
 
-`libssconverter` は Rust で実装されており、C-API を通じて利用します。プラットフォームに応じた静的ライブラリまたは動的ライブラリをプロジェクトにリンクしてください。
+`libssconverter` は Rust で実装されており、C-API を通じて利用します。プラットフォームに応じた静的ライブラリまたは動的ライブラリをプロジェクトにリンクしてください。どちらもヘッダとともに、リリースのネイティブライブラリの zip に入っています（[SDK の README](../../../README.ja.md#1-ツールライブラリをダウンロードする)）。
 
-- **Windows**: `ssconverter.lib`（共有ライブラリとして使う場合は `ssconverter.dll` も）
-- **macOS/Linux**: `libssconverter.a`（共有ライブラリとして使う場合は `libssconverter.dylib` / `.so` も）
+- **Windows**: `ssconverter.lib`（静的）または `ssconverter.dll`（共有）
+- **macOS/Linux**: `libssconverter.a`（静的）または `libssconverter.dylib` / `.so`（共有）
 
 また、各プラットフォームで必要なシステムライブラリ（pthread, dl 等）を適宜追加してください。
 
@@ -61,6 +61,7 @@ void on_update() {
     if (ctx && ss_converter_is_finished(ctx)) {
         // 変換が完了した
         on_conversion_complete(ctx);
+        ctx = nullptr;  // 上で破棄したので、これ以降はポーリングしない
     }
 }
 ```

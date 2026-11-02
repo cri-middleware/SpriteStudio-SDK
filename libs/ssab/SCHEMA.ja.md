@@ -36,7 +36,7 @@
  └─ .ssqe (シーケンスパック)      ──────► .ssqb (SsSequenceBinary)
 ```
 
-各 `.ssab` は自己完結的です。特定のアニメーションパックが参照する ss*e リソースのみが埋め込まれ、使用されないリソースは除外されます。
+各 `.ssab` は自己完結的です。特定のアニメーションパックが参照する ss*e リソースのみが埋め込まれ、使用されないリソースは除外されます。例外はサウンドで、Audio パーツを持つパックはプロジェクトの `.ssse` をすべて持ちます。
 
 ---
 
@@ -53,7 +53,7 @@
 | `animations` | [AnimationData] | `SsAnimePack.anime_list` (ssae) | このパック内の全アニメーション |
 | `cellmaps` | [CellMap] | `SsCellMap` (ssce) | このパックが参照するセルマップのみ（エフェクトが使用するものも含む） |
 | `effects` | [Effect] | `SsEffectFile` (ssee) | Effect タイプのパーツが参照するエフェクトのみ |
-| `sound_lists` | [SoundList] | `SsAudioPack` (ssse) | パックに Audio タイプのパーツが含まれる場合のみ |
+| `sound_lists` | [SoundList] | `SsAudioPack` (ssse) | パックに Audio タイプのパーツがあればプロジェクトの全 `SoundList`、無ければ含まれない |
 | `font_bitmaps` | [FontBitmap] | `SsCharMap` (fnt) | `text_bitmap == true` の Text タイプパーツが使用するビットマップフォントのみ |
 | `external_textures` | [ExternalTexture] | — | 外部テクスチャ参照。`name_hash` でソート。プロジェクトの `<ExternalTextures>` リストと、この pack 内の `TCHG` キーが指す全ての `TextureName`（`common.png` のようなセルマップ画像を含む）の和集合。Player が `TCHG` のハッシュ（ひいては `DrawBatch.texture_hash`）をロード可能な名前へ逆引きするためのテーブルであり、両方の供給元を網羅する必要がある。 |
 | `external_instances` | [ExternalInstance] | — | クロスパックインスタンス参照。`(anime_pack_name_hash, anime_name_hash)` でソートされる。このテーブルに FlatBuffers の `(key)` は無いため、`LookupByKey` ではなくベクタを走査して引く。各エントリは `anime_pack_name_hash`（参照先 pack の `SsAnimeBinary.name_hash` と一致）、`anime_pack_name`（隣接する `<pack>.ssab` ファイル探索に使用）、`anime_name_hash`、`anime_name`（診断用）を持つ。 |
@@ -583,7 +583,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 
 ## ssab の主要な設計方針
 
-1. **ssae 単位の変換**: 各 ssab は単一の ssae アニメーションパックに対応し、そのパックが実際に使用する ss*e リソース (ssce, ssee, ssse, fnt) のみをバンドルします。sspj プロジェクトファイルは ssab に含まれません。
+1. **ssae 単位の変換**: 各 ssab は単一の ssae アニメーションパックに対応し、そのパックが実際に使用する ss*e リソース (ssce, ssee, fnt) のみをバンドルします。Audio パーツがある場合は、プロジェクトの ssse もすべて加わります。sspj プロジェクトファイルは ssab に含まれません。
 
 2. **ハッシュベースの検索**: 名前を持つエンティティは `name_hash: uint32`（名前の FNV-1a）を持ち、検索は文字列ではなく整数の比較で済む。`name_hash` が `(key)` のテーブル（セル・セルマップ・エフェクト・サウンド・ラベルなど）はこのハッシュ順に書かれていて二分探索で引ける。ランタイムはセル・セルマップ・エフェクトを二分探索で、アニメーションとパーツを線形に探す。
 

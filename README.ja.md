@@ -14,13 +14,13 @@ SpriteStudio-SDK `7.x.x` は **SpriteStudio 7.6 以上**で作成されたプロ
 ## 🔄 ワークフロー
 
 1. **変換 (Convert):** 提供されている CLI ツール (`ssconverter-cli`) を使用して、SpriteStudio のプロジェクト (`.sspj`) を極限まで最適化されたバイナリフォーマット (`.ssab`) に変換します。
-2. **どこでも再生 (Play Anywhere):** 生成された `.ssab` ファイルを本 SDK のランタイムに渡します。**SDK はすべての `.ssab` ファイルを再生できるよう設計されており**、SpriteStudio の機能を標準でサポートします。テキスト描画とサウンド再生は責務分担として Player 側の担当です（[制限事項 §1](./libs/ssruntime/docs/10_introduction/20_limitations.ja.md#1-テキストとサウンドは-player-が実装する) を参照）。
+2. **どこでも再生 (Play Anywhere):** 生成された `.ssab` ファイルを本 SDK のランタイムに渡します。**SDK はすべての `.ssab` ファイルを再生できるよう設計されており**、SpriteStudio の機能を標準でサポートします。テキスト描画とサウンド再生は責務分担として Player（`libssruntime` が計算したものをエンジン上で描く側）の担当です（[制限事項 §1](./libs/ssruntime/docs/10_introduction/20_limitations.ja.md#1-テキストとサウンドは-player-が実装する) を参照）。
 
 この SDK を使用してアセットを変換し、アニメーションを再生する際の流れを以下の図に示します：
 
 > **図の凡例**
 > - **図形**: `[ ]` データ/ファイル, `( )` ライブラリ/コンポーネント, `[[ ]]` ツール/アプリケーション
-> - **矢印**: `-->` データの流れ, `-.->` 依存/参照
+> - **矢印**: `-->` データの流れ
 > - **枠線**: 点線枠は生成されたファイルを示します。
 
 ```mermaid
@@ -76,10 +76,10 @@ graph LR
 - ライブラリ
     - [libsspj](./libs/sspj/README.ja.md): `sspj`、`ssae`、`ssce`、`ssee`、`ssqe`、`ssse`、ビットマップフォントの文字マップ（`fnt`）ファイルで構成される`sspj`プロジェクトを解析するライブラリです。
     - [libssab](./libs/ssab/README.ja.md): アニメーションバイナリファイルである`ssab`ファイルを作成・解析するライブラリです。
-    - [libssconverter](./libs/ssconverter/README.ja.md): `sspj` プロジェクトを解析し、`ssab` ファイルを作成するライブラリです。
+    - [libssconverter](./libs/ssconverter/README.ja.md): `sspj` プロジェクトを解析し、`ssab` と `ssqb` のファイルを作成するライブラリです。
     - [libssruntime](./libs/ssruntime/README.ja.md): 再生の "Brain"。フレーム毎にパーツの状態（トランスフォーム、メッシュ変形、カラー）を計算し、エンジン非依存の `DrawBatch` プランを出力します。
 - ツール
-    - [ssconverter-cli](./cli/README.ja.md): `sspj` プロジェクトを解析し、`ssab` ファイルを作成するコマンドラインツールです。
+    - [ssconverter-cli](./cli/README.ja.md): `sspj` プロジェクトを解析し、`ssab` と `ssqb` のファイルを作成するコマンドラインツールです。
 
 ## 🚀 クイックスタート
 
@@ -92,7 +92,7 @@ graph LR
 - **Web (WASM)**: 直接 JavaScript/TypeScript から利用可能なパッケージが `spritestudio-sdk-web-libs.zip` として用意されています。
 
 ### 2. サンプルプロジェクトをコンバートする
-ダウンロードしたツールを実行して、このリポジトリの `tests/` にあるサンプルプロジェクト（リポジトリをクローンするか、Release の *Source code* zip を取得してください）をバイナリ形式 (`.ssab`) に変換します：
+このリポジトリの `tests/` にあるサンプルプロジェクト（リポジトリをクローンするか、Release の *Source code* zip を取得してください）をバイナリ形式 (`.ssab`) に変換します。ダウンロードしたツールはそのチェックアウトのルートで実行します。以下のコマンドは、展開した `ssconverter-cli` をそこに置いた前提です：
 
 **Windows:**
 ```powershell
@@ -113,7 +113,7 @@ graph LR
 
 このリポジトリの `tests/` ディレクトリには、SpriteStudio の各種機能を検証するためのサンプルプロジェクトが含まれています：
 
-- `tests/overall/overall.sspj`: 基本から応用までを網羅した包括的なプロジェクト（最初のテストにおすすめです）。
+- `tests/overall/overall.sspj`: 基本から応用までを網羅した包括的なプロジェクト。Player 移植ガイドの「実装の進め方」が使います。
 - `tests/allAttributeV7/allAttributeV7.sspj`: 全てのアニメーションアトリビュートを網羅しています。
 - `tests/allPartsV7/allPartsV7.sspj`: 全てのパーツ種別の検証用プロジェクトです。
 - `tests/ParticleEffect/ParticleEffect.sspj`: パーティクルエフェクトの検証用プロジェクトです。

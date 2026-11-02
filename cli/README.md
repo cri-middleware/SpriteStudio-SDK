@@ -84,7 +84,7 @@ _Note: The `--out-dir` option is not available in batch mode._
 
 ## Exit status
 
-In either mode, the run exits with a non-zero status when a path given does not exist or a project fails to convert. Every such path and project is named on stderr, and the projects that can be converted still are.
+In either mode, the run exits with a non-zero status when a path given does not exist, when no `.sspj` is found at the paths, or when a project fails to convert. Every such path and project is named on stderr, and the projects that can be converted still are.
 
 # Examples
 

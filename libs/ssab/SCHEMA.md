@@ -36,7 +36,7 @@ One `.ssab` file is generated **per `.ssae` (animation pack)**. The `.ssab` cont
  └─ .ssqe (sequence pack)   ──────► .ssqb (SsSequenceBinary)
 ```
 
-Each `.ssab` is self-contained: it embeds only the ss*e resources that the specific animation pack references. Resources not used by the pack are excluded.
+Each `.ssab` is self-contained: it embeds only the ss*e resources that the specific animation pack references. Resources not used by the pack are excluded. The exception is sound: a pack with an Audio part carries every `.ssse` of the project.
 
 ---
 
@@ -53,7 +53,7 @@ Each `.ssab` is self-contained: it embeds only the ss*e resources that the speci
 | `animations` | [AnimationData] | `SsAnimePack.anime_list` (ssae) | All animations in this pack |
 | `cellmaps` | [CellMap] | `SsCellMap` (ssce) | Only cellmaps referenced by this pack (including those used by effects) |
 | `effects` | [Effect] | `SsEffectFile` (ssee) | Only effects referenced by Effect-type parts |
-| `sound_lists` | [SoundList] | `SsAudioPack` (ssse) | Included only if the pack contains Audio-type parts |
+| `sound_lists` | [SoundList] | `SsAudioPack` (ssse) | Every `SoundList` of the project when the pack contains an Audio-type part; none otherwise |
 | `font_bitmaps` | [FontBitmap] | `SsCharMap` (fnt) | Only bitmap fonts used by Text-type parts with `text_bitmap == true` |
 | `external_textures` | [ExternalTexture] | — | External texture references; sorted by `name_hash`. Union of the project's `<ExternalTextures>` list and every distinct `TextureName` named by a `TCHG` key in this pack (including cellmap images such as `common.png`). This is the reverse-lookup table a Player needs to turn a `TCHG` hash — and hence `DrawBatch.texture_hash` — back into a loadable name, so it must cover both sources. |
 | `external_instances` | [ExternalInstance] | — | Cross-pack instance references; sorted by `(anime_pack_name_hash, anime_name_hash)`. The table carries no FlatBuffers `(key)`, so a reader scans the vector rather than calling `LookupByKey`. Each entry carries `anime_pack_name_hash` (matches `SsAnimeBinary.name_hash` of the target pack), `anime_pack_name` (used to locate the sibling `<pack>.ssab` file), `anime_name_hash`, and `anime_name` (diagnostic). |
@@ -583,7 +583,7 @@ All enums have a 1:1 mapping between ss*e and ssab. Key enums:
 
 ## Key Design Decisions in ssab
 
-1. **Per-ssae conversion**: Each ssab corresponds to a single ssae animation pack, bundling only the ss*e resources (ssce, ssee, ssse, fnt) that the pack actually uses. The sspj project file is not represented in ssab.
+1. **Per-ssae conversion**: Each ssab corresponds to a single ssae animation pack, bundling only the ss*e resources (ssce, ssee, fnt) that the pack actually uses, plus every ssse of the project when the pack has an Audio part. The sspj project file is not represented in ssab.
 
 2. **Hash-based lookups**: Named entities carry a `name_hash: uint32` (FNV-1a of the name), so a lookup compares integers, not strings. The tables whose `name_hash` is a `(key)` — cells, cell maps, effects, sounds, labels and the like — are written sorted by it, so they can be binary-searched; the runtime does so for cells, cell maps and effects, and finds an animation or a part by a linear scan.
 

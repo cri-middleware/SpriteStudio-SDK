@@ -72,7 +72,8 @@ void convert() {
 
 # Architecture
 
-- **`converter`**: Core logic for mapping `sspj` data structures to `ssab` FlatBuffers schemas.
+- **`converter`**: The conversion entry points (`convert_sspj_to_ssab_files` and its variants), `ConvertConfig` and `ConverterError`.
+- **`model_t`**: The mapping from `sspj` data structures to the `ssab` Object API structs (`…T`): parts, animations and keyframes, cell maps, effects, sounds and fonts.
 - **`cache`**: Implements caching and deduplication logic for FlatBuffers objects to reduce file size.
 - **`scan`**: Bounded directory traversal for batch `.sspj` discovery (`scan` feature).
 - **`utility`**: Path collection helpers used by `ssconverter-cli` (`scan` feature).

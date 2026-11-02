@@ -2,7 +2,7 @@
 
 # libssconverter Integration Guide
 
-`libssconverter` is a C-compatible library for converting SpriteStudio project files (`.sspj`) into a runtime-optimized binary format (`.ssab`).
+`libssconverter` is a C-compatible library for converting SpriteStudio project files (`.sspj`) into runtime-optimized binary formats (`.ssab`, `.ssqb`).
 It is designed to be integrated into custom game engines, tools, or development editors for in-process conversion.
 
 ## 1. Preparation
@@ -10,10 +10,10 @@ It is designed to be integrated into custom game engines, tools, or development 
 ### Linking the Library
 
 `libssconverter` is implemented in Rust and is used via its C-API.
-Link the static or dynamic library appropriate for your platform to your project.
+Link the static or dynamic library appropriate for your platform to your project. Both, and the header, are in the release's native library archives ([SDK README](../../../README.md#1-download-the-tools-or-libraries)).
 
-- **Windows**: `ssconverter.lib` (and `ssconverter.dll` if shared)
-- **macOS/Linux**: `libssconverter.a` (and `libssconverter.dylib`/`.so` if shared)
+- **Windows**: `ssconverter.lib` (static) or `ssconverter.dll` (shared)
+- **macOS/Linux**: `libssconverter.a` (static) or `libssconverter.dylib` / `.so` (shared)
 
 Also, add any necessary system libraries for each platform (e.g., pthread, dl).
 
@@ -63,6 +63,7 @@ void on_update() {
     if (ctx && ss_converter_is_finished(ctx)) {
         // Conversion is complete
         on_conversion_complete(ctx);
+        ctx = nullptr;  // destroyed above; stop polling it
     }
 }
 ```

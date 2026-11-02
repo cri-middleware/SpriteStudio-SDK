@@ -69,7 +69,8 @@ void convert() {
 
 # アーキテクチャ
 
-- **`converter`**: `sspj` のデータ構造を `ssab` の FlatBuffers スキーマにマッピングするコアロジック。
+- **`converter`**: 変換の入口（`convert_sspj_to_ssab_files` とその派生）、`ConvertConfig`、`ConverterError`。
+- **`model_t`**: `sspj` のデータ構造を `ssab` の Object API の構造体（`…T`）へ対応付ける処理。パーツ、アニメーションとキーフレーム、セルマップ、エフェクト、サウンド、フォント。
 - **`cache`**: FlatBuffers オブジェクトのキャッシュと重複排除ロジックを実装し、ファイルサイズを削減します。
 - **`scan`**: バッチ変換向けに `.sspj` を探索する上限付きディレクトリ走査（`scan` feature）。
 - **`utility`**: `ssconverter-cli` が使用するパス収集ヘルパー（`scan` feature）。

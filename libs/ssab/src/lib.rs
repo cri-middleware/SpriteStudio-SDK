@@ -45,7 +45,7 @@
 //!
 //! # Validation
 //!
-//! `get_root_as_*` verifies the buffer; the `_unchecked` variants do not. `ssruntime`
+//! `root_as_*` verifies the buffer; the `_unchecked` variants do not. `ssruntime`
 //! deliberately uses the unchecked path in the playback hot loop, which is why
 //! validating untrusted assets is the Player's responsibility.
 //!

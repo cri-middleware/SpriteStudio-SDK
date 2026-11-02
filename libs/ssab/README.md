@@ -77,7 +77,7 @@ fn main() {
 
 ## Creating/Writing Data (Converter)
 
-You must enable the `converter` feature.
+You must enable the `converter` feature. The example also uses the `flatbuffers` crate directly, which `ssab` does not re-export: add it to `[dependencies]` at the version in the SDK's root `Cargo.toml`.
 
 ```rust
 #[cfg(feature = "converter")]
@@ -96,6 +96,8 @@ fn create_ssab() {
     // `SsAnimeBinaryT` is the root: it holds the parts and the animation list.
     let mut binary = SsAnimeBinaryT::default();
     binary.name = "MyProject".to_string();
+    // The runtime refuses a pack whose version is not this one.
+    binary.version = ssab::SSAB_SCHEMA_VERSION;
     binary.animations = vec![anime];
 
     // Serialize with FlatBufferBuilder. The helper writes the "SSAB" file
