@@ -16,7 +16,7 @@ Problems that often occur while building a Player, and their causes.
 | Every part vanishes for an instant at the loop boundary | An out-of-range frame number is passed to `ss_runtime_get_frame_data` | [Playback Control §6-1](../30_core/20_playback_control.md#6-1-accepted-frame-numbers) |
 | Events or sounds on frame 0 sometimes do not occur | Event processing is gated on whether the frame is drawn | [Events §3-1](../30_core/30_events.md#3-1-events-on-the-start-frame) |
 | Parts with a texture change are not drawn | `external_textures()` is not loaded | [Loading and Initialization §3](../30_core/10_initialization.md#3-loading-textures) |
-| The image is upside down / flipped twice | The coordinate system setting and a flip in the Player are both applied | [Player Architecture §5](../20_design/20_architecture.md#5-coordinate-system) |
+| The image is upside down / flipped twice | The coordinate system setting and a flip in the Player are both applied | [Player Design Approach §5](../20_design/20_architecture.md#5-coordinate-system) |
 | An effect or child animation lags / is frozen after being shown again | The child's clock is advanced from `draw_order` | [Instance Parts §2](../40_parts/50_instance.md#2-advancing-the-child-with-the-slot) |
 | Independent-playback effects or children do not start when playback restarts | Slots are not initialized on `play` | [Instance Parts §6](../40_parts/50_instance.md#6-restarting-playback) |
 | Child animations or effects do not fade out with the parent's fade | The opacity of the instance part or effect part is not applied | [Instance Parts §5](../40_parts/50_instance.md#5-drawing-the-child) / [Effect Parts §3](../40_parts/60_effect.md#3-drawing-the-effectdrawplan) |

@@ -26,8 +26,7 @@ ssab = "7.0.0-beta.1"
 You need to switch `features` depending on your use case.
 
 ## `default` (Runtime)
-The default state. Optimized for reading data (deserialization).
-Suitable for game runtimes or players that only need to playback data.
+The default state enables the `std` feature (`flatbuffers/std`). Optimized for reading data (deserialization) and suitable for runtimes or tools running with the standard library.
 
 - **Characteristics**: Read-only access, Zero-copy reading.
 
@@ -37,7 +36,7 @@ ssab = "7.0.0-beta.1"
 ```
 
 ## `no_std` Support
-`libssab` is compatible with `no_std` environments. To use it, disable the default features:
+`libssab` is compatible with `no_std` environments (`core` + `alloc`). Disable default features to drop the `std` dependency:
 
 ```toml
 [dependencies]
@@ -45,7 +44,7 @@ ssab = { version = "7.0.0-beta.1", default-features = false }
 ```
 
 ## `converter`
-Mode for tools that generate or edit data.
+Mode for tools that generate or edit data (implies `std`).
 Enables FlatBuffers Object API (`--gen-object-api`), allowing manipulation of data as Rust structs and writing back to binary.
 
 - **Characteristics**: Read/Write access, Object API (T-structs) available.
@@ -78,7 +77,7 @@ fn main() {
 
 ## Creating/Writing Data (Converter)
 
-You must enable the `converter` feature.
+You must enable the `converter` feature. The example also uses the `flatbuffers` crate directly, which `ssab` does not re-export: add it to `[dependencies]` at the version in the SDK's root `Cargo.toml`.
 
 ```rust
 #[cfg(feature = "converter")]
@@ -97,6 +96,8 @@ fn create_ssab() {
     // `SsAnimeBinaryT` is the root: it holds the parts and the animation list.
     let mut binary = SsAnimeBinaryT::default();
     binary.name = "MyProject".to_string();
+    // The runtime refuses a pack whose version is not this one.
+    binary.version = ssab::SSAB_SCHEMA_VERSION;
     binary.animations = vec![anime];
 
     // Serialize with FlatBufferBuilder. The helper writes the "SSAB" file
@@ -112,30 +113,5 @@ fn create_ssab() {
 
 # Development & Code Generation (Updating fbs files)
 
-If you modify or update the `.fbs` files in the `fbs` folder, you need to regenerate the Rust code.
-Regeneration requires the `flatc` command (Google FlatBuffers Compiler) to be installed.
-
-## Update Procedure
-
-1. Install `flatc` (Google FlatBuffers Compiler), the version [CONTRIBUTING](../../CONTRIBUTING.md#prerequisites) says to use.
-2. Update or modify the `.fbs` files in the `fbs/` folder.
-3. Run the following script to regenerate the Rust code.
-
-### Windows (PowerShell)
-
-```powershell
-./scripts/generate.ps1
-```
-
-### macOS / Linux (Bash)
-
-```bash
-./scripts/generate.sh
-```
-
-These scripts perform the following steps:
-
-1. Compile definition files in the `fbs` folder.
-2. Generate source code for `runtime` and `converter` into `src/runtime` and `src/converter` respectively.
-3. Apply Object API generation options and other settings to the `converter` code.
+When you edit `.fbs` files under `fbs/`, regenerate the committed Rust bindings in `src/runtime/` and `src/converter/` with `./scripts/generate.sh` (or `./scripts/generate.ps1` on Windows). The `flatc` release to use is in [CONTRIBUTING.md](../../CONTRIBUTING.md#prerequisites).
 

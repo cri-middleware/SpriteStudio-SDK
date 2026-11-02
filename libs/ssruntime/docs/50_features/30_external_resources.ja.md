@@ -41,7 +41,7 @@ Brain はこのアトリビュートを計算し、その値を **DrawBatch の�
 
 FrameData の `parts[].texture` にも、同じ値（テクスチャ名のハッシュ、差し替えが無ければ `0`）が入っています。`update_flag` の `AttributeTexture` が立っているときだけ有効です。
 
-DrawBatch で描く Player は、これを読む必要はありません。パーツごとにエンジンのノードを作る `SceneGraph` モードの Player のように、DrawBatch を使わない実装だけが参照してください。
+DrawBatch で描く Player は、これを読む必要はありません。パーツごとにエンジンのノードを作る `SceneGraph` モード（[描画ループ §3](../30_core/40_render_loop.ja.md#3-rendermode)）の Player のように、DrawBatch を使わない実装だけが参照してください。
 
 ### 2-4. 注意
 

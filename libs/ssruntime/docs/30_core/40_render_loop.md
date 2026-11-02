@@ -8,7 +8,7 @@ Each FrameData field is defined in the [FrameData schema](https://github.com/cri
 
 ## 1. SoA buffers
 
-Calling `ss_runtime_get_frame_data` writes the values for every part of that frame into the SoA buffers. The Player receives a pointer and a length, and reads directly by part index. A buffer stays valid until the next call to `ss_runtime_get_frame_data`.
+Calling `ss_runtime_get_frame_data` writes the values for every part of that frame into the SoA buffers (§3 lists the ones `SceneGraph` mode leaves unwritten). The Player receives a pointer and a length, and reads directly by part index. A buffer stays valid until the next call to `ss_runtime_get_frame_data`.
 
 | Buffer | Function | Per part | Contents |
 | :--- | :--- | :--- | :--- |
@@ -17,7 +17,7 @@ Calling `ss_runtime_get_frame_data` writes the values for every part of that fra
 | Local UVs | `ss_runtime_get_local_uvs` | 10 floats | The UVs for the 5 vertices above. They are **pixel coordinates on the cellmap texture**, so normalize them by dividing by the texture size |
 | Cell info | `ss_runtime_get_cell_meta` | 6 floats | `[origin x, origin y, width, height, left, top]`. Left and top are the position on the cellmap texture |
 
-The values of a part with no cell are 0. Mesh, shape and 9-slice parts pass their vertices through dedicated buffers ([Mesh](../40_parts/20_mesh.md), [9-slice, Shape and Text](../40_parts/30_special_parts.md)).
+The values of a part with no cell are 0. Mesh, shape and 9-slice parts pass their vertices through dedicated buffers ([Mesh](../40_parts/20_mesh.md), [9-Slice, Shape, and Text](../40_parts/30_special_parts.md)).
 
 UV animation (moving, rotating and scaling the cut-out region) and part and cell flips (`flip_h` / `flip_v` / `img_flip_h` / `img_flip_v`) are already reflected in the local vertices and local UVs. The Player does not need to flip coordinates or UVs.
 
@@ -43,13 +43,13 @@ The Brain outputs the parts in draw order (`draw_order`), and a list of DrawBatc
 
 ```cpp
 // 1. Have the Brain compute FrameData
-const uint8_t* fd_ptr; size_t fd_len;
+const uint8_t* fd_ptr = nullptr; uintptr_t fd_len = 0;   // left as is on failure (Playback Control §6-1)
 ss_runtime_get_frame_data(ctx, frame_no, &fd_ptr, &fd_len);
 auto frame_data = ss::runtime::GetFrameData(fd_ptr);
 
 // 2. Receive the SoA buffers
 const float *world_matrices, *local_vertices;
-size_t m_len, v_len;
+uintptr_t m_len, v_len;
 ss_runtime_get_world_matrices(ctx, &world_matrices, &m_len);
 ss_runtime_get_local_vertices(ctx, &local_vertices, &v_len);
 
@@ -85,9 +85,9 @@ The values in `draw_order` are indices into `FrameData.parts`, and the SoA buffe
 | :--- | :--- | :--- |
 | `Normal` | Local vertices (§1) and world matrices | This page, [Parts Color](../40_parts/10_parts_color.md) |
 | `Mesh` | The mesh SoA buffer | [Mesh](../40_parts/20_mesh.md) |
-| `Shape` | The shape SoA buffer | [9-slice, Shape and Text §2](../40_parts/30_special_parts.md#2-shape) |
-| `Nines` | The 9-slice SoA buffer | [9-slice, Shape and Text §1](../40_parts/30_special_parts.md#1-9-slice) |
-| `Text` | No vertices. The Player builds the glyphs from the ssab | [9-slice, Shape and Text §3](../40_parts/30_special_parts.md#3-text) |
+| `Shape` | The shape SoA buffer | [9-Slice, Shape, and Text §2](../40_parts/30_special_parts.md#2-shape) |
+| `Nines` | The 9-slice SoA buffer | [9-Slice, Shape, and Text §1](../40_parts/30_special_parts.md#1-9-slice) |
+| `Text` | No vertices. The Player builds the glyphs from the ssab | [9-Slice, Shape, and Text §3](../40_parts/30_special_parts.md#3-text) |
 | `Mask` | Writes only to the stencil (or coverage). Draws no color | [Mask](../40_parts/40_mask.md) |
 | `Instance` | Draws a child animation at that position | [Instance Parts](../40_parts/50_instance.md) |
 | `Effect` | Draws the effect's particles at that position | [Effect Parts](../40_parts/60_effect.md) |
@@ -107,7 +107,7 @@ Bit `0x01` of `DrawBatch.flags` means that the parts in that run have `mask_infl
 | Mode | Value | Contents |
 | :--- | :--- | :--- |
 | **`Direct`** (default, recommended) | `0` | Numeric values such as vertices are passed only through the SoA buffers. FrameData does not carry `cells` / `vertices` / `deforms`, so there is less computation and allocation. The examples on this page assume this mode |
-| **`SceneGraph`** | `1` | For Players that create an engine node per part. FrameData carries all of `cells` / `vertices` / `deforms`. The mesh SoA buffer is empty |
+| **`SceneGraph`** | `1` | For Players that create an engine node per part. FrameData carries all of `cells` / `vertices` / `deforms`. World matrices are not computed, so the values of `ss_runtime_get_world_matrices` cannot be used. Mesh vertices are not computed either, and the mesh SoA buffer is empty |
 
 `parts_color` is in FrameData in both modes. If `cells` or `vertices` in FrameData is `null`, check whether you are reading in `Direct` mode.
 
@@ -138,7 +138,7 @@ In engines that update animation on one thread and build vertices and draw on an
 
 ### 4-2. Reading FrameData vectors directly
 
-Values not in the SoA buffers, such as **`parts`** (part state) and **`parts_color`** (vertex colors), are passed as FlatBuffers vectors in FrameData. Reading them with per-element accessors, as in `frame_data->parts_color()->Get(i)->lt()->rgba()->r()`, is heavier than you would expect, because it builds accessor objects, checks bounds on every field and dereferences the buffer indirectly. **In high-level languages such as C#, JavaScript and Python, this can become the heaviest work in scenes with many parts.**
+Values not in the SoA buffers, such as **`parts`** (part state) and **`parts_color`** (vertex colors), are passed as FlatBuffers vectors in FrameData. Reading them with per-element accessors, as in `frame_data->parts_color()->Get(i)->lt().rgba().r()`, is heavier than you would expect, because it builds accessor objects, checks bounds on every field and dereferences the buffer indirectly. **In high-level languages such as C#, JavaScript and Python, this can become the heaviest work in scenes with many parts.**
 
 > [!WARNING]
 > **Measured (Unity / C#, 100 characters):** reading `parts` and `parts_color` with per-element accessors every frame took **about 7ms / frame** (about 72% of the work of ingesting FrameData). Switching to the method below brought it down to **about 0.27ms** (about 26x).

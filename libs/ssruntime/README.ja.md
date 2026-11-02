@@ -5,7 +5,7 @@
 [SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/README.ja.md) のワークフローにおける再生の **Brain（中枢）** です。[ssconverter-cli](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/cli/README.ja.md) が生成した `.ssab` バイナリを読み込み、レンダラーがフレーム毎に必要とするすべて — パーツの状態（トランスフォーム、メッシュ変形、カラー）、エンジン非依存の `DrawBatch` プラン、イベント信号 — を出力します。
 
 > **エンジン非依存設計**
-> `libssruntime` 自体は描画を一切行いません。各「Player」（エンジン / プラットフォーム統合）が出力された状態を受け取り、ネイティブの描画 API で実際の描画を行います。この分離設計こそが、エンジン間で一貫した再生結果を生む根拠です — 詳細はトップ README の「[なぜこの SDK を選ぶべきか？](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/README.ja.md)」を参照してください。
+> `libssruntime` 自体は描画を一切行いません。各「Player」（エンジン / プラットフォーム統合）が出力された状態を受け取り、ネイティブの描画 API で実際の描画を行います。この分離設計こそが、エンジン間で一貫した再生結果を生む根拠です — 詳細はトップ README の「[なぜこの SDK を選ぶべきか？](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/README.ja.md#-なぜこの-sdk-を選ぶべきか)」を参照してください。
 
 # 主な機能
 
@@ -13,13 +13,13 @@
 - **サブフレーム補間**: ソースのフレームレートを超えた滑らかな再生 — Hermite、Bezier、Linear、各種イージング曲線をサポート。
 - **`DrawBatch` プランの出力**: フレーム毎の出力にエンジン非依存のバッチプラン（頂点、マスク列、パーティクル quad スロット、インスタンス / エフェクトスロット）を含みます。詳細は [描画ループ](./docs/30_core/40_render_loop.ja.md) を参照してください。
 - **決定論的な再生**: パーティクル等の再現性のための明示的な乱数シード制御。
-- **詳細な再生制御** (`PlaybackController`): 再生 / 一時停止 / 停止、1 フレーム単位のステップ（前進 / 後退）、任意フレームへのサブフレーム精度シーク、再生範囲と FPS のカスタマイズ、ループ回数 (`-1` で無限)、`Normal` / `PingPong` スタイル、`Forward` / `Reverse` 方向、リアルタイム / 固定ステップの時間進行モード。
+- **詳細な再生制御** (`PlaybackController`): 再生 / 一時停止 / 停止、1 フレーム単位のステップ（前進 / 後退）、任意フレームへのサブフレーム精度シーク、再生範囲と FPS のカスタマイズ、ループ回数 (`-1` で無限)、`Normal` / `PingPong` スタイル、`Forward` / `Backward` 方向、リアルタイム / 固定ステップの時間進行モード。
 - **アニメーションミキシング**: 複数のアニメーションを **トラック** に積んで合成します（クロスフェード、オーバーレイ、加算）。強度はトラックごとの `alpha`、離散属性とイベントの発火は track 0 が担当します。詳細は [アニメーションミキシング](./docs/50_features/10_animation_mixing.ja.md) を参照してください。
 - **`no_std` ファースト**: コアは純粋な `no_std`。`std` は開発時の利便性のためだけのオプトイン。全環境で SIMD (`f32x4`) を活用。
 
 # `no_std` サポート
 
-`libssruntime` は `no_std` 環境と互換性があるように設計されており、組み込みシステムやカスタムゲームエンジンのコアでの利用に適しています。
+`libssruntime` は `no_std` ファーストで設計されています。`std` は開発時の利便性のためだけのオプトインであり、リリース用のスクリプトでは一切使用されません。
 
 Rust から依存する場合は、そのまま追加します。デフォルトで有効になる機能はありません：
 
@@ -116,13 +116,10 @@ void play_animation(const uint8_t* ssab_data, size_t size) {
         
         // 6. 描画情報の取得
         const uint8_t* data;
-        size_t len;
-        // フレーム番号は浮動小数で管理・取得されます（サブフレーム対応）
+        uintptr_t len;
+        // フレーム番号は浮動小数で管理・取得されます（サブフレーム対応）。
+        // 整数フレームのみで再生したい場合は frame の代わりに floorf(frame) を渡します。
         ss_runtime_get_frame_data(ctx, frame, &data, &len);
-        
-        // オプション: 整数フレームとして扱いたい場合は Player 側で切り捨て（floor）を行ってください。
-        // float decimal = ss_runtime_get_frame_no(ctx) - floor(ss_runtime_get_frame_no(ctx));
-        // render_parts(data, len, decimal);
     }
 
     // リソースとコンテキストの破棄
@@ -146,24 +143,6 @@ void play_animation(const uint8_t* ssab_data, size_t size) {
 
 # 開発・コード生成 (fbsファイルの更新)
 
-`fbs` フォルダ内の `.fbs` ファイルを変更・更新した場合、Rust コードを再生成する必要があります。再生成には `flatc` コマンド (Google FlatBuffers Compiler) がインストールされている必要があります。
-
-## 更新手順
-
-1. `flatc` (Google FlatBuffers Compiler) をインストールします。使うバージョンは [CONTRIBUTING](../../CONTRIBUTING.md#前提条件) を参照してください。
-2. `fbs/` フォルダ内の `.fbs` ファイルを更新・編集します。
-3. 以下のスクリプトを実行し、Rust コードを再生成します。
-
-### Windows (PowerShell)
-
-```powershell
-./scripts/generate.ps1
-```
-
-### macOS / Linux (Bash)
-
-```bash
-./scripts/generate.sh
-```
+`fbs/` 内の `.fbs` ファイルを変更した場合は、`./scripts/generate.sh`（Windows では `./scripts/generate.ps1`）を実行して `src/runtime/` の Rust コードを再生成してください。使う `flatc` のバージョンは [CONTRIBUTING.md](../../CONTRIBUTING.md#前提条件) にあります。
 
 

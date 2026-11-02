@@ -1,6 +1,8 @@
+[**日本語**](./USAGE.ja.md) | [**English**](./USAGE.md)
+
 # libssconverter Integration Guide
 
-`libssconverter` is a C-compatible library for converting SpriteStudio project files (`.sspj`) into a runtime-optimized binary format (`.ssab`).
+`libssconverter` is a C-compatible library for converting SpriteStudio project files (`.sspj`) into runtime-optimized binary formats (`.ssab`, `.ssqb`).
 It is designed to be integrated into custom game engines, tools, or development editors for in-process conversion.
 
 ## 1. Preparation
@@ -8,10 +10,10 @@ It is designed to be integrated into custom game engines, tools, or development 
 ### Linking the Library
 
 `libssconverter` is implemented in Rust and is used via its C-API.
-Link the static or dynamic library appropriate for your platform to your project.
+Link the static or dynamic library appropriate for your platform to your project. Both, and the header, are in the release's native library archives ([SDK README](../../../README.md#1-download-the-tools-or-libraries)).
 
-- **Windows**: `ssconverter.lib` (and `ssconverter.dll` if shared)
-- **macOS/Linux**: `libssconverter.a` (and `libssconverter.dylib`/`.so` if shared)
+- **Windows**: `ssconverter.lib` (static) or `ssconverter.dll` (shared)
+- **macOS/Linux**: `libssconverter.a` (static) or `libssconverter.dylib` / `.so` (shared)
 
 Also, add any necessary system libraries for each platform (e.g., pthread, dl).
 
@@ -61,6 +63,7 @@ void on_update() {
     if (ctx && ss_converter_is_finished(ctx)) {
         // Conversion is complete
         on_conversion_complete(ctx);
+        ctx = nullptr;  // destroyed above; stop polling it
     }
 }
 ```
@@ -82,7 +85,7 @@ void on_conversion_complete(Context* ctx) {
         ss_converter_get_error(ctx, &err_msg, &len);
         if (err_msg) {
             printf("Error: %.*s\n", (int)len, err_msg);
-            // Memory obtained via ss_converter_get_error is freed by ss_converter_destroy
+            // The buffer returned by ss_converter_get_error remains valid until the next conversion starts on this Context or ss_converter_destroy is called
         }
     }
 
@@ -118,5 +121,5 @@ For the implementation patterns, and for concrete Godot and Unity code, see the 
 ## 5. Notes
 
 - **Memory Management**: Always destroy contexts created with `ss_converter_create` using `ss_converter_destroy`.
-- **Thread Safety**: While conversion happens in an internal thread, do not call `ss_converter_convert` multiple times simultaneously on the same `Context`.
+- **Thread Safety**: A `Context` runs one job at a time; while a job is running in its internal thread, do not start another `ss_converter_convert` or `ss_converter_scan_dir` on the same `Context`.
 - **Path Format**: It is recommended to use absolute paths when passing them to the library.

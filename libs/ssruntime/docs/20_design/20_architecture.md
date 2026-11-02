@@ -1,8 +1,8 @@
 > [日本語](./20_architecture.ja.md) | **English**
 
-# Player design decisions
+# Player Design Approach
 
-This page lists what to decide before you start implementing. Changing any of these later means rewriting a lot. The names and shapes of a Player's public API are fixed by the [Player API conventions](./30_api_conventions.md), so this page covers the internal structure.
+This page lists what to decide before you start implementing. Changing any of these later means rewriting a lot. The names and shapes of a Player's public API are fixed by the [Player API Conventions](./30_api_conventions.md), so this page covers the internal structure.
 
 ## 1. How to integrate the library
 
@@ -12,7 +12,7 @@ This page lists what to decide before you start implementing. Changing any of th
 | Dynamic library (`.dll` / `.so` / `.dylib`) | Calling over FFI from C# or a scripting language |
 | WebAssembly (`.wasm`) | Running in a browser |
 
-In an environment without the OS standard library, or where you want to use the engine's own allocator, build the `no_std` configuration ([Integrating into no_std environments](./40_no_std_integration.md)).
+In an environment without the OS standard library, or where you want to use the engine's own allocator, build the `no_std` configuration ([Integrating into no_std Environments](./40_no_std_integration.md)).
 
 ## 2. How ssab memory is held
 
@@ -137,7 +137,7 @@ There are two kinds of ssab. You may support either one, or both.
 | **Reference** | Files outside the ssab | Game engines that use the engine's asset management (AssetBundles, resource loading) as-is |
 | **Embedded** | Inside the ssab | When you want to distribute a single file, as with web ads or small apps |
 
-How textures are loaded differs by type ([Loading and initialization §3](../30_core/10_initialization.md#3-loading-textures)).
+How textures are loaded differs by type ([Loading and Initialization §3](../30_core/10_initialization.md#3-loading-textures)).
 
 ## 7. Scope of supported features
 
@@ -147,7 +147,7 @@ Implementing everything at once is hard, so we recommend working in stages. The 
 | :--- | :--- |
 | Basic | Attributes, parent/child inheritance, blend modes, events |
 | Next | [Parts color](../40_parts/10_parts_color.md), [Mesh](../40_parts/20_mesh.md), [Mask](../40_parts/40_mask.md), [Instance parts](../40_parts/50_instance.md), [Effect parts](../40_parts/60_effect.md) |
-| As needed | [9-slice, shapes and text](../40_parts/30_special_parts.md), [Audio](../50_features/50_audio.md), [Animation mixing](../50_features/10_animation_mixing.md), [Part overrides](../50_features/20_part_overrides.md), [Editor integration](../50_features/60_editor_integration.md) |
+| As needed | [9-Slice, Shape, and Text](../40_parts/30_special_parts.md), [Audio](../50_features/50_audio.md), [Animation mixing](../50_features/10_animation_mixing.md), [Part overrides](../50_features/20_part_overrides.md), [Editor integration](../50_features/60_editor_integration.md) |
 
 ---
 [Back to contents](../README.md)

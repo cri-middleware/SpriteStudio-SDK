@@ -8,7 +8,7 @@ This page explains how to build a mechanism that imports an sspj in the engine's
 
 The `libssconverter` C-API is asynchronous by design and does its work on a separate thread. Use it as follows so that the editor's UI (the main thread) does not stall.
 
-1. **Start**: create a Context with `ss_converter_create` and start the work (`ss_converter_convert` or `ss_converter_scan_dir`). The function returns immediately.
+1. **Start**: create a conversion Context with `ss_converter_create` (ssconverter's own, not the Brain's Context) and start the work (`ss_converter_convert` or `ss_converter_scan_dir`). The function returns immediately.
 2. **Check every frame**: in the editor's per-frame processing, check `ss_converter_is_finished` and update the progress display.
 3. **Destroy**: when it has finished, receive the result and free the Context with `ss_converter_destroy`.
 
@@ -20,6 +20,8 @@ When a user drops a folder into the editor, for example, find every sspj inside 
 2. Every frame, display progress such as "Searching… n found" with `ss_converter_scan_found` and `ss_converter_scan_visited`.
 3. When the scan has finished, collect the paths of the sspj files found with `ss_converter_scan_result_count` and `ss_converter_scan_result_at`.
 
+`ss_converter_scan_dir` takes the scan's limits (depth, entries, milliseconds). `ss_converter_scan_budget_exceeded` says whether a limit cut the scan short; if it did, the sspj files found are not all of them. The paths `ss_converter_scan_result_at` returns belong to the Context, so copy them before calling `ss_converter_scan_result_count` again, before starting `ss_converter_convert` on the same Context, and before `ss_converter_destroy`.
+
 Calling `ss_converter_convert` for many sspj files all at once makes CPU load and memory use spike. Limit the number of Contexts running at once to about the number of CPU cores (4 to 8, for example), and add the next conversion whenever a slot frees up.
 
 ## 3. Cancellation
@@ -29,7 +31,7 @@ When scanning or converting a large project, being able to cancel midway is esse
 On cancel, call **`ss_converter_abort(ctx)`** on every running Context. The worker thread receives the abort request.
 
 > [!WARNING]
-> **Do not call `ss_converter_destroy` right after `ss_converter_abort`.** The thread takes a little time to stop. Keep checking every frame, and **call `ss_converter_destroy(ctx)` only after `ss_converter_is_finished(ctx)` becomes true.** If you do not, freed memory is read and the program crashes.
+> **Do not call `ss_converter_destroy` right after `ss_converter_abort`.** The thread takes a little time to stop. Keep checking every frame, and **call `ss_converter_destroy(ctx)` only after `ss_converter_is_finished(ctx)` becomes true.** If you do not, the conversion thread outlives the Context for a while, writing output files and calling the log callback; if what the callback points at is already freed, the program crashes there.
 
 ### 3-1. Unity (C#) example
 

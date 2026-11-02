@@ -13,7 +13,7 @@ The playback **Brain** of the [SpriteStudio-SDK](https://github.com/cri-middlewa
 - **Sub-frame interpolation**: smooth playback beyond the source framerate — Hermite, Bezier, Linear, and easing curves.
 - **`DrawBatch` plan emission**: each frame's output includes a cross-engine batch plan (vertices, mask sequences, particle quad slots, instance / effect slots). See [Render Loop](./docs/30_core/40_render_loop.md).
 - **Deterministic playback**: explicit random-seed control for reproducible particle simulation.
-- **Rich playback control** (`PlaybackController`): transport (play / pause / stop), single-frame stepping (forward / backward), seek to any frame at sub-frame precision, custom playback range and FPS, loop count (`-1` = infinite), `Normal` / `PingPong` styles, `Forward` / `Reverse` direction, and real-time vs. fixed-step time advancement.
+- **Rich playback control** (`PlaybackController`): transport (play / pause / stop), single-frame stepping (forward / backward), seek to any frame at sub-frame precision, custom playback range and FPS, loop count (`-1` = infinite), `Normal` / `PingPong` styles, `Forward` / `Backward` direction, and real-time vs. fixed-step time advancement.
 - **Animation mixing**: stack several animations on **tracks** — crossfades, overlays, additive blending. Strength is a per-track `alpha`; track 0 carries the discrete attributes and event firing. See [Animation Mixing](./docs/50_features/10_animation_mixing.md).
 - **`no_std`-first**: pure `no_std` core; `std` is opt-in for developer ergonomics only. SIMD (`f32x4`) on every target.
 
@@ -27,7 +27,7 @@ A Rust dependent takes the crate as it comes — nothing is on by default:
 ssruntime = "7.0.0-beta.1"
 ```
 
-The binary deliverables are built from `ssruntime-ffi`, the sibling crate that emits this one as a `staticlib` / `cdylib`. The feature set for each target, and the command that builds it, are in [Integrating into no_std environments §1](./docs/20_design/40_no_std_integration.md#1-build-configuration).
+The binary deliverables are built from `ssruntime-ffi`, the sibling crate that emits this one as a `staticlib` / `cdylib`. The feature set for each target, and the command that builds it, are in [Integrating into no_std Environments §1](./docs/20_design/40_no_std_integration.md#1-build-configuration).
 
 *Note: An allocator (`alloc` crate) is still required even in `no_std` mode — animation state and metadata are heap-allocated.*
 
@@ -116,15 +116,13 @@ void play_animation(const uint8_t* ssab_data, size_t size) {
 
         // 6. Get rendering information
         const uint8_t* data;
-        size_t len;
+        uintptr_t len;
         // The frame number is managed as a float (Sub-frame support).
+        // Pass floorf(frame) instead of frame when playing on integer frames only.
         ss_runtime_get_frame_data(ctx, frame, &data, &len);
-
-        // Optional: you can implement integer frame management by truncating the decimal point
-        // float decimal = ss_runtime_get_frame_no(ctx) - floor(ss_runtime_get_frame_no(ctx));
-        // render_parts(data, len, decimal);
     }
 
+    // Destroy the resource and the context
     ss_resource_destroy(res);
     ss_runtime_destroy(ctx);
 }
@@ -145,25 +143,6 @@ This guide covers everything from basic architecture to advanced features like m
 
 # Development & Code Generation (Updating fbs files)
 
-If you modify or update the `.fbs` files in the `fbs` folder, you need to regenerate the Rust code.
-Regeneration requires the `flatc` command (Google FlatBuffers Compiler) to be installed.
-
-## Update Procedure
-
-1. Install `flatc` (Google FlatBuffers Compiler), the version [CONTRIBUTING](../../CONTRIBUTING.md#prerequisites) says to use.
-2. Update or modify the `.fbs` files in the `fbs/` folder.
-3. Run the following script to regenerate the Rust code.
-
-### Windows (PowerShell)
-
-```powershell
-./scripts/generate.ps1
-```
-
-### macOS / Linux (Bash)
-
-```bash
-./scripts/generate.sh
-```
+When you edit `.fbs` files under `fbs/`, regenerate the committed Rust bindings in `src/runtime/` with `./scripts/generate.sh` (or `./scripts/generate.ps1` on Windows). The `flatc` release to use is in [CONTRIBUTING.md](../../CONTRIBUTING.md#prerequisites).
 
 

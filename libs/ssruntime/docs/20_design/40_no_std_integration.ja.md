@@ -82,7 +82,7 @@ cargo rustc -p ssruntime-ffi --release --features "custom_alloc,panic-handler" -
 
 ### 4-2. 関数を定義する
 
-リンクする C / C++ のプロジェクトで、次の 3 つの `extern "C"` 関数を、`ssruntime.h` の宣言と同じ型で定義します。同じファイルで `ssruntime.h` を読み込めます。`memcpy` / `memset` / `memmove` / `memcmp` / `strlen` などの C ランタイム関数も最終的なリンクで必要ですが、通常はエンジンの CRT が提供します（ベアメタル環境では別に用意してください）。
+リンクする C / C++ のプロジェクトで、次の 3 つの `extern "C"` 関数を定義します（`ssruntime.h` は `ss_custom_alloc` と `ss_custom_free` を同じ型で宣言しているので、同じファイルで `ssruntime.h` を読み込めます）。`memcpy` / `memset` / `memmove` / `memcmp` / `strlen` などの C ランタイム関数も最終的なリンクで必要ですが、通常はエンジンの CRT が提供します（ベアメタル環境では別に用意してください）。
 
 ```cpp
 #include <stddef.h>

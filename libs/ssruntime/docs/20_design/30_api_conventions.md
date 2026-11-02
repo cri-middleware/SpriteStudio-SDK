@@ -1,6 +1,6 @@
 > [日本語](./30_api_conventions.ja.md) | **English**
 
-# Player API conventions
+# Player API Conventions
 
 A Player's public API is written in its host's language. This page draws the line between what every Player unifies and what is left to each language's conventions.
 
@@ -167,7 +167,7 @@ A **track** layers onto the pose the tracks below it produced. A **source** is o
 
 The track forms of the playback settings take §3-1's stems with `track` in front, and track 0's keep §3-1's stems: `speedScale` is track 0's `trackSpeed`. On track 0, `crossfade` and `setTrackAnimation` change `currentAnimation` from the call on, as `setAnimation` does.
 
-A read and its write share the stem, as in §3 (`trackAlpha` is used for both, and the form of the write follows the host). `setTrackAnimation` keeps its verb because there is no matching read. What comes back is a source handle, and you can read that with `trackMainSource`.
+A read and its write share the stem, as in §3 (`trackAlpha` is used for both, and the form of the write follows the host). `setTrackAnimation` keeps its verb because there is no matching read. The handle of the source it laid is read with `trackMainSource`.
 
 ### 3-3. Terminology
 
@@ -234,7 +234,7 @@ If the default for the same feature differs between Players, behavior changes si
 
 | Setting | Default | Why |
 |---|---|---|
-| Override `priority` | `HoldUntilNextAnimation` | The C-API's default |
+| Override `priority` | `HoldUntilNextAnimation` | A required argument in the C-API, which has no default; this is the usual choice ([Part Overrides §1-3](../50_features/20_part_overrides.md#1-3-priority-modes)) |
 | Visibility override `cascade` | `false` | A keyframed hide in SpriteStudio does not extend to descendants, so cascading happens only when requested explicitly |
 | Color override `blendOp` | `Mix` | The zero value. The color's alpha carries the strength, so it means "plain" |
 | Part following when the part is hidden | Keep following | A part hidden for one frame does not take its follower away |
@@ -296,7 +296,7 @@ The cause is on the load row because nothing else carries it. A version mismatch
 
 ### 7-3. Once, and at one layer
 
-**Report only once.** These calls sit on a path taken every frame. A state machine re-specifies its clip every frame, but a name that failed never becomes "set up", so the guard that does nothing for the same name (§8-2) does not protect it, and every frame takes the failure branch. Without limiting the count, one misspelling fills the log at frame-rate speed. Key the limit on the failure itself (such as the pair of kind and name), not on the call site. A second wrong name is then reported as a separate line.
+**Report only once.** These calls sit on a path taken every frame. A state machine re-specifies its animation every frame, but a name that failed never becomes "set up", so the guard that does nothing for the same name (§8-2) does not protect it, and every frame takes the failure branch. Without limiting the count, one misspelling fills the log at frame-rate speed. Key the limit on the failure itself (such as the pair of kind and name), not on the call site. A second wrong name is then reported as a separate line.
 
 **Report at one layer only.** In a Player that has an internal player under its public layer, there are two places that can write the same line. Report from the layer the host called. A report from the inner layer shows the name of a type the caller cannot touch.
 
@@ -304,7 +304,7 @@ The cause is on the load row because nothing else carries it. A version mismatch
 
 Godot's Output panel, Unity's Console, the browser console, `FlutterError`, Ren'Py's log. Where the host has a structured error channel the caller explicitly connected (an `onError` property, a rejected `Future`, a `Result` that must be consumed), that channel is the main route, and the log is the backstop for the caller who connected neither.
 
-The level follows the size of the impact. A pack that failed to load leaves the Player drawing nothing, so it is an error. A `setAnimation` that did not take effect only keeps the previous clip drawing, so it is a warning.
+The level follows the size of the impact. A pack that failed to load leaves the Player drawing nothing, so it is an error. A `setAnimation` that did not take effect only keeps the previous animation drawing, so it is a warning.
 
 ---
 
@@ -350,7 +350,7 @@ Speed, the frame-rate override, frame skip and playback direction are kept acros
 
 **If `name` is the animation already set up, return from `setAnimation(name)` without calling the C-API.**
 
-It is a "select" operation, so if there is nothing to reselect, it does nothing. `ss_runtime_setup_animation`, on the other hand, is not a call that does nothing. It returns playback to Stopped, rewinds the playhead, discards the playback section, and clears every override except `Permanent` ones. A state machine that specifies the current clip every frame is perfectly ordinary host code.
+It is a "select" operation, so if there is nothing to reselect, it does nothing. `ss_runtime_setup_animation`, on the other hand, is not a call that does nothing. It returns playback to Stopped, rewinds the playhead, discards the playback section, and clears every override except `Permanent` ones. A state machine that specifies the current animation every frame is perfectly ordinary host code.
 
 ```cpp
 // Without the guard, this animation never plays

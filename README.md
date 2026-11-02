@@ -15,13 +15,13 @@ SpriteStudio-SDK `7.x.x` supports projects authored in **SpriteStudio 7.6 or lat
 ## 🔄 The Workflow (How it works)
 
 1. **Convert:** Use the provided CLI tool (`ssconverter-cli`) to convert your SpriteStudio project (`.sspj`) into a highly optimized binary format (`.ssab`).
-2. **Play Anywhere:** Pass the `.ssab` file to this SDK runtime. **The SDK is designed to play any `.ssab` file**, supporting the SpriteStudio feature set out of the box. Text drawing and audio playback are the Player's side of the split — see [Limitations §1](./libs/ssruntime/docs/10_introduction/20_limitations.md#1-the-player-implements-text-and-sound).
+2. **Play Anywhere:** Pass the `.ssab` file to this SDK runtime. **The SDK is designed to play any `.ssab` file**, supporting the SpriteStudio feature set out of the box. Text drawing and audio playback are the Player's side of the split (a Player is the engine-side integration that draws what `libssruntime` computes) — see [Limitations §1](./libs/ssruntime/docs/10_introduction/20_limitations.md#1-the-player-implements-text-and-sound).
 
 The following diagram shows the workflow of converting assets and playing animations using this SDK:
 
 > **Diagram Legend**
 > - **Shapes**: `[ ]` Data/Files, `( )` Libraries/Components, `[[ ]]` Tools/Applications.
-> - **Arrows**: `-->` Data Flow, `-.->` Dependency/Reference.
+> - **Arrows**: `-->` Data Flow.
 > - **Borders**: Dashed borders indicate generated files.
 
 ```mermaid
@@ -77,10 +77,10 @@ graph LR
 - Libraries
     - [libsspj](./libs/sspj/README.md): a library that parses `sspj` projects, which consist of `sspj`, `ssae`, `ssce`, `ssee`, `ssqe`, `ssse` and bitmap-font character map (`fnt`) files.
     - [libssab](./libs/ssab/README.md): a library that creates and parses `ssab` files, which are animation binary files.
-    - [libssconverter](./libs/ssconverter/README.md): a library that parses `sspj` projects and creates `ssab` files.
+    - [libssconverter](./libs/ssconverter/README.md): a library that parses `sspj` projects and creates `ssab` and `ssqb` files.
     - [libssruntime](./libs/ssruntime/README.md): the playback Brain. Computes per-frame part states (transforms, mesh deformations, color) and emits a cross-engine `DrawBatch` plan that any renderer can consume.
 - Tool
-    - [ssconverter-cli](./cli/README.md): a command-line tool that parses `sspj` projects and creates `ssab` files.
+    - [ssconverter-cli](./cli/README.md): a command-line tool that parses `sspj` projects and creates `ssab` and `ssqb` files.
 
 ## 🚀 Quick Start
 
@@ -93,7 +93,7 @@ Download the latest version of the tools for your platform from the [GitHub Rele
 - **Web (WASM)**: A pre-built package for direct JavaScript/TypeScript usage is available as `spritestudio-sdk-web-libs.zip`.
 
 ### 2. Convert a Sample Project
-Run the downloaded tool to convert one of the sample projects in this repository's `tests/` folder (clone the repository, or download the Release's *Source code* zip) into the binary `.ssab` format:
+Convert one of the sample projects in this repository's `tests/` folder (clone the repository, or download the Release's *Source code* zip) into the binary `.ssab` format. Run the downloaded tool from the root of that checkout; the commands below assume you put the extracted `ssconverter-cli` there:
 
 **Windows:**
 ```powershell
@@ -114,7 +114,7 @@ Refer to the [libssruntime README](./libs/ssruntime/README.md) for instructions 
 
 This repository includes several sample projects in the `tests/` directory to verify different features of SpriteStudio:
 
-- `tests/overall/overall.sspj`: A comprehensive project covering basic to advanced features (recommended for initial testing).
+- `tests/overall/overall.sspj`: A comprehensive project covering basic to advanced features, the one the Player Porting Guide's implementation steps use.
 - `tests/allAttributeV7/allAttributeV7.sspj`: Verifies all animation attributes.
 - `tests/allPartsV7/allPartsV7.sspj`: Verifies all part types.
 - `tests/ParticleEffect/ParticleEffect.sspj`: Verifies particle effects.

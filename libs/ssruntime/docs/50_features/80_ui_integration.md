@@ -21,13 +21,13 @@ This page is what a Player that offers UI integration keeps the same as the othe
 
 The point is taken in the space the Player reports part outlines in. The space of `partTransform` is recommended.
 
-Like the other APIs that read one part, **answer from the frame the last tick built** ([API Conventions §9](../20_design/30_api_conventions.md#9-reading-a-part)). Do not build a frame to answer.
+Like the other APIs that read one part, **answer from the frame the last tick built** ([Player API Conventions §9](../20_design/30_api_conventions.md#9-reading-a-part)). Do not build a frame to answer.
 
 A FrameData's `draw_order` leaves hidden parts out (unless they draw as a mask), so the first part hit walking `draw_order` from the back is the front-most.
 
 ```cpp
 // partOutline() and contains() are the Player's functions for the outlines of §1-2 (not in the C-API)
-int hitTestPart(const ss::FrameData* frame, Point point, const std::set<int>* targets) {
+int hitTestPart(const ss::runtime::FrameData* frame, Point point, const std::set<int>* targets) {
     auto order = frame->draw_order();
     for (int rank = int(order->size()) - 1; rank >= 0; --rank) {
         int p = order->Get(rank);
@@ -48,9 +48,11 @@ The outline's shape, type and coordinate space are the Player's, chosen to suit 
 |---|---|
 | A part with a cell | The four corners of its local vertices (`ss_runtime_get_local_vertices`) through the world matrix and the transform the Player adds at the root (flip, offset). Skew and vertex deform included |
 | A Mesh part | The axis-aligned box around its mesh vertices (`ss_runtime_get_mesh_vertices_x` / `_y`, in world space), through the root transform. A skinned mesh part's own transform stays near the root, so its corners through the matrix do not match the artwork |
-| A part with a size and no cell (a Shape) | The FrameData part's `size_x/y` around its `pivot_x/y` (left `-(0.5 + pivot_x) * size_x`, top `-(0.5 + pivot_y) * size_y`), through the world matrix and the root transform, as four points |
+| A part with a size and no cell (a Shape) | The FrameData part's `size_x/y` around its `pivot_x/y` (left `-(0.5 + pivot_x) * size_x`; top `-(0.5 + pivot_y) * size_y` with Y down, `(0.5 - pivot_y) * size_y` with Y up, the default), through the world matrix and the root transform, as four points |
 | Null, bone, Instance and Effect parts | None (their size is 0) |
 | A hidden part | None. A part drawn at alpha 0 has one |
+
+This table assumes the SoA buffers of `Direct` mode (the default). In `SceneGraph` mode neither world matrices nor mesh vertices are computed, so take them from the Player's own nodes ([Render Loop §3](../30_core/40_render_loop.md#3-rendermode)).
 
 A corner that a Shape's vertex deform carries outside its size is not inside the outline. Reading the Shape vertex buffer would follow it; the size and pivot are what every Player already reads, so the outline is built from those alone. For a Shape without vertex deform it equals the box around the vertices drawn.
 
@@ -77,7 +79,7 @@ By default, one animation carries a label named after each state. Labels are low
 - A state's section runs from its label's frame to the frame before **the next label**, or to the end of the animation when there is none. The section loops.
 - The next label is not only a state's: it is the first label of any name in the animation (`reduced_motion`, or one unrelated to the states) on a frame after the start.
 - **An ssab's labels are not in frame order** (`AnimationData.labels` is ordered by name hash). Sort them by frame before looking up the next one.
-- The animation whose labels are read is, by default, the one the player has selected.
+- The animation whose labels are read is, by default, the one the Player has selected.
 
 ### 2-3. When a state has no label
 
@@ -94,14 +96,14 @@ When a state has no label, fall back in this order.
 Let code replace the default for a state with an animation name, or with a section between labels.
 
 - An override also applies to the states that fall back to it. Override `hover`, and a `pressed` with no label plays that section too.
-- Report an override that names an animation or label the pack does not have once ([API Conventions §7](../20_design/30_api_conventions.md#7-reporting-failure)), and treat that state as having no override.
+- Report an override that names an animation or label the pack does not have once ([Player API Conventions §7](../20_design/30_api_conventions.md#7-reporting-failure)), and treat that state as having no override.
 
 Resolving a state's section, fallbacks of §2-3 and overrides included, in one function is recommended. If the same function also returns the reduced-motion decision (§3), every branch can be tested with neither a runtime nor a display node.
 
 ### 2-5. Switching
 
 - When the state or the selection (§2-6) changes, play the new section from its start **at once**. The section playing is dropped.
-- **The adapter owns** the section, the loop count (infinite) and play and stop. The host must not drive the same player alongside it.
+- **The adapter owns** the section, the loop count (infinite) and play and stop. The host must not drive the same Player alongside it.
 - When the same state is shown again with the same selection and the same reduced motion, do nothing. The host may show the state every frame. After the pack is loaded again, show it again.
 
 On a host with no way to learn that a pack has loaded, the adapter shows the state again on every tick, doing nothing when the state, the pack and the animation are all unchanged. The state then appears on the tick after the pack arrives.
@@ -124,7 +126,7 @@ While it is true:
 
 - Hold the first frame of the current state's section, and when the state changes, the first frame of the new one.
 - If the animation has a `reduced_motion` label, `normal` (and the states that fall back to `normal`) loops that section instead, up to the frame before the next label. The other states stay held, so pressed and disabled still look it. A section taken from a selected label (§2-6) stays held too, so on still looks it.
-- Do not deliver user data, sound or other events while held: hold with `stop`, not `pause`. While the `reduced_motion` section plays, its events are delivered as usual.
+- Do not deliver user data, sound or other events while held: hold with `stop`, not `pause`. After a seek to the section's first frame, the next `update` still reports that frame's events ([Events §3](../30_core/30_events.md#3-which-frames-are-reported)), so drop that report. While the `reduced_motion` section plays, its events are delivered as usual.
 
 ## 4. The accessibility default
 
@@ -141,7 +143,7 @@ While it is true:
 ## 6. What this convention leaves open
 
 - A crossfade when the state switches.
-- Whether reduced motion is a property of the player or lives only in the adapter.
+- Whether reduced motion is a property of the Player or lives only in the adapter.
 
 ---
 [Back to contents](../README.md)

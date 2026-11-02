@@ -111,7 +111,7 @@ So `LT = 0x00`, `CC = 0x11`, and `RB = 0x22`. `NO = 0xFF` means unspecified. Tre
 
 #### `FontBitmap` / `FontGlyphBitmap`: the bitmap font glyph table
 
-`ssab->font_bitmaps()` holds **only the charmaps that text parts with `text_bitmap == true` actually reference**. In a project with only outline-font parts, it is empty.
+`ssab->font_bitmaps()` holds **only the charmaps that text parts with `text_bitmap == true` actually reference**. In a project with only outline-font parts, `font_bitmaps()` is absent (`nullptr` in C++).
 
 `FontBitmap.name_hash` is the `fnv1a` hash of the `PartTypeText.text_char_map` string as is, so a single hash finds a part's font.
 
@@ -134,6 +134,8 @@ So `LT = 0x00`, `CC = 0x11`, and `RB = 0x22`. `NO = 0xFF` means unspecified. Tre
 | `width_advance` | Advance width (px) |
 | `text` | `id` as a character. For debug display |
 | `page` | Index into `name_texture[]` |
+
+`offset` and `size_texture_original` are the ssab's `Vec2`, whose components are named `v1` / `v2`, not `x` / `y` (`v1` is X or the width, `v2` is Y or the height). `glyph.offset.x` / `glyph.offset.y` in the formulas below mean `offset.v1` / `offset.v2`.
 
 The converter has already resolved the page image names from their paths relative to the charmap file. They are stored as **paths relative to the project**, like other external resources ([Loading and Initialization §3-1](../30_core/10_initialization.md#3-1-file-reference-strings-in-the-ssab)).
 
@@ -179,7 +181,7 @@ if the charmap has no glyph for it:
     continue
 
 pos  = pen + (glyph.offset - base_offset) * scale
-size = (glyph.atlas.width, glyph.atlas.height) * scale
+size = (glyph.atlas.w, glyph.atlas.h) * scale
 
 // Wrapping (only when text_width > 0)
 if text_width > 0 and pos.x + size.x > text_width:
@@ -199,7 +201,7 @@ pen.x += glyph.width_advance * scale + text_space
 
 #### Bounding rectangle and right edge of each line
 
-After placing every glyph, compute `bound` (`left / top / right / bottom`), which encloses all the glyph rectangles, and **the right edge of each line, `R[line]`**.
+After placing every glyph, compute `bound` (`left / top / right / bottom`, with `width = right - left` and `height = bottom - top`), which encloses all the glyph rectangles, and **the right edge of each line, `R[line]`**.
 
 #### Box size
 

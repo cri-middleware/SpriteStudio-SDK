@@ -49,7 +49,7 @@ for (InstanceChild& c : instance_children) {
 | :--- | :--- |
 | `visible` | Whether to draw the child in this frame |
 | `transitioned` | The slot met a new key and configured the child for it. **The slot does not start the child: call `ss_runtime_play` on it**, or an independently played child never advances. **Reset the slots inside the child too** (§6) |
-| `child_frame_no` | The frame number to draw the child at. **It includes a fraction. Use it without rounding** ([Playback Control §6-2](../30_core/20_playback_control.md#6-2-do-not-discard-the-fraction)). **Use it on a `transitioned` tick too.** The slot has already put the child at its section's first frame for the direction, which is where `ss_runtime_play` snaps it, and a synced child's value follows the parent. Reading the child's frame after the `play` instead would put a synced child back at its section start for that tick |
+| `child_frame_no` | The frame number to draw the child at. **It includes a fraction. Use it without rounding** ([Playback Control §6-2](../30_core/20_playback_control.md#6-2-do-not-discard-the-fraction)). **Use it on a `transitioned` tick too.** The slot has already put the child at its section's first frame for the direction, which is where `ss_runtime_play` snaps it, and the value of a child that follows the parent's frame (a child without independent playback) follows the parent. Reading the child's frame after the `play` instead would put such a child back at its section start for that tick |
 | `child_looped` | An independently played child completed one cycle (§4) |
 | `independent` | Whether the child plays independently |
 
@@ -57,7 +57,7 @@ for (InstanceChild& c : instance_children) {
 
 ## 3. Independent playback
 
-Instance parts and effect parts have an "independent playback" setting, which advances on the part's own elapsed time regardless of the parent's playback speed or pause. `ss_instance_slot_is_independent` / `ss_effect_slot_is_independent` (or `independent` in the step's return value) tells you whether a part plays independently.
+Instance parts and effect parts have an "independent playback" setting, which advances on the part's own elapsed time regardless of the parent's playback speed or pause. `ss_instance_slot_is_independent` / `ss_effect_slot_is_independent` tells you whether a part plays independently (for an instance part, `independent` in the return value of `ss_instance_slot_step` does too).
 
 - **Keep calling `step` even while the parent is paused, and even when a seek leaves the parent's frame unchanged.** Otherwise the result looks unnatural, for example particles freezing in mid-air.
 - Only **explicitly placed playback keys** (`EventInstance` / `EventEffect`) can start or restart independent playback. When the current frame has no explicit key (for example, when none was placed at the start of the animation), the Brain uses an implicit key that starts from frame 0, but an independently played child does not restart on this implicit key, even when the parent loops.
@@ -77,7 +77,7 @@ When the child advances its own instance parts and effect parts (when it advance
 | Whether the parent looped | Pass `r.child_looped`. An independently played child runs on its own elapsed time, not the parent's, so for the grandchild "the parent looped" is this value, not the parent animation's `ss_runtime_just_looped`. If you forget to pass it, the grandchild's playback key is not restarted when the child loops, and it does not play from the second cycle on |
 | Elapsed time | The parent's elapsed time multiplied by the absolute value of the speed `ss_instance_slot_get_speed` reads after `ss_instance_slot_step`. The child runs at that speed, so the grandchildren run at that speed too. Passing the parent's value unchanged makes the grandchildren alone run at a different rate under a key whose speed is not 1. Do not use `speed` in `ss_event_instance_info`. When the parent goes back before an independent child's first explicit key, that holds the implicit key's 1, but the slot ignores the implicit key and keeps running the child at the previous key's speed (§3), so the grandchildren alone run at a different rate. The child's own `ss_instance_slot_step` still takes the parent's elapsed time unchanged (the slot applies the speed itself) |
 | Sub-frame setting | Pass the child the same setting as the parent. Pass it both when the parent's setting changes and when the child is created. Otherwise the parent moves smoothly while only the child moves in whole frames |
-| Mask settings | Pass the composed settings ([Masks §2-6](./40_mask.md#2-6-composing-mask-settings-through-an-instance)) |
+| Mask settings | Pass the composed settings ([Mask §2-6](./40_mask.md#2-6-composing-mask-settings-through-an-instance)) |
 
 ## 5. Drawing the child
 

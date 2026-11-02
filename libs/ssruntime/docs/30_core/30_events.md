@@ -18,6 +18,7 @@ This page covers how to notify game code of the keys on the timeline (user data,
 ss_runtime_update(ctx, delta_ms);
 
 // The event table of the animation track 0 plays. With animation mixing, look it up per event (§4)
+const auto* current_animation = binary->animations()->Get(ss_runtime_get_current_animation_index(ctx));  // binary is the ssab root (Loading and Initialization §5)
 const auto* events = current_animation->events();
 if (events != nullptr) {
     int count = ss_runtime_get_passed_event_count(ctx);

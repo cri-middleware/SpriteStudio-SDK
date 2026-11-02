@@ -20,7 +20,7 @@ Brain は 2 つのオブジェクトを使います。
 
 // 1. リソースを作る。borrow は Player のメモリを参照し、copy は Brain の中に複製する
 void* resource = ss_resource_create_borrow(ssab_data_ptr, ssab_data_len);
-if (resource == nullptr) { /* ssab が空か、版が合わない */ }
+if (resource == nullptr) { /* ptr が nullptr か、ssab の版が合わない（§4-2） */ }
 
 // 2. Context を作る
 void* context = ss_runtime_create();
@@ -66,7 +66,7 @@ ss_resource_destroy(resource);
 
 Brain は ssab の構造を検証しません（[制限事項 §5](../10_introduction/20_limitations.ja.md#5-brain-は-ssab-を検証しない)）。ネットワークや利用者の入力から ssab を受け取る場合は、Brain に渡す前に次の確認をしてください。
 
-- **ファイル識別子**: ssab の **4〜7 バイト目**には、ファイル識別子として ASCII の `"SSAB"` が入っています。この 4 バイトを比べれば、別の形式のファイルや空のファイルを取り違えて渡すことを防げます。
+- **ファイル識別子**: ssab の**オフセット 4〜7**（0 から数えます）の 4 バイトには、ファイル識別子として ASCII の `"SSAB"` が入っています。この 4 バイトを比べれば、別の形式のファイルや空のファイルを取り違えて渡すことを防げます。
 - **FlatBuffers の境界チェック**: 構造の妥当性まで確かめるには、Player の言語の FlatBuffers バインディングで生成した Verifier（C++ の `flatbuffers::Verifier`、C# の `SsAnimeBinaryVerify` など）に通してから渡します。
 
 版が Brain と合わない ssab は、リソースの作成が失敗します（`ss_resource_create_*` は `nullptr` を返し、`ss_runtime_load_ssab_*` は `false` を返します）。
@@ -148,11 +148,13 @@ ss_runtime_set_log_callback(my_log_callback);
 
 `level` は `SS_RUNTIME_LOG_ERROR`（1）/ `SS_RUNTIME_LOG_WARN`（2）/ `SS_RUNTIME_LOG_INFO`（3）のどれかです。発行されるのは `ERROR` だけで、`WARN` と `INFO` は予約されています。`switch` には 3 つすべての分岐を書いてください。
 
-失敗した C-API の呼び出しは、どの関数で失敗したかを前に付けた `ERROR` を 1 行出します（`ss_runtime_setup_animation: Animation not found`）。コールバックを登録していなければ文字列を組み立てないので、負荷はかかりません。
+Context を取る C-API の呼び出しは、失敗するとどの関数で失敗したかを前に付けた `ERROR` を 1 行出します（`ss_runtime_setup_animation: Animation not found`）。コールバックを登録していなければ文字列を組み立てないので、負荷はかかりません。
 
 ### 4-2. 失敗の理由
 
 失敗する C-API の呼び出しは、戻り値（`false`・`-1`・`NaN` など）で失敗を伝えます。理由は、その直後に `ss_runtime_get_last_error(context)` で数値のコードとして取り、`ss_runtime_error_message(code)` で文言にします。コード `0` は成功です。ログは戻り値を確かめない呼び出し側のためのもので、`ss_runtime_get_last_error` と同じ失敗を報告します。
+
+Context を取らない `ss_resource_create_*` と `ss_effect_slot_create` には、ログも `ss_runtime_get_last_error` もありません。`nullptr` を返すことが失敗の報告のすべてです。`ss_resource_create_*` が `nullptr` を返すのは、`ptr` が `nullptr` のときと、ssab の版が Brain の読む版と違うときだけです（空や壊れたバイト列は検出しません。§2）。版の不一致を利用者に伝えるときは、Brain の版（`ss_runtime_ssab_schema_version()`）と ssab の `version()` を並べてください。
 
 Player の公開 API で失敗をどう伝えるかは、[Player API 規約 §7](../20_design/30_api_conventions.ja.md#7-失敗の伝え方) に従ってください。
 

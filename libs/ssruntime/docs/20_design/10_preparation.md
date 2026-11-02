@@ -8,7 +8,7 @@ Before you start writing a Player, check that the Brain can be used on your targ
 
 The Brain is a C-API library written in Rust, and its per-frame output is a FlatBuffers buffer. Check the following three points for your target engine and language.
 
-1. **Can Rust build for the platform?** Check that your target CPU architecture and platform are listed in [Rust's platform support](https://doc.rust-lang.org/beta/rustc/platform-support.html). If the SDK release has no library for that platform, build it yourself ([no_std Integration §1](./40_no_std_integration.md#1-build-configuration)).
+1. **Can Rust build for the platform?** Check that your target CPU architecture and platform are listed in [Rust's platform support](https://doc.rust-lang.org/beta/rustc/platform-support.html). If the SDK release has no library for that platform, build it yourself ([Integrating into no_std Environments §1](./40_no_std_integration.md#1-build-configuration)).
 2. **Can the engine's language call C functions (or WebAssembly)?** Check that the engine can load a native library or WebAssembly, and that its language can bind and call the functions.
 3. **Does FlatBuffers code generation support the language?** Check [the languages FlatBuffers supports](https://flatbuffers.dev/support/).
 
@@ -27,9 +27,9 @@ The Brain is a C-API library written in Rust, and its per-frame output is a Flat
 
 ## 3. Prepare a test ssab
 
-1. Get `ssconverter-cli`.
-2. Convert the SDK's `tests/overall/overall.sspj` to ssab. This project has an animation for each feature ([“Implementation steps” in the contents](../README.md#1-implementation-steps)).
-3. Place the converted ssab in the project as an asset.
+1. Get `ssconverter-cli` from [GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) ([ssconverter-cli README](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/cli/README.md)).
+2. In the SDK repository, run `ssconverter-cli tests/overall/overall.sspj` to convert it to ssab. This project has an animation for each feature ([“Implementation steps” in the contents](../README.md#1-implementation-steps)).
+3. Place the converted ssab (written to `tests/overall/overall/`) in the project as an asset.
 
 ---
 [Back to contents](../README.md)

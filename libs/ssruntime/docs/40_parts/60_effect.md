@@ -39,7 +39,7 @@ if (step.visible) {
 ```
 
 - **The elapsed time is in seconds** (`ss_runtime_update` takes milliseconds).
-- **Do not advance the effect's clock from `draw_order`.** Hidden effect parts are not in `draw_order`, so if you `step` while walking `draw_order`, an independently played effect freezes in mid-air while hidden. **Enumerate every effect part from the ssab and `step` every one of them every frame.** Use `step.visible` only to decide whether to draw. Step a hidden part with `draw = false` (§2): it keeps the clock moving and skips the particles nobody draws.
+- **Do not advance the effect's clock from `draw_order`** (for the reason in [Instance Parts §2](./50_instance.md#2-advancing-the-child-with-the-slot): an independently played effect would freeze in mid-air while hidden). **Enumerate every effect part from the ssab and `step` every one of them every frame.** Use `step.visible` only to decide whether to draw. Step a hidden part with `draw = false` (§2): it keeps the clock moving and skips the particles nobody draws.
 - The returned `EffectDrawPlan` buffer stays valid until the next `step` call on the same slot.
 - When you replay the parent from the start with `play`, or when a slot starts an instance child that has effect parts, reset the slot to its initial state with `ss_effect_slot_reset` ([Instance Parts §6](./50_instance.md#6-restarting-playback)).
 - Independent playback is handled the same as for instance parts ([Instance Parts §3](./50_instance.md#3-independent-playback)).

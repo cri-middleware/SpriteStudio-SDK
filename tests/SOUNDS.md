@@ -9,7 +9,7 @@ Where the audio under `tests/*/sound/` comes from.
 
 The synthesized files contain no third-party audio: the script computes every sample itself. To change
 one, edit the script and run it again rather than replacing the file by hand, and copy the length it
-prints into the `<msec>` of the `soundlist.ssse` beside the file.
+prints into the `<msec>` of the project's `soundlist.ssse` (one directory above `sound/`).
 
 Both files replace earlier ones that had been brought in from elsewhere. A snippet scan matched them to
 audio published in other projects — `test.mp3` byte for byte to `music_logo.mp3` in

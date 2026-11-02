@@ -44,15 +44,15 @@ void convert() {
     ss_converter_convert(ctx, "path/to/project.sspj", "output/dir", false, nullptr);
     
     // Wait for finish
-    while (ss_converter_is_running(ctx)) {
+    while (!ss_converter_is_finished(ctx)) {
         // sleep or update progress
     }
     
     // Check result
     CConverterError result = ss_converter_get_result(ctx);
     if (result != CConverterError::Success) {
-        const char* err_msg;
-        size_t len;
+        const char* err_msg = nullptr;
+        uintptr_t len = 0;
         ss_converter_get_error(ctx, &err_msg, &len);
         printf("Error: %.*s\n", (int)len, err_msg);
     }
@@ -72,7 +72,11 @@ void convert() {
 
 # Architecture
 
-- **`converter`**: Core logic for mapping `sspj` data structures to `ssab` FlatBuffers schemas.
+- **`converter`**: The conversion entry points (`convert_sspj_to_ssab_files` and its variants), `ConvertConfig` and `ConverterError`.
+- **`model_t`**: The mapping from `sspj` data structures to the `ssab` Object API structs (`…T`): parts, animations and keyframes, cell maps, effects, sounds and fonts.
 - **`cache`**: Implements caching and deduplication logic for FlatBuffers objects to reduce file size.
-- **`ffi`**: C-API wrapper functions.
+- **`scan`**: Bounded directory traversal for batch `.sspj` discovery (`scan` feature).
+- **`utility`**: Path collection helpers used by `ssconverter-cli` (`scan` feature).
+- **`ffi`**: C-API wrapper functions (`ffi` feature).
+- **`web`**: `wasm-bindgen` entry points for in-browser conversion (`web` feature).
 

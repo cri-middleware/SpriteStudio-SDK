@@ -8,7 +8,7 @@
 
 `libssconverter` の C-API は、別のスレッドで処理する非同期の設計です。エディタの UI（メインスレッド）を止めないよう、次の形で使います。
 
-1. **開始する**: `ss_converter_create` で Context を作り、処理を始めます（`ss_converter_convert` または `ss_converter_scan_dir`）。関数はすぐに戻ります。
+1. **開始する**: `ss_converter_create` で変換用の Context（ssconverter のもので、Brain の Context とは別）を作り、処理を始めます（`ss_converter_convert` または `ss_converter_scan_dir`）。関数はすぐに戻ります。
 2. **毎フレーム確かめる**: エディタの毎フレームの処理で `ss_converter_is_finished` を確かめ、進捗の表示を更新します。
 3. **破棄する**: 終わったら結果を受け取り、`ss_converter_destroy` で解放します。
 
@@ -20,6 +20,8 @@
 2. 毎フレーム、`ss_converter_scan_found` と `ss_converter_scan_visited` で「探索中… n 件」のような進捗を表示します。
 3. 探索が終わったら、`ss_converter_scan_result_count` と `ss_converter_scan_result_at` で、見つかった sspj のパスを集めます。
 
+`ss_converter_scan_dir` には探索の上限（深さ・項目数・ミリ秒）を渡します。上限で打ち切られたかは `ss_converter_scan_budget_exceeded` で分かり、その場合は見つかった sspj が全部ではありません。`ss_converter_scan_result_at` が返すパスは Context が持つ文字列なので、同じ Context で `ss_converter_scan_result_count` を呼び直す前、`ss_converter_convert` を始める前、`ss_converter_destroy` の前にコピーしてください。
+
 たくさんの sspj を一度にすべて `ss_converter_convert` すると、CPU の負荷とメモリの使用量が跳ね上がります。同時に動かす Context の数を CPU のコア数程度（4〜8 など）に抑え、空いたところに次の変換を足していく形にしてください。
 
 ## 3. キャンセル
@@ -29,7 +31,7 @@
 キャンセルされたら、動いているすべての Context に **`ss_converter_abort(ctx)`** を呼びます。別のスレッドが中断の要求を受け取ります。
 
 > [!WARNING]
-> **`ss_converter_abort` の直後に `ss_converter_destroy` を呼ばないでください。** スレッドが止まるまでには少し時間がかかります。毎フレームの確認を続け、**`ss_converter_is_finished(ctx)` が真になってから `ss_converter_destroy(ctx)` を呼んでください。** 守らないと、解放済みのメモリを読んでクラッシュします。
+> **`ss_converter_abort` の直後に `ss_converter_destroy` を呼ばないでください。** スレッドが止まるまでには少し時間がかかります。毎フレームの確認を続け、**`ss_converter_is_finished(ctx)` が真になってから `ss_converter_destroy(ctx)` を呼んでください。** 守らないと、破棄した後も変換のスレッドがしばらく残り、出力のファイルを書いたり、ログのコールバックを呼んだりします。コールバックの先がすでに解放されていると、そこでクラッシュします。
 
 ### 3-1. Unity（C#）の例
 

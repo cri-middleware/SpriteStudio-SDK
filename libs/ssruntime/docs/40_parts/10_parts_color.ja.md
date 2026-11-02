@@ -35,6 +35,7 @@
 - パーツの `PartState.part_color` が `parts_color` の添字です。`-1` ならパーツカラーはありません（§5）。
 - 1 つのパーツカラーは、合成の種類 `blend_type` と、4 隅（`lt` / `rt` / `lb` / `rb`）の色を持ちます。各隅は色 `rgba` と合成の強さ `rate` を持ちます。
 - **`rgba.a` には、パーツの不透明度（親から継承したものを含む）が掛けてあります。** Player は `PartState.alpha` を掛け直さないでください。
+- `rgba` は `U8Color` で、メモリ上の並びは `a, r, g, b`（各 1 byte）です。構造体を直接読むとき（[描画ループ §4-2](../30_core/40_render_loop.ja.md#4-2-framedata-のベクタを直接読む)）は、この順で読んでください。
 
 ## 4. パーツの種類ごとの規則
 
@@ -120,7 +121,8 @@ varying vec4 partcolor_color;
 
 ```glsl
 void vertex() {
-    int idx = clamp(int(CUSTOM0.y + 0.5), 0, 3);   // blend_type を 0..3 に収める
+    int b = int(CUSTOM0.y + 0.5);
+    int idx = (b >= 0 && b <= 3) ? b : 0;   // 0..3 の外は Mix（§2）
     vec4 c = _PartColorCoef[idx];
     float rate = CUSTOM0.x;
     partcolor_varg = vec4(

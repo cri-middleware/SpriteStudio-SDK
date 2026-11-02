@@ -26,7 +26,7 @@ ssab = "7.0.0-beta.1"
 用途に応じて `features` を切り替える必要があります。
 
 ## `default` (Runtime)
-デフォルトの状態です。データの読み込み（デシリアライズ）に最適化されています。ゲームランタイムやプレイヤーなど、データの再生のみを行う場合に適しています。
+デフォルトでは `std` feature (`flatbuffers/std`) が有効になります。データの読み込み（デシリアライズ）に最適化されており、標準ライブラリ環境でデータの再生・読み取りのみを行う場合に適しています。
 
 - **特徴**: Read-only アクセス、ゼロコピー読み込み。
 ```toml
@@ -35,7 +35,7 @@ ssab = "7.0.0-beta.1"
 ```
 
 ## `no_std` サポート
-`libssab` は `no_std` 環境と互換性があります。`no_std` で使用する場合は、デフォルト機能を無効にします：
+`libssab` は `no_std` 環境（`core` + `alloc`）と互換性があります。`no_std` で使用する場合は、デフォルト機能を無効にして `std` 依存を外します：
 
 ```toml
 [dependencies]
@@ -43,7 +43,7 @@ ssab = { version = "7.0.0-beta.1", default-features = false }
 ```
 
 ## `converter`
-データの生成や編集を行うツール向けのモードです。
+データの生成や編集を行うツール向けのモードです（`std` を含みます）。
 FlatBuffers の Object API (`--gen-object-api`) が有効になり、Rust の構造体としてデータを操作し、バイナリへの書き出しが可能になります。
 
 - **特徴**: Read/Write アクセス、Object API (T構造体) の利用可能。
@@ -75,7 +75,7 @@ fn main() {
 
 ## データの作成/書き出し (Converter)
 
-`converter` feature を有効にする必要があります。
+`converter` feature を有効にする必要があります。この例は `flatbuffers` クレートも直接使います。`ssab` は再エクスポートしないので、SDK のルートの `Cargo.toml` と同じバージョンの `flatbuffers` を `[dependencies]` に加えてください。
 
 ```rust
 #[cfg(feature = "converter")]
@@ -94,6 +94,8 @@ fn create_ssab() {
     // `SsAnimeBinaryT` がルートで、パーツとアニメーション一覧を保持します。
     let mut binary = SsAnimeBinaryT::default();
     binary.name = "MyProject".to_string();
+    // version が一致しないパックはランタイムが読み込みません。
+    binary.version = ssab::SSAB_SCHEMA_VERSION;
     binary.animations = vec![anime];
 
     // FlatBufferBuilder でシリアライズ。ヘルパーが "SSAB" ファイル識別子を
@@ -109,30 +111,6 @@ fn create_ssab() {
 
 # 開発・コード生成 (fbsファイルの更新)
 
-`fbs` フォルダ内の `.fbs` ファイルを変更・更新した場合、Rust コードを再生成する必要があります。再生成には `flatc` コマンド (Google FlatBuffers Compiler) がインストールされている必要があります。
-
-## 更新手順
-
-1. `flatc` (Google FlatBuffers Compiler) をインストールします。使うバージョンは [CONTRIBUTING](../../CONTRIBUTING.md#前提条件) を参照してください。
-2. `fbs/` フォルダ内の `.fbs` ファイルを更新・編集します。
-3. 以下のスクリプトを実行し、Rust コードを再生成します。
-
-### Windows (PowerShell)
-
-```powershell
-./scripts/generate.ps1
-```
-
-### macOS / Linux (Bash)
-
-```bash
-./scripts/generate.sh
-```
-
-このスクリプトは以下の処理を行います：
-
-1. `fbs` フォルダ内の定義ファイルをコンパイル。
-2. `runtime` 用と `converter` 用のソースコードをそれぞれ `src/runtime` と `src/converter` に生成。
-3. `converter` 用のコードには Object API 生成オプションなどを付与。
+`fbs/` 内の `.fbs` ファイルを変更した場合は、`./scripts/generate.sh`（Windows では `./scripts/generate.ps1`）を実行して `src/runtime/` と `src/converter/` の Rust コードを再生成してください。使う `flatc` のバージョンは [CONTRIBUTING.md](../../CONTRIBUTING.md#前提条件) にあります。
 
 

@@ -1,6 +1,6 @@
 > [日本語](./40_mask.ja.md) | **English**
 
-# Masks
+# Mask
 
 How to implement SpriteStudio's "mask" and "clipping". Both are built on the same mechanism, the stencil, but **they are different features**. The Brain provides the draw order and the mask DrawBatches. The Player decides which parts each mask affects, and writes to the stencil (or the coverage bitmap).
 
@@ -22,13 +22,13 @@ How to implement SpriteStudio's "mask" and "clipping". Both are built on the sam
 | **writer** | — | A part that writes to the stencil (a pure mask or clipping) |
 | **target** | — | A drawn part affected by a mask or clipping |
 | **pure mask** | — | A writer that draws no color and writes only its shape (mask parts, and drawn parts turned into masks) |
-| `Priority` | **FrameData (per frame)** | Draw priority. Ties are decided by part ID (§2-1) |
+| `Priority` | **FrameData (per frame)** | Draw priority (`PartState.priority`). Ties are decided by part ID (§2-1) |
 | `mask` (float, `0..255`) | **FrameData (per frame)** | Doubles as the cutout threshold. `0` disables the writer (§2-2 / §2-5) |
 | `mask_influence` | **PartData (static)** | **Its meaning changes with the role** (§1-3). Either the write op or the flag for receiving masks |
 | `mask_write` | **PartData (static)** | The flag that makes a drawn part a **clipping** writer |
 | `draw_as_mask` | **PartData (static)** | The flag that makes a drawn part (shape / text / 9-slice) a **pure mask**. In authoring it is a per-type setting, but in ssab it is a single field |
 | `visible_inside_mask` | **PartData (static)** | Polarity. `1` = draw inside / `0` = draw outside (§2-4) |
-| `Hide` | **FrameData (per frame)** | Hidden. **For writers, the Player checks it too** (§3) |
+| `Hide` | **FrameData (per frame)** | Hidden (`PartState.hide`). **For writers, the Player checks it too** (§3) |
 
 The mask fields are split across two tables. Do not mix up which one you read from.
 
@@ -201,7 +201,7 @@ Only clipping carries over, and pure masks do not, because their scopes (§2-1) 
 > [!IMPORTANT]
 > **Clipping (`mask_write`) emits no mask DrawBatch.** Clipping is emitted only as an ordinary drawing DrawBatch, so a Player that looks only at `Mask` DrawBatches **misses all clipping.** Decide the writers in the Player by reading PartData (the three expressions of §1-3).
 
-**Hidden writers**: the Brain removes from `draw_order` and the DrawBatches only **mask parts** with `Hide == true`. **A drawn part turned into a mask by `draw_as_mask` still emits its mask DrawBatch when `Hide == true`** (only its own color drawing stops; the shape is still written). Decide in the Player whether a writer works, from **both `mask != 0` and `Hide == false`** (§2-2). It only removes again what the Brain has already removed, so this check is safe in either case.
+**Hidden writers**: the Brain removes every part with `Hide == true` from `draw_order` and the DrawBatches. Among writers, that means mask parts and clipping (drawn parts with `mask_write`). The exception is a drawn part turned into a mask by `draw_as_mask`: **it still emits its mask DrawBatch when `Hide == true`** (only its own color drawing stops; the shape is still written). Decide in the Player whether a writer works, from **both `mask != 0` and `Hide == false`** (§2-2). It only removes again what the Brain has already removed, so this check is safe in either case.
 
 **Do not use `mask_indices` as the list of writers.** FrameData's `mask_indices` is the list of pure mask parts, but it **does not include clipping** and **does not remove mask parts with `Hide == true`**, so it does not match `draw_order`. Decide the writers by walking `draw_order` with the expressions of §1-3.
 

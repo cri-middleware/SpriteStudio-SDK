@@ -1,6 +1,6 @@
 > **日本語** | [English](./80_ui_integration.md)
 
-# UI 統合：当たり判定・UI 状態・reduced motion
+# UI 統合: 当たり判定・UI 状態・reduced motion
 
 アニメーションをボタンのような UI の部品として使うホストは、ポインタがどのパーツに当たったか、部品がどの状態にあるか、動きを減らす設定が有効かを、アニメーションの見た目に結びつける必要があります。これに Brain は関わりません。当たり判定は直前の tick が組み立てたフレームを読むだけ、状態はラベルの区間の再生、reduced motion は再生を止めるかどうかなので、Player の中で完結します。
 
@@ -27,7 +27,7 @@ FrameData の `draw_order` には非表示のパーツが入らない（マス�
 
 ```cpp
 // partOutline() と contains() は §1-2 の輪郭を扱う Player の関数（C-API には無い）
-int hitTestPart(const ss::FrameData* frame, Point point, const std::set<int>* targets) {
+int hitTestPart(const ss::runtime::FrameData* frame, Point point, const std::set<int>* targets) {
     auto order = frame->draw_order();
     for (int rank = int(order->size()) - 1; rank >= 0; --rank) {
         int p = order->Get(rank);
@@ -48,9 +48,11 @@ int hitTestPart(const ss::FrameData* frame, Point point, const std::set<int>* ta
 |---|---|
 | セルのあるパーツ | ローカル頂点（`ss_runtime_get_local_vertices`）の四隅にワールド行列と、Player が根元に加える変換（反転・オフセット）を掛けた 4 点。スキューと頂点変形を含む |
 | メッシュパーツ | メッシュの頂点（`ss_runtime_get_mesh_vertices_x` / `_y`、ワールド座標）を囲む軸平行の矩形に、根元の変換を掛けたもの。スキンメッシュのパーツ自身の変換は根元の近くにあるので、四隅に行列を掛けても絵と合わない |
-| セルが無くサイズのあるパーツ（シェイプ） | FrameData のパーツの `size_x/y` を `pivot_x/y` の周りに取った矩形（左 `-(0.5 + pivot_x) * size_x`、上 `-(0.5 + pivot_y) * size_y`）に、ワールド行列と根元の変換を掛けた 4 点 |
+| セルが無くサイズのあるパーツ（シェイプ） | FrameData のパーツの `size_x/y` を `pivot_x/y` の周りに取った矩形（左 `-(0.5 + pivot_x) * size_x`。上は、Y が下向きなら `-(0.5 + pivot_y) * size_y`、Y が上向き（既定）なら `(0.5 - pivot_y) * size_y`）に、ワールド行列と根元の変換を掛けた 4 点 |
 | ヌル・ボーン・インスタンス・エフェクトのパーツ | 輪郭なし（サイズが 0） |
 | 非表示のパーツ | 輪郭なし。アルファ 0 で描いているパーツには輪郭がある |
+
+この表は `Direct` モード（既定）の SoA バッファを前提にしています。`SceneGraph` モードではワールド行列もメッシュの頂点も計算されないので、Player が持つノードの変換から求めてください（[描画ループ §3](../30_core/40_render_loop.ja.md#3-rendermode)）。
 
 シェイプの頂点変形でサイズの外へ出た角は、輪郭に入りません。シェイプの頂点バッファを読めば追えますが、どの Player もすでに読んでいるサイズとピボットだけで作れる形を選んでいます。頂点変形の無いシェイプでは、描いた頂点を囲む矩形と一致します。
 
@@ -77,7 +79,7 @@ int hitTestPart(const ss::FrameData* frame, Point point, const std::set<int>* ta
 - 状態の区間は、そのラベルのフレームから、**次のラベル**の 1 フレーム手前までです。次のラベルが無ければアニメーションの終わりまでです。区間はループ再生します。
 - 次のラベルは、状態の名前に限らず、アニメーションのすべてのラベル（`reduced_motion` も、状態と関係ないラベルも）のうち、開始より後のフレームにある最初のものです。
 - **ssab のラベルはフレーム順に並んでいません**（`AnimationData.labels` は名前のハッシュ順）。フレーム順に並べ直してから次のラベルを引いてください。
-- 状態のラベルを読むアニメーションは、既定ではプレイヤーが選んでいるアニメーションです。
+- 状態のラベルを読むアニメーションは、既定では Player が選んでいるアニメーションです。
 
 ### 2-3. ラベルが無いとき
 
@@ -101,7 +103,7 @@ int hitTestPart(const ss::FrameData* frame, Point point, const std::set<int>* ta
 ### 2-5. 切り替え
 
 - 状態か選択（§2-6）が変わったら、新しい区間の先頭から**すぐに**再生してください。再生途中の区間は捨てます。
-- 区間・ループ回数（無限）・再生と停止は、**アダプタが握ります**。ホストは同じプレイヤーを並行して操作しないでください。
+- 区間・ループ回数（無限）・再生と停止は、**アダプタが握ります**。ホストは同じ Player を並行して操作しないでください。
 - 同じ状態を同じ選択・同じ reduced motion で示し直されたら、何もしないでください。ホストは状態を毎フレーム示してかまいません。パックを読み込み直したら、示し直してください。
 
 パックの読み込み完了を知らせる口が無いホストでは、アダプタが毎 tick 状態を示し直し、同じ状態・同じパック・同じアニメーションなら何もしない形にします。状態はパックが入った次の tick に出ます。
@@ -124,7 +126,7 @@ int hitTestPart(const ss::FrameData* frame, Point point, const std::set<int>* ta
 
 - 今の状態の区間の先頭フレームで止めます。状態が変わったら、新しい区間の先頭フレームで止めます。
 - アニメーションに `reduced_motion` ラベルがあれば、`normal`（と、`normal` に落ちてくる状態）だけは、代わりにその区間（次のラベルの 1 フレーム手前まで）をループ再生します。ほかの状態は止めたままにして、押下や無効の見た目を残します。選択中のラベル（§2-6）から引いた区間も止めたままにして、オンの見た目を残します。
-- 止めている間は、ユーザーデータ・サウンドなどのイベントを出さないでください。`pause` ではなく `stop` で止めます。`reduced_motion` の区間を再生しているときは、その区間のイベントが普通に出ます。
+- 止めている間は、ユーザーデータ・サウンドなどのイベントを出さないでください。`pause` ではなく `stop` で止めます。区間の先頭へシークして止めたときも、次の `update` は移動先のフレームのイベントを報告するので（[イベント §3](../30_core/30_events.ja.md#3-イベントが報告されるフレーム)）、その報告は捨ててください。`reduced_motion` の区間を再生しているときは、その区間のイベントが普通に出ます。
 
 ## 4. 読み上げの既定
 
@@ -141,7 +143,7 @@ int hitTestPart(const ss::FrameData* frame, Point point, const std::set<int>* ta
 ## 6. この規約で決めないこと
 
 - 状態を切り替えるときのクロスフェード。
-- reduced motion をプレイヤーのプロパティにするか、アダプタだけに置くか。
+- reduced motion を Player のプロパティにするか、アダプタだけに置くか。
 
 ---
 [目次に戻る](../README.ja.md)

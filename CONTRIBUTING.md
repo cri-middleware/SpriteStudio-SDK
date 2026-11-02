@@ -98,15 +98,15 @@ scripts/build-pages.sh serve=yes   # the published tree: that build + rustdoc at
 ### FFI and C-API
 Since this SDK provides C-compatible interfaces (`ssruntime`, `ssconverter`), please pay attention to:
 - **Binary Compatibility**: Avoid breaking changes to the C-API unless absolutely necessary.
-- **Header Generation**: `build.rs` in `ssruntime-ffi` and `ssconverter-ffi` writes the C header and the C# bindings into the crate's `target/`, and `cargo test` compares them with the copies committed in its `bindings/`. If you change the C-API on purpose, or only a `///` comment on an `extern "C"` function or a `#[repr(C)]` type (both files carry those comments) or an `ffi` module's `//!` doc (it opens the header), run `UPDATE_BINDINGS=1 cargo test -p ssruntime-ffi --test bindings` (or `-p ssconverter-ffi`) and commit the copies, so the change shows in the pull request.
+- **Header Generation**: `build.rs` in `ssruntime-ffi` and `ssconverter-ffi` writes the C header and the C# bindings into the crate's `target/`, and `cargo test` compares them with the copies committed in its `bindings/`. If you change the C-API on purpose, or only a `///` comment on an `extern "C"` function or a `#[repr(C)]` type (both files carry those comments) or an `ffi` module's `//!` doc (it opens the header), run `UPDATE_BINDINGS=1 cargo test -p ssruntime-ffi --test bindings` (or `-p ssconverter-ffi`) and commit the copies, so the change shows in the pull request. In those comments, name an item as `name`, not as a rustdoc link [`name`]: a C or C# reader cannot follow the link, and the `bindings` test fails on one.
 - **Memory Management**: Clearly document who owns the memory across the FFI boundary.
 
 #### Naming the C-API
 
 Every Player reads the C-API while writing its own public API, so a name settled here is copied into every Player repository.
 
-- **Every exported symbol is `ss_<object>_<verb>_<noun>`.** The object is `runtime` for anything that takes a context, and `resource`, `effect_slot` or `instance_slot` for the three handle types that own themselves.
-- **The verb comes first and is never omitted**: `get_` / `set_` / `clear_` / `find_` / `add_` / `load_` / `bind_` / `cancel_` / `fade_`. A reader and its writer spell the noun identically — `ss_runtime_get_frame_rate` against `ss_runtime_set_frame_rate`, never `get_fps`. A hash-keyed twin adds `_by_hash` and changes nothing else.
+- **Every exported symbol of `ssruntime-ffi` is `ss_<object>_<verb>_<noun>`.** The object is `runtime` for anything that takes a context, and `resource`, `effect_slot` or `instance_slot` for the three handle types that own themselves.
+- **The verb comes first**: `get_` / `set_` / `clear_` / `find_` / `add_` / `load_` / `bind_` / `cancel_` / `fade_`. Only a name that is a verb itself or a fixed phrase goes without one (`ss_runtime_play`, `ss_runtime_next_frame`, `ss_runtime_just_looped`, `ss_runtime_error_message`). A reader and its writer spell the noun identically — `ss_runtime_get_frame_rate` against `ss_runtime_set_frame_rate`, never `get_fps`. A hash-keyed twin adds `_by_hash` and changes nothing else.
 - **The noun is the stem from the vocabulary in the [Player API Conventions](./libs/ssruntime/docs/20_design/30_api_conventions.md).** Where the C-API and that vocabulary disagree, the C-API is wrong: a Player should only ever re-spell a name (`ss_runtime_just_looped` → `justLooped`), never translate it.
 - **An out-parameter that points at runtime-owned memory is `const`.** The buffer belongs to the context until the next call that rebuilds it.
 - **Failure crosses as a code, never as a string.** A call reports failure by its return value; the caller reads the reason with `ss_runtime_get_last_error` and turns it into text with `ss_runtime_error_message`. The codes in `libs/ssruntime/src/error.rs` are a compatibility surface of their own.
@@ -219,15 +219,15 @@ scripts/build-pages.sh serve=yes   # 公開ツリー: 上記 + /api/ の rustdoc
 ### FFI と C-API
 この SDK は C 互換インターフェース（`ssruntime`、`ssconverter`）を提供しているため、以下の点に注意してください：
 - **バイナリ互換性**: 避けられない場合を除き、C-API の破壊的変更は避けてください。
-- **ヘッダー生成**: `ssruntime-ffi` と `ssconverter-ffi` の `build.rs` は、C ヘッダーと C# バインディングをそのクレートの `target/` に書き出し、`cargo test` がそれを `bindings/` にコミットされた写しと比べます。C-API を意図して変更した場合や、`extern "C"` 関数や `#[repr(C)]` 型の `///` コメント（このコメントは両方のファイルに写されます）、`ffi` モジュールの `//!` ドキュメント（ヘッダーの冒頭に写されます）だけを直した場合は、`UPDATE_BINDINGS=1 cargo test -p ssruntime-ffi --test bindings`（コンバーターは `-p ssconverter-ffi`）を実行して写しをコミットしてください。変更が PR にそのまま表示されます。
+- **ヘッダー生成**: `ssruntime-ffi` と `ssconverter-ffi` の `build.rs` は、C ヘッダーと C# バインディングをそのクレートの `target/` に書き出し、`cargo test` がそれを `bindings/` にコミットされた写しと比べます。C-API を意図して変更した場合や、`extern "C"` 関数や `#[repr(C)]` 型の `///` コメント（このコメントは両方のファイルに写されます）、`ffi` モジュールの `//!` ドキュメント（ヘッダーの冒頭に写されます）だけを直した場合は、`UPDATE_BINDINGS=1 cargo test -p ssruntime-ffi --test bindings`（コンバーターは `-p ssconverter-ffi`）を実行して写しをコミットしてください。変更が PR にそのまま表示されます。それらのコメントでは、項目を rustdoc のリンク [`name`] ではなく `name` と書いてください。C や C# の読み手はリンクをたどれず、`bindings` テストも失敗します。
 - **メモリ管理**: FFI 境界を越えてデータをやり取りする場合、メモリの所有権を明確にドキュメント化してください。
 
 #### C-API の命名
 
 どの Player も C-API を読みながら自分の公開 API を書くので、ここで決めた名前はすべての Player リポジトリに写されます。
 
-- **公開するシンボルはすべて `ss_<object>_<verb>_<noun>` です。** object は、Context を取るものはすべて `runtime`、自分自身を所有する 3 つのハンドル型は `resource` / `effect_slot` / `instance_slot` です。
-- **動詞を先頭に置き、省略しません**: `get_` / `set_` / `clear_` / `find_` / `add_` / `load_` / `bind_` / `cancel_` / `fade_`。読み出しと書き込みの対は名詞をまったく同じに綴ります（`ss_runtime_get_frame_rate` と `ss_runtime_set_frame_rate`。`get_fps` にはしない）。ハッシュで引く版は `_by_hash` を付けるだけで、ほかは変えません。
+- **`ssruntime-ffi` が公開するシンボルはすべて `ss_<object>_<verb>_<noun>` です。** object は、Context を取るものはすべて `runtime`、自分自身を所有する 3 つのハンドル型は `resource` / `effect_slot` / `instance_slot` です。
+- **動詞を先頭に置きます**: `get_` / `set_` / `clear_` / `find_` / `add_` / `load_` / `bind_` / `cancel_` / `fade_`。動詞を持たないのは、名前そのものが動詞か決まった言い回しのものだけです（`ss_runtime_play`、`ss_runtime_next_frame`、`ss_runtime_just_looped`、`ss_runtime_error_message`）。読み出しと書き込みの対は名詞をまったく同じに綴ります（`ss_runtime_get_frame_rate` と `ss_runtime_set_frame_rate`。`get_fps` にはしない）。ハッシュで引く版は `_by_hash` を付けるだけで、ほかは変えません。
 - **名詞は [Player API 規約](./libs/ssruntime/docs/20_design/30_api_conventions.ja.md) の語彙表の語幹です。** C-API と語彙表が食い違ったら、誤っているのは C-API です。Player は名前を綴り直すだけで済むべきで（`ss_runtime_just_looped` → `justLooped`）、訳し直させてはいけません。
 - **Brain が所有するメモリを指す出力引数は `const` にします。** そのバッファは、作り直す次の呼び出しまで Context のものです。
 - **失敗は文字列ではなくコードで渡します。** 呼び出しは戻り値で失敗を伝え、呼び出し側は `ss_runtime_get_last_error` で理由を取り、`ss_runtime_error_message` で文言にします。`libs/ssruntime/src/error.rs` のコードは、それ自体が互換性を保つべき面です。

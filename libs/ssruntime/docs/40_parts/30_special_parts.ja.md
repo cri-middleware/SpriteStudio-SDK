@@ -111,7 +111,7 @@ for (auto batch : *frame_data->draw_batches()) {
 
 #### `FontBitmap` / `FontGlyphBitmap`: ビットマップフォントのグリフの表
 
-`ssab->font_bitmaps()` に入るのは、**`text_bitmap == true` のテキストパーツが実際に参照している charmap だけ**です。アウトラインフォントのパーツしか無いプロジェクトでは空です。
+`ssab->font_bitmaps()` に入るのは、**`text_bitmap == true` のテキストパーツが実際に参照している charmap だけ**です。アウトラインフォントのパーツしか無いプロジェクトでは、`font_bitmaps()` 自体がありません（C++ では `nullptr`）。
 
 `PartTypeText.text_char_map` の文字列をそのまま `fnv1a` でハッシュした値が `FontBitmap.name_hash` なので、パーツからフォントはハッシュ 1 回で引けます。
 
@@ -134,6 +134,8 @@ for (auto batch : *frame_data->draw_batches()) {
 | `width_advance` | 送り幅（px） |
 | `text` | `id` を文字にしたもの。デバッグ表示用 |
 | `page` | `name_texture[]` の添字 |
+
+`offset` と `size_texture_original` は ssab の `Vec2` で、成分の名前は `x` / `y` ではなく `v1` / `v2` です（`v1` が X または幅、`v2` が Y または高さ）。以降の式の `glyph.offset.x` / `glyph.offset.y` は `offset.v1` / `offset.v2` のことです。
 
 ページ画像の名前は、charmap のファイルからの相対パスをコンバータが解決済みで、他の外部リソースと同じ**プロジェクトからの相対パス**として入っています（[ロードと初期化 §3-1](../30_core/10_initialization.ja.md#3-1-ssab-に入っているファイル参照の文字列)）。
 
@@ -179,7 +181,7 @@ if charmap にグリフが無い:
     continue
 
 pos  = pen + (glyph.offset - base_offset) * scale
-size = (glyph.atlas.width, glyph.atlas.height) * scale
+size = (glyph.atlas.w, glyph.atlas.h) * scale
 
 // 折り返し（text_width > 0 のときだけ）
 if text_width > 0 and pos.x + size.x > text_width:
@@ -199,7 +201,7 @@ pen.x += glyph.width_advance * scale + text_space
 
 #### 外接矩形と行ごとの右端
 
-すべてのグリフを置いたら、全グリフの矩形を囲む `bound`（`left / top / right / bottom`）と、**行ごとの右端 `R[line]`** を求めます。
+すべてのグリフを置いたら、全グリフの矩形を囲む `bound`（`left / top / right / bottom`。幅は `width = right - left`、高さは `height = bottom - top`）と、**行ごとの右端 `R[line]`** を求めます。
 
 #### 枠の大きさ
 

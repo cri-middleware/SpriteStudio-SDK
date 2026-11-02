@@ -63,7 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 # 特徴
 
 - **完全な型サポート**: SpriteStudio の内部型（補間タイプ、ブレンドモード、各属性値など）を Rust の enum や struct にマッピングしており、安全に扱えます。
-- **並列ロード**: `rayon` を活用し、`.ssae` や `.ssce` などの依存ファイルを並列に読み込むことで、ロード時間を短縮しています。
+- **並列ロード**: デフォルトの `parallel` feature で `rayon` を有効にし、`.ssae` や `.ssce` などの依存ファイルを並列に読み込むことでロード時間を短縮しています。`wasm32-unknown-unknown` などスレッドを持たないターゲットでは `default-features = false` で逐次ロードに切り替えられます。
 - **Serde 統合**: すべてのデータ構造で `Deserialize` を導出（derive）しているため、他の Serde エコシステムのツールとも容易に統合可能です。
 
 # アーキテクチャ
@@ -73,3 +73,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - `sspj::ssattribute`: 個別の属性定義（座標、回転、スケール、ユーザーデータなど）。
 - `sspj::ssce`: セルマップとセルの定義。
 - `sspj::ssee`: エフェクトノードとパーティクル挙動の定義。
+- `sspj::ssqe`: シーケンスパックとシーケンスの定義。
+- `sspj::ssse`: サウンドエフェクトリストの定義。
+- `sspj::sscharmap`: ビットマップフォント (`.fnt`) 文字マップのパーサと定義。
+- `sspj::ssloader`: XML および `.fnt` ファイルを読み込む `SsLoader` トレイト。
+- `sspj::sstypes`: 共通のプリミティブ型と列挙型（ブレンドモード、補間タイプなど）。
+- `sspj::sspj_error`: 読み込み・解析時のエラー型。

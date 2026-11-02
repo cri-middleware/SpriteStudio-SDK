@@ -42,15 +42,15 @@ void convert() {
     ss_converter_convert(ctx, "path/to/project.sspj", "output/dir", false, nullptr);
     
     // 完了を待機
-    while (ss_converter_is_running(ctx)) {
+    while (!ss_converter_is_finished(ctx)) {
         // sleep or update progress
     }
     
     // 結果の確認
     CConverterError result = ss_converter_get_result(ctx);
     if (result != CConverterError::Success) {
-        const char* err_msg;
-        size_t len;
+        const char* err_msg = nullptr;
+        uintptr_t len = 0;
         ss_converter_get_error(ctx, &err_msg, &len);
         printf("Error: %.*s\n", (int)len, err_msg);
     }
@@ -69,7 +69,11 @@ void convert() {
 
 # アーキテクチャ
 
-- **`converter`**: `sspj` のデータ構造を `ssab` の FlatBuffers スキーマにマッピングするコアロジック。
+- **`converter`**: 変換の入口（`convert_sspj_to_ssab_files` とその派生）、`ConvertConfig`、`ConverterError`。
+- **`model_t`**: `sspj` のデータ構造を `ssab` の Object API の構造体（`…T`）へ対応付ける処理。パーツ、アニメーションとキーフレーム、セルマップ、エフェクト、サウンド、フォント。
 - **`cache`**: FlatBuffers オブジェクトのキャッシュと重複排除ロジックを実装し、ファイルサイズを削減します。
-- **`ffi`**: C-API のラッパー関数群。
+- **`scan`**: バッチ変換向けに `.sspj` を探索する上限付きディレクトリ走査（`scan` feature）。
+- **`utility`**: `ssconverter-cli` が使用するパス収集ヘルパー（`scan` feature）。
+- **`ffi`**: C-API のラッパー関数群（`ffi` feature）。
+- **`web`**: ブラウザ内変換向けの `wasm-bindgen` エントリポイント（`web` feature）。
 

@@ -99,7 +99,7 @@ Affects **normal parts only**.
 - **Single color and four corners**: `ss_runtime_set_part_color_override` uses one color for all four corners. For a gradient, use `ss_runtime_set_part_color_override_corners`. **The corner order is `lt, rt, lb, rb`** (top-left, top-right, bottom-left, bottom-right).
 - **`rate` is always `1.0`.**
 - **Do not apply alpha twice.** The alpha of the color you specify is multiplied by the part's opacity, the same as keyframe parts color ([Parts Color §3](../40_parts/10_parts_color.md#3-reading-the-parts-color)).
-- **Colors are treated as 8-bit sRGB values.** The Brain does all color arithmetic in 8-bit sRGB integers and does no linear, gamma or PMA conversion. If your Player needs conversion to linear, do it in one place, in the shader input and output functions (`ss_input_texture()` / `ss_output_color()`), the same as for keyframe parts color. Building separate color handling just for overrides converts twice.
+- **Colors are treated as 8-bit sRGB values.** The Brain does all color arithmetic in 8-bit sRGB integers and does no linear, gamma or PMA conversion. If your Player needs conversion to linear, do it in one place, in the shader input and output functions (`ss_input_texture()` / `ss_output_color()`; [Parts Color §6](../40_parts/10_parts_color.md#6-shader-example)), the same as for keyframe parts color. Building separate color handling just for overrides converts twice.
 
 When you set a color override on **a part with no parts color in its keyframes**, that part is output as a part with parts color (`AttributePartColor` in `update_flag` is set, and FrameData carries parts color for it). If your Player draws differently depending on whether a part has parts color, expect this switch (if it does not draw differently, as in [Parts Color §5](../40_parts/10_parts_color.md#5-parts-without-a-parts-color), nothing is needed).
 
@@ -160,7 +160,7 @@ Player-side settings an engine typically writes every frame (how the character i
 
 ### 5-2. In `Direct` mode, FrameData has no `cells`
 
-In `Direct` mode (the default), FrameData does not carry `cells` / `vertices` / `deforms` (they are passed in the SoA buffers). It does carry `parts_color`.
+In `Direct` mode (the default; [Render Loop §3](../30_core/40_render_loop.md#3-rendermode)), FrameData does not carry `cells` / `vertices` / `deforms` (they are passed in the SoA buffers). It does carry `parts_color`.
 
 So **`FrameData.cells` does not tell you whether a cell override took effect** (it is easy to misread "not present = not working"). To check in `Direct` mode, look at the following.
 
@@ -176,7 +176,7 @@ On failure, functions return `false` (or `-1`); get the reason with `ss_runtime_
 | `ss_runtime_find_part_index(ctx, part_name)` | — | `int32_t`. `-1` if not found or no animation is set up |
 | `ss_runtime_hash_string(str)` | — | `uint32_t`. `0` for `NULL` or a string that is not UTF-8 |
 | `ss_runtime_set_part_color_override(ctx, part, blend_op, rgba, priority_mode)` | `blend_op`: `0` = Mix `1` = Mul `2` = Add `3` = Sub<br>`rgba`: `0xRRGGBBAA` | Uses one color for all four corners. Normal parts only |
-| `ss_runtime_set_part_color_override_corners(ctx, part, blend_op, rgba_ltrtlbrb, priority_mode)` | `rgba_ltrtlbrb`: `uint32_t` × 4 (**in `lt, rt, lb, rb` order**) | Specifies the four corners separately |
+| `ss_runtime_set_part_color_override_corners(ctx, part, blend_op, rgba_ltrtlbrb, priority_mode)` | `rgba_ltrtlbrb`: `const uint32_t*`, an array of 4 (**in `lt, rt, lb, rb` order**); `NULL` gives `false` | Specifies the four corners separately |
 | `ss_runtime_clear_part_color_override(ctx, part)` | — | |
 | `ss_runtime_set_part_cell_override(ctx, part, cellmap_name_hash, cell_name_hash, priority_mode)` | Hashes of the cellmap name and the cell name | `(0, 0)` clears. `false` if not found. Normal parts and mask parts only |
 | `ss_runtime_clear_part_cell_override(ctx, part)` | — | |

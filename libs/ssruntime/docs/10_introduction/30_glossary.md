@@ -16,6 +16,7 @@ These are the terms used in this guide. Each concept has exactly one term. A ter
 | ssqe | A sequence file. It holds the settings for playing several animations in order |
 | charmap | A bitmap-font definition file (`.fnt`) |
 | ssab | The playback binary that ssconverter generates from one ssae. It includes the cell map, effect, sound and charmap information that the ssae uses. Its schema is FlatBuffers |
+| Pack | One loaded ssab, referred to as the set of animations it holds (as in `frameScope`'s `pack`) |
 | ssqb | The sequence binary that ssconverter generates from an ssqe |
 
 ## 2. SpriteStudio concepts
@@ -37,12 +38,12 @@ These are the terms used in this guide. Each concept has exactly one term. A ter
 | Brain | `libssruntime`. It computes animation state and outputs the draw plan. → [Overview §2](./10_overview.md#2-division-of-work-between-brain-and-player) |
 | Player | The implementation that wraps the Brain and does loading, drawing, event notification and sound playback on the engine |
 | ssconverter | The converter that reads an sspj and generates ssab. It comes as a library (`libssconverter`) and a CLI (`ssconverter-cli`) |
-| Resource | Read-only data created by loading an ssab. A resource handle in the C-API, `AnimationResource` in Rust. Several Contexts can share it. → [Loading & Initialization §1](../30_core/10_initialization.md#1-resource-and-context) |
+| Resource | Read-only data created by loading an ssab. A resource handle in the C-API, `AnimationResource` in Rust. Several Contexts can share it. → [Loading and Initialization §1](../30_core/10_initialization.md#1-resource-and-context) |
 | Context | The playback state and computation buffers for one animated object. You use it by binding a resource to it |
 | FrameData | The FlatBuffers buffer that the Brain outputs every frame. It contains the part states, the draw plan, parts color and more |
 | PartData | The static definition of a part stored in the ssab (the ssab's `parts`). It does not change from frame to frame |
 | SoA buffer | A buffer that lays out the values of all parts in a single array, such as world matrices and vertices. You read it directly through a pointer. → [Render Loop §1](../30_core/40_render_loop.md#1-soa-buffers) |
-| DrawBatch | A group of parts that can be drawn in a row with the same texture and the same blend mode. The Player can draw one DrawBatch with one draw call. → [Render Loop §2](../30_core/40_render_loop.md#2-drawing-with-drawbatch) |
+| DrawBatch | A group of parts that can be drawn in a row with the same kind (`kind`), the same texture and the same blend mode. The Player can draw one DrawBatch with one draw call. → [Render Loop §2](../30_core/40_render_loop.md#2-drawing-with-drawbatch) |
 | `draw_order` / rank | `draw_order` is the list of part indices in the order they are drawn. A rank is a position in that list |
 | Slot | The child playback state that the Player holds for each instance part and effect part. You operate it with `ss_instance_slot_*` / `ss_effect_slot_*` |
 | Playhead | The current playback position (frame number). It is fractional during sub-frame playback |

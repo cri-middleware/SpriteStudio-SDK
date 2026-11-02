@@ -27,9 +27,9 @@ Brain は Rust で書かれた C-API のライブラリで、フレームごと�
 
 ## 3. テスト用の ssab を用意する
 
-1. `ssconverter-cli` を用意します。
-2. SDK の `tests/overall/overall.sspj` を ssab に変換します。このプロジェクトには、機能ごとのアニメーションが揃っています（[目次の「実装の進め方」](../README.ja.md#1-実装の進め方)）。
-3. 変換した ssab をプロジェクトのアセットとして置きます。
+1. `ssconverter-cli` を [GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) から入手します（[ssconverter-cli の README](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/cli/README.ja.md)）。
+2. SDK のリポジトリで `ssconverter-cli tests/overall/overall.sspj` を実行し、ssab に変換します。このプロジェクトには、機能ごとのアニメーションが揃っています（[目次の「実装の進め方」](../README.ja.md#1-実装の進め方)）。
+3. 変換した ssab（`tests/overall/overall/` に出力されます）をプロジェクトのアセットとして置きます。
 
 
 ---

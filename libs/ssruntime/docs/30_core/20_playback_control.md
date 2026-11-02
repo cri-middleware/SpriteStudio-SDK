@@ -18,7 +18,7 @@ void MyPlayer::tick(float delta_seconds) {
 
     // 4. Have the Brain compute the state of that frame (§6)
     float draw_frame = sub_frame_enabled ? frame_no : floorf(frame_no);
-    const uint8_t* fd; size_t fd_len;
+    const uint8_t* fd = nullptr; uintptr_t fd_len = 0;   // left as is on failure (§6-1)
     ss_runtime_get_frame_data(ctx, draw_frame, &fd, &fd_len);
 
     // 5. Advance the children of instance parts and effect parts, and draw (the Render Loop page)
@@ -74,7 +74,7 @@ What is kept is the playback direction setting, not **the heading partway throug
 
 Setup also returns the playback state to **Stopped** and releases any pause hold (§4).
 
-The other two ways to change track 0's animation, `ss_runtime_crossfade` and `ss_runtime_set_track_animation` on track 0, follow the same table: the kept settings belong to track 0 and reach the animation laid there, and the section and the loop count start over. Unlike setup, they leave the playback state as it is — a crossfade carries on playing. See [Animation Mixing §1-5](../50_features/10_animation_mixing.md).
+The other two ways to change track 0's animation, `ss_runtime_crossfade` and `ss_runtime_set_track_animation` on track 0, follow the same table: the kept settings belong to track 0 and reach the animation laid there, and the section and the loop count start over. Unlike setup, they leave the playback state as it is — a crossfade carries on playing. See [Animation Mixing §1-5](../50_features/10_animation_mixing.md#1-5-a-tracks-playback-settings).
 
 ## 4. Playback state
 
@@ -181,7 +181,7 @@ The Player decides whether to use sub-frames. If it does, pass the frame number 
 `ss_runtime_get_frame_data` accepts frame numbers in the half-open interval **`[first frame, last frame + 1)`**. Think of frame N as occupying `[N, N+1)` in time.
 
 - At the end and at loop boundaries, the playhead briefly takes a fractional value in `(last frame, last frame + 1)`. This range is **valid**, and returns the same pose as the last frame. Nothing is extrapolated past the end. **You do not need to clamp `frame_no` to the last frame.**
-- Out of range (less than the first frame, last frame + 1 or more, or `NaN`), the call fails without returning FrameData (`ss_runtime_get_last_error` is `InvalidParameter`). Nothing can be drawn for that frame, so every part disappears for a moment.
+- Out of range (less than the first frame, last frame + 1 or more, or `NaN`), the call fails without returning FrameData (`ss_runtime_get_last_error` is `InvalidParameter`). `out_data` and `out_len` are left as they were, so set them to `nullptr` and `0` before the call. Nothing can be drawn for that frame, so every part disappears for a moment.
 
 This range is that of **the whole animation**. Even with a playback section set (§5-4), the Brain does not clamp to the section edges. While the playhead is in the slot of the section's last frame, `(section's last frame, section's last frame + 1)` (with a backward, one-way (`Normal`) loop it also lands here right after crossing the section start), the pose returned is interpolated toward the key on the frame after the section. Put the same pose as the section start on that frame outside the section, and the loop seam also joins smoothly at sub-frame precision. When you cut one animation into playback sections and do not want keys outside the section to show, you may instead clamp the `frame_no` used for drawing to the section's last frame in the Player (not the value you hold as state; §6-2).
 
@@ -234,7 +234,7 @@ class MyPlayer {
 
 ### 7-2. Common mistakes
 
-Each of these is a defect that actually occurred in an existing Player. None of them happen if you implement the form in §7-1.
+Each of these is an easy mistake to make. None of them happen if you implement the form in §7-1.
 
 | Wrong implementation | Symptom |
 | :--- | :--- |
