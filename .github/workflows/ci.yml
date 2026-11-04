@@ -40,6 +40,11 @@ jobs:
   # scripts/check.sh and check.ps1 run this job and the Test step below on a
   # contributor's machine, and `msrv=yes` the msrv job: a step changed here
   # changes there too.
+  #
+  # No job waits for this one. On a pull request every job starts at once, so
+  # the run takes as long as its slowest job, not lint and then that job. In the
+  # weekly run, which is where a new stable Rust's clippy lints first show up,
+  # the platform builds and their caches still go ahead that week.
   lint:
     name: 💅 Lint & Format
     runs-on: ubuntu-latest
@@ -93,7 +98,6 @@ jobs:
 
   ci:
     name: ${{ matrix.name }}
-    needs: lint
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     permissions:
@@ -190,7 +194,6 @@ jobs:
 
   msrv:
     name: 🦀 MSRV (declared rust-version)
-    needs: lint
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -230,7 +233,6 @@ jobs:
 
   audit:
     name: 🔒 Security audit (cargo-audit)
-    needs: lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -263,7 +265,6 @@ jobs:
   # converter in any reasonable time.
   miri:
     name: 🔬 Miri (C ABI handles)
-    needs: lint
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -290,17 +291,23 @@ jobs:
         run: cargo run -p ssconverter-cli -- -o target/miri-fixtures/overall tests/overall/overall.sspj
         shell: bash
 
+      # nextest runs each test in a process of its own, as many at once as the
+      # runner has CPUs, where `cargo miri test` interprets them one after
+      # another in a single process.
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
+        with:
+          tool: cargo-nextest
+
       - name: Test the C ABI handles under Miri
-        run: cargo +nightly miri test -p ssruntime --features ffi --test ffi_lifecycle
+        run: cargo +nightly miri nextest run -p ssruntime --features ffi --test ffi_lifecycle
         env:
           MIRIFLAGS: -Zmiri-disable-isolation
           SSRUNTIME_FIXTURES: ${{ github.workspace }}/target/miri-fixtures
         shell: bash
 
   # The weekly tier. `github.base_ref == 'main'` is the release PR: under git-flow
-  # only release/X.Y is merged into main. Not after lint, unlike the jobs above:
-  # the weekly run is where a new stable Rust's clippy lints first show up, and
-  # the platform builds and their caches should not skip that week for them.
+  # only release/X.Y is merged into main.
   platforms:
     name: ${{ matrix.name }}
     if: github.event_name != 'pull_request' || github.base_ref == 'main'
