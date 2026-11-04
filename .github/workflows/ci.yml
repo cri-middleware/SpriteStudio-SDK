@@ -291,8 +291,16 @@ jobs:
         run: cargo run -p ssconverter-cli -- -o target/miri-fixtures/overall tests/overall/overall.sspj
         shell: bash
 
+      # nextest runs each test in a process of its own, as many at once as the
+      # runner has CPUs, where `cargo miri test` interprets them one after
+      # another in a single process.
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
+        with:
+          tool: cargo-nextest
+
       - name: Test the C ABI handles under Miri
-        run: cargo +nightly miri test -p ssruntime --features ffi --test ffi_lifecycle
+        run: cargo +nightly miri nextest run -p ssruntime --features ffi --test ffi_lifecycle
         env:
           MIRIFLAGS: -Zmiri-disable-isolation
           SSRUNTIME_FIXTURES: ${{ github.workspace }}/target/miri-fixtures
