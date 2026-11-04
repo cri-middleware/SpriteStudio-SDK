@@ -14,13 +14,15 @@ use clap::{CommandFactory, Parser};
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::process::ExitCode;
+use std::sync::LazyLock;
 use std::thread::JoinHandle;
 
-const VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "+", env!("VERGEN_GIT_SHA"));
+static VERSION: LazyLock<String> = LazyLock::new(|| format!("{}+{} (ssab schema v{}, ssqb schema v{})", env!("CARGO_PKG_VERSION"), env!("VERGEN_GIT_SHA"), ssconverter::ssab_schema_version(), ssconverter::ssqb_schema_version()));
+
 #[derive(Parser, Debug)]
 #[command(
     name = "ssconverter-cli",
-    version = VERSION,
+    version = VERSION.as_str(),
     about = "Converts SpriteStudio projects (.sspj) to optimized binary files (.ssab)",
     override_usage = "
   single mode: convert a single sspj project
@@ -49,14 +51,6 @@ struct Cli {
     out_dir: Option<OsString>,
 }
 
-/*
-fn version_string() -> String {
-    let sha = env!("VERGEN_GIT_SHA");
-    let short_sha = if sha.len() >= 7 { &sha[..7] } else { sha };
-    format!("{}+{}", env!("CARGO_PKG_VERSION"), short_sha)
-}
- */
-
 fn main() -> ExitCode {
     let args = Cli::parse();
     let mut cmd = Cli::command();
@@ -76,7 +70,7 @@ fn main() -> ExitCode {
         return ExitCode::FAILURE;
     }
 
-    println!("{} {} (ssab schema v{})", cmd.get_name(), VERSION, ssconverter::ssab_schema_version());
+    println!("{} {}", cmd.get_name(), *VERSION);
 
     let mut config = ssconverter::ConverterConfig::default();
     if sspj_paths.len() == 1 {
