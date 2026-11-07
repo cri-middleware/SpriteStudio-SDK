@@ -27,7 +27,7 @@ pub fn collect_sspj_files_cancellable(root: &Path, should_stop: &AtomicBool, max
     }
 
     let start = Instant::now();
-    let mut walker = WalkDir::new(root).max_depth(max_depth).same_file_system(true).into_iter().filter_entry(|entry| is_walked(entry.file_name()));
+    let mut walker = WalkDir::new(root).max_depth(max_depth).same_file_system(true).into_iter().filter_entry(is_walked_entry);
 
     loop {
         if should_stop.load(Ordering::Relaxed) {
@@ -68,13 +68,7 @@ fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
     }
 
     if path.is_dir() {
-        return WalkDir::new(path)
-            .into_iter()
-            .filter_entry(|entry| is_walked(entry.file_name()))
-            .filter_map(Result::ok)
-            .filter(|entry| is_sspj_file(entry.path()))
-            .map(|entry| entry.path().canonicalize().unwrap_or_else(|_| entry.path().to_path_buf()))
-            .collect();
+        return WalkDir::new(path).into_iter().filter_entry(is_walked_entry).filter_map(Result::ok).filter(|entry| is_sspj_file(entry.path())).map(|entry| entry.path().canonicalize().unwrap_or_else(|_| entry.path().to_path_buf())).collect();
     }
 
     vec![]
@@ -86,6 +80,11 @@ fn is_sspj_file(path: &Path) -> bool {
 
 fn is_walked(name: &OsStr) -> bool {
     !name.to_string_lossy().starts_with(".git")
+}
+
+/// The root was asked for by name, so only what a walk finds below it is filtered.
+fn is_walked_entry(entry: &walkdir::DirEntry) -> bool {
+    entry.depth() == 0 || is_walked(entry.file_name())
 }
 
 /// Whether a walk let one level deeper would find anything inside `dir`.
@@ -162,6 +161,19 @@ mod tests {
         // `<root>` and `a`.
         assert_eq!((visited.load(Ordering::Relaxed), budget_exceeded.load(Ordering::Relaxed)), (2, true));
         let _ = std::fs::remove_dir_all(&root);
+    }
+
+    // A root is walked whatever it is called: it was asked for by name. Below it,
+    // `.git*` is still left out.
+    #[test]
+    fn only_what_a_walk_finds_is_left_out_as_git() {
+        let root = scratch_dir("git-root").join(".gitwork");
+        std::fs::create_dir_all(root.join(".github")).expect("Failed to create the directories");
+        std::fs::write(root.join("project.sspj"), b"").expect("Failed to write the project");
+        std::fs::write(root.join(".github").join("skipped.sspj"), b"").expect("Failed to write the project");
+        assert_eq!(scan(&root, 8), (1, false));
+        assert_eq!(parse_args(std::slice::from_ref(&root)).len(), 1);
+        let _ = std::fs::remove_dir_all(root.parent().expect("The root has a parent"));
     }
 
     #[test]

@@ -112,6 +112,45 @@ mod tests {
         assert!(checked >= 2, "expected an .ssab and an .ssqb, checked {checked}");
     }
 
+    /// The output can be the project's own folder, where the assets already are. They
+    /// stay as they were, and a read-only one does not stop the conversion.
+    #[test]
+    fn an_output_in_the_project_leaves_its_assets_alone() {
+        let project = get_test_base_path().join("target").join("ssab_in_place_test_output");
+        if project.exists() {
+            std::fs::remove_dir_all(&project).unwrap();
+        }
+        std::fs::create_dir_all(&project).unwrap();
+        for entry in std::fs::read_dir(get_test_base_path().join("tests/Ringo")).unwrap() {
+            let path = entry.unwrap().path();
+            if path.is_file() {
+                std::fs::copy(&path, project.join(path.file_name().unwrap())).unwrap();
+            }
+        }
+
+        let image = project.join("Ringo.png");
+        let authored = std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(1_000_000_000);
+        std::fs::File::options().write(true).open(&image).unwrap().set_modified(authored).unwrap();
+        let before = std::fs::read(&image).unwrap();
+        let writable = image.metadata().unwrap().permissions();
+        let mut read_only = writable.clone();
+        read_only.set_readonly(true);
+        std::fs::set_permissions(&image, read_only).unwrap();
+
+        let mut config = ConverterConfig::default();
+        config.output = Some(project.as_os_str().to_os_string());
+        let converted = convert_sspj_to_ssab_files(&project.join("Ringo.sspj"), &config, &|_msg: &str| {});
+
+        let modified = image.metadata().unwrap().modified().unwrap();
+        let after = std::fs::read(&image).unwrap();
+        std::fs::set_permissions(&image, writable).unwrap();
+
+        converted.expect("conversion failed");
+        assert!(project.join("Ringo.ssab").exists());
+        assert_eq!(modified, authored);
+        assert_eq!(after, before);
+    }
+
     /// `canvas_size` is the authored canvas, not the canvas minus the pivot. A pivot
     /// of `0 -0.5` is the ordinary way to author a character standing on the ground,
     /// which is why `Doll` and `ParticleEffect` both carry one.
