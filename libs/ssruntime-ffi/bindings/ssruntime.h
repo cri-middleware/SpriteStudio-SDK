@@ -920,7 +920,10 @@ bool ss_runtime_clear_track(void *context, uint32_t track);
 
 /**
  * Fade `track` to `name` over `duration_ms` — the same time unit as
- * `ss_runtime_update`'s delta.
+ * `ss_runtime_update`'s delta. A `track` that does not exist yet is created.
+ * Returns `false` with `InvalidParameter` for a `duration_ms` that is not positive,
+ * a `NaN` or a null `name`, and with `AnimationNotFound` for a `name` the pack does
+ * not have or before `ss_runtime_setup_animation`.
  *
  * # Safety
  * `name` must be a valid null-terminated UTF-8 (or lossy-decodable) string.
