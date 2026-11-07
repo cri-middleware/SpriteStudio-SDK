@@ -636,7 +636,10 @@ impl PlaybackController {
                     self.passed_frames.push(current_frame_no);
                 }
                 if self.is_playing {
-                    self.current_frame = current_frame_no as f32 + next_frame_decimal;
+                    // A backward wrap keeps a decimal computed near frame 0, which
+                    // can round up to the next whole frame at this magnitude.
+                    let whole = current_frame_no as f32;
+                    self.current_frame = (whole + next_frame_decimal).min((whole + 1.0).next_down());
                 } else {
                     self.current_frame = current_frame_no as f32;
                 }
@@ -804,6 +807,21 @@ mod tests {
         c.setup(-10, 20, 60);
         assert!(c.set_animation_section(-1, 5));
         assert_eq!((c.get_start_frame(), c.get_end_frame()), (-10, 5), "a negative end stays the animation's edge");
+    }
+
+    /// A backward wrap keeps the decimal of a step that ended just under a whole
+    /// frame. Added to the section's last frame it must not round up past it.
+    #[test]
+    fn a_backward_wrap_stays_inside_the_section() {
+        let mut c = PlaybackController::new();
+        c.setup(0, 60, 30);
+        c.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
+        c.set_speed_scale(0.5);
+        c.play();
+        for _ in 0..4 {
+            let frame = c.update(1000.0);
+            assert!((0.0..61.0).contains(&frame), "frame {frame} is outside [0, 61)");
+        }
     }
 
     #[test]
