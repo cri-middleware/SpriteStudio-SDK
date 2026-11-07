@@ -103,7 +103,7 @@ ss_runtime_set_track_animation(ctx, 1, "look_around");
 ss_runtime_set_track_alpha(ctx, 1, 0.4f);           // 40% 重ねる
 ```
 
-トラックは必要に応じて作られます。アニメーションを載せる操作（`ss_runtime_set_track_animation`・`ss_runtime_crossfade`・`ss_runtime_add_track_source`）と、速度・フレームレートの上書き・フレームスキップ・再生方向・同期・出ていく側のイベントの閾値の設定が、まだ無いトラックを作ります（track 3 に載せると、track 1・2 も空のまま作られます）。`ss_runtime_set_track_alpha`・`ss_runtime_set_track_blend`・`ss_runtime_fade_track` はトラックを作らず、まだ無いトラックには `false` を返すので、トラックを作ってから呼んでください。track 1 以降は、`ss_runtime_setup_animation` でアニメーションをセットアップするまで作れません。`alpha` は 0〜1 の範囲に制限しません。1 を超えると外挿になり、重ねる用途ではそれが欲しい場合があります。
+トラックは必要に応じて作られます。アニメーションを載せる操作（`ss_runtime_set_track_animation`・`ss_runtime_crossfade`・`ss_runtime_add_track_source`）と、速度・フレームレートの上書き・フレームスキップ・再生方向・同期・出ていく側のイベントの閾値の設定が、まだ無いトラックを作ります（track 3 に載せると、track 1・2 も空のまま作られます）。`ss_runtime_set_track_alpha`・`ss_runtime_set_track_blend`・`ss_runtime_fade_track` はトラックを作らず、まだ無いトラックには `false` を返すので、トラックを作ってから呼んでください。`ss_runtime_setup_animation` でアニメーションをセットアップするまでは、track 0 を含めてどのトラックにも載せられず、track 1 以降も作れません。`alpha` は 0〜1 の範囲に制限しません。1 を超えると外挿になり、重ねる用途ではそれが欲しい場合があります。
 
 `ss_runtime_set_track_animation` は、トラックの中身を置き換えます。そのトラックに載っていたソースは、`ss_runtime_add_track_source` で加えたものも含めてすべて解放され、進行中のフェードは `alpha` のフェードも含めて取り消されます。取り消された `alpha` は、その時点の値で止まります。
 

@@ -690,3 +690,24 @@ fn set_track_speed_and_frame_target_the_tracks_animation() {
     ctx.update(1000.0);
     assert_eq!(ctx.get_track_frame(1), Some(3.0), "speed 0 parks the track");
 }
+
+/// Track 0 carries no structure until `setup_animation` has built it, so every
+/// call that lays an animation on it reports that rather than succeeding and
+/// leaving a frame with nothing to write to.
+#[test]
+fn laying_on_track_zero_before_setup_reports_animation_not_found() {
+    let ssab = load_ringo_resource();
+    let resource = unsafe { AnimationResource::new(ssab.as_slice()) }.expect("Failed to load resource");
+    let mut ctx = Context::new();
+    ctx.bind_resource(&resource);
+
+    assert_eq!(ctx.set_track_animation(0, "walk"), Err(error::SSRuntimeError::AnimationNotFound));
+    assert_eq!(ctx.crossfade(0, "walk", 100.0), Err(error::SSRuntimeError::AnimationNotFound));
+    assert_eq!(ctx.add_track_source(0, "walk", 1.0), Err(error::SSRuntimeError::AnimationNotFound));
+    assert_eq!(ctx.get_frame_data(0.0).err(), Some(error::SSRuntimeError::AnimationNotFound));
+
+    ctx.set_track_speed(0, 2.0).expect("track 0's settings can be stated before setup");
+    ctx.setup_animation("walk").unwrap();
+    assert_eq!(ctx.get_track_speed(0), Some(2.0));
+    ctx.set_track_animation(0, "run").expect("track 0 is set up");
+}

@@ -22,6 +22,7 @@ impl<'a> Context<'a> {
 
     pub fn set_track_animation_by_hash(&mut self, track: u32, hash: u32) -> Result<(), error::SSRuntimeError> {
         let index = self.resolve_animation(hash)?;
+        self.ensure_set_up()?;
         self.ensure_track(track)?;
         let handle = self.attach_source(track, index, 1.0)?;
         self.replace_track_main(track, handle);
@@ -137,6 +138,7 @@ impl<'a> Context<'a> {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
         let index = self.resolve_animation(hash)?;
+        self.ensure_set_up()?;
         self.ensure_track(track)?;
 
         let to = self.attach_source(track, index, 0.0)?;
@@ -325,6 +327,7 @@ impl<'a> Context<'a> {
 
     pub fn add_track_source_by_hash(&mut self, track: u32, hash: u32, weight: f32) -> Result<u32, error::SSRuntimeError> {
         let index = self.resolve_animation(hash)?;
+        self.ensure_set_up()?;
         self.ensure_track(track)?;
         let handle = self.attach_source(track, index, weight)?;
         // The first animation to land on a track becomes its main one, so callers
@@ -451,11 +454,17 @@ impl<'a> Context<'a> {
         resource.find_animation_index_by_hash(hash).ok_or(error::SSRuntimeError::AnimationNotFound)
     }
 
-    /// Grow the stack so `track` exists. Every track but 0 may be created this
-    /// way; track 0 exists from construction, but until `setup_animation` has run
-    /// there is no structure to layer onto, so this reports `AnimationNotFound`.
+    /// `setup_animation` sizes the frame's buffers, so nothing can be laid on any
+    /// track before it has run, track 0 included.
+    fn ensure_set_up(&self) -> Result<(), error::SSRuntimeError> {
+        if self.instance.primary_source().has_real_animation() { Ok(()) } else { Err(error::SSRuntimeError::AnimationNotFound) }
+    }
+
+    /// Grow the stack so `track` exists. Track 0 exists from construction, so its
+    /// settings can be stated before `setup_animation`; any other track reports
+    /// `AnimationNotFound` until then, with no structure to layer onto.
     fn ensure_track(&mut self, track: u32) -> Result<(), error::SSRuntimeError> {
-        if track != 0 && !self.instance.sources[self.instance.primary_idx()].has_real_animation() {
+        if track != 0 && !self.instance.primary_source().has_real_animation() {
             return Err(error::SSRuntimeError::AnimationNotFound);
         }
         if track as usize >= self.instance.tracks.len() {
