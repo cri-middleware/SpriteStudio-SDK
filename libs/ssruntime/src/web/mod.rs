@@ -254,15 +254,21 @@ impl From<WebEffectEventInfo> for crate::types::ss_effect_event_info {
     }
 }
 
-/// How every fallible call here reports: the Brain's own wording, as the string
-/// of a JS exception.
+/// How every fallible call here reports: a JS `Error` with the Brain's own wording
+/// as its message.
 ///
 /// `Display`, not `Debug`: `Debug` prints the Rust variant name, an identifier from
 /// a language a JS caller is not writing, and it reaches their user through
 /// whatever the Player puts in front of them. `Display` also carries what a variant
 /// knows: `InvalidVersion` names the version expected and the one that arrived.
 fn js_error(e: crate::error::SSRuntimeError) -> JsValue {
-    JsValue::from_str(&alloc::format!("{}", e))
+    js_message(&alloc::format!("{}", e))
+}
+
+/// An `Error` rather than a bare string, so that whoever catches it finds `message`
+/// and a stack.
+fn js_message(message: &str) -> JsValue {
+    JsError::new(message).into()
 }
 
 #[wasm_bindgen]
@@ -277,7 +283,7 @@ impl SSRuntimeResource {
     /// packs you trust. A schema-version mismatch is reported as an error.
     #[wasm_bindgen(constructor)]
     pub fn new(data: &[u8]) -> Result<SSRuntimeResource, JsValue> {
-        let ssab_data = SsabData::load_copy(data).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let ssab_data = SsabData::load_copy(data).map_err(|e| js_message(&e.to_string()))?;
         // SAFETY: the JS caller guarantees a valid `.ssab`, as the C ABI's caller does; nothing
         // here can check it (crate docs, "Limitations to design around").
         let inner = unsafe { SsabResource::new(ssab_data) };
@@ -285,7 +291,7 @@ impl SSRuntimeResource {
             // The reason, not just the fact: a version mismatch names both
             // versions, which is the whole of what the user needs to act.
             let reason = inner.parse_error().map_or_else(|| alloc::string::String::from("Failed to parse SSAB data"), |e| alloc::format!("{}", e));
-            return Err(JsValue::from_str(&reason));
+            return Err(js_message(&reason));
         }
         Ok(SSRuntimeResource { inner })
     }
@@ -517,11 +523,11 @@ impl SSRuntimeContext {
     }
 
     pub fn get_ssab_buf(&self) -> Result<*const u8, JsValue> {
-        self.inner.get_ssab_data().map(|s| s.as_ptr()).ok_or_else(|| JsValue::from_str("SSAB data not found"))
+        self.inner.get_ssab_data().map(|s| s.as_ptr()).ok_or_else(|| js_message("SSAB data not found"))
     }
 
     pub fn get_ssab_len(&self) -> Result<usize, JsValue> {
-        self.inner.get_ssab_data().map(|s| s.len()).ok_or_else(|| JsValue::from_str("SSAB data not found"))
+        self.inner.get_ssab_data().map(|s| s.len()).ok_or_else(|| js_message("SSAB data not found"))
     }
 
     // Frame Number getter functions
@@ -728,7 +734,7 @@ impl SSRuntimeContext {
         let blend = match blend {
             0 => crate::TrackBlend::Mix,
             1 => crate::TrackBlend::Additive,
-            _ => return Err(JsValue::from_str("blend must be 0 (mix) or 1 (additive)")),
+            _ => return Err(js_message("blend must be 0 (mix) or 1 (additive)")),
         };
         self.inner.set_track_blend(track, blend).map_err(js_error)
     }
@@ -746,7 +752,7 @@ impl SSRuntimeContext {
         let sync = match sync {
             0 => crate::TrackSync::Free,
             1 => crate::TrackSync::Start,
-            _ => return Err(JsValue::from_str("sync must be 0 (free) or 1 (start)")),
+            _ => return Err(js_message("sync must be 0 (free) or 1 (start)")),
         };
         self.inner.set_track_sync(track, sync).map_err(js_error)
     }
@@ -968,7 +974,7 @@ impl SSRuntimeContext {
     /// 4 packed RGBA in ssruntime corner order `lt, rt, lb, rb`.
     pub fn set_part_color_override_corners(&mut self, part: u32, blend_op: u8, rgba_ltrtlbrb: &[u32], priority_mode: u8) -> Result<(), JsValue> {
         if rgba_ltrtlbrb.len() < 4 {
-            return Err(JsValue::from_str("rgba_ltrtlbrb must have 4 elements"));
+            return Err(js_message("rgba_ltrtlbrb must have 4 elements"));
         }
         let corners = [rgba_ltrtlbrb[0].to_be_bytes(), rgba_ltrtlbrb[1].to_be_bytes(), rgba_ltrtlbrb[2].to_be_bytes(), rgba_ltrtlbrb[3].to_be_bytes()];
         self.inner.set_part_color_override_corners(part, blend_op, corners, priority_mode).map_err(js_error)

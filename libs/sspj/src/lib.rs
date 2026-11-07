@@ -49,6 +49,7 @@
 
 mod parallel;
 
+pub mod asset_path;
 pub mod ssae;
 pub mod ssattribute;
 pub mod ssce;

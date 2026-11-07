@@ -207,7 +207,7 @@ By default, only the primary (track 0's main animation) fires events. A source a
 ss_runtime_set_source_event_threshold(ctx, run, 0.5f);   // fires when run's weight is 0.5 or more
 ```
 
-The outgoing side of a crossfade is the exception: its sources fire while the side's share of the track, `1 - t`, is at least the **track's** outgoing threshold, however many sources it holds, and their own thresholds are not consulted while they fade. The default is `+∞`, so the outgoing side falls silent the moment the fade begins, which is when the incoming animation starts firing on track 0. At `0.5` it fires through the first half of the fade. It belongs to the track and holds for every crossfade on it; track 0 keeps it across `ss_runtime_setup_animation`.
+The outgoing side of a crossfade is the exception: its sources fire while the side's share of the track, `1 - t`, is at least the **track's** outgoing threshold, however many sources it holds, and their own thresholds are not consulted while they fade. The default is `+∞`, so the outgoing side falls silent the moment the fade begins, which is when the incoming animation starts firing on track 0. At `0.5` it fires through the first half of the fade. In the update that completes the fade the outgoing side has already been released, so it does not fire even at `0`. It belongs to the track and holds for every crossfade on it; track 0 keeps it across `ss_runtime_setup_animation`.
 
 ```cpp
 ss_runtime_set_track_outgoing_event_threshold(ctx, 0, 0.5f);   // the outgoing side fires for the first half
