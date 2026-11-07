@@ -64,7 +64,7 @@ ssruntime.windows.editor.x86_64.lib(...) : error LNK2005: ___rust_alloc is alrea
 godot.windows.editor.x86_64.exe : fatal error LNK1169: one or more multiply defined symbols found.
 ```
 
-**Cause**: each Rust static library contains the Rust runtime (the allocator and panic functions), so `__rust_alloc` / `rust_begin_unwind` / `rust_eh_personality` and others appear in both `.lib` files. The MSVC linker treats duplicates as errors (macOS's `ld` demotes them to warnings and links anyway, so this happens only on Windows).
+**Cause**: each Rust static library contains the Rust runtime (the allocator and panic functions), so `__rust_alloc` / `rust_begin_unwind` / `rust_eh_personality` and others appear in both `.lib` files. The MSVC linker treats duplicates as errors; macOS is [§4-1](#4-1-duplicate-symbols-linking-both-libssruntimea-and-libssconvertera).
 
 **Fix**: add `/FORCE:MULTIPLE` to the link options of the final binary.
 
@@ -102,21 +102,22 @@ if env["platform"] == "windows":
 
 The libraries are built with `panic = "abort"`, so `rust_begin_unwind` / `rust_eh_personality` are never actually used, and both allocators call MSVCRT's `malloc` / `free`, so they behave the same. Whichever definition is used, the behavior does not change.
 
-## 4. Link warnings on macOS (ld)
+## 4. Link errors on macOS (ld)
 
-### 4-1. Duplicate symbol warnings (linking both `libssruntime.a` and `libssconverter.a`)
+### 4-1. Duplicate symbols (linking both `libssruntime.a` and `libssconverter.a`)
 
-**Symptom**: linking both static libraries into the same binary makes `ld` emit duplicate symbol warnings. **The link succeeds**, and the resulting binary works correctly.
+**Symptom**: linking both static libraries into the same binary makes `ld` fail.
 
 ```
-ld: warning: duplicate symbol '___rust_alloc' in:
-    .../libssconverter.a[arm64](...)
-    .../libssruntime.a[arm64](...)
+duplicate symbol '_rust_eh_personality' in:
+    .../libssruntime.a[2](...)
+    .../libssconverter.a[2](...)
+ld: 1 duplicate symbols
 ```
 
 **Cause**: the same as §3-2.
 
-**Fix**: `ld` completes the link with the first definition it finds, so **you do not need to do anything.** As described in §3-2, there is no effect on behavior. If the warnings bother you, filtering them out of the build log with `grep -v "duplicate symbol"` is enough.
+**Fix**: add `-Wl,-dead_strip` to the options of the final link, or link one of the two as a dynamic library. With `-dead_strip`, `ld` reports the duplicate as a warning and completes the link. As described in §3-2, there is no effect on behavior.
 
 ---
 [Back to contents](../README.md)

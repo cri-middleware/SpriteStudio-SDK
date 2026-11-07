@@ -124,7 +124,7 @@ The Brain's default coordinate system is the same as SpriteStudio's: **Y-Up, ori
 | :--- | :--- | :--- |
 | Y-axis direction | `ss_runtime_set_coordinate_system` | `0` = Y-Up (default) / `1` = Y-Down. With Y-Down, the Brain flips the Y coordinate and the rotation direction |
 | Origin | `ss_runtime_set_origin` | `0` = center (default) / `1` = top-left. With top-left, the Brain adds an offset based on the canvas size |
-| Units | `ss_runtime_set_unit` | `0` = pixels (default) / `1` = normalized. Normalized divides coordinates by the canvas size, giving 0.0–1.0 |
+| Units | `ss_runtime_set_unit` | `0` = pixels (default) / `1` = normalized. Normalized divides each part's position by the canvas size. Sizes, local vertices and UVs stay in pixels |
 
 With Y-Down set, the local vertices are already flipped. Flipping the Y axis again in the world matrix flips it twice, so do not do that. For effect vertices, specify it separately with the `y_flip` argument of `ss_effect_slot_step` ([Effect parts §2](../40_parts/60_effect.md#2-arguments-of-ss_effect_slot_step)).
 

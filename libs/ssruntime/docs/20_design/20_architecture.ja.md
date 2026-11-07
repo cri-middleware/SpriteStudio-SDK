@@ -124,7 +124,7 @@ Brain の既定の座標系は、SpriteStudio と同じ **Y-Up・中心原点・
 | :--- | :--- | :--- |
 | Y 軸の向き | `ss_runtime_set_coordinate_system` | `0` = Y-Up（既定） / `1` = Y-Down。Y-Down では Y 座標と回転の向きを Brain が反転する |
 | 原点 | `ss_runtime_set_origin` | `0` = 中心（既定） / `1` = 左上。左上ではキャンバスの大きさに応じたオフセットを Brain が足す |
-| 単位 | `ss_runtime_set_unit` | `0` = ピクセル（既定） / `1` = 正規化。正規化では座標をキャンバスの大きさで割り、0.0〜1.0 にする |
+| 単位 | `ss_runtime_set_unit` | `0` = ピクセル（既定） / `1` = 正規化。正規化ではパーツの位置をキャンバスの大きさで割る。サイズ・ローカル頂点・UV はピクセルのまま |
 
 Y-Down を設定した場合、ローカル頂点は反転済みです。ワールド行列の側でさらに Y 軸を反転すると二重に反転するので、しないでください。エフェクトの頂点は `ss_effect_slot_step` の `y_flip` 引数で別に指定します（[エフェクトパーツ §2](../40_parts/60_effect.ja.md#2-ss_effect_slot_step-の引数)）。
 

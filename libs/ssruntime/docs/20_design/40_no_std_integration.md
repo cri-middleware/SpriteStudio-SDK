@@ -149,7 +149,7 @@ void ss_custom_abort() {
 Define these three and link `libssruntime.a` (or `.lib`), and every memory allocation in the Brain goes through the engine's allocator.
 
 > [!NOTE]
-> `ss_custom_abort` is called only when a panic occurs in the Brain. If `ss_custom_alloc` returns `NULL` (allocation failure), Rust's allocation-error handling aborts immediately without going through `ss_custom_abort`. If you want your own handling of allocation failure, do it inside `ss_custom_alloc`.
+> `ss_custom_abort` is called when a panic occurs in the Brain, and an allocation failure is one: when `ss_custom_alloc` returns `NULL`, the Brain panics and reaches `ss_custom_abort`. If you want your own handling of allocation failure, do it inside `ss_custom_alloc`.
 
 ---
 

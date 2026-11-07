@@ -64,7 +64,7 @@ ssruntime.windows.editor.x86_64.lib(...) : error LNK2005: ___rust_alloc は既�
 godot.windows.editor.x86_64.exe : fatal error LNK1169: 1 つ以上の複数定義のシンボルが見つかりました。
 ```
 
-**原因**: Rust の静的ライブラリは、それぞれが Rust のランタイム（アロケータやパニックの関数）を含むので、2 つの `.lib` に `__rust_alloc` / `rust_begin_unwind` / `rust_eh_personality` などが重複します。MSVC のリンカは重複をエラーにします（macOS の `ld` は警告にして通すので、Windows でだけ起きます）。
+**原因**: Rust の静的ライブラリは、それぞれが Rust のランタイム（アロケータやパニックの関数）を含むので、2 つの `.lib` に `__rust_alloc` / `rust_begin_unwind` / `rust_eh_personality` などが重複します。MSVC のリンカは重複をエラーにします。macOS は [§4-1](#4-1-シンボルの重複libssruntimea-と-libssconvertera-を両方リンクする) を見てください。
 
 **対処**: 最終的なバイナリのリンクのオプションに `/FORCE:MULTIPLE` を加えます。
 
@@ -102,21 +102,22 @@ if env["platform"] == "windows":
 
 `panic = "abort"` でビルドしているので `rust_begin_unwind` / `rust_eh_personality` は実際には使われず、アロケータもどちらも MSVCRT の `malloc` / `free` を呼ぶので同じ動きです。どちらの定義が使われても、動作は変わりません。
 
-## 4. macOS でのリンクの警告（ld）
+## 4. macOS でのリンクのエラー（ld）
 
-### 4-1. シンボルの重複の警告（`libssruntime.a` と `libssconverter.a` を両方リンクする）
+### 4-1. シンボルの重複（`libssruntime.a` と `libssconverter.a` を両方リンクする）
 
-**症状**: 2 つの静的ライブラリを同じバイナリにリンクすると、`ld` が duplicate symbol の警告を出す。**リンクは成功し**、できたバイナリも正しく動く。
+**症状**: 2 つの静的ライブラリを同じバイナリにリンクすると、`ld` が失敗する。
 
 ```
-ld: warning: duplicate symbol '___rust_alloc' in:
-    .../libssconverter.a[arm64](...)
-    .../libssruntime.a[arm64](...)
+duplicate symbol '_rust_eh_personality' in:
+    .../libssruntime.a[2](...)
+    .../libssconverter.a[2](...)
+ld: 1 duplicate symbols
 ```
 
 **原因**: §3-2 と同じです。
 
-**対処**: `ld` は最初に見つけた定義を使ってリンクを完了するので、**何もしなくてかまいません。** 動作への影響は §3-2 のとおりありません。警告が気になる場合は、ビルドのログから `grep -v "duplicate symbol"` で除く程度で十分です。
+**対処**: 最終的なバイナリのリンクのオプションに `-Wl,-dead_strip` を加えるか、どちらか一方を動的ライブラリとしてリンクします。`-dead_strip` を付けると、`ld` は重複を警告にしてリンクを完了します。動作への影響は §3-2 のとおりありません。
 
 ---
 [目次に戻る](../README.ja.md)

@@ -119,7 +119,7 @@ The following ssae pack and model-level fields are not included in ssab:
 The following ssae `SsPart` fields are editor-only and not included in ssab:
 
 - `array_index`, `show`, `locked`, `color_label` (editor UI state)
-- `inherit_type`, `inherit_rates` (resolved at conversion time)
+- `inherit_type`, `inherit_rates` (`HIDE` is resolved at conversion time; the other rates are not used)
 - `bone_length`, `bone_position`, `bone_rotation` (bone editing data)
 - `weight_position`, `weight_impact`, `mesh_weight_type`, `mesh_weight_strong` (mesh weight editing)
 - `ik_depth`, `ik_rotation_arrow` (IK solver parameters)

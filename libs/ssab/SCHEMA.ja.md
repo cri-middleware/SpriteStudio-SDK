@@ -119,7 +119,7 @@ ssae ではパーツタイプは単純な列挙型 (`SsPartType`) であり、�
 以下の ssae `SsPart` フィールドはエディタ専用のため、ssab には含まれません:
 
 - `array_index`, `show`, `locked`, `color_label` (エディタ UI の状態)
-- `inherit_type`, `inherit_rates` (変換時に解決済み)
+- `inherit_type`, `inherit_rates` (`HIDE` は変換時に解決済み。ほかのレートは使わない)
 - `bone_length`, `bone_position`, `bone_rotation` (ボーン編集データ)
 - `weight_position`, `weight_impact`, `mesh_weight_type`, `mesh_weight_strong` (メッシュウェイト編集データ)
 - `ik_depth`, `ik_rotation_arrow` (IK ソルバーパラメータ)
