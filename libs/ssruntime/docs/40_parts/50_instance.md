@@ -12,7 +12,7 @@ After loading an animation, find every instance part (`PartTypeInstance`) among 
 2. **Create the child Context.** Bind the referenced ssab's resource, and set up the child animation with `ss_runtime_setup_animation_by_hash(child_ctx, ref_anime_name_hash)`. Do not play it yet: it starts when the slot meets its first key ([§2](#2-advancing-the-child-with-the-slot)).
 3. **Create the slot** with `ss_instance_slot_create()`. The slot holds no resource; it works on the child Context it receives every frame.
 
-The child is also a Player, so if the child animation has instance parts or effect parts, prepare them the same way inside the child.
+The child is also a Player, so if the child animation has instance parts or effect parts, prepare them the same way inside the child. When a part references its own ssab, the child has the same instance part, so preparing every child up front never ends.
 
 ## 2. Advancing the child with the slot
 
