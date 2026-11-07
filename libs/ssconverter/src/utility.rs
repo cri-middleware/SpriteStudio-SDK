@@ -130,6 +130,23 @@ mod tests {
         let _ = std::fs::remove_dir_all(&root);
     }
 
+    // A link to a directory below the root is not followed, and that is not a cut.
+    // The root itself is followed when it is one.
+    #[cfg(unix)]
+    #[test]
+    fn a_symlink_to_a_directory_is_followed_only_as_the_root() {
+        let root = scratch_dir("symlink");
+        let tree = root.join("tree");
+        let elsewhere = nested_project("symlink-target");
+        std::fs::create_dir_all(&tree).expect("Failed to create the tree");
+        std::os::unix::fs::symlink(&elsewhere, tree.join("link")).expect("Failed to create the symlink");
+        std::os::unix::fs::symlink(&elsewhere, root.join("root_link")).expect("Failed to create the symlink");
+        assert_eq!(scan(&tree, 8), (0, false));
+        assert_eq!(scan(&root.join("root_link"), 8), (1, false));
+        let _ = std::fs::remove_dir_all(&root);
+        let _ = std::fs::remove_dir_all(&elsewhere);
+    }
+
     // Telling a cut must not cost the walk another level: a wide directory at the
     // limit is looked into, not opened subdirectory by subdirectory and counted
     // against `max_entries`.

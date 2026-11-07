@@ -20,7 +20,7 @@
 2. 毎フレーム、`ss_converter_scan_found` と `ss_converter_scan_visited` で「探索中… n 件」のような進捗を表示します。
 3. 探索が終わったら、`ss_converter_scan_result_count` と `ss_converter_scan_result_at` で、見つかった sspj のパスを集めます。
 
-`ss_converter_scan_dir` には探索の上限（深さ・項目数・ミリ秒）を渡します。上限で打ち切られたかは `ss_converter_scan_budget_exceeded` で分かり、その場合は見つかった sspj が全部ではありません。`ss_converter_scan_result_at` が返すパスは Context が持つ文字列なので、同じ Context で `ss_converter_scan_result_count` を呼び直す前、`ss_converter_convert` を始める前、`ss_converter_destroy` の前にコピーしてください。
+`ss_converter_scan_dir` には探索の上限（深さ・項目数・ミリ秒）を渡します。上限で打ち切られたかは `ss_converter_scan_budget_exceeded` で分かり、その場合は見つかった sspj が全部ではありません。フォルダへのシンボリックリンクは、渡したフォルダ自身でない限りたどりません。`ss_converter_scan_result_at` が返すパスは Context が持つ文字列なので、同じ Context で `ss_converter_scan_result_count` を呼び直す前、`ss_converter_convert` を始める前、`ss_converter_destroy` の前にコピーしてください。
 
 たくさんの sspj を一度にすべて `ss_converter_convert` すると、CPU の負荷とメモリの使用量が跳ね上がります。同時に動かす Context の数を CPU のコア数程度（4〜8 など）に抑え、空いたところに次の変換を足していく形にしてください。
 

@@ -20,7 +20,7 @@ When a user drops a folder into the editor, for example, find every sspj inside 
 2. Every frame, display progress such as "Searching… n found" with `ss_converter_scan_found` and `ss_converter_scan_visited`.
 3. When the scan has finished, collect the paths of the sspj files found with `ss_converter_scan_result_count` and `ss_converter_scan_result_at`.
 
-`ss_converter_scan_dir` takes the scan's limits (depth, entries, milliseconds). `ss_converter_scan_budget_exceeded` says whether a limit cut the scan short; if it did, the sspj files found are not all of them. The paths `ss_converter_scan_result_at` returns belong to the Context, so copy them before calling `ss_converter_scan_result_count` again, before starting `ss_converter_convert` on the same Context, and before `ss_converter_destroy`.
+`ss_converter_scan_dir` takes the scan's limits (depth, entries, milliseconds). `ss_converter_scan_budget_exceeded` says whether a limit cut the scan short; if it did, the sspj files found are not all of them. A symbolic link to a folder is not followed, unless it is the folder you pass. The paths `ss_converter_scan_result_at` returns belong to the Context, so copy them before calling `ss_converter_scan_result_count` again, before starting `ss_converter_convert` on the same Context, and before `ss_converter_destroy`.
 
 Calling `ss_converter_convert` for many sspj files all at once makes CPU load and memory use spike. Limit the number of Contexts running at once to about the number of CPU cores (4 to 8, for example), and add the next conversion whenever a slot frees up.
 
