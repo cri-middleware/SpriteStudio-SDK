@@ -1,3 +1,4 @@
+use crate::asset_path::{join_asset_path, normalize_asset_path};
 use crate::parallel::*;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -168,23 +169,32 @@ impl crate::ssloader::SsLoader for SsProject {
         Ok(sspj)
     }
 
+    /// `maps` is keyed by path relative to the `.sspj`'s directory, in the form
+    /// [`normalize_asset_path`] gives.
     fn load_from_maps(name: &str, maps: &std::collections::HashMap<String, String>) -> Result<Self::Output, crate::sspj_error::SspjError> {
         let Some(xml_data) = maps.get(name) else {
             return Err(crate::sspj_error::SspjError::FileError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("Failed to read a file: {:?}", name))));
         };
         let mut sspj = quick_xml::de::from_str::<SsProject>(xml_data).map_err(crate::sspj_error::SspjError::XmlParseError)?;
 
-        sspj.sound_list = par_iter!(sspj.audiopack_names).map(|audiopack| crate::ssse::SsAudioPack::load_from_maps(audiopack, maps)).collect::<Result<Vec<crate::ssse::SsAudioPack>, crate::sspj_error::SspjError>>()?;
-        sspj.sequence_list = par_iter!(sspj.sequencepack_names).map(|sequence_name| crate::ssqe::SsSequencePack::load_from_maps(sequence_name, maps)).collect::<Result<Vec<crate::ssqe::SsSequencePack>, crate::sspj_error::SspjError>>()?;
+        sspj.sound_list = par_iter!(sspj.audiopack_names).map(|audiopack| crate::ssse::SsAudioPack::load_from_maps(&normalize_asset_path(audiopack), maps)).collect::<Result<Vec<crate::ssse::SsAudioPack>, crate::sspj_error::SspjError>>()?;
+        sspj.sequence_list =
+            par_iter!(sspj.sequencepack_names).map(|sequence_name| crate::ssqe::SsSequencePack::load_from_maps(&normalize_asset_path(sequence_name), maps)).collect::<Result<Vec<crate::ssqe::SsSequencePack>, crate::sspj_error::SspjError>>()?;
         sspj.charmap_dic = par_iter!(sspj.charmap_names)
             .map(|charmap_name| {
-                let charmap_data = crate::sscharmap::SsCharMap::load_from_maps(charmap_name, maps)?;
+                let charmap_data = crate::sscharmap::SsCharMap::load_from_maps(&normalize_asset_path(charmap_name), maps)?;
                 Ok((charmap_name.to_string(), charmap_data))
             })
             .collect::<Result<HashMap<String, crate::sscharmap::SsCharMap>, crate::sspj_error::SspjError>>()?;
-        sspj.cellmap_list = par_iter!(sspj.cellmap_names).map(|cellmap_name| crate::ssce::SsCellMap::load_from_maps(cellmap_name, maps)).collect::<Result<Vec<crate::ssce::SsCellMap>, crate::sspj_error::SspjError>>()?;
-        sspj.effect_file_list = par_iter!(sspj.effect_file_names).map(|effect_file_name| crate::ssee::SsEffectFile::load_from_maps(effect_file_name, maps)).collect::<Result<Vec<crate::ssee::SsEffectFile>, crate::sspj_error::SspjError>>()?;
-        sspj.anime_list = par_iter!(sspj.animepack_names).map(|animepack_name| crate::ssae::SsAnimePack::load_from_maps(animepack_name, maps)).collect::<Result<Vec<crate::ssae::SsAnimePack>, crate::sspj_error::SspjError>>()?;
+        sspj.cellmap_list = par_iter!(sspj.cellmap_names)
+            .map(|cellmap_name| crate::ssce::SsCellMap::load_from_maps(&join_asset_path(&sspj.settings.cell_map_base_directory, cellmap_name), maps))
+            .collect::<Result<Vec<crate::ssce::SsCellMap>, crate::sspj_error::SspjError>>()?;
+        sspj.effect_file_list = par_iter!(sspj.effect_file_names)
+            .map(|effect_file_name| crate::ssee::SsEffectFile::load_from_maps(&join_asset_path(&sspj.settings.effect_base_directory, effect_file_name), maps))
+            .collect::<Result<Vec<crate::ssee::SsEffectFile>, crate::sspj_error::SspjError>>()?;
+        sspj.anime_list = par_iter!(sspj.animepack_names)
+            .map(|animepack_name| crate::ssae::SsAnimePack::load_from_maps(&join_asset_path(&sspj.settings.anime_base_directory, animepack_name), maps))
+            .collect::<Result<Vec<crate::ssae::SsAnimePack>, crate::sspj_error::SspjError>>()?;
 
         Ok(sspj)
     }
@@ -206,6 +216,44 @@ mod tests {
 
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()
+    }
+
+    /// A host hands the project's files over by path, so a reference has to reach them
+    /// the way a filesystem would: under its base directory, however it is spelled.
+    #[test]
+    fn load_from_maps_finds_what_load_from_file_finds() {
+        let dir = get_test_base_path().join("tests/allPartsV7");
+        let on_disk = SsProject::load_from_file(&dir.join("allPartsV7.sspj")).unwrap();
+
+        let read = |name: &str| std::fs::read_to_string(dir.join(name)).unwrap();
+        let mut maps = HashMap::new();
+        for name in &on_disk.animepack_names {
+            maps.insert(format!("anime/{name}"), read(name));
+        }
+        for name in &on_disk.cellmap_names {
+            maps.insert(format!("cells/{name}"), read(name));
+        }
+        for name in &on_disk.effect_file_names {
+            maps.insert(format!("effects/{name}"), read(name));
+        }
+        for name in on_disk.audiopack_names.iter().chain(&on_disk.charmap_names) {
+            maps.insert(name.clone(), read(name));
+        }
+        let sspj = read("allPartsV7.sspj")
+            .replace("<animeBaseDirectory></animeBaseDirectory>", "<animeBaseDirectory>anime</animeBaseDirectory>")
+            .replace("<cellMapBaseDirectory></cellMapBaseDirectory>", "<cellMapBaseDirectory>./cells/</cellMapBaseDirectory>")
+            .replace("<effectBaseDirectory></effectBaseDirectory>", "<effectBaseDirectory>effects</effectBaseDirectory>")
+            .replace("<value>soundlist.ssse</value>", "<value>./soundlist.ssse</value>");
+        maps.insert("allPartsV7.sspj".to_string(), sspj);
+
+        let from_maps = SsProject::load_from_maps("allPartsV7.sspj", &maps).unwrap();
+
+        assert_eq!(from_maps.settings.anime_base_directory, "anime");
+        assert!(from_maps.anime_list == on_disk.anime_list);
+        assert!(from_maps.cellmap_list == on_disk.cellmap_list);
+        assert!(from_maps.effect_file_list == on_disk.effect_file_list);
+        assert!(from_maps.sound_list == on_disk.sound_list);
+        assert!(from_maps.charmap_dic == on_disk.charmap_dic);
     }
 
     #[test]

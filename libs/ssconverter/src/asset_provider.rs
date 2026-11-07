@@ -86,7 +86,7 @@ impl MemoryAssetProvider {
         let mut sspj_map = HashMap::new();
         let mut binary_map = HashMap::new();
         for (path, data) in files {
-            let rel = crate::utils::normalize_asset_path(&Path::new(&path).strip_prefix(&sspj_dir).map_err(|_| crate::ConverterError::ConversionFailed(format!("Failed to strip prefix '{}' from '{}'", sspj_dir, path)))?.to_string_lossy());
+            let rel = sspj::asset_path::normalize_asset_path(&Path::new(&path).strip_prefix(&sspj_dir).map_err(|_| crate::ConverterError::ConversionFailed(format!("Failed to strip prefix '{}' from '{}'", sspj_dir, path)))?.to_string_lossy());
             if path.ends_with(".sspj") || path.ends_with(".ssae") || path.ends_with(".ssce") || path.ends_with(".ssee") || path.ends_with(".ssqe") || path.ends_with(".ssse") || path.ends_with(".fnt") {
                 let text = String::from_utf8(data).map_err(|e| crate::ConverterError::ConversionFailed(format!("Non-UTF8 text asset '{}': {}", path, e)))?;
                 sspj_map.insert(rel, text);
@@ -102,11 +102,11 @@ impl MemoryAssetProvider {
 #[cfg(feature = "web")]
 impl AssetProvider for MemoryAssetProvider {
     fn validate_asset(&self, path: &str) -> Result<(), crate::ConverterError> {
-        let key = crate::utils::normalize_asset_path(path);
+        let key = sspj::asset_path::normalize_asset_path(path);
         if self.sspj_map.contains_key(&key) || self.binary_map.contains_key(&key) { Ok(()) } else { Err(crate::ConverterError::ConversionFailed(format!("Asset not found: {}", path))) }
     }
     fn read_asset(&self, path: &str) -> Result<Vec<u8>, std::io::Error> {
-        let key = crate::utils::normalize_asset_path(path);
+        let key = sspj::asset_path::normalize_asset_path(path);
         if let Some(s) = self.sspj_map.get(&key) {
             return Ok(s.as_bytes().to_vec());
         }
