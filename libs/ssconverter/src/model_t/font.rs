@@ -149,7 +149,8 @@ mod tests {
         assert_eq!(offset.v2, 29.0);
     }
 
-    /// U+20BB7 used to be truncated to U+0BB7, a glyph for a Tamil letter.
+    /// A glyph above U+FFFF has no 16-bit id, so it is an error rather than a truncation
+    /// (U+20BB7 to U+0BB7, a Tamil letter).
     #[test]
     fn a_glyph_above_u_ffff_is_an_error() {
         let mut mock_charmap = SsCharMap::default();
@@ -164,7 +165,7 @@ mod tests {
         assert!(message.contains("mock.fnt") && message.contains("U+20BB7"), "{message}");
     }
 
-    /// BMFont's invalid-char glyph used to be truncated to U+FFFF.
+    /// BMFont's invalid-char glyph has no 16-bit id either.
     #[test]
     fn the_invalid_char_glyph_is_left_out() {
         let mut mock_charmap = SsCharMap::default();

@@ -320,7 +320,7 @@ pub fn rate_ease_elastic_inout<T: SsFloat>(rate: T, power_easing: T) -> T {
         let s = power_easing_modify * T::from_f32(0.25);
         rate_mul_2 -= one;
         if rate_mul_2 < zero {
-            T::from_f32(-0.5) * T::from_f32(2.0).powf(T::from_f32(10.0) * rate_mul_2) * ((rate - s) * (T::pi() * T::from_f32(2.0)) / power_easing_modify).sin()
+            T::from_f32(-0.5) * T::from_f32(2.0).powf(T::from_f32(10.0) * rate_mul_2) * ((rate_mul_2 - s) * (T::pi() * T::from_f32(2.0)) / power_easing_modify).sin()
         } else {
             T::from_f32(2.0).powf(T::from_f32(-10.0) * rate_mul_2) * ((rate_mul_2 - s) * (T::pi() * T::from_f32(2.0)) / power_easing_modify).sin() * T::from_f32(0.5) + one
         }
@@ -474,14 +474,21 @@ mod tests {
         assert_near(rate_ease_elastic_inout(0.0, 2.0), 0.0);
         assert_near(rate_ease_elastic_inout(1.0, 2.0), 1.0);
 
-        // Regression: a keyframe authored without an easing rate yields
-        // power_easing == 0. The in/out variants used to divide by it and
-        // return NaN; all three must stay finite (the inout branch already
-        // guarded this, the in/out twins did not).
+        // A keyframe authored without an easing rate yields power_easing == 0, and
+        // all three must stay finite.
         for &rate in &[0.1_f32, 0.25, 0.5, 0.75, 0.9] {
             assert!(rate_ease_elastic_in(rate, 0.0).is_finite(), "elastic_in NaN at rate {rate}");
             assert!(rate_ease_elastic_out(rate, 0.0).is_finite(), "elastic_out NaN at rate {rate}");
             assert!(rate_ease_elastic_inout(rate, 0.0).is_finite(), "elastic_inout NaN at rate {rate}");
+        }
+    }
+
+    /// Both halves of the in/out curve meet at the midpoint, for any period.
+    #[test]
+    fn test_elastic_inout_meets_at_the_midpoint() {
+        for &power in &[0.0_f32, 0.45, 1.0, 2.0] {
+            assert_near(rate_ease_elastic_inout(0.4999, power), 0.5);
+            assert_near(rate_ease_elastic_inout(0.5001, power), 0.5);
         }
     }
 

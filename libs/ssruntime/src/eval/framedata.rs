@@ -356,8 +356,8 @@ pub struct CachedPartData {
     pub mesh_binding: Option<alloc::sync::Arc<MeshBindingCache>>,
     pub mesh_cell: Option<alloc::sync::Arc<MeshCellData>>,
 
-    // バッチキー用の静的メタデータ (setup 時に SSAB PartData から1回だけ読む)。
-    // フレームごとの DrawBatch 計算で参照される。
+    // Batch-key metadata: read once from the SSAB `PartData` at setup, used by the
+    // per-frame `DrawBatch` pass.
     pub blend_type: ssab::ssab::ss::format::BlendType,
     pub part_type_disc: ssab::ssab::ss::format::PartType,
     pub mask_influence: bool,

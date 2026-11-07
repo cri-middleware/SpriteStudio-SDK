@@ -32,9 +32,7 @@ fn build_mix_layer(parts: &[MixLayerPart]) -> LayerState<'static> {
     layer
 }
 
-/// Resolve one `Mix` track at full alpha, with the primary's own pose as the
-/// floor — the shape every pre-track test was written against, so those tests
-/// keep asserting exactly what they did before the stack existed.
+/// Resolve one `Mix` track at full alpha, with the primary's own pose as the floor.
 fn mix_single_track<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx: usize, resolved_layer: &mut LayerState<'b>) {
     mix_tracks(sources, layers, &[TrackState::new()], primary_idx, &[], resolved_layer);
 }

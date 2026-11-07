@@ -264,9 +264,7 @@ impl<'de> Deserialize<'de> for SsCurve {
                                 return Err(serde::de::Error::custom(format!("Expected 4 space-separated numbers, but got '{}'", value)));
                             }
                         }
-                        _ => {
-                            // ignore
-                        }
+                        _ => {}
                     }
                 }
 

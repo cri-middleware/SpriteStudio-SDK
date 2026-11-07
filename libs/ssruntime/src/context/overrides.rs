@@ -20,7 +20,7 @@ impl<'a> Context<'a> {
         resource.animations[anim_idx as usize].cached_parts().iter().position(|p| p.name_hash == hash).map(|i| i as i32).unwrap_or(-1)
     }
 
-    /// The integer frame the primary playhead is on right now — baked into a NON
+    /// The integer frame the primary playhead is on right now — baked into an OverwriteOnNextKeyframe
     /// override at set time so its own set-frame keyframe can be skipped through
     /// the update of its first evaluation (see `PriorityMode::OverwriteOnNextKeyframe`).
     fn override_set_frame(&self) -> i32 {
@@ -87,7 +87,8 @@ impl<'a> Context<'a> {
 
     /// Set a per-part color override with a single RGBA (fills all four corners).
     /// `blend_op`: `0=Mix 1=Mul 2=Add 3=Sub`. `rgba`: packed `0xRRGGBBAA`.
-    /// `priority`: `0=NON 1=NOW_ANIMATION 2=PERMANENT`. Normal parts only.
+    /// `priority`: `0=OverwriteOnNextKeyframe 1=HoldUntilNextAnimation 2=Permanent`.
+    /// Normal parts only.
     pub fn set_part_color_override(&mut self, part: u32, blend_op: u8, rgba: u32, priority: u8) -> Result<(), error::SSRuntimeError> {
         let corner = rgba.to_be_bytes(); // 0xRRGGBBAA -> [r, g, b, a]
         self.set_part_color_override_corners(part, blend_op, [corner; 4], priority)
@@ -102,7 +103,7 @@ impl<'a> Context<'a> {
         let Some(priority) = crate::eval::override_layer::PriorityMode::from_u8(priority) else {
             return Err(error::SSRuntimeError::InvalidParameter);
         };
-        // Anchor the NON one-shot to "from the moment of override": remember the
+        // Anchor the OverwriteOnNextKeyframe one-shot to "from the moment of override": remember the
         // set frame (its own keyframe is skipped through the update of the first
         // evaluation).
         let set_frame = self.override_set_frame();
@@ -118,8 +119,8 @@ impl<'a> Context<'a> {
 
     /// Set a per-part cell override, identified by `(cellmap_name_hash,
     /// cell_name_hash)` (FNV-1a of the cellmap name without `.ssce` and the cell
-    /// name). `(0, 0)` reverts to the animation. `priority`: `0=NON 1=NOW 2=
-    /// PERMANENT`. Normal + Mask parts only. The cell is resolved against the
+    /// name). `(0, 0)` reverts to the animation. `priority`:
+    /// `0=OverwriteOnNextKeyframe 1=HoldUntilNextAnimation 2=Permanent`. Normal + Mask parts only. The cell is resolved against the
     /// bound SSAB now and cached; errors if it cannot be resolved.
     pub fn set_part_cell_override(&mut self, part: u32, cellmap_name_hash: u32, cell_name_hash: u32, priority: u8) -> Result<(), error::SSRuntimeError> {
         if cellmap_name_hash == 0 && cell_name_hash == 0 {

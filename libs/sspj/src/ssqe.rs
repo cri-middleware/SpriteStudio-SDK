@@ -73,15 +73,7 @@ mod tests {
     use std::path::{Path, PathBuf};
 
     fn load_ssqe(path: &Path) {
-        let r = SsSequencePack::load_from_file(path);
-        match r {
-            Ok(ss_sequence_pack) => {
-                println!("{:?}", ss_sequence_pack);
-            }
-            Err(e) => {
-                panic!("{:?}", e);
-            }
-        }
+        SsSequencePack::load_from_file(path).unwrap();
     }
 
     fn get_test_base_path() -> PathBuf {
@@ -89,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_ssce() {
+    fn parse_ssqe() {
         ["tests/overall/sequence.ssqe"].par_iter().for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_ssqe(p.as_path());

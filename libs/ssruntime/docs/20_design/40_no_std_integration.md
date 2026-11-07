@@ -82,7 +82,7 @@ cargo rustc -p ssruntime-ffi --release --features "custom_alloc,panic-handler" -
 
 ### 4-2. Defining the functions
 
-In the C / C++ project you link against, define the following three `extern "C"` functions (`ssruntime.h` declares `ss_custom_alloc` and `ss_custom_free` with these types, so the same file can include it). C runtime functions such as `memcpy` / `memset` / `memmove` / `memcmp` / `strlen` are also needed at the final link, but the engine's CRT usually provides them (on bare metal, supply them separately).
+In the C / C++ project you link against, define the following three `extern "C"` functions. C runtime functions such as `memcpy` / `memset` / `memmove` / `memcmp` / `strlen` are also needed at the final link, but the engine's CRT usually provides them (on bare metal, supply them separately).
 
 ```cpp
 #include <stddef.h>
@@ -149,7 +149,7 @@ void ss_custom_abort() {
 Define these three and link `libssruntime.a` (or `.lib`), and every memory allocation in the Brain goes through the engine's allocator.
 
 > [!NOTE]
-> `ss_custom_abort` is called only when a panic occurs in the Brain. If `ss_custom_alloc` returns `NULL` (allocation failure), Rust's allocation-error handling aborts immediately without going through `ss_custom_abort`. If you want your own handling of allocation failure, do it inside `ss_custom_alloc`.
+> `ss_custom_abort` is called when a panic occurs in the Brain, and an allocation failure is one: when `ss_custom_alloc` returns `NULL`, the Brain panics and reaches `ss_custom_abort`. If you want your own handling of allocation failure, do it inside `ss_custom_alloc`.
 
 ---
 

@@ -2,8 +2,8 @@
 
 use crate::Context;
 
-/// High-level instance-child slot: tracks the per-slot transition state
-/// previously kept in each Player's instance-children table. `step()` resolves
+/// High-level instance-child slot: tracks the per-slot transition state.
+/// `step()` resolves
 /// labels against the *child* runtime context, configures the child's
 /// playback (animation section, loop, direction), and advances the child's
 /// frame — leaving only the C++/host-side `play()` event sink and the

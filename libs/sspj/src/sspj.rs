@@ -46,8 +46,6 @@ pub struct SsProject {
     pub animepack_names: Vec<String>,
     #[serde(deserialize_with = "parse_name_list", default)]
     pub effect_file_names: Vec<String>,
-    //#[serde(deserialize_with = "parse_name_list", default)]
-    //texture_list: Vec<String>,
     #[serde(deserialize_with = "parse_name_list", default)]
     pub sequencepack_names: Vec<String>,
 
@@ -202,15 +200,7 @@ mod tests {
     use std::path::{Path, PathBuf};
 
     fn load_sspj(path: &Path) {
-        let r = SsProject::load_from_file(path);
-        match r {
-            Ok(sspj) => {
-                println!("{:?}", sspj);
-            }
-            Err(e) => {
-                panic!("{:?}", e);
-            }
-        }
+        SsProject::load_from_file(path).unwrap();
     }
 
     fn get_test_base_path() -> PathBuf {

@@ -118,7 +118,6 @@ mod tests {
         assert!(result.is_ok(), "SsProject should parse with minimal fields. Error: {:?}", result.err());
         let sspj = result.unwrap();
         assert_eq!(sspj.name, "test_project");
-        // Check if defaults are working
         assert_eq!(sspj.settings.anime_base_directory, "");
     }
 }

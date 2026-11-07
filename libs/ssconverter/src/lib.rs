@@ -54,15 +54,14 @@
 //! `#[no_mangle] extern "C"` symbols into your binary, and those collide if the same
 //! binary also links a prebuilt `libssconverter`.
 //!
-//! `parallel` spans two crates: the web entry path is itself parallel inside [`sspj`],
-//! so the feature gates rayon in both, with a sequential fallback in each crate's
-//! `parallel` module.
+//! `parallel` also switches [`sspj`] to parallel parsing, so it gates rayon in both
+//! crates, with a sequential fallback in each.
 //!
 //! # Versioning
 //!
 //! [`version_string`] reports this converter's version, while [`ssab_schema_version`]
 //! and [`ssqb_schema_version`] report the *format* versions of the binaries it emits.
-//! A Player checks the latter to decide whether it can read a given asset.
+//! `ssruntime` refuses a pack whose format version differs from its own.
 //!
 //! # Further reading
 //!

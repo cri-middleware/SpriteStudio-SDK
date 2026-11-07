@@ -48,7 +48,7 @@ if (step.visible) {
 
 | 引数 | 値 |
 | :--- | :--- |
-| `y_flip` | Y-Down のエンジン（Godot の 2D、PixiJS など）は `true`、Y-Up のエンジン（Unity など）は `false`。SpriteStudio は Y-Up で作られているので、`true` ではパーティクルの Y 座標と回転の向きを反転して返す |
+| `y_flip` | Y-Down のエンジン（Godot の 2D、PixiJS など）は `true`、Y-Up のエンジン（Unity など）は `false`。SpriteStudio は Y-Up で作られているので、`true` ではパーティクルの Y 座標、回転の向き、矩形を反転して返す |
 | `vert_stride` | 1 頂点あたりの float の数。2D のエンジンは `2`（XY）、3 成分の頂点を求めるエンジン（Unity の Mesh、Unreal の FProcMeshVertex など）は `3`（XYZ、z = 0） |
 | `draw` | このフレームの `draw_order` にパーツがあるか、つまり描くかどうか。`false` ではエフェクトの時計と遷移だけを進め、パーティクルは作らず、見えないとして返す。次に `true` で `step` したときは、毎回描いていた場合と同じ plan が返る。判定にはこのフレームの `ss_runtime_get_frame_data` が先に要るので、それより前に `step` する Player は `true` を渡す |
 

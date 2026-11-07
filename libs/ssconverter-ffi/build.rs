@@ -23,7 +23,7 @@ fn main() {
     // The `ffi` module doc is written for C readers, so it opens the header.
     let c_output_file = PathBuf::from(&crate_dir).join("target").join("ssconverter.h");
     let preamble = module_doc(&core_dir.join("src").join("ffi").join("mod.rs"));
-    match cbindgen::Builder::new().with_crate(&core_dir).with_language(cbindgen::Language::C).with_cpp_compat(true).with_header(preamble).with_include_guard("SSCONVERTER_H").generate() {
+    match cbindgen::Builder::new().with_crate(&core_dir).with_language(cbindgen::Language::C).with_cpp_compat(true).with_header(preamble).with_include_guard("SSCONVERTER_H").exclude_item("ASSET_PATH_SEPARATOR").generate() {
         Ok(bindings) => {
             bindings.write_to_file(&c_output_file);
         }

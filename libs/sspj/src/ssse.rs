@@ -54,15 +54,7 @@ mod tests {
     use std::path::{Path, PathBuf};
 
     fn load_ssse(path: &Path) {
-        let r = SsAudioPack::load_from_file(path);
-        match r {
-            Ok(ss_cell_map) => {
-                println!("{:?}", ss_cell_map);
-            }
-            Err(e) => {
-                panic!("{:?}", e);
-            }
-        }
+        SsAudioPack::load_from_file(path).unwrap();
     }
 
     fn get_test_base_path() -> PathBuf {

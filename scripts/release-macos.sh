@@ -55,8 +55,8 @@ done
 # flat framework layout). Ren'Py dlopens this framework by path (ctypes); Flutter /
 # CocoaPods link it via vendored_frameworks. Unity consumes the separate
 # ssruntime.bundle built below (macOS's native-plugin format). The bare
-# libssruntime.dylib is now just an internal intermediate — the shared Mach-O the
-# framework and bundle are copied from — and is no longer shipped.
+# libssruntime.dylib is an internal intermediate, the shared Mach-O the framework
+# and bundle are copied from, and is not shipped.
 #
 # The packaging lives in scripts/make-macos-framework.sh (single source of truth)
 # so SSPlayerForFlutter's build-runtime.sh reuses the exact same layout on its fast

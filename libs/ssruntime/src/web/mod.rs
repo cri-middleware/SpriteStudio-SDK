@@ -1,20 +1,20 @@
 //! Wasm bindings for ssruntime.
 //!
 //! This module mirrors the C FFI surface in `src/ffi/mod.rs` 1:1 for JS/TS
-//! Players. The FFI side is authoritative — when adding or modifying public
-//! API, update `src/ffi/mod.rs` first and reflect the change here. A fallible
-//! one reports through `js_error` — never by formatting the error itself, which
-//! is how twenty-eight call sites came to hand JS the Rust variant name. POD return
-//! types (`ss_event_instance_info`, `ss_effect_event_info`) are exposed as
+//! Players. POD return types (`ss_event_instance_info`, `ss_effect_event_info`)
+//! are exposed as
 //! wasm-bindgen wrapper classes (`WebEventInstanceInfo`,
 //! `WebEffectEventInfo`) because wasm-bindgen cannot expose `#[repr(C)]`
 //! structs by value.
 //!
-//! Not yet exposed (deferred):
+//! Not exposed:
 //!
 //! - `ss_runtime_set_log_callback`, which requires bridging a JS `Function`
-//!   and a `js-sys` dependency, held off until the JS/TS Player needs it.
+//!   and a `js-sys` dependency.
 //! - `ss_runtime_ssab_schema_version`.
+
+// The FFI side is authoritative: update `src/ffi/mod.rs` first and reflect the
+// change here. A fallible call reports through `js_error`.
 
 use crate::owning::{OwningContext, OwningEffectSlot};
 use crate::{SsabData, SsabResource};
@@ -257,15 +257,10 @@ impl From<WebEffectEventInfo> for crate::types::ss_effect_event_info {
 /// How every fallible call here reports: the Brain's own wording, as the string
 /// of a JS exception.
 ///
-/// `Display`, not `Debug`. `Debug` prints the Rust variant name — a JS caller
-/// was being handed `AnimationNotFound`, which is an identifier from a language
-/// they are not writing, and it reaches their user through whatever the Player
-/// puts in front of them. `Display` also carries what a variant knows:
-/// `InvalidVersion` names the version expected and the one that arrived, which
-/// is the whole of what a stale pack needs someone to be told.
-///
-/// One function rather than a closure per call site, because there were
-/// twenty-eight of them and they have to agree.
+/// `Display`, not `Debug`: `Debug` prints the Rust variant name, an identifier from
+/// a language a JS caller is not writing, and it reaches their user through
+/// whatever the Player puts in front of them. `Display` also carries what a variant
+/// knows: `InvalidVersion` names the version expected and the one that arrived.
 fn js_error(e: crate::error::SSRuntimeError) -> JsValue {
     JsValue::from_str(&alloc::format!("{}", e))
 }
@@ -951,7 +946,8 @@ impl SSRuntimeContext {
     }
 
     /// Mirror of `ss_runtime_set_part_visibility_override`.
-    /// `force`: 0=clear/revert, 1=force-hide, 2=force-visible (reserved).
+    /// `force`: 0=clear/revert, 1=force-hide. Anything else, 2 (reserved for
+    /// force-visible) included, is rejected.
     pub fn set_part_visibility_override(&mut self, part: u32, force: u8, cascade: bool) -> Result<(), JsValue> {
         self.inner.set_part_visibility_override(part, force, cascade).map_err(js_error)
     }
@@ -1024,7 +1020,8 @@ impl SSRuntimeEffectSlot {
     /// `SSRuntimeContext::get_active_effect_event` (or built manually via
     /// `WebEffectEventInfo`).
     ///
-    /// `y_flip = true` for Y-down rendering (pixi.js); `vert_stride = 2` packs
+    /// `y_flip = true` for Y-down rendering (pixi.js), mirroring each particle's Y
+    /// position, rotation sign and quad; `vert_stride = 2` packs
     /// (x,y) verts, `3` packs (x,y,0) for engines requiring 3-component verts.
     /// `draw` is whether the part is in this frame's `draw_order`: a hidden
     /// part steps with `false`, which moves its clock and builds no plan. Pass

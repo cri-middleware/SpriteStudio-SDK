@@ -79,7 +79,6 @@ pub struct SsPart {
     pub ik_depth: i32,
     #[serde(rename = "IKRotationArrow", default)]
     pub ik_rotation_arrow: SsIkRotationArrow,
-    // m_pPartValueInfo // TODO:
     #[serde(default)]
     pub shape_type: SsShapeType,
     #[serde(default)]
@@ -208,7 +207,7 @@ impl FromStr for SsMeshBindInfo {
         // Chunk layout: one header field followed by influence groups of 4
         // values each (bone, weight, offset_x, offset_y). The header is the
         // per-vertex influence count in SpriteStudio exports, but the part's total bone
-        // count in older (pre-V7) exports — where each vertex still lists only
+        // count in older exports — where each vertex still lists only
         // the bones that actually influence it. So the header can't be trusted
         // as the influence count; derive the count from the data length.
         if !(array.len() - 1).is_multiple_of(4) {
@@ -396,15 +395,7 @@ mod tests {
     use std::path::{Path, PathBuf};
 
     fn load_ssae(path: &Path) {
-        let r = SsAnimePack::load_from_file(path);
-        match r {
-            Ok(ss_anime_pack) => {
-                println!("{:?}", ss_anime_pack);
-            }
-            Err(e) => {
-                panic!("{:?}", e)
-            }
-        }
+        SsAnimePack::load_from_file(path).unwrap();
     }
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()

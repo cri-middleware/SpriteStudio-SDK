@@ -276,8 +276,7 @@ impl SsMatrix4x4 {
         // Skew. SpriteStudio's Skew is a per-part Vertex-deform mode that does
         // NOT inherit, so by default it is applied to local vertices instead of
         // here (see crate::eval::SKEW_PROPAGATES and geometry::skew_local_tans).
-        // This branch is the propagate path, kept ready for a future
-        // SpriteStudio that makes Skew inherit; it is gated off today.
+        // This branch is the propagate path, gated off by `SKEW_PROPAGATES`.
         let skew_x = state.skew_x() * core::f32::consts::PI / 180.0;
         let skew_y = state.skew_y() * core::f32::consts::PI / 180.0;
         if crate::eval::SKEW_PROPAGATES && (skew_x != 0.0 || skew_y != 0.0) {

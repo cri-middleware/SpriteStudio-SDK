@@ -48,7 +48,7 @@ if (step.visible) {
 
 | Argument | Value |
 | :--- | :--- |
-| `y_flip` | `true` for Y-down engines (Godot's 2D, PixiJS and so on), `false` for Y-up engines (Unity and so on). SpriteStudio is authored in Y-up, so with `true` the particles' Y coordinates and rotation direction are returned flipped |
+| `y_flip` | `true` for Y-down engines (Godot's 2D, PixiJS and so on), `false` for Y-up engines (Unity and so on). SpriteStudio is authored in Y-up, so with `true` the particles' Y coordinates, rotation direction and quads are returned flipped |
 | `vert_stride` | The number of floats per vertex. `2` (XY) for 2D engines; `3` (XYZ, z = 0) for engines that require three-component vertices (Unity's Mesh, Unreal's FProcMeshVertex and so on) |
 | `draw` | Whether the part is in this frame's `draw_order`, that is whether you draw it. With `false` the step moves only the effect's clock and transitions, builds no particles and returns not visible; the next step with `true` returns the same plan it would have had every step drawn. Knowing it needs this frame's `ss_runtime_get_frame_data` first, so a Player that steps before that passes `true` |
 

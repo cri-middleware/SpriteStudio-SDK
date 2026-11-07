@@ -24,7 +24,6 @@ fn convert_events_per_frames_part(
 ) {
     for part_anime in &anime_data.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
-            // not found part (an illegal case)
             continue;
         };
 
@@ -166,7 +165,6 @@ fn convert_events_per_frames_part(
                         instance_t.end_offset = key.value.end_offset;
                         instance_t.speed = key.value.speed;
 
-                        // for target frame.
                         let mut i_args = ssab::ssab::ss::format::EventInstanceT::default();
                         i_args.part_index = part_index;
                         i_args.value = Box::new(instance_t);
@@ -197,7 +195,6 @@ fn convert_events_per_frames_part(
                         effect_t.speed = key.value.speed;
                         effect_t.independent = key.value.independent;
 
-                        // for target frame.
                         let mut e_args = ssab::ssab::ss::format::EventEffectT::default();
                         e_args.part_index = part_index;
                         e_args.value = Box::new(effect_t);
@@ -244,9 +241,7 @@ fn convert_events_per_frames_part(
                         }
                     });
                 }
-                _ => {
-                    // skip
-                }
+                _ => {}
             }
         });
     }
@@ -423,7 +418,6 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             }
             sspj::ssattribute::SsAttributeKind::Prio(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
-                    // TODO: when Z-sorting, priority should be based on spatially transformed Z-values.
                     p_args.priority = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePrio;
                 }
@@ -453,7 +447,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePartColor;
                 }
             }
-            sspj::ssattribute::SsAttributeKind::Color => { /* MEMO: Not Supported (Feature prior to Ver.6.0) */ }
+            sspj::ssattribute::SsAttributeKind::Color => { /* VCOL is a pre-SS6 attribute and is not converted. */ }
             sspj::ssattribute::SsAttributeKind::Shader(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeShaderT::default();
@@ -481,7 +475,6 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             sspj::ssattribute::SsAttributeKind::Vertex(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     if _key.value.use_skew.unwrap_or(false) {
-                        // Skew
                         match &_key.value.skew {
                             None => {
                                 p_args.skew_x = 0.0_f32;
@@ -496,7 +489,6 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
 
                         p_args.vertex = None; // Mutually exclusive with "Vertex"
                     } else {
-                        // Vertex
                         let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
                         let mut coordinate = ssab::ssab::ss::format::Vec2T::default();
 
@@ -642,9 +634,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeTexture;
                 }
             }
-            _ => {
-                // Empty.
-            }
+            _ => {}
         }
     });
 }
@@ -755,7 +745,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
                     value.pingpong = _key.value.pingpong;
                     value.independent = _key.value.independent;
                     value.reverse = _key.value.reverse;
-                    // Collapse SS6's `infinity` flag into SS7's loop_num=-1.
+                    // Collapse SS6's `infinity` flag into the `.ssab`'s `loop_num = -1`.
                     // See SsAttributeKind::Instance handling above for details.
                     value.loop_num = if _key.value.infinity { -1 } else { _key.value.loop_num };
                     value.start_label_hash = crate::utils::fnv1a_hash_str(&_key.value.start_label);
@@ -791,9 +781,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
                     flag_exist_event = true;
                 }
             }
-            _ => {
-                // Empty.
-            }
+            _ => {}
         }
     });
 
@@ -812,7 +800,6 @@ fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, parts_
 
     for part_anime in &anime_data.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
-            // not found part (an illegal case)
             continue;
         };
 
@@ -890,7 +877,6 @@ fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map:
 
     for part_anime in &anime_data.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
-            // not found part (an illegal case)
             continue;
         };
 
@@ -1223,7 +1209,6 @@ fn optimize_part_animation_data_value_changing_range(interpolation: &ssab::ssab:
     }
 }
 
-#[cfg(false)]
 macro_rules! impl_optimize_interpolatable_attribute {
     ($fn_name:ident, $type_t:ty) => {
         fn $fn_name(attribute: &[$type_t]) -> Option<Vec<$type_t>> {
@@ -1231,44 +1216,7 @@ macro_rules! impl_optimize_interpolatable_attribute {
                 return None;
             }
             let mut optimized = Vec::with_capacity(attribute.len());
-
-            for i in 0..attribute.len() {
-                let current = &attribute[i];
-                let is_first = i == 0;
-                let is_last = i == attribute.len() - 1;
-
-                if is_first || is_last {
-                    let mut key = current.clone();
-                    if is_last {
-                        key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                    }
-                    optimized.push(key);
-                    continue;
-                }
-
-                let prev = &attribute[i - 1];
-                let next = &attribute[i + 1];
-
-                // 冗長なキーの判定: 前後と同じ値で、補間も発生しない場合
-                // MEMO: 値の変化がない区間でも、補間タイプによっては曲線を描く可能性があるため interpolation もチェックする
-                let is_redundant = current.value == prev.value && current.value == next.value && !optimize_part_animation_data_value_changing_range(&prev.interpolation) && !optimize_part_animation_data_value_changing_range(&current.interpolation);
-
-                if !is_redundant {
-                    optimized.push(current.clone());
-                }
-            }
-            if optimized.is_empty() { None } else { Some(optimized) }
-        }
-    };
-}
-macro_rules! impl_optimize_interpolatable_attribute {
-    ($fn_name:ident, $type_t:ty) => {
-        fn $fn_name(attribute: &[$type_t]) -> Option<Vec<$type_t>> {
-            if attribute.is_empty() {
-                return None;
-            }
-            let mut optimized = Vec::with_capacity(attribute.len());
-            optimized.push(attribute[0].clone()); // First key always exist.
+            optimized.push(attribute[0].clone());
 
             for i in 1..attribute.len() {
                 let current = &attribute[i];
@@ -1339,7 +1287,6 @@ impl_optimize_interpolatable_attribute!(optimize_part_animation_data_deform, sup
 impl_optimize_simple_attribute!(optimize_part_animation_data_texture, super::keyframes::TextureKey);
 
 fn modify_part_animation_data(p_args: &mut super::keyframes::PartKeys, _part_type: &sspj::sstypes::SsPartType, _anime_data: &sspj::ssae::SsPartAnime) {
-    // Key-data optimization per attribute
     p_args.cell_array = p_args.cell_array.as_ref().and_then(|v| optimize_part_animation_data_cell(v));
     p_args.position_x_array = p_args.position_x_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
     p_args.position_y_array = p_args.position_y_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
@@ -1386,7 +1333,6 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
 
     for part_anime in &setup_animation.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
-            // not found part (an illegal case)
             continue;
         };
 
@@ -1396,7 +1342,6 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
 
     for part_anime in &anime_data.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
-            // not found part (an illegal case)
             continue;
         };
 
@@ -1558,7 +1503,8 @@ fn float_value_constant_key(value: f32) -> super::keyframes::FloatKey {
 
 // PartColor mediation. The XML carries (rgba, rate) per corner plus a per-attribute
 // (blend_type, target). Older SpriteStudio runtimes encoded the same compatibility
-// quirk that lives here: under Mix+Whole, `rate` and `rgba.a` swap roles. The same
+// quirk that lives here: under Mix, `rate` and `rgba.a` differ in role between Whole
+// and Vertex. The same
 // pair carries two unrelated semantics (a "blend weight" and a "final-alpha source"),
 // and which XML field carries which depends on (blend_type, target).
 //
@@ -1571,11 +1517,10 @@ fn float_value_constant_key(value: f32) -> super::keyframes::FloatKey {
 // the per-attribute is expanded into four corner entries; downstream code never
 // sees it again.
 //
-// Reference: SS6PlayerForUnity/Assets/SpriteStudio6/Editor/Import/SSAE.cs
-//   `ParseAnimationAttributePartsColor` (the C# converter applies the same table).
-//   The C++ SDK applies an equivalent split at draw time in
-//   Common/Drawer/ssplayer_render_gl.cpp, using a fixed-function texture combiner
-//   constant instead of vertex data; we follow the shader-friendly Unity encoding.
+// SS6PlayerForUnity's `ParseAnimationAttributePartsColor` applies the same table. The
+// C++ SDK applies an equivalent split at draw time, using a fixed-function texture
+// combiner constant instead of vertex data; this follows the shader-friendly Unity
+// encoding.
 fn build_part_color_key_value_color_t(
     src: &sspj::ssattribute::SsAttributePartsColorKeyValueColor,
     blend_type: &sspj::sstypes::SsBlendType,
@@ -1832,7 +1777,6 @@ pub fn convert_animation_data_list(
 ) -> Result<(Vec<ssab::ssab::ss::format::AnimationDataT>, ssab::ssab::ss::format::KeyframesT), crate::ConverterError> {
     let mut keyframes = super::keyframes::KeyframesBuilder::new(&anime_pack.name);
     let Some(setup_animation) = anime_pack.anime_list.iter().find(|anime_data| anime_data.is_setup) else {
-        // not found setup animation
         return Ok((vec![], keyframes.finish()));
     };
 
@@ -1847,8 +1791,8 @@ pub fn convert_animation_data_list(
 /// outside it means the sspj is malformed. Every lookup happens inside a
 /// `for_each` closure several calls down, which has no way to return an error,
 /// so the first offending id is recorded here and [`Self::check`] reads it once
-/// the walk is over. Without that the index panicked, and `panic = "abort"`
-/// turned a malformed pack into a dead host process.
+/// the walk is over. An index would panic, and `panic = "abort"` would turn a
+/// malformed pack into a dead host process.
 pub struct CellmapResolver<'a> {
     names: &'a [String],
     out_of_range: core::cell::Cell<Option<i32>>,
@@ -1860,7 +1804,7 @@ impl<'a> CellmapResolver<'a> {
     }
 
     /// Negative `map_id` is the documented "no map" convention in sspj (e.g. an
-    /// unset shader map slot) and resolves to `0`, same as before.
+    /// unset shader map slot) and resolves to `0`.
     fn name_hash(&self, map_id: i32) -> u32 {
         if map_id < 0 {
             return 0;

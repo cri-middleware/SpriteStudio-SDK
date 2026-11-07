@@ -43,8 +43,8 @@ The Brain outputs the parts in draw order (`draw_order`), and a list of DrawBatc
 
 ```cpp
 // 1. Have the Brain compute FrameData
-const uint8_t* fd_ptr = nullptr; uintptr_t fd_len = 0;   // left as is on failure (Playback Control §6-1)
-ss_runtime_get_frame_data(ctx, frame_no, &fd_ptr, &fd_len);
+const uint8_t* fd_ptr = nullptr; uintptr_t fd_len = 0;
+if (!ss_runtime_get_frame_data(ctx, frame_no, &fd_ptr, &fd_len)) return;   // Playback Control §6-1
 auto frame_data = ss::runtime::GetFrameData(fd_ptr);
 
 // 2. Receive the SoA buffers

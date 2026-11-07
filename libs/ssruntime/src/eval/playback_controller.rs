@@ -172,10 +172,8 @@ impl PlaybackController {
     /// loop count this is raised once per cycle, not only on the last one, and
     /// with an infinite loop count it is never raised.
     ///
-    /// Internal playback state, deliberately not part of the Player-facing
-    /// surface — it is absent from the C-API and the WASM bindings because
-    /// every past attempt to build a `finished` notification on it produced a
-    /// bug. Use [`is_finished`] for that.
+    /// Internal playback state, absent from the C-API and the WASM bindings. A
+    /// `finished` notification reads [`is_finished`].
     ///
     /// [`is_finished`]: Self::is_finished
     pub fn is_end_frame_reached(&self) -> bool {
@@ -280,9 +278,6 @@ impl Default for PlaybackController {
 impl PlaybackController {
     pub fn new() -> Self {
         Self {
-            // Not paused and not playing are different things: a controller
-            // that has never played must not report itself as held, or every
-            // Player's `is_pausing` inherits a meaningless `true`.
             is_pausing: false,
             is_playing: false,
 
@@ -359,8 +354,7 @@ impl PlaybackController {
     /// effect, a haste buff, a "show every frame" capture mode. Resetting those
     /// here would let an animation transition clobber a setting the state
     /// machine never knew about. The Players' sub-frame flag is the same kind of
-    /// setting and already behaves this way — it simply lives on their side of
-    /// the FFI, so this never touched it.
+    /// setting, on their side of the FFI.
     ///
     /// [`Self::reset_setup`] does reset them: it releases the slot for a
     /// different owner, rather than handing the same one a new clip.
@@ -389,8 +383,7 @@ impl PlaybackController {
         // outward leg of whatever direction is in force.
         self.playback_forward = if self.playback_direction == PlaybackDirection::Forward { 1 } else { -1 };
         // Carries the retained rate and any retained override onto the new
-        // animation. Reading `anime_data_fps` directly here would ignore the
-        // override, which used to be invisible only because `setup` overwrote it.
+        // animation; `anime_data_fps` alone would ignore the override.
         self.recompute_update_interval();
         self.passed_frames.clear();
         self.needs_evaluation = false;
@@ -480,9 +473,7 @@ impl PlaybackController {
     /// animation players do with one.
     ///
     /// A negative rate is **not** reverse playback — direction is
-    /// [`Self::set_playback_direction`]'s business — and is clamped to a stop
-    /// rather than silently running forward at full speed, which is what
-    /// normalizing it to `1.0` used to do.
+    /// [`Self::set_playback_direction`]'s business — and is clamped to a stop.
     pub fn set_speed_scale(&mut self, speed_scale: f32) {
         self.speed_scale = normalise_speed_scale(speed_scale);
         self.recompute_update_interval();
@@ -495,7 +486,7 @@ impl PlaybackController {
     /// Returns false, changing nothing, when both ends are in range and the end
     /// is before the start: no section runs backwards.
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) -> bool {
-        let in_range = |frame: i32| frame >= 0 && frame <= self.anime_data_end_frame;
+        let in_range = |frame: i32| frame >= self.anime_data_start_frame.max(0) && frame <= self.anime_data_end_frame;
         if in_range(start_frame) && in_range(end_frame) && end_frame < start_frame {
             return false;
         }
@@ -636,7 +627,10 @@ impl PlaybackController {
                     self.passed_frames.push(current_frame_no);
                 }
                 if self.is_playing {
-                    self.current_frame = current_frame_no as f32 + next_frame_decimal;
+                    // A backward wrap keeps a decimal computed near frame 0, which
+                    // can round up to the next whole frame at this magnitude.
+                    let whole = current_frame_no as f32;
+                    self.current_frame = (whole + next_frame_decimal).min((whole + 1.0).next_down());
                 } else {
                     self.current_frame = current_frame_no as f32;
                 }
@@ -682,11 +676,8 @@ impl PlaybackController {
     /// [`Self::is_pausing`]. Use [`Self::resume`] to lift the hold; `play`
     /// rewinds and is not a resume.
     ///
-    /// Ignored when nothing is playing. Holding a stopped animation would mean
-    /// nothing — `play` clears the hold on its way out anyway — and it is the
-    /// one way left to reach "stopped, and also paused", the combination the
-    /// seed value and [`Self::stop`] were both cleaned up to avoid. Keeping it
-    /// unreachable is what lets `is_pausing` be read on its own.
+    /// Ignored when nothing is playing, so "stopped, and also paused" cannot
+    /// happen and `is_pausing` can be read on its own.
     pub fn pause(&mut self) {
         if !self.is_playing {
             return;
@@ -706,11 +697,7 @@ impl PlaybackController {
     /// to move it.
     pub fn stop(&mut self) {
         self.is_playing = false;
-        // A stopped animation is not a held one. Leaving the hold set would
-        // surface through every Player as "stopped, and also paused", the same
-        // meaningless state the seed value used to produce. Nothing internal
-        // reads it while `is_playing` is false, so this only cleans up what the
-        // getter reports.
+        // A stopped animation is not a held one; the getter reads this alone.
         self.is_pausing = false;
     }
 
@@ -778,6 +765,47 @@ mod tests {
 
     fn rf(diff: f32, start: i32, end: i32, loops: i32, style: PlaybackStyle, dir: PlaybackDirection) -> (f32, bool) {
         resolve_frame(diff, start, end, loops, style, dir)
+    }
+
+    /// An end before the animation's own start is out of range, as one after its
+    /// end is, for an animation that does not start at frame 0.
+    #[test]
+    fn a_section_end_before_the_animation_start_is_the_animation_edge() {
+        let section = |start: i32, end: i32| {
+            let mut c = PlaybackController::new();
+            c.setup(20, 40, 60);
+            assert!(c.set_animation_section(start, end), "({start}, {end}) is not refused");
+            (c.get_start_frame(), c.get_end_frame(), c.get_frame_no())
+        };
+        assert_eq!(section(0, -1), (20, 40, 20.0));
+        assert_eq!(section(5, 25), (20, 25, 20.0));
+        assert_eq!(section(10, 30), (20, 30, 20.0));
+        assert_eq!(section(-1, 10), (20, 40, 20.0));
+        assert_eq!(section(21, 25), (21, 25, 21.0));
+
+        let mut c = PlaybackController::new();
+        c.setup(20, 40, 60);
+        assert!(!c.set_animation_section(30, 25), "both in range and backwards");
+
+        let mut c = PlaybackController::new();
+        c.setup(-10, 20, 60);
+        assert!(c.set_animation_section(-1, 5));
+        assert_eq!((c.get_start_frame(), c.get_end_frame()), (-10, 5), "a negative end stays the animation's edge");
+    }
+
+    /// A backward wrap keeps the decimal of a step that ended just under a whole
+    /// frame. Added to the section's last frame it must not round up past it.
+    #[test]
+    fn a_backward_wrap_stays_inside_the_section() {
+        let mut c = PlaybackController::new();
+        c.setup(0, 60, 30);
+        c.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
+        c.set_speed_scale(0.5);
+        c.play();
+        for _ in 0..4 {
+            let frame = c.update(1000.0);
+            assert!((0.0..61.0).contains(&frame), "frame {frame} is outside [0, 61)");
+        }
     }
 
     #[test]
@@ -1836,8 +1864,6 @@ mod tests {
 
     #[test]
     fn a_controller_that_never_played_is_neither_playing_nor_paused() {
-        // `is_pausing` used to be seeded `true`, which surfaced through every
-        // Player as "paused" on an animation that had never run.
         let t = PlaybackController::new();
         assert!(!t.is_playing());
         assert!(!t.is_pausing());
@@ -1849,10 +1875,9 @@ mod tests {
 
     #[test]
     fn update_does_not_advance_until_play_is_called() {
-        // `is_pausing` no longer starts life `true`, so the guard that keeps a
-        // never-played controller still is `is_playing` alone. Pin that: the
-        // playhead must not move, and no frame must be reported as passed, for
-        // a controller that was only set up.
+        // The guard that keeps a never-played controller still is `is_playing`
+        // alone: the playhead must not move, and no frame must be reported as
+        // passed, for a controller that was only set up.
         let mut t = primed(-1);
         assert!(!t.is_playing());
         assert!(!t.is_pausing());
@@ -2132,10 +2157,8 @@ mod tests {
 
     #[test]
     fn setup_folds_the_override_into_the_update_interval() {
-        // Regression: `setup` used to compute the interval from `anime_data_fps`
-        // while every other writer used the effective rate. That was invisible
-        // while `setup` also cleared the override, and would advance at the
-        // authored rate the moment it stopped.
+        // `setup` computes the interval from the effective rate, as every other
+        // writer does.
         let mut t = PlaybackController::new();
         t.setup(0, 1000, 30);
         t.set_skip_frames(true);
@@ -2175,8 +2198,6 @@ mod tests {
 
     #[test]
     fn a_zero_speed_freezes_the_playhead() {
-        // It used to normalize to 1.0, so dragging a speed slider to its minimum
-        // played at full speed — the opposite of what the value says.
         let mut t = PlaybackController::new();
         t.setup(0, 1000, 30);
         t.set_skip_frames(true);

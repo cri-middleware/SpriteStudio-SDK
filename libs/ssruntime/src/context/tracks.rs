@@ -22,6 +22,7 @@ impl<'a> Context<'a> {
 
     pub fn set_track_animation_by_hash(&mut self, track: u32, hash: u32) -> Result<(), error::SSRuntimeError> {
         let index = self.resolve_animation(hash)?;
+        self.ensure_set_up()?;
         self.ensure_track(track)?;
         let handle = self.attach_source(track, index, 1.0)?;
         self.replace_track_main(track, handle);
@@ -33,10 +34,10 @@ impl<'a> Context<'a> {
     /// source's `weight` only decides proportions among the sources sharing one
     /// track, and is silent when a source is the only one animating an attribute.
     ///
-    /// Alpha is not clamped — values above 1 extrapolate, which is occasionally
-    /// what an overlay wants — but `alpha <= 0` makes the track contribute
-    /// nothing. Track 0 at alpha 0 resolves to the setup pose, which is how an
-    /// animation fades out to rest.
+    /// Alpha is not clamped: values above 1 extrapolate, which is occasionally
+    /// what an overlay wants, and a negative one extrapolates away from the track's
+    /// pose. At `0` the track contributes nothing. Track 0 at alpha 0 resolves to
+    /// the setup pose, which is how an animation fades out to rest.
     pub fn set_track_alpha(&mut self, track: u32, alpha: f32) -> Result<(), error::SSRuntimeError> {
         let t = self.instance.tracks.get_mut(track as usize).ok_or(error::SSRuntimeError::InvalidParameter)?;
         if alpha.is_nan() {
@@ -114,9 +115,9 @@ impl<'a> Context<'a> {
     /// the discrete attributes and the events all speak for it from the call on.
     /// The host has said where the character is going, and the outgoing side is
     /// only its pose fading away: it neither reports state nor fires events
-    /// (unless its event threshold is lowered). Handing over on completion
-    /// instead let an outgoing animation that ran out mid-fade report the
-    /// character finished, and then playing again once the fade completed.
+    /// (unless its event threshold is lowered). Handing over on completion would
+    /// let an outgoing animation that runs out mid-fade report the character
+    /// finished, and then playing again once the fade completes.
     ///
     /// **Everything the track carries fades out together**, in the proportions it
     /// carries them: the main animation, any `add_track_source` sources, and
@@ -137,6 +138,7 @@ impl<'a> Context<'a> {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
         let index = self.resolve_animation(hash)?;
+        self.ensure_set_up()?;
         self.ensure_track(track)?;
 
         let to = self.attach_source(track, index, 0.0)?;
@@ -325,6 +327,7 @@ impl<'a> Context<'a> {
 
     pub fn add_track_source_by_hash(&mut self, track: u32, hash: u32, weight: f32) -> Result<u32, error::SSRuntimeError> {
         let index = self.resolve_animation(hash)?;
+        self.ensure_set_up()?;
         self.ensure_track(track)?;
         let handle = self.attach_source(track, index, weight)?;
         // The first animation to land on a track becomes its main one, so callers
@@ -429,8 +432,6 @@ impl<'a> Context<'a> {
         Some(self.instance.tracks.get(track as usize)?.outgoing_event_threshold)
     }
 
-    // ---- internals shared by the track API ---------------------------------
-
     /// Build the part bases for this instance's coordinate setup now, not on the
     /// first frame. Runs when the animation or a coordinate setting changes.
     pub(super) fn prepare_part_bases(&mut self) {
@@ -451,11 +452,17 @@ impl<'a> Context<'a> {
         resource.find_animation_index_by_hash(hash).ok_or(error::SSRuntimeError::AnimationNotFound)
     }
 
-    /// Grow the stack so `track` exists. Every track but 0 may be created this
-    /// way; track 0 exists from construction, but until `setup_animation` has run
-    /// there is no structure to layer onto, so this reports `AnimationNotFound`.
+    /// `setup_animation` sizes the frame's buffers, so nothing can be laid on any
+    /// track before it has run, track 0 included.
+    fn ensure_set_up(&self) -> Result<(), error::SSRuntimeError> {
+        if self.instance.primary_source().has_real_animation() { Ok(()) } else { Err(error::SSRuntimeError::AnimationNotFound) }
+    }
+
+    /// Grow the stack so `track` exists. Track 0 exists from construction, so its
+    /// settings can be stated before `setup_animation`; any other track reports
+    /// `AnimationNotFound` until then, with no structure to layer onto.
     fn ensure_track(&mut self, track: u32) -> Result<(), error::SSRuntimeError> {
-        if track != 0 && !self.instance.sources[self.instance.primary_idx()].has_real_animation() {
+        if track != 0 && !self.instance.primary_source().has_real_animation() {
             return Err(error::SSRuntimeError::AnimationNotFound);
         }
         if track as usize >= self.instance.tracks.len() {
@@ -483,10 +490,8 @@ impl<'a> Context<'a> {
         // heading and the frame interval from it.
         source.controller.adopt_policy(&self.instance.tracks[track as usize].policy);
         source.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
-        // A source laid on a track plays from the moment it is attached; the
-        // character's clock decides whether it actually moves. Left stopped, an
-        // overlay sat on its first frame and a completed crossfade froze the
-        // character, since nothing but `play` ever started a controller.
+        // A laid source plays from the moment it is attached; the character's
+        // clock decides whether it actually moves.
         source.controller.play();
         if self.instance.tracks[track as usize].sync == TrackSync::Start
             && let Some(phase) = self.primary_phase()

@@ -43,8 +43,8 @@ Brain は、描画する順に並べたパーツ（`draw_order`）と、それ�
 
 ```cpp
 // 1. FrameData を計算させる
-const uint8_t* fd_ptr = nullptr; uintptr_t fd_len = 0;   // 失敗したときは書き換えられない（再生制御 §6-1）
-ss_runtime_get_frame_data(ctx, frame_no, &fd_ptr, &fd_len);
+const uint8_t* fd_ptr = nullptr; uintptr_t fd_len = 0;
+if (!ss_runtime_get_frame_data(ctx, frame_no, &fd_ptr, &fd_len)) return;   // 再生制御 §6-1
 auto frame_data = ss::runtime::GetFrameData(fd_ptr);
 
 // 2. SoA バッファを受け取る

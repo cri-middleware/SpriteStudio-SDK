@@ -1,6 +1,25 @@
 //! `EffectSlot` tests.
 
 use super::*;
+use crate::effect_slot::particle_quad;
+use crate::eval::geometry::compute_local_vertices;
+
+/// A 100 x 200 cell whose pivot sits a quarter right and a quarter up of its
+/// centre: the quad is the box a Normal part draws that cell in, and the corners
+/// the texture's top maps to stay on top in either Y direction.
+#[test]
+fn a_particle_quad_is_the_normal_part_box_in_both_y_directions() {
+    let (vx, vy) = compute_local_vertices((100.0, 200.0), (0.25, 0.25), (0.0, 0.0), (false, false), None);
+    assert_eq!((vx[0], vy[0]), (-75.0, 50.0));
+
+    let (xs, ys) = particle_quad(vx[0], vy[0], 100.0, 200.0, 1.0);
+    assert_eq!(xs, [-75.0, 25.0, -75.0, 25.0]);
+    assert_eq!(ys, [50.0, 50.0, -150.0, -150.0], "Y-up: the top corners are the higher ones");
+
+    let (xs, ys) = particle_quad(vx[0], vy[0], 100.0, 200.0, -1.0);
+    assert_eq!(xs, [-75.0, 25.0, -75.0, 25.0]);
+    assert_eq!(ys, [-50.0, -50.0, 150.0, 150.0], "Y-down: the top corners are the lower ones");
+}
 
 /// A slot stepped with `draw == false` -- its part hidden -- moves its clock
 /// and transitions as a drawn one does, so once it draws again it builds the

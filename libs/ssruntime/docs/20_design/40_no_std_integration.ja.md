@@ -82,7 +82,7 @@ cargo rustc -p ssruntime-ffi --release --features "custom_alloc,panic-handler" -
 
 ### 4-2. 関数を定義する
 
-リンクする C / C++ のプロジェクトで、次の 3 つの `extern "C"` 関数を定義します（`ssruntime.h` は `ss_custom_alloc` と `ss_custom_free` を同じ型で宣言しているので、同じファイルで `ssruntime.h` を読み込めます）。`memcpy` / `memset` / `memmove` / `memcmp` / `strlen` などの C ランタイム関数も最終的なリンクで必要ですが、通常はエンジンの CRT が提供します（ベアメタル環境では別に用意してください）。
+リンクする C / C++ のプロジェクトで、次の 3 つの `extern "C"` 関数を定義します。`memcpy` / `memset` / `memmove` / `memcmp` / `strlen` などの C ランタイム関数も最終的なリンクで必要ですが、通常はエンジンの CRT が提供します（ベアメタル環境では別に用意してください）。
 
 ```cpp
 #include <stddef.h>
@@ -149,7 +149,7 @@ void ss_custom_abort() {
 この 3 つを定義して `libssruntime.a`（または `.lib`）をリンクすれば、Brain のメモリ確保はすべてエンジンのアロケータを通ります。
 
 > [!NOTE]
-> `ss_custom_abort` が呼ばれるのは、Brain でパニックが起きたときだけです。`ss_custom_alloc` が `NULL` を返した場合（確保の失敗）は、Rust のアロケーションエラーの処理ですぐに abort し、`ss_custom_abort` は通りません。確保の失敗に独自の処理をしたい場合は、`ss_custom_alloc` の中で行ってください。
+> `ss_custom_abort` は、Brain でパニックが起きたときに呼ばれます。確保の失敗もその 1 つで、`ss_custom_alloc` が `NULL` を返すと、Brain はパニックして `ss_custom_abort` に至ります。確保の失敗に独自の処理をしたい場合は、`ss_custom_alloc` の中で行ってください。
 
 ---
 

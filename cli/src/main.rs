@@ -77,9 +77,8 @@ fn main() -> ExitCode {
         config.convert_config = ssconverter::ConvertConfig { embedded: args.embedded, ..Default::default() };
         config.output = args.out_dir;
     } else {
-        // batch mode
         config.convert_config = ssconverter::ConvertConfig { embedded: args.embedded, ..Default::default() };
-        config.output = None; // batch mode does not support out_dir
+        config.output = None;
     }
 
     let mut handlers: Vec<JoinHandle<Result<(), ssconverter::ConverterError>>> = vec![];

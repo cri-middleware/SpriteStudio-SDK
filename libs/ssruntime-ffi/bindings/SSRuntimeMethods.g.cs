@@ -22,11 +22,18 @@ namespace SpriteStudio.SsRuntime
 
 
 
+        /// <summary>
+        ///  Register the function that receives a message for every failure the runtime
+        ///  records, for the whole process. It runs on the thread of the failing call, and
+        ///  `message` is valid only during it. `level` is one of `SS_RUNTIME_LOG_*`.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_log_callback", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_set_log_callback(delegate* unmanaged[Cdecl]<int, byte*, void> callback);
 
         /// <summary>
-        ///  Creates an AnimationResource by copying the provided data.
+        ///  Create a resource from a copy of the `len` bytes at `ptr`, which may be freed
+        ///  on return. Release it with `ss_resource_destroy`. Returns null for a null `ptr`
+        ///  or a pack of another schema version.
         ///
         ///  # Security and Validation
         ///  To maximize performance and minimize binary size, `libssruntime` **does not validate** the input `.ssab` data.
@@ -35,14 +42,15 @@ namespace SpriteStudio.SsRuntime
         ///
         ///  # Safety
         ///
-        ///  This function is unsafe because it dereferences a raw pointer.
-        ///  The caller must ensure the pointer is valid and points to a valid memory block.
+        ///  `ptr` must point to `len` readable bytes.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_resource_create_copy", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* ss_resource_create_copy(byte* ptr, nuint len);
 
         /// <summary>
-        ///  Creates an AnimationResource by borrowing the provided data.
+        ///  Create a resource that reads the `len` bytes at `ptr` in place, with no copy.
+        ///  Release it with `ss_resource_destroy`. Returns null for a null `ptr` or a pack
+        ///  of another schema version.
         ///
         ///  # Security and Validation
         ///  To maximize performance and minimize binary size, `libssruntime` **does not validate** the input `.ssab` data.
@@ -51,29 +59,43 @@ namespace SpriteStudio.SsRuntime
         ///
         ///  # Safety
         ///
-        ///  This function is unsafe because it dereferences a raw pointer.
-        ///  The caller must ensure the pointer is valid and points to a valid memory block of at least `len` bytes,
-        ///  AND the memory must remain valid and unmodified until this resource is destroyed.
+        ///  `ptr` must point to `len` readable bytes, which stay valid and unmodified until
+        ///  this handle is destroyed and no context or effect slot holds the resource.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_resource_create_borrow", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* ss_resource_create_borrow(byte* ptr, nuint len);
 
+        /// <summary>
+        ///  Release this handle. Null is ignored. A context or effect slot bound to the
+        ///  resource keeps its own share, so this is safe while they live.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_resource_destroy", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_resource_destroy(void* resource);
 
+        /// <summary>
+        ///  Create an empty context. Bind a resource and set up an animation before playing.
+        ///  Release it with `ss_runtime_destroy`.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_create", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* ss_runtime_create();
 
+        /// <summary>
+        ///  Release a context and its share of the bound resource. Null is ignored.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_destroy", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_destroy(void* context);
 
+        /// <summary>
+        ///  Return a context to its just-created state: the resource is unbound, and the
+        ///  last error, the overrides and the playback and coordinate settings are cleared.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_reset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_reset(void* context);
 
         /// <summary>
-        ///  Why the last call that tracks a reason failed, as a stable code. The codes
-        ///  are listed with `SSRuntimeError` in
-        ///  &lt;https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/src/error.rs&gt;.
+        ///  Why the last call that tracks a reason failed, as a stable code: `1`
+        ///  `EmptyData`, `2` `InvalidVersion`, `3` `AnimationNotFound`, `4` `NotLoaded`,
+        ///  `5` `InvalidParameter`, `6` `MemoryError`, `7` `MalformedEffect`, `99` `Unknown`.
         ///  `0` means the last such call succeeded, and so does a null `context`.
         ///
         ///  Every fallible entry point that has a context to write to clears this on
@@ -117,19 +139,24 @@ namespace SpriteStudio.SsRuntime
         public static extern uint ss_runtime_ssab_schema_version();
 
         /// <summary>
-        ///  Binds an AnimationResource to a Context.
+        ///  Bind a resource to a context, which takes its own share of it. One resource can
+        ///  be bound to several contexts, and `ss_resource_destroy` is safe while they are:
+        ///  the resource lives until the last of them is destroyed, reset or bound to another.
+        ///  A `_borrow` resource's buffer is the caller's to keep alive for as long.
         ///
-        ///  # Safety and Lifetimes
-        ///  - To save memory, a single Resource can be bound to multiple Contexts.
-        ///  - **Lifetime Safety:** This implementation uses `Arc` for internal reference counting.
-        ///    It is safe to destroy the `resource` (via `ss_resource_destroy`) even if it is still bound
-        ///    to contexts; the memory will be kept alive until all bound contexts are also destroyed or reset.
+        ///  Drops the context's tracks and overrides; `ss_runtime_setup_animation` comes next.
+        ///  Returns `false` with `InvalidParameter` for a null `resource`.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_bind_resource", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_bind_resource(void* context, void* resource);
 
         /// <summary>
+        ///  Create a resource from a copy of the `len` bytes at `ptr` and bind it to
+        ///  `context`, in one call, for a caller that needs no resource handle. Returns
+        ///  `false` with `InvalidParameter` for a null `ptr`, or `InvalidVersion` for a pack
+        ///  of another schema version.
+        ///
         ///  # Security and Validation
         ///  To maximize performance and minimize binary size, `libssruntime` **does not validate** the input `.ssab` data.
         ///  Passing corrupted or maliciously crafted data will cause undefined behavior (e.g., out-of-bounds reads).
@@ -137,14 +164,18 @@ namespace SpriteStudio.SsRuntime
         ///
         ///  # Safety
         ///
-        ///  This function is unsafe because it dereferences a raw pointer.
-        ///  The caller must ensure the pointer is valid and points to a valid memory block.
+        ///  `ptr` must point to `len` readable bytes.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_load_ssab_copy", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_load_ssab_copy(void* context, byte* ptr, nuint len);
 
         /// <summary>
+        ///  Create a resource that reads the `len` bytes at `ptr` in place and bind it to
+        ///  `context`, in one call, for a caller that needs no resource handle. Returns
+        ///  `false` with `InvalidParameter` for a null `ptr`, or `InvalidVersion` for a pack
+        ///  of another schema version.
+        ///
         ///  # Security and Validation
         ///  To maximize performance and minimize binary size, `libssruntime` **does not validate** the input `.ssab` data.
         ///  Passing corrupted or maliciously crafted data will cause undefined behavior (e.g., out-of-bounds reads).
@@ -152,42 +183,86 @@ namespace SpriteStudio.SsRuntime
         ///
         ///  # Safety
         ///
-        ///  This function is unsafe because it dereferences a raw pointer.
-        ///  The caller must ensure the pointer is valid and points to a valid memory block.
+        ///  `ptr` must point to `len` readable bytes, which stay valid and unmodified until
+        ///  `context` is destroyed, reset or bound to another resource.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_load_ssab_borrow", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_load_ssab_borrow(void* context, byte* ptr, nuint len);
 
+        /// <summary>
+        ///  The bound resource's `.ssab` bytes. Returns `false` and writes nothing when
+        ///  no resource is bound (`NotLoaded`).
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_ssab", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void ss_runtime_get_ssab(void* context, byte** out_data, nuint* out_len);
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool ss_runtime_get_ssab(void* context, byte** out_data, nuint* out_len);
 
+        /// <summary>
+        ///  The bound resource's `.ssab` bytes, or null with `NotLoaded` when none is bound.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_ssab_buf", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* ss_runtime_get_ssab_buf(void* context);
 
+        /// <summary>
+        ///  The length of `ss_runtime_get_ssab_buf`, or `0` with `NotLoaded` when none is bound.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_ssab_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern nuint ss_runtime_get_ssab_len(void* context);
 
         /// <summary>
+        ///  Select the animation `name` of the bound resource and move to its first frame.
+        ///  This does not start it; `ss_runtime_play` does. It drops every track but 0, the
+        ///  section and the loop count, and keeps the speed, the frame rate, the frame skip
+        ///  and the direction. Returns `false` with `NotLoaded`, `AnimationNotFound`, or
+        ///  `InvalidParameter` for a null `name`.
+        ///
         ///  # Safety
         ///
-        ///  This function is unsafe because it dereferences a raw pointer.
-        ///  The caller must ensure the pointer is valid and points to a valid null-terminated string.
+        ///  `name` must be null or a valid null-terminated string.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_setup_animation", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_setup_animation(void* context, byte* name);
 
+        /// <summary>
+        ///  `ss_runtime_setup_animation` by the hash `ss_runtime_hash_string` gives for the name.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_setup_animation_by_hash", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_setup_animation_by_hash(void* context, uint name_hash);
 
+        /// <summary>
+        ///  Build the FrameData of `frame_no`, which is in `[first frame, last frame + 1)`
+        ///  of the animation, and write where it is to `out_data` and `out_len`.
+        ///
+        ///  Returns `false` and writes nothing when no frame can be built, with the
+        ///  reason on `ss_runtime_get_last_error`: `NotLoaded` with no resource bound,
+        ///  `AnimationNotFound` with no animation set up, `InvalidParameter` for a
+        ///  `frame_no` out of range.
+        ///
+        ///  The buffer belongs to the context, and stays valid until the next
+        ///  `ss_runtime_get_frame_data` on it, or until it is rebound, reset or destroyed.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_frame_data", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void ss_runtime_get_frame_data(void* context, float frame_no, byte** out_data, nuint* out_len);
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool ss_runtime_get_frame_data(void* context, float frame_no, byte** out_data, nuint* out_len);
 
+        /// <summary>
+        ///  Per-part world matrices for the current frame, written by
+        ///  `ss_runtime_get_frame_data`: 16 floats per part, indexed by `part_index * 16`, with
+        ///  the translation at `[12]` and `[13]`. The SceneGraph render mode does not compute them.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_world_matrices", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_world_matrices(void* context, float** out_data, nuint* out_len);
 
+        /// <summary>
+        ///  Per-part UVs for the current frame, written by `ss_runtime_get_frame_data`,
+        ///  matching `ss_runtime_get_local_vertices`:
+        ///  `[lt.u, lt.v, rt.u, rt.v, lb.u, lb.v, rb.u, rb.v, center.u, center.v]` = 10 floats,
+        ///  indexed by `part_index * 10`, in the cellmap's texture-pixel space. Divide by the
+        ///  texture size to normalize.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_local_uvs", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_local_uvs(void* context, float** out_data, nuint* out_len);
 
@@ -367,6 +442,10 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_nines_index_offsets", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_nines_index_offsets(void* context, uint** out_data, nuint* out_len);
 
+        /// <summary>
+        ///  The playhead of track 0's main animation, with its fraction: what
+        ///  `ss_runtime_update` last returned, or where a seek put it.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_frame_no", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern float ss_runtime_get_frame_no(void* context);
 
@@ -382,18 +461,34 @@ namespace SpriteStudio.SsRuntime
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_is_finished(void* context);
 
+        /// <summary>
+        ///  `true` for the single `ss_runtime_update` that took playback back to the start of
+        ///  its cycle; the next update clears it. Never raised on the last cycle of a finite
+        ///  loop count, which finishes instead.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_just_looped", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_just_looped(void* context);
 
+        /// <summary>
+        ///  `true` while the clock runs and track 0 has not finished. A paused character is still playing.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_is_playing", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_is_playing(void* context);
 
+        /// <summary>
+        ///  Whether track 0's playhead is moving forward now. A ping-pong's return leg reads
+        ///  `false`, as does a backward animation's outward leg.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_is_playing_forward", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_is_playing_forward(void* context);
 
+        /// <summary>
+        ///  `true` while a playing character is held by `ss_runtime_pause`. Once track 0 has
+        ///  finished this reads `false`; `ss_runtime_is_clock_pausing` still reads the hold.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_is_pausing", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_is_pausing(void* context);
@@ -427,28 +522,53 @@ namespace SpriteStudio.SsRuntime
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_is_stack_in_motion(void* context);
 
+        /// <summary>
+        ///  What `ss_runtime_set_skip_frames` stored.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_skip_frames", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_get_skip_frames(void* context);
 
+        /// <summary>
+        ///  0 = forward, 1 = backward.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_playback_direction", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_playback_direction(void* context);
 
+        /// <summary>
+        ///  0 = normal, 1 = ping-pong.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_playback_style", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_playback_style(void* context);
 
+        /// <summary>
+        ///  `-1` for an animation that loops forever, otherwise the cycles it plays.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_loop_count", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_loop_count(void* context);
 
+        /// <summary>
+        ///  The cycles left, `0` once finished; `-1` for an animation that loops forever.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_remaining_loops", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_remaining_loops(void* context);
 
+        /// <summary>
+        ///  The first frame of the playback range: the section's when one is set, otherwise the animation's.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_start_frame", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_start_frame(void* context);
 
+        /// <summary>
+        ///  The last frame of the playback range: the section's when one is set, otherwise the animation's.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_end_frame", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_end_frame(void* context);
 
+        /// <summary>
+        ///  The rate track 0's animation plays at, in frames per second: the override when one
+        ///  is set, otherwise the rate it was authored at.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_frame_rate", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_frame_rate(void* context);
 
@@ -461,18 +581,39 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_speed_scale", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern float ss_runtime_get_speed_scale(void* context);
 
+        /// <summary>
+        ///  `true` (the default) advances by the time elapsed, skipping frames to keep up.
+        ///  `false` advances one frame at a time, at most one per update.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_skip_frames", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_set_skip_frames(void* context, [MarshalAs(UnmanagedType.U1)] bool skip);
 
+        /// <summary>
+        ///  `n &gt; 0` plays n cycles and then finishes; `0` or a negative count loops forever.
+        ///  `ss_runtime_setup_animation` resets it to looping forever, so set it after.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_loop_count", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_set_loop_count(void* context, int loop_count);
 
+        /// <summary>
+        ///  Play at `frame_rate` frames per second instead of the authored rate; `0` or a
+        ///  negative rate clears the override. It survives `ss_runtime_setup_animation`.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_frame_rate", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_set_frame_rate(void* context, int frame_rate);
 
+        /// <summary>
+        ///  `direction`: 0 = forward, otherwise backward. `style`: 0 = normal, otherwise
+        ///  ping-pong. Call it before `ss_runtime_play`. It survives `ss_runtime_setup_animation`.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_playback_direction", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_set_playback_direction(void* context, int direction, int style);
 
+        /// <summary>
+        ///  Playback speed as a multiple of the frame rate. `0.0` stops the playhead while
+        ///  `ss_runtime_is_playing` stays `true`, and a negative speed clamps to `0.0`; direction
+        ///  is `ss_runtime_set_playback_direction`'s. It survives `ss_runtime_setup_animation`.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_speed_scale", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_set_speed_scale(void* context, float speed_scale);
 
@@ -487,12 +628,24 @@ namespace SpriteStudio.SsRuntime
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_set_animation_section(void* context, int start_frame, int end_frame);
 
+        /// <summary>
+        ///  Advance by `delta` **milliseconds** and return the frame to pass to
+        ///  `ss_runtime_get_frame_data`. With animation mixing it advances every track and fade;
+        ///  the frame returned is track 0's.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_update", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern float ss_runtime_update(void* context, float delta);
 
+        /// <summary>
+        ///  Start track 0 from the start of its range (the end when playing backward), with its
+        ///  loop count re-armed, and start the clock the other tracks and fades run on.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_play", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_play(void* context);
 
+        /// <summary>
+        ///  `ss_runtime_play`, starting from `frame_no`. A negative `frame_no` starts where `ss_runtime_play` does.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_play_with_start_frame", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_play_with_start_frame(void* context, float frame_no);
 
@@ -517,19 +670,36 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_runtime_resume", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_resume(void* context);
 
+        /// <summary>
+        ///  Stop every track and fade where they stand. Nothing rewinds; `ss_runtime_play` starts them again.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_stop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_stop(void* context);
 
+        /// <summary>
+        ///  Seek track 0 to `frame`, clamped to the playback range. The events of the frames in between do not fire.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_frame_no", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_set_frame_no(void* context, float frame);
 
+        /// <summary>
+        ///  Step track 0 one whole frame forward, whatever the direction and style. Does nothing on the range's last frame.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_next_frame", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_next_frame(void* context);
 
+        /// <summary>
+        ///  Step track 0 one whole frame back, whatever the direction and style. Does nothing on the range's first frame.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_prev_frame", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_prev_frame(void* context);
 
         /// <summary>
+        ///  Put `name` on `track`, replacing what it played and cancelling its fade. Tracks
+        ///  grow on demand. Returns `false` with `NotLoaded`, `AnimationNotFound` (an unknown
+        ///  name, or no `ss_runtime_setup_animation` yet), or `InvalidParameter` for a null
+        ///  `name`.
+        ///
         ///  # Safety
         ///  `name` must be a valid null-terminated UTF-8 (or lossy-decodable) string.
         /// </summary>
@@ -537,10 +707,18 @@ namespace SpriteStudio.SsRuntime
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_set_track_animation(void* context, uint track, byte* name);
 
+        /// <summary>
+        ///  `ss_runtime_set_track_animation` by the hash of the name.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_track_animation_by_hash", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_set_track_animation_by_hash(void* context, uint track, uint hash);
 
+        /// <summary>
+        ///  The strength of `track`: `0` contributes nothing, `1` all of it, and other values
+        ///  extrapolate. Returns `false` with `InvalidParameter` for a `NaN` or a track that does
+        ///  not exist.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_track_alpha", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_set_track_alpha(void* context, uint track, float alpha);
@@ -579,9 +757,16 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_track_sync", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern uint ss_runtime_get_track_sync(void* context, uint track);
 
+        /// <summary>
+        ///  How many tracks exist, silent ones included; at least 1.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_track_count", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern uint ss_runtime_get_track_count(void* context);
 
+        /// <summary>
+        ///  Silence `track`: its sources are released and its fade cancelled. Track 0 cannot be
+        ///  cleared (`InvalidParameter`); fade it to alpha 0 instead.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_clear_track", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_clear_track(void* context, uint track);
@@ -597,10 +782,18 @@ namespace SpriteStudio.SsRuntime
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_crossfade(void* context, uint track, byte* name, float duration_ms);
 
+        /// <summary>
+        ///  `ss_runtime_crossfade` by the hash of the name.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_crossfade_by_hash", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_crossfade_by_hash(void* context, uint track, uint hash, float duration_ms);
 
+        /// <summary>
+        ///  Drive the alpha of `track` to `target_alpha` over `duration_ms`, the same time unit
+        ///  as `ss_runtime_update`'s delta. Returns `false` with `InvalidParameter` for a
+        ///  `duration_ms` that is not positive, a `NaN`, or a track that does not exist.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_fade_track", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_fade_track(void* context, uint track, float target_alpha, float duration_ms);
@@ -611,10 +804,17 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_track_fade_progress", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern float ss_runtime_get_track_fade_progress(void* context, uint track);
 
+        /// <summary>
+        ///  Cancel the fade on `track`, leaving its alpha and weights where they stand.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_cancel_track_fade", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_cancel_track_fade(void* context, uint track);
 
+        /// <summary>
+        ///  Seek the animation on `track`, which is how an axis authored as an animation is
+        ///  driven. Returns `false` with `InvalidParameter` when the track has no animation.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_track_frame", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_set_track_frame(void* context, uint track, float frame);
@@ -625,6 +825,10 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_track_frame", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern float ss_runtime_get_track_frame(void* context, uint track);
 
+        /// <summary>
+        ///  The speed of `track`, as a multiple of each animation's frame rate. The track keeps
+        ///  it across a crossfade or a new animation. Track 0's is `ss_runtime_set_speed_scale`.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_track_speed", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_set_track_speed(void* context, uint track, float speed);
@@ -636,6 +840,10 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_track_speed", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern float ss_runtime_get_track_speed(void* context, uint track);
 
+        /// <summary>
+        ///  The rate in frames per second `track` plays its animations at; `0` or a negative
+        ///  rate clears it. The track keeps it, as it does its speed.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_track_frame_rate", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_set_track_frame_rate(void* context, uint track, int frame_rate);
@@ -647,6 +855,9 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_track_frame_rate", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_track_frame_rate(void* context, uint track);
 
+        /// <summary>
+        ///  `ss_runtime_set_skip_frames` for `track`. The track keeps it, as it does its speed.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_track_skip_frames", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_set_track_skip_frames(void* context, uint track, [MarshalAs(UnmanagedType.U1)] bool skip);
@@ -743,9 +954,17 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_runtime_add_track_source", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern uint ss_runtime_add_track_source(void* context, uint track, byte* name, float weight);
 
+        /// <summary>
+        ///  `ss_runtime_add_track_source` by the hash of the name.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_add_track_source_by_hash", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern uint ss_runtime_add_track_source_by_hash(void* context, uint track, uint hash, float weight);
 
+        /// <summary>
+        ///  The proportion of a source within its track; `ss_runtime_set_track_alpha` is the
+        ///  strength of the track as a whole. Returns `false` with `InvalidParameter` for an
+        ///  invalid or released handle.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_source_weight", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_set_source_weight(void* context, uint handle, float weight);
@@ -757,6 +976,9 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_source_weight", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern float ss_runtime_get_source_weight(void* context, uint handle);
 
+        /// <summary>
+        ///  Seek one source. Returns `false` with `InvalidParameter` for an invalid or released handle.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_source_frame", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_set_source_frame(void* context, uint handle, float frame);
@@ -779,13 +1001,24 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_current_animation_index", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_current_animation_index(void* context);
 
+        /// <summary>
+        ///  The playhead of a source; `NaN` for an invalid or released handle.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_source_frame", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern float ss_runtime_get_source_frame(void* context, uint handle);
 
+        /// <summary>
+        ///  A source fires events once its weight reaches `threshold`. The default, `+inf`,
+        ///  keeps every source silent but track 0's main one, which always fires. Returns `false`
+        ///  with `InvalidParameter` for an invalid or released handle.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_source_event_threshold", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_set_source_event_threshold(void* context, uint handle, float threshold);
 
+        /// <summary>
+        ///  `NaN` for an invalid or released handle.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_source_event_threshold", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern float ss_runtime_get_source_event_threshold(void* context, uint handle);
 
@@ -800,6 +1033,9 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_effect_slot_create", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* ss_effect_slot_create(void* resource, uint effect_name_hash, uint seed);
 
+        /// <summary>
+        ///  Release a slot and its share of the resource. Null is ignored.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_effect_slot_destroy", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_effect_slot_destroy(void* slot);
 
@@ -819,8 +1055,8 @@ namespace SpriteStudio.SsRuntime
         ///  timing inputs. `parent_looped` re-arms transition detection across the
         ///  parent's loop edge.
         ///
-        ///  `y_flip = true` mirrors particle Y position and rotation sign, for Y-down
-        ///  rendering of Y-up authored content (Godot, pixi.js). Pass `false` for
+        ///  `y_flip = true` mirrors each particle's Y position, rotation sign and quad, for
+        ///  Y-down rendering of Y-up authored content (Godot, pixi.js). Pass `false` for
         ///  Y-up engines (Unity 2D).
         ///
         ///  `vert_stride` selects the vertex layout of the returned `EffectDrawPlan`:
@@ -839,6 +1075,9 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_effect_slot_step", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern ss_effect_step_result ss_effect_slot_step(void* slot, ss_effect_event_info ev, float parent_frame, float delta_seconds, float fps, [MarshalAs(UnmanagedType.U1)] bool parent_looped, [MarshalAs(UnmanagedType.U1)] bool y_flip, byte vert_stride, [MarshalAs(UnmanagedType.U1)] bool draw);
 
+        /// <summary>
+        ///  The seed the slot was created with; `0` for a null slot.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_effect_slot_get_seed", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern uint ss_effect_slot_get_seed(void* slot);
 
@@ -860,6 +1099,9 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_instance_slot_create", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* ss_instance_slot_create();
 
+        /// <summary>
+        ///  Release a slot. Null is ignored.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_instance_slot_destroy", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_instance_slot_destroy(void* slot);
 
@@ -887,6 +1129,9 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_instance_slot_step", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern ss_instance_step_result ss_instance_slot_step(void* slot, ss_event_instance_info ev, void* child_ctx, float parent_frame, float delta_seconds, [MarshalAs(UnmanagedType.U1)] bool parent_looped);
 
+        /// <summary>
+        ///  Whether the slot's current key plays the child on its own time rather than the parent's frame.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_instance_slot_is_independent", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_instance_slot_is_independent(void* slot);
@@ -911,30 +1156,60 @@ namespace SpriteStudio.SsRuntime
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_render_mode", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_set_render_mode(void* context, byte mode);
 
+        /// <summary>
+        ///  0 = Direct, 1 = SceneGraph.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_render_mode", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte ss_runtime_get_render_mode(void* context);
 
+        /// <summary>
+        ///  0 = Y-up (the default), 1 = Y-down, which flips Y coordinates and rotation. Any other value is Y-up.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_coordinate_system", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_set_coordinate_system(void* context, int coordinate_system);
 
+        /// <summary>
+        ///  0 = Y-up, 1 = Y-down.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_coordinate_system", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_coordinate_system(void* context);
 
+        /// <summary>
+        ///  0 = the canvas center (the default), 1 = its top-left corner, which offsets root
+        ///  parts by half the canvas. Any other value is the center.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_origin", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_set_origin(void* context, int origin);
 
+        /// <summary>
+        ///  0 = the canvas center, 1 = its top-left corner.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_origin", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_origin(void* context);
 
+        /// <summary>
+        ///  0 = pixels (the default), 1 = normalized, which divides each part's position by the
+        ///  canvas size. Sizes, local vertices and UVs stay in pixels. Any other value is pixels.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_unit", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_set_unit(void* context, int unit);
 
+        /// <summary>
+        ///  0 = pixels, 1 = normalized.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_unit", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_unit(void* context);
 
+        /// <summary>
+        ///  How many events the last `ss_runtime_update` passed. They stay until the next update.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_passed_event_count", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_passed_event_count(void* context);
 
+        /// <summary>
+        ///  Collected event `index`, as an index into the `events()` of the animation of the
+        ///  source that fired it (`ss_runtime_get_passed_event_source_handle`); `-1` out of range.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_passed_event_index", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_passed_event_index(void* context, int index);
 
@@ -983,10 +1258,12 @@ namespace SpriteStudio.SsRuntime
         public static extern ss_effect_event_info ss_runtime_get_active_effect_event(void* context, uint slot_index);
 
         /// <summary>
+        ///  The FNV-1a hash the converter stores for a name, which the `_by_hash` calls
+        ///  take. `0` for a null or non-UTF-8 string.
+        ///
         ///  # Safety
         ///
-        ///  This function is unsafe because it dereferences a raw pointer.
-        ///  The caller must ensure the pointer is valid and points to a valid null-terminated string.
+        ///  `s` must be null or a valid null-terminated string.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_hash_string", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern uint ss_runtime_hash_string(byte* s);
@@ -1003,7 +1280,8 @@ namespace SpriteStudio.SsRuntime
 
         /// <summary>
         ///  Set or clear a per-part visibility override.
-        ///  `force`: `0` = clear/revert, `1` = force-hide, `2` = force-visible (reserved).
+        ///  `force`: `0` = clear/revert, `1` = force-hide. Anything else, `2` (reserved for
+        ///  force-visible) included, returns `false` with `InvalidParameter`.
         ///  `cascade != 0` propagates a force-hide to descendants.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_part_visibility_override", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
