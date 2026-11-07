@@ -445,22 +445,27 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: 
     }
 }
 
+/// The bound resource's `.ssab` bytes. Returns `false` and writes nothing when
+/// no resource is bound (`NotLoaded`).
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mut *const c_uchar, out_len: *mut usize) {
-    if let Some(ffi_context) = unsafe { get_context(context) } {
-        ffi_context.last_error = None;
-        if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
-            unsafe {
-                if !out_data.is_null() {
-                    *out_data = ssab_buf.as_ptr() as *const c_uchar;
-                }
-                if !out_len.is_null() {
-                    *out_len = ssab_buf.len();
-                }
+pub unsafe extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mut *const c_uchar, out_len: *mut usize) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
+        return false;
+    };
+    ffi_context.last_error = None;
+    if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ssab_buf.as_ptr() as *const c_uchar;
             }
-        } else {
-            ffi_context.fail("ss_runtime_get_ssab", crate::error::SSRuntimeError::NotLoaded);
+            if !out_len.is_null() {
+                *out_len = ssab_buf.len();
+            }
         }
+        true
+    } else {
+        ffi_context.fail("ss_runtime_get_ssab", crate::error::SSRuntimeError::NotLoaded);
+        false
     }
 }
 
@@ -530,22 +535,37 @@ pub unsafe extern "C" fn ss_runtime_setup_animation_by_hash(context: *mut c_void
     }
 }
 
+/// Build the FrameData of `frame_no`, which is in `[first frame, last frame + 1)`
+/// of the animation, and write where it is to `out_data` and `out_len`.
+///
+/// Returns `false` and writes nothing when no frame can be built, with the
+/// reason on `ss_runtime_get_last_error`: `NotLoaded` with no resource bound,
+/// `AnimationNotFound` with no animation set up, `InvalidParameter` for a
+/// `frame_no` out of range.
+///
+/// The buffer belongs to the context, and stays valid until the next
+/// `ss_runtime_get_frame_data` on it, or until it is rebound, reset or destroyed.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_no: c_float, out_data: *mut *const c_uchar, out_len: *mut usize) {
-    if let Some(ffi_context) = unsafe { get_context(context) } {
-        ffi_context.last_error = None;
-        match ffi_context.ctx.get_frame_data(frame_no) {
-            Ok(ret) => unsafe {
+pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_no: c_float, out_data: *mut *const c_uchar, out_len: *mut usize) -> bool {
+    let Some(ffi_context) = (unsafe { get_context(context) }) else {
+        return false;
+    };
+    ffi_context.last_error = None;
+    match ffi_context.ctx.get_frame_data(frame_no) {
+        Ok(ret) => {
+            unsafe {
                 if !out_data.is_null() {
                     *out_data = ret.as_ptr();
                 }
                 if !out_len.is_null() {
                     *out_len = ret.len();
                 }
-            },
-            Err(e) => {
-                ffi_context.fail("ss_runtime_get_frame_data", e);
             }
+            true
+        }
+        Err(e) => {
+            ffi_context.fail("ss_runtime_get_frame_data", e);
+            false
         }
     }
 }
@@ -2373,6 +2393,23 @@ mod tests {
             assert_eq!(unsafe { ss_runtime_get_last_error(ctx) }, 0, "{api}");
         }
         unsafe { ss_runtime_destroy(ctx) };
+    }
+
+    /// The two calls that hand out a buffer say when there is none, and leave
+    /// the out parameters as the caller set them.
+    #[test]
+    fn the_buffer_getters_report_failure_and_leave_their_out_parameters_alone() {
+        let not_loaded = crate::error::SSRuntimeError::NotLoaded.as_code();
+        let ctx = ss_runtime_create();
+        let (mut data, mut len): (*const c_uchar, usize) = (core::ptr::null(), 7);
+        assert!(!unsafe { ss_runtime_get_ssab(ctx, &mut data, &mut len) });
+        assert_eq!(unsafe { ss_runtime_get_last_error(ctx) }, not_loaded);
+        assert!(!unsafe { ss_runtime_get_frame_data(ctx, 0.0, &mut data, &mut len) });
+        assert_eq!(unsafe { ss_runtime_get_last_error(ctx) }, not_loaded);
+        assert!(data.is_null());
+        assert_eq!(len, 7);
+        unsafe { ss_runtime_destroy(ctx) };
+        assert!(!unsafe { ss_runtime_get_frame_data(core::ptr::null_mut(), 0.0, &mut data, &mut len) });
     }
 
     /// The message no longer carries the two version numbers — `as_str` is

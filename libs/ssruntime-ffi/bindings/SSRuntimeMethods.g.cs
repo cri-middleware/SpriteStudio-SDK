@@ -159,8 +159,13 @@ namespace SpriteStudio.SsRuntime
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_load_ssab_borrow(void* context, byte* ptr, nuint len);
 
+        /// <summary>
+        ///  The bound resource's `.ssab` bytes. Returns `false` and writes nothing when
+        ///  no resource is bound (`NotLoaded`).
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_ssab", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void ss_runtime_get_ssab(void* context, byte** out_data, nuint* out_len);
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool ss_runtime_get_ssab(void* context, byte** out_data, nuint* out_len);
 
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_ssab_buf", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* ss_runtime_get_ssab_buf(void* context);
@@ -182,8 +187,21 @@ namespace SpriteStudio.SsRuntime
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool ss_runtime_setup_animation_by_hash(void* context, uint name_hash);
 
+        /// <summary>
+        ///  Build the FrameData of `frame_no`, which is in `[first frame, last frame + 1)`
+        ///  of the animation, and write where it is to `out_data` and `out_len`.
+        ///
+        ///  Returns `false` and writes nothing when no frame can be built, with the
+        ///  reason on `ss_runtime_get_last_error`: `NotLoaded` with no resource bound,
+        ///  `AnimationNotFound` with no animation set up, `InvalidParameter` for a
+        ///  `frame_no` out of range.
+        ///
+        ///  The buffer belongs to the context, and stays valid until the next
+        ///  `ss_runtime_get_frame_data` on it, or until it is rebound, reset or destroyed.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_frame_data", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void ss_runtime_get_frame_data(void* context, float frame_no, byte** out_data, nuint* out_len);
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool ss_runtime_get_frame_data(void* context, float frame_no, byte** out_data, nuint* out_len);
 
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_world_matrices", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void ss_runtime_get_world_matrices(void* context, float** out_data, nuint* out_len);

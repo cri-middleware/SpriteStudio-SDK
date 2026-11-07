@@ -377,7 +377,11 @@ bool ss_runtime_load_ssab_borrow(void *context,
                                  const unsigned char *ptr,
                                  uintptr_t len);
 
-void ss_runtime_get_ssab(void *context, const unsigned char **out_data, uintptr_t *out_len);
+/**
+ * The bound resource's `.ssab` bytes. Returns `false` and writes nothing when
+ * no resource is bound (`NotLoaded`).
+ */
+bool ss_runtime_get_ssab(void *context, const unsigned char **out_data, uintptr_t *out_len);
 
 const unsigned char *ss_runtime_get_ssab_buf(void *context);
 
@@ -393,7 +397,19 @@ bool ss_runtime_setup_animation(void *context, const char *name);
 
 bool ss_runtime_setup_animation_by_hash(void *context, uint32_t name_hash);
 
-void ss_runtime_get_frame_data(void *context,
+/**
+ * Build the FrameData of `frame_no`, which is in `[first frame, last frame + 1)`
+ * of the animation, and write where it is to `out_data` and `out_len`.
+ *
+ * Returns `false` and writes nothing when no frame can be built, with the
+ * reason on `ss_runtime_get_last_error`: `NotLoaded` with no resource bound,
+ * `AnimationNotFound` with no animation set up, `InvalidParameter` for a
+ * `frame_no` out of range.
+ *
+ * The buffer belongs to the context, and stays valid until the next
+ * `ss_runtime_get_frame_data` on it, or until it is rebound, reset or destroyed.
+ */
+bool ss_runtime_get_frame_data(void *context,
                                float frame_no,
                                const unsigned char **out_data,
                                uintptr_t *out_len);
