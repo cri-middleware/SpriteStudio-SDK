@@ -264,6 +264,10 @@ impl<'a> InstanceState<'a> {
     /// new animation is set up: an instance's tracks belong to the animation that
     /// established them, so they do not survive a re-setup.
     fn collapse_to_track_zero(&mut self) {
+        // The collected events read against these sources, and their handles would
+        // name whatever the slots hold next.
+        self.collected_event_indices.clear();
+        self.collected_event_source_handles.clear();
         self.sources.truncate(1);
         self.layers.truncate(1);
         // Rebuilding the slot must not read as a reset of the host's playback

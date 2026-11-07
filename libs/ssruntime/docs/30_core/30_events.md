@@ -21,9 +21,11 @@ ss_runtime_update(ctx, delta_ms);
 const auto* current_animation = binary->animations()->Get(ss_runtime_get_current_animation_index(ctx));  // binary is the ssab root (Loading and Initialization §5)
 const auto* events = current_animation->events();
 if (events != nullptr) {
-    int count = ss_runtime_get_passed_event_count(ctx);
-    for (int i = 0; i < count; i++) {
-        int event_idx = ss_runtime_get_passed_event_index(ctx, i);
+    std::vector<int> passed(ss_runtime_get_passed_event_count(ctx));
+    for (int i = 0; i < (int)passed.size(); i++) {
+        passed[i] = ss_runtime_get_passed_event_index(ctx, i);
+    }
+    for (int event_idx : passed) {
         if (event_idx < 0 || (uint32_t)event_idx >= events->size()) continue;
         auto per_frame = events->Get(event_idx);
 
@@ -82,6 +84,8 @@ if (events != nullptr) {
 ```
 
 `emit_*` are placeholder functions standing for the Player's notification to the host; they do not exist. How to play a sound on an audio event is in [Audio](../50_features/50_audio.md).
+
+**Read the events before notifying anything.** `ss_runtime_setup_animation`, `ss_runtime_bind_resource` and `ss_runtime_reset` clear them, so a handler of the end notification or of an earlier event that sets up another animation leaves nothing to read after it.
 
 ## 3. Which frames are reported
 

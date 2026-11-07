@@ -13,8 +13,8 @@ void MyPlayer::tick(float delta_seconds) {
     // 1. 時間を進める。経過時間はミリ秒で渡す。戻り値は描画するフレーム番号
     float frame_no = ss_runtime_update(ctx, delta_seconds * 1000.0f);
 
-    // 2. ループと終了を通知する（§7）
-    // 3. そのフレームで通過したイベントを通知する（イベントのページ）
+    // 2. 通過したイベントと、ループ・終了のフラグを読む（イベントのページ、§7）
+    // 3. それらを通知する。別のアニメーションをセットアップするハンドラは、まだ読んでいないものを消す
 
     // 4. そのフレームの状態を計算させる（§6）
     float draw_frame = sub_frame_enabled ? frame_no : floorf(frame_no);

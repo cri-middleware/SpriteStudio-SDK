@@ -1296,7 +1296,8 @@ void ss_runtime_set_unit(void *context, int32_t unit);
 int32_t ss_runtime_get_unit(void *context);
 
 /**
- * How many events the last `ss_runtime_update` passed. They stay until the next update.
+ * How many events the last `ss_runtime_update` passed. They stay until the next one,
+ * `ss_runtime_setup_animation`, `ss_runtime_bind_resource` or `ss_runtime_reset`.
  */
 int32_t ss_runtime_get_passed_event_count(void *context);
 

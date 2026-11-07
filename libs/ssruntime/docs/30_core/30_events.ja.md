@@ -21,9 +21,11 @@ ss_runtime_update(ctx, delta_ms);
 const auto* current_animation = binary->animations()->Get(ss_runtime_get_current_animation_index(ctx));  // binary は ssab のルート（ロードと初期化 §5）
 const auto* events = current_animation->events();
 if (events != nullptr) {
-    int count = ss_runtime_get_passed_event_count(ctx);
-    for (int i = 0; i < count; i++) {
-        int event_idx = ss_runtime_get_passed_event_index(ctx, i);
+    std::vector<int> passed(ss_runtime_get_passed_event_count(ctx));
+    for (int i = 0; i < (int)passed.size(); i++) {
+        passed[i] = ss_runtime_get_passed_event_index(ctx, i);
+    }
+    for (int event_idx : passed) {
         if (event_idx < 0 || (uint32_t)event_idx >= events->size()) continue;
         auto per_frame = events->Get(event_idx);
 
@@ -82,6 +84,8 @@ if (events != nullptr) {
 ```
 
 `emit_*` は Player がホストに通知する処理を表す、実在しない関数です。オーディオのイベントを受けて音を鳴らす手順は [オーディオ](../50_features/50_audio.ja.md) にあります。
+
+**何かを通知する前に、イベントを読んでください。** `ss_runtime_setup_animation`・`ss_runtime_bind_resource`・`ss_runtime_reset` はイベントを消すので、終了の通知や先のイベントのハンドラが別のアニメーションをセットアップすると、その後には読むものが残りません。
 
 ## 3. イベントが報告されるフレーム
 
