@@ -12,7 +12,8 @@
  * - **Resource** (`ss_resource_create_copy` / `_borrow` → `ss_resource_destroy`) — parsed
  *   `.ssab` data. Internally reference-counted, so it is safe to destroy a resource that
  *   contexts are still bound to; the buffer stays alive until the last one lets go.
- *   The `_borrow` variant does *not* copy, so the caller's buffer must outlive it.
+ *   The `_borrow` variant does *not* copy, so the caller's buffer must outlive the
+ *   resource and every context and effect slot holding it.
  * - **Context** (`ss_runtime_create` → `ss_runtime_destroy`) — the playback state of
  *   one animated object: a stack of tracks, each playing an animation, layered onto the
  *   setup pose. Bind a resource with `ss_runtime_bind_resource`; several contexts may
@@ -249,10 +250,17 @@ typedef struct ss_event_instance_info {
 extern "C" {
 #endif // __cplusplus
 
+/**
+ * Register the function that receives a message for every failure the runtime
+ * records, for the whole process. It runs on the thread of the failing call, and
+ * `message` is valid only during it. `level` is one of `SS_RUNTIME_LOG_*`.
+ */
 void ss_runtime_set_log_callback(SsLogCallback callback);
 
 /**
- * Creates an AnimationResource by copying the provided data.
+ * Create a resource from a copy of the `len` bytes at `ptr`, which may be freed
+ * on return. Release it with `ss_resource_destroy`. Returns null for a null `ptr`
+ * or a pack of another schema version.
  *
  * # Security and Validation
  * To maximize performance and minimize binary size, `libssruntime` **does not validate** the input `.ssab` data.
@@ -261,14 +269,15 @@ void ss_runtime_set_log_callback(SsLogCallback callback);
  *
  * # Safety
  *
- * This function is unsafe because it dereferences a raw pointer.
- * The caller must ensure the pointer is valid and points to a valid memory block.
+ * `ptr` must point to `len` readable bytes.
  */
 void *ss_resource_create_copy(const unsigned char *ptr,
                               uintptr_t len);
 
 /**
- * Creates an AnimationResource by borrowing the provided data.
+ * Create a resource that reads the `len` bytes at `ptr` in place, with no copy.
+ * Release it with `ss_resource_destroy`. Returns null for a null `ptr` or a pack
+ * of another schema version.
  *
  * # Security and Validation
  * To maximize performance and minimize binary size, `libssruntime` **does not validate** the input `.ssab` data.
@@ -277,25 +286,39 @@ void *ss_resource_create_copy(const unsigned char *ptr,
  *
  * # Safety
  *
- * This function is unsafe because it dereferences a raw pointer.
- * The caller must ensure the pointer is valid and points to a valid memory block of at least `len` bytes,
- * AND the memory must remain valid and unmodified until this resource is destroyed.
+ * `ptr` must point to `len` readable bytes, which stay valid and unmodified until
+ * this handle is destroyed and no context or effect slot holds the resource.
  */
 void *ss_resource_create_borrow(const unsigned char *ptr,
                                 uintptr_t len);
 
+/**
+ * Release this handle. Null is ignored. A context or effect slot bound to the
+ * resource keeps its own share, so this is safe while they live.
+ */
 void ss_resource_destroy(void *resource);
 
+/**
+ * Create an empty context. Bind a resource and set up an animation before playing.
+ * Release it with `ss_runtime_destroy`.
+ */
 void *ss_runtime_create(void);
 
+/**
+ * Release a context and its share of the bound resource. Null is ignored.
+ */
 void ss_runtime_destroy(void *context);
 
+/**
+ * Return a context to its just-created state: the resource is unbound, and the
+ * last error, the overrides and the playback and coordinate settings are cleared.
+ */
 void ss_runtime_reset(void *context);
 
 /**
- * Why the last call that tracks a reason failed, as a stable code. The codes
- * are listed with `SSRuntimeError` in
- * <https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/src/error.rs>.
+ * Why the last call that tracks a reason failed, as a stable code: `1`
+ * `EmptyData`, `2` `InvalidVersion`, `3` `AnimationNotFound`, `4` `NotLoaded`,
+ * `5` `InvalidParameter`, `6` `MemoryError`, `7` `MalformedEffect`, `99` `Unknown`.
  * `0` means the last such call succeeded, and so does a null `context`.
  *
  * Every fallible entry point that has a context to write to clears this on
@@ -336,18 +359,22 @@ const char *ss_runtime_error_message(int32_t code);
 uint32_t ss_runtime_ssab_schema_version(void);
 
 /**
- * Binds an AnimationResource to a Context.
+ * Bind a resource to a context, which takes its own share of it. One resource can
+ * be bound to several contexts, and `ss_resource_destroy` is safe while they are:
+ * the resource lives until the last of them is destroyed, reset or bound to another.
+ * A `_borrow` resource's buffer is the caller's to keep alive for as long.
  *
- * # Safety and Lifetimes
- * - To save memory, a single Resource can be bound to multiple Contexts.
- * - **Lifetime Safety:** This implementation uses `Arc` for internal reference counting.
- *   It is safe to destroy the `resource` (via `ss_resource_destroy`) even if it is still bound
- *   to contexts; the memory will be kept alive until all bound contexts are also destroyed or reset.
+ * Drops the context's tracks and overrides; `ss_runtime_setup_animation` comes next.
+ * Returns `false` with `InvalidParameter` for a null `resource`.
  */
-bool ss_runtime_bind_resource(void *context,
-                              void *resource);
+bool ss_runtime_bind_resource(void *context, void *resource);
 
 /**
+ * Create a resource from a copy of the `len` bytes at `ptr` and bind it to
+ * `context`, in one call, for a caller that needs no resource handle. Returns
+ * `false` with `InvalidParameter` for a null `ptr`, or `InvalidVersion` for a pack
+ * of another schema version.
+ *
  * # Security and Validation
  * To maximize performance and minimize binary size, `libssruntime` **does not validate** the input `.ssab` data.
  * Passing corrupted or maliciously crafted data will cause undefined behavior (e.g., out-of-bounds reads).
@@ -355,14 +382,18 @@ bool ss_runtime_bind_resource(void *context,
  *
  * # Safety
  *
- * This function is unsafe because it dereferences a raw pointer.
- * The caller must ensure the pointer is valid and points to a valid memory block.
+ * `ptr` must point to `len` readable bytes.
  */
 bool ss_runtime_load_ssab_copy(void *context,
                                const unsigned char *ptr,
                                uintptr_t len);
 
 /**
+ * Create a resource that reads the `len` bytes at `ptr` in place and bind it to
+ * `context`, in one call, for a caller that needs no resource handle. Returns
+ * `false` with `InvalidParameter` for a null `ptr`, or `InvalidVersion` for a pack
+ * of another schema version.
+ *
  * # Security and Validation
  * To maximize performance and minimize binary size, `libssruntime` **does not validate** the input `.ssab` data.
  * Passing corrupted or maliciously crafted data will cause undefined behavior (e.g., out-of-bounds reads).
@@ -370,8 +401,8 @@ bool ss_runtime_load_ssab_copy(void *context,
  *
  * # Safety
  *
- * This function is unsafe because it dereferences a raw pointer.
- * The caller must ensure the pointer is valid and points to a valid memory block.
+ * `ptr` must point to `len` readable bytes, which stay valid and unmodified until
+ * `context` is destroyed, reset or bound to another resource.
  */
 bool ss_runtime_load_ssab_borrow(void *context,
                                  const unsigned char *ptr,
@@ -383,18 +414,32 @@ bool ss_runtime_load_ssab_borrow(void *context,
  */
 bool ss_runtime_get_ssab(void *context, const unsigned char **out_data, uintptr_t *out_len);
 
+/**
+ * The bound resource's `.ssab` bytes, or null with `NotLoaded` when none is bound.
+ */
 const unsigned char *ss_runtime_get_ssab_buf(void *context);
 
+/**
+ * The length of `ss_runtime_get_ssab_buf`, or `0` with `NotLoaded` when none is bound.
+ */
 uintptr_t ss_runtime_get_ssab_len(void *context);
 
 /**
+ * Select the animation `name` of the bound resource and move to its first frame.
+ * This does not start it; `ss_runtime_play` does. It drops every track but 0, the
+ * section and the loop count, and keeps the speed, the frame rate, the frame skip
+ * and the direction. Returns `false` with `NotLoaded`, `AnimationNotFound`, or
+ * `InvalidParameter` for a null `name`.
+ *
  * # Safety
  *
- * This function is unsafe because it dereferences a raw pointer.
- * The caller must ensure the pointer is valid and points to a valid null-terminated string.
+ * `name` must be null or a valid null-terminated string.
  */
 bool ss_runtime_setup_animation(void *context, const char *name);
 
+/**
+ * `ss_runtime_setup_animation` by the hash `ss_runtime_hash_string` gives for the name.
+ */
 bool ss_runtime_setup_animation_by_hash(void *context, uint32_t name_hash);
 
 /**
@@ -414,8 +459,20 @@ bool ss_runtime_get_frame_data(void *context,
                                const unsigned char **out_data,
                                uintptr_t *out_len);
 
+/**
+ * Per-part world matrices for the current frame, written by
+ * `ss_runtime_get_frame_data`: 16 floats per part, indexed by `part_index * 16`, with
+ * the translation at `[12]` and `[13]`. The SceneGraph render mode does not compute them.
+ */
 void ss_runtime_get_world_matrices(void *context, const float **out_data, uintptr_t *out_len);
 
+/**
+ * Per-part UVs for the current frame, written by `ss_runtime_get_frame_data`,
+ * matching `ss_runtime_get_local_vertices`:
+ * `[lt.u, lt.v, rt.u, rt.v, lb.u, lb.v, rb.u, rb.v, center.u, center.v]` = 10 floats,
+ * indexed by `part_index * 10`, in the cellmap's texture-pixel space. Divide by the
+ * texture size to normalize.
+ */
 void ss_runtime_get_local_uvs(void *context, const float **out_data, uintptr_t *out_len);
 
 /**
@@ -589,6 +646,10 @@ void ss_runtime_get_nines_index_offsets(void *context,
                                         const uint32_t **out_data,
                                         uintptr_t *out_len);
 
+/**
+ * The playhead of track 0's main animation, with its fraction: what
+ * `ss_runtime_update` last returned, or where a seek put it.
+ */
 float ss_runtime_get_frame_no(void *context);
 
 /**
@@ -601,12 +662,28 @@ float ss_runtime_get_frame_no(void *context);
  */
 bool ss_runtime_is_finished(void *context);
 
+/**
+ * `true` for the single `ss_runtime_update` that took playback back to the start of
+ * its cycle; the next update clears it. Never raised on the last cycle of a finite
+ * loop count, which finishes instead.
+ */
 bool ss_runtime_just_looped(void *context);
 
+/**
+ * `true` while the clock runs and track 0 has not finished. A paused character is still playing.
+ */
 bool ss_runtime_is_playing(void *context);
 
+/**
+ * Whether track 0's playhead is moving forward now. A ping-pong's return leg reads
+ * `false`, as does a backward animation's outward leg.
+ */
 bool ss_runtime_is_playing_forward(void *context);
 
+/**
+ * `true` while a playing character is held by `ss_runtime_pause`. Once track 0 has
+ * finished this reads `false`; `ss_runtime_is_clock_pausing` still reads the hold.
+ */
 bool ss_runtime_is_pausing(void *context);
 
 /**
@@ -632,20 +709,45 @@ bool ss_runtime_is_clock_pausing(void *context);
  */
 bool ss_runtime_is_stack_in_motion(void *context);
 
+/**
+ * What `ss_runtime_set_skip_frames` stored.
+ */
 bool ss_runtime_get_skip_frames(void *context);
 
+/**
+ * 0 = forward, 1 = backward.
+ */
 int32_t ss_runtime_get_playback_direction(void *context);
 
+/**
+ * 0 = normal, 1 = ping-pong.
+ */
 int32_t ss_runtime_get_playback_style(void *context);
 
+/**
+ * `-1` for an animation that loops forever, otherwise the cycles it plays.
+ */
 int32_t ss_runtime_get_loop_count(void *context);
 
+/**
+ * The cycles left, `0` once finished; `-1` for an animation that loops forever.
+ */
 int32_t ss_runtime_get_remaining_loops(void *context);
 
+/**
+ * The first frame of the playback range: the section's when one is set, otherwise the animation's.
+ */
 int32_t ss_runtime_get_start_frame(void *context);
 
+/**
+ * The last frame of the playback range: the section's when one is set, otherwise the animation's.
+ */
 int32_t ss_runtime_get_end_frame(void *context);
 
+/**
+ * The rate track 0's animation plays at, in frames per second: the override when one
+ * is set, otherwise the rate it was authored at.
+ */
 int32_t ss_runtime_get_frame_rate(void *context);
 
 /**
@@ -656,14 +758,35 @@ int32_t ss_runtime_get_frame_rate(void *context);
  */
 float ss_runtime_get_speed_scale(void *context);
 
+/**
+ * `true` (the default) advances by the time elapsed, skipping frames to keep up.
+ * `false` advances one frame at a time, at most one per update.
+ */
 void ss_runtime_set_skip_frames(void *context, bool skip);
 
+/**
+ * `n > 0` plays n cycles and then finishes; `0` or a negative count loops forever.
+ * `ss_runtime_setup_animation` resets it to looping forever, so set it after.
+ */
 void ss_runtime_set_loop_count(void *context, int loop_count);
 
+/**
+ * Play at `frame_rate` frames per second instead of the authored rate; `0` or a
+ * negative rate clears the override. It survives `ss_runtime_setup_animation`.
+ */
 void ss_runtime_set_frame_rate(void *context, int frame_rate);
 
+/**
+ * `direction`: 0 = forward, otherwise backward. `style`: 0 = normal, otherwise
+ * ping-pong. Call it before `ss_runtime_play`. It survives `ss_runtime_setup_animation`.
+ */
 void ss_runtime_set_playback_direction(void *context, int direction, int style);
 
+/**
+ * Playback speed as a multiple of the frame rate. `0.0` stops the playhead while
+ * `ss_runtime_is_playing` stays `true`, and a negative speed clamps to `0.0`; direction
+ * is `ss_runtime_set_playback_direction`'s. It survives `ss_runtime_setup_animation`.
+ */
 void ss_runtime_set_speed_scale(void *context, float speed_scale);
 
 /**
@@ -675,11 +798,24 @@ void ss_runtime_set_speed_scale(void *context, float speed_scale);
  */
 bool ss_runtime_set_animation_section(void *context, int start_frame, int end_frame);
 
+/**
+ * Advance by `delta` **milliseconds** and return the frame to pass to
+ * `ss_runtime_get_frame_data`. With animation mixing it advances every track and fade;
+ * the frame returned is track 0's.
+ */
 float ss_runtime_update(void *context, float delta);
 
+/**
+ * Start track 0 from the start of its range (the end when playing backward), with its
+ * loop count re-armed, and start the clock the other tracks and fades run on.
+ */
 void ss_runtime_play(void *context);
 
-void ss_runtime_play_with_start_frame(void *context, float frame_no);
+/**
+ * `ss_runtime_play`, starting from `frame_no`. A negative `frame_no` starts where `ss_runtime_play` does.
+ */
+void ss_runtime_play_with_start_frame(void *context,
+                                      float frame_no);
 
 /**
  * Holds playback where it stands, keeping the current frame. With animation
@@ -700,22 +836,48 @@ void ss_runtime_pause(void *context);
  */
 void ss_runtime_resume(void *context);
 
+/**
+ * Stop every track and fade where they stand. Nothing rewinds; `ss_runtime_play` starts them again.
+ */
 void ss_runtime_stop(void *context);
 
-void ss_runtime_set_frame_no(void *context, float frame);
+/**
+ * Seek track 0 to `frame`, clamped to the playback range. The events of the frames in between do not fire.
+ */
+void ss_runtime_set_frame_no(void *context,
+                             float frame);
 
+/**
+ * Step track 0 one whole frame forward, whatever the direction and style. Does nothing on the range's last frame.
+ */
 void ss_runtime_next_frame(void *context);
 
+/**
+ * Step track 0 one whole frame back, whatever the direction and style. Does nothing on the range's first frame.
+ */
 void ss_runtime_prev_frame(void *context);
 
 /**
+ * Put `name` on `track`, replacing what it played and cancelling its fade. Tracks
+ * grow on demand. Returns `false` with `NotLoaded`, `AnimationNotFound` (an unknown
+ * name, or no `ss_runtime_setup_animation` yet), or `InvalidParameter` for a null
+ * `name`.
+ *
  * # Safety
  * `name` must be a valid null-terminated UTF-8 (or lossy-decodable) string.
  */
 bool ss_runtime_set_track_animation(void *context, uint32_t track, const char *name);
 
+/**
+ * `ss_runtime_set_track_animation` by the hash of the name.
+ */
 bool ss_runtime_set_track_animation_by_hash(void *context, uint32_t track, uint32_t hash);
 
+/**
+ * The strength of `track`: `0` contributes nothing, `1` all of it, and other values
+ * extrapolate. Returns `false` with `InvalidParameter` for a `NaN` or a track that does
+ * not exist.
+ */
 bool ss_runtime_set_track_alpha(void *context, uint32_t track, float alpha);
 
 /**
@@ -745,8 +907,15 @@ bool ss_runtime_set_track_sync(void *context, uint32_t track, uint32_t sync);
  */
 uint32_t ss_runtime_get_track_sync(void *context, uint32_t track);
 
+/**
+ * How many tracks exist, silent ones included; at least 1.
+ */
 uint32_t ss_runtime_get_track_count(void *context);
 
+/**
+ * Silence `track`: its sources are released and its fade cancelled. Track 0 cannot be
+ * cleared (`InvalidParameter`); fade it to alpha 0 instead.
+ */
 bool ss_runtime_clear_track(void *context, uint32_t track);
 
 /**
@@ -758,8 +927,16 @@ bool ss_runtime_clear_track(void *context, uint32_t track);
  */
 bool ss_runtime_crossfade(void *context, uint32_t track, const char *name, float duration_ms);
 
+/**
+ * `ss_runtime_crossfade` by the hash of the name.
+ */
 bool ss_runtime_crossfade_by_hash(void *context, uint32_t track, uint32_t hash, float duration_ms);
 
+/**
+ * Drive the alpha of `track` to `target_alpha` over `duration_ms`, the same time unit
+ * as `ss_runtime_update`'s delta. Returns `false` with `InvalidParameter` for a
+ * `duration_ms` that is not positive, a `NaN`, or a track that does not exist.
+ */
 bool ss_runtime_fade_track(void *context, uint32_t track, float target_alpha, float duration_ms);
 
 /**
@@ -767,8 +944,15 @@ bool ss_runtime_fade_track(void *context, uint32_t track, float target_alpha, fl
  */
 float ss_runtime_get_track_fade_progress(void *context, uint32_t track);
 
+/**
+ * Cancel the fade on `track`, leaving its alpha and weights where they stand.
+ */
 bool ss_runtime_cancel_track_fade(void *context, uint32_t track);
 
+/**
+ * Seek the animation on `track`, which is how an axis authored as an animation is
+ * driven. Returns `false` with `InvalidParameter` when the track has no animation.
+ */
 bool ss_runtime_set_track_frame(void *context, uint32_t track, float frame);
 
 /**
@@ -776,6 +960,10 @@ bool ss_runtime_set_track_frame(void *context, uint32_t track, float frame);
  */
 float ss_runtime_get_track_frame(void *context, uint32_t track);
 
+/**
+ * The speed of `track`, as a multiple of each animation's frame rate. The track keeps
+ * it across a crossfade or a new animation. Track 0's is `ss_runtime_set_speed_scale`.
+ */
 bool ss_runtime_set_track_speed(void *context, uint32_t track, float speed);
 
 /**
@@ -784,6 +972,10 @@ bool ss_runtime_set_track_speed(void *context, uint32_t track, float speed);
  */
 float ss_runtime_get_track_speed(void *context, uint32_t track);
 
+/**
+ * The rate in frames per second `track` plays its animations at; `0` or a negative
+ * rate clears it. The track keeps it, as it does its speed.
+ */
 bool ss_runtime_set_track_frame_rate(void *context, uint32_t track, int frame_rate);
 
 /**
@@ -792,6 +984,9 @@ bool ss_runtime_set_track_frame_rate(void *context, uint32_t track, int frame_ra
  */
 int32_t ss_runtime_get_track_frame_rate(void *context, uint32_t track);
 
+/**
+ * `ss_runtime_set_skip_frames` for `track`. The track keeps it, as it does its speed.
+ */
 bool ss_runtime_set_track_skip_frames(void *context, uint32_t track, bool skip);
 
 /**
@@ -871,11 +1066,19 @@ uint32_t ss_runtime_get_track_main_source(void *context, uint32_t track);
  */
 uint32_t ss_runtime_add_track_source(void *context, uint32_t track, const char *name, float weight);
 
+/**
+ * `ss_runtime_add_track_source` by the hash of the name.
+ */
 uint32_t ss_runtime_add_track_source_by_hash(void *context,
                                              uint32_t track,
                                              uint32_t hash,
                                              float weight);
 
+/**
+ * The proportion of a source within its track; `ss_runtime_set_track_alpha` is the
+ * strength of the track as a whole. Returns `false` with `InvalidParameter` for an
+ * invalid or released handle.
+ */
 bool ss_runtime_set_source_weight(void *context, uint32_t handle, float weight);
 
 /**
@@ -884,6 +1087,9 @@ bool ss_runtime_set_source_weight(void *context, uint32_t handle, float weight);
  */
 float ss_runtime_get_source_weight(void *context, uint32_t handle);
 
+/**
+ * Seek one source. Returns `false` with `InvalidParameter` for an invalid or released handle.
+ */
 bool ss_runtime_set_source_frame(void *context, uint32_t handle, float frame);
 
 /**
@@ -902,10 +1108,21 @@ int32_t ss_runtime_get_source_animation_index(void *context, uint32_t handle);
  */
 int32_t ss_runtime_get_current_animation_index(void *context);
 
+/**
+ * The playhead of a source; `NaN` for an invalid or released handle.
+ */
 float ss_runtime_get_source_frame(void *context, uint32_t handle);
 
+/**
+ * A source fires events once its weight reaches `threshold`. The default, `+inf`,
+ * keeps every source silent but track 0's main one, which always fires. Returns `false`
+ * with `InvalidParameter` for an invalid or released handle.
+ */
 bool ss_runtime_set_source_event_threshold(void *context, uint32_t handle, float threshold);
 
+/**
+ * `NaN` for an invalid or released handle.
+ */
 float ss_runtime_get_source_event_threshold(void *context, uint32_t handle);
 
 /**
@@ -918,6 +1135,9 @@ float ss_runtime_get_source_event_threshold(void *context, uint32_t handle);
  */
 void *ss_effect_slot_create(const void *resource, uint32_t effect_name_hash, uint32_t seed);
 
+/**
+ * Release a slot and its share of the resource. Null is ignored.
+ */
 void ss_effect_slot_destroy(void *slot);
 
 /**
@@ -935,8 +1155,8 @@ void ss_effect_slot_reset(void *slot);
  * timing inputs. `parent_looped` re-arms transition detection across the
  * parent's loop edge.
  *
- * `y_flip = true` mirrors particle Y position and rotation sign, for Y-down
- * rendering of Y-up authored content (Godot, pixi.js). Pass `false` for
+ * `y_flip = true` mirrors each particle's Y position, rotation sign and quad, for
+ * Y-down rendering of Y-up authored content (Godot, pixi.js). Pass `false` for
  * Y-up engines (Unity 2D).
  *
  * `vert_stride` selects the vertex layout of the returned `EffectDrawPlan`:
@@ -962,6 +1182,9 @@ struct ss_effect_step_result ss_effect_slot_step(void *slot,
                                                  uint8_t vert_stride,
                                                  bool draw);
 
+/**
+ * The seed the slot was created with; `0` for a null slot.
+ */
 uint32_t ss_effect_slot_get_seed(void *slot);
 
 /**
@@ -979,6 +1202,9 @@ bool ss_effect_slot_is_independent(void *slot);
  */
 void *ss_instance_slot_create(void);
 
+/**
+ * Release a slot. Null is ignored.
+ */
 void ss_instance_slot_destroy(void *slot);
 
 /**
@@ -1008,6 +1234,9 @@ struct ss_instance_step_result ss_instance_slot_step(void *slot,
                                                      float delta_seconds,
                                                      bool parent_looped);
 
+/**
+ * Whether the slot's current key plays the child on its own time rather than the parent's frame.
+ */
 bool ss_instance_slot_is_independent(void *slot);
 
 /**
@@ -1028,22 +1257,53 @@ float ss_instance_slot_get_speed(void *slot);
  */
 void ss_runtime_set_render_mode(void *context, uint8_t mode);
 
+/**
+ * 0 = Direct, 1 = SceneGraph.
+ */
 uint8_t ss_runtime_get_render_mode(void *context);
 
-void ss_runtime_set_coordinate_system(void *context, int32_t coordinate_system);
+/**
+ * 0 = Y-up (the default), 1 = Y-down, which flips Y coordinates and rotation. Any other value is Y-up.
+ */
+void ss_runtime_set_coordinate_system(void *context,
+                                      int32_t coordinate_system);
 
+/**
+ * 0 = Y-up, 1 = Y-down.
+ */
 int32_t ss_runtime_get_coordinate_system(void *context);
 
+/**
+ * 0 = the canvas center (the default), 1 = its top-left corner, which offsets root
+ * parts by half the canvas. Any other value is the center.
+ */
 void ss_runtime_set_origin(void *context, int32_t origin);
 
+/**
+ * 0 = the canvas center, 1 = its top-left corner.
+ */
 int32_t ss_runtime_get_origin(void *context);
 
+/**
+ * 0 = pixels (the default), 1 = normalized, which divides each part's position by the
+ * canvas size. Sizes, local vertices and UVs stay in pixels. Any other value is pixels.
+ */
 void ss_runtime_set_unit(void *context, int32_t unit);
 
+/**
+ * 0 = pixels, 1 = normalized.
+ */
 int32_t ss_runtime_get_unit(void *context);
 
+/**
+ * How many events the last `ss_runtime_update` passed. They stay until the next update.
+ */
 int32_t ss_runtime_get_passed_event_count(void *context);
 
+/**
+ * Collected event `index`, as an index into the `events()` of the animation of the
+ * source that fired it (`ss_runtime_get_passed_event_source_handle`); `-1` out of range.
+ */
 int32_t ss_runtime_get_passed_event_index(void *context, int32_t index);
 
 /**
@@ -1089,10 +1349,12 @@ struct ss_event_instance_info ss_runtime_get_active_event_instance(void *context
 struct ss_effect_event_info ss_runtime_get_active_effect_event(void *context, uint32_t slot_index);
 
 /**
+ * The FNV-1a hash the converter stores for a name, which the `_by_hash` calls
+ * take. `0` for a null or non-UTF-8 string.
+ *
  * # Safety
  *
- * This function is unsafe because it dereferences a raw pointer.
- * The caller must ensure the pointer is valid and points to a valid null-terminated string.
+ * `s` must be null or a valid null-terminated string.
  */
 uint32_t ss_runtime_hash_string(const char *s);
 
@@ -1107,7 +1369,8 @@ int32_t ss_runtime_find_part_index(void *context, const char *part_name);
 
 /**
  * Set or clear a per-part visibility override.
- * `force`: `0` = clear/revert, `1` = force-hide, `2` = force-visible (reserved).
+ * `force`: `0` = clear/revert, `1` = force-hide. Anything else, `2` (reserved for
+ * force-visible) included, returns `false` with `InvalidParameter`.
  * `cascade != 0` propagates a force-hide to descendants.
  */
 bool ss_runtime_set_part_visibility_override(void *context,

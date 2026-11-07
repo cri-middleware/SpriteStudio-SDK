@@ -11,7 +11,8 @@
  * time** — see `ss_converter_create`.
  *
  * Every entry point tolerates a null context and returns a safe default rather
- * than dereferencing it, and each one runs its work inside `catch_unwind`.
+ * than dereferencing it, and the conversion and scan entry points run their work
+ * inside `catch_unwind`.
  * **That net only exists where the binary was built with unwinding.** This
  * repository's own profiles set `panic = "abort"`, so in the artifacts it ships
  * a panic ends the host process instead of being reported here. Reporting
@@ -41,17 +42,41 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+/**
+ * The outcome `ss_converter_get_result` reports.
+ */
 enum CConverterError
 #if defined(__cplusplus) || __STDC_VERSION__ >= 202311L
   : int32_t
 #endif // defined(__cplusplus) || __STDC_VERSION__ >= 202311L
  {
+  /**
+   * The conversion finished and wrote its output.
+   */
   Success = 0,
+  /**
+   * A file could not be read or written.
+   */
   ErrorIo = -1,
+  /**
+   * The `.sspj` or a file it references could not be parsed.
+   */
   ErrorSspj = -2,
+  /**
+   * The project parsed but could not be converted.
+   */
   ErrorConversion = -3,
+  /**
+   * No conversion was ever started on this context.
+   */
   ErrorNotYetStarted = -4,
+  /**
+   * `ss_converter_abort` stopped the conversion.
+   */
   ErrorAborted = -5,
+  /**
+   * A null context, or the worker panicked.
+   */
   ErrorUnknown = -99,
 };
 #ifndef __cplusplus
@@ -87,12 +112,18 @@ const char *ss_converter_version(void);
  */
 void ss_converter_version_free(char *s);
 
+/**
+ * The `.ssab` schema version this converter writes.
+ */
 uint32_t ss_converter_ssab_schema_version(void);
 
+/**
+ * The `.ssqb` schema version this converter writes.
+ */
 uint32_t ss_converter_ssqb_schema_version(void);
 
 /**
- * A conversion context, or null if the allocation failed.
+ * Create a conversion context.
  *
  * **A context runs one job at a time** — a conversion
  * (`ss_converter_convert`) or a directory scan (`ss_converter_scan_dir`).
@@ -108,16 +139,21 @@ struct Context *ss_converter_create(void);
  * Release a context from `ss_converter_create`. Null is accepted and ignored.
  *
  * Every borrowed pointer taken from this context — the scan results, the error
- * text — dies with it.
+ * text — dies with it. A job still running is neither stopped nor waited for, and
+ * its `callback` keeps being called, so call `ss_converter_abort` and wait for
+ * `ss_converter_is_finished` first.
  */
 void ss_converter_destroy(struct Context *context);
 
 /**
  * Start converting one `.sspj` into `output_dir`, **on a worker thread**.
  *
- * Returns immediately. Poll `ss_converter_is_finished`, then call
+ * Returns once the worker is spawned. Poll `ss_converter_is_finished`, then call
  * `ss_converter_get_result` for the outcome and `ss_converter_get_error`
  * for the text when it is not `Success`.
+ *
+ * If a conversion is still running on this context, this waits for it first; call
+ * `ss_converter_abort` and poll `ss_converter_is_finished` before starting another.
  *
  * `callback` is invoked **on the worker thread** with a message that is only
  * valid for the duration of the call; copy anything you keep, and do not touch
@@ -176,7 +212,7 @@ CConverterError ss_converter_get_result(struct Context *context);
  * before `ss_converter_get_result` has been called, which is what fills this
  * in. **The text is borrowed from the context**: do not free it, and do not
  * keep it past the next conversion on that context or the context's own
- * destruction.
+ * destruction. A null `context` leaves the out pointers untouched.
  */
 void ss_converter_get_error(struct Context *context, const char **out_data, uintptr_t *out_len);
 
@@ -186,8 +222,8 @@ void ss_converter_get_error(struct Context *context, const char **out_data, uint
  * Returns immediately; poll `ss_converter_is_finished`. The three budgets
  * bound the walk — `max_depth` directories deep, `max_entries` entries, and
  * `max_millis` of wall clock; `ss_converter_scan_budget_exceeded` reports
- * whether one of them cut the walk short, in which case the results are a
- * prefix rather than the whole tree.
+ * whether one of them cut the walk short, in which case the results are partial.
+ * `max_millis == 0` means no time limit.
  *
  * See `ss_converter_create` on one job at a time: a context scanning is not
  * a context converting.
@@ -206,8 +242,8 @@ void ss_converter_scan_dir(struct Context *ctx,
 uintptr_t ss_converter_scan_visited(struct Context *ctx);
 
 /**
- * `.sspj` files the scan has found so far. Safe to poll while it runs, unlike
- * `ss_converter_scan_result_count`.
+ * `.sspj` files the scan has found so far, which is what to poll while it runs:
+ * the paths themselves are published when it finishes.
  */
 uintptr_t ss_converter_scan_found(struct Context *ctx);
 
@@ -223,8 +259,8 @@ bool ss_converter_scan_budget_exceeded(struct Context *ctx);
  *
  * Despite the name this rebuilds the context's result strings from the
  * scanner, which is what makes them readable by
- * `ss_converter_scan_result_at` — so call it before the first read, and
- * again whenever you want newer results.
+ * `ss_converter_scan_result_at` — so call it after `ss_converter_is_finished`,
+ * before the first read.
  *
  * **It invalidates every pointer a previous `ss_converter_scan_result_at`
  * handed out.** Read the paths you want, or copy them, before calling this
@@ -237,8 +273,8 @@ uintptr_t ss_converter_scan_result_count(struct Context *ctx);
  * count that `ss_converter_scan_result_count` last reported.
  *
  * **Borrowed from the context** — do not free it. It dies at the next
- * `ss_converter_scan_result_count`, the next `ss_converter_convert` on
- * this context, or the context's own destruction.
+ * `ss_converter_scan_result_count`, `ss_converter_scan_dir` or
+ * `ss_converter_convert` on this context, or the context's own destruction.
  */
 const char *ss_converter_scan_result_at(struct Context *ctx, uintptr_t index);
 
