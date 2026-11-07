@@ -94,7 +94,8 @@ if (events != nullptr) {
 | Normal playback | The frames passed since the previous `update` |
 | `ss_runtime_play` / `ss_runtime_play_with_start_frame` | The start frame (and the frames passed after it) |
 | `ss_runtime_set_frame_no` (seek) | The destination frame, whether playing or stopped. **The frames between the origin and the destination are not reported** |
-| `ss_runtime_set_animation_section` | The frame at the start of the section (the end when backward) |
+| `ss_runtime_next_frame` / `ss_runtime_prev_frame` / `ss_runtime_set_track_frame` / `ss_runtime_set_source_frame` | The same as a seek, for the source they move. A source other than the primary reports only when it fires events ([Animation Mixing §6](../50_features/10_animation_mixing.md#6-events)) |
+| `ss_runtime_set_animation_section` | The frame at the start of the section (the end when backward), whether playing or stopped |
 
 The events of passed frames are reported in backward playback too.
 

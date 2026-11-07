@@ -26,7 +26,7 @@ const ss_effect_step_result step = ss_effect_slot_step(
     slot, ev,
     parent_frame_no,       // the parent's playhead
     delta_seconds,         // elapsed time (seconds)
-    fps,                   // the animation's frame rate (AnimationData.fps)
+    fps,                   // §2
     parent_looped,         // the parent's ss_runtime_just_looped
     /*y_flip*/ true,       // §2
     /*vert_stride*/ 2,     // §2
@@ -42,12 +42,13 @@ if (step.visible) {
 - **Do not advance the effect's clock from `draw_order`** (for the reason in [Instance Parts §2](./50_instance.md#2-advancing-the-child-with-the-slot): an independently played effect would freeze in mid-air while hidden). **Enumerate every effect part from the ssab and `step` every one of them every frame.** Use `step.visible` only to decide whether to draw. Step a hidden part with `draw = false` (§2): it keeps the clock moving and skips the particles nobody draws.
 - The returned `EffectDrawPlan` buffer stays valid until the next `step` call on the same slot.
 - When you replay the parent from the start with `play`, or when a slot starts an instance child that has effect parts, reset the slot to its initial state with `ss_effect_slot_reset` ([Instance Parts §6](./50_instance.md#6-restarting-playback)).
-- Independent playback is handled the same as for instance parts ([Instance Parts §3](./50_instance.md#3-independent-playback)).
+- Independent playback is handled the same as for instance parts ([Instance Parts §3](./50_instance.md#3-independent-playback)), except that an effect's clock follows the frame-rate override (§2).
 
 ## 2. Arguments of `ss_effect_slot_step`
 
 | Argument | Value |
 | :--- | :--- |
+| `fps` | `ss_runtime_get_frame_rate` of the context that has the part: the frame-rate override when one is set, otherwise the authored rate. An independently played effect converts the elapsed time to frames with it, so `ss_runtime_set_frame_rate` changes that effect's speed, and `ss_runtime_set_speed_scale` does not |
 | `y_flip` | `true` for Y-down engines (Godot's 2D, PixiJS and so on), `false` for Y-up engines (Unity and so on). SpriteStudio is authored in Y-up, so with `true` the particles' Y coordinates, rotation direction and quads are returned flipped |
 | `vert_stride` | The number of floats per vertex. `2` (XY) for 2D engines; `3` (XYZ, z = 0) for engines that require three-component vertices (Unity's Mesh, Unreal's FProcMeshVertex and so on) |
 | `draw` | Whether the part is in this frame's `draw_order`, that is whether you draw it. With `false` the step moves only the effect's clock and transitions, builds no particles and returns not visible; the next step with `true` returns the same plan it would have had every step drawn. Knowing it needs this frame's `ss_runtime_get_frame_data` first, so a Player that steps before that passes `true` |

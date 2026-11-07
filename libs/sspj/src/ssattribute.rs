@@ -458,6 +458,7 @@ where
 {
     #[derive(Deserialize)]
     struct SignalCommandParamList {
+        #[serde(default)]
         value: Vec<SsAttributeSignalCommandParam>,
     }
     Ok(SignalCommandParamList::deserialize(deserializer)?.value)
@@ -474,6 +475,7 @@ where
 {
     #[derive(Deserialize)]
     struct SignalCommandList {
+        #[serde(default)]
         value: Vec<SsAttributeSignalCommand>,
     }
     Ok(SignalCommandList::deserialize(deserializer)?.value)

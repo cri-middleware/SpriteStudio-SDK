@@ -26,7 +26,7 @@ const ss_effect_step_result step = ss_effect_slot_step(
     slot, ev,
     parent_frame_no,       // 親の再生ヘッド
     delta_seconds,         // 経過時間（秒）
-    fps,                   // アニメーションのフレームレート（AnimationData.fps）
+    fps,                   // §2
     parent_looped,         // 親の ss_runtime_just_looped
     /*y_flip*/ true,       // §2
     /*vert_stride*/ 2,     // §2
@@ -42,12 +42,13 @@ if (step.visible) {
 - **エフェクトの時計を `draw_order` で進めないでください**（理由は [インスタンスパーツ §2](./50_instance.ja.md#2-スロットで子を進める) と同じで、非表示の間は独立再生のエフェクトが空中で止まります）。**すべてのエフェクトパーツを ssab から列挙し、毎フレーム漏れなく `step` してください。** `step.visible` は、描くかどうかを決めるためだけに使います。非表示のパーツは `draw = false` で `step` します（§2）。時計は進み、誰も描かないパーティクルの計算は省かれます。
 - 返された `EffectDrawPlan` のバッファは、同じスロットで次に `step` を呼ぶまで有効です。
 - 親を `play` で先頭から再生し直すときと、エフェクトパーツを持つインスタンスの子をスロットが始めたときは、`ss_effect_slot_reset` でスロットを初期状態に戻してください（[インスタンスパーツ §6](./50_instance.ja.md#6-再生し直すとき)）。
-- 独立再生の扱いはインスタンスパーツと同じです（[インスタンスパーツ §3](./50_instance.ja.md#3-独立再生)）。
+- 独立再生の扱いはインスタンスパーツと同じです（[インスタンスパーツ §3](./50_instance.ja.md#3-独立再生)）。ただし、エフェクトの時計はフレームレートの上書きに従います（§2）。
 
 ## 2. `ss_effect_slot_step` の引数
 
 | 引数 | 値 |
 | :--- | :--- |
+| `fps` | パーツを持つコンテキストの `ss_runtime_get_frame_rate`。フレームレートの上書きがあればその値、無ければ作成時の値。独立再生のエフェクトは経過時間をこの値でフレームに換算するので、`ss_runtime_set_frame_rate` で速さが変わり、`ss_runtime_set_speed_scale` では変わらない |
 | `y_flip` | Y-Down のエンジン（Godot の 2D、PixiJS など）は `true`、Y-Up のエンジン（Unity など）は `false`。SpriteStudio は Y-Up で作られているので、`true` ではパーティクルの Y 座標、回転の向き、矩形を反転して返す |
 | `vert_stride` | 1 頂点あたりの float の数。2D のエンジンは `2`（XY）、3 成分の頂点を求めるエンジン（Unity の Mesh、Unreal の FProcMeshVertex など）は `3`（XYZ、z = 0） |
 | `draw` | このフレームの `draw_order` にパーツがあるか、つまり描くかどうか。`false` ではエフェクトの時計と遷移だけを進め、パーティクルは作らず、見えないとして返す。次に `true` で `step` したときは、毎回描いていた場合と同じ plan が返る。判定にはこのフレームの `ss_runtime_get_frame_data` が先に要るので、それより前に `step` する Player は `true` を渡す |

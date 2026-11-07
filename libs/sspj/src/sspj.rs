@@ -76,6 +76,7 @@ where
 {
     #[derive(Deserialize)]
     struct List {
+        #[serde(default)]
         value: Vec<String>,
     }
     List::deserialize(deserializer).map(|l| l.value)

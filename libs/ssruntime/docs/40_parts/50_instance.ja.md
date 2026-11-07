@@ -57,7 +57,7 @@ for (InstanceChild& c : instance_children) {
 
 ## 3. 独立再生
 
-インスタンスパーツとエフェクトパーツには、親の再生速度や停止にかかわらず、自分の経過時間で進む「独立再生」の設定があります。独立再生かどうかは、`ss_instance_slot_is_independent` / `ss_effect_slot_is_independent` で分かります（インスタンスパーツは `ss_instance_slot_step` の戻り値の `independent` でも分かります）。
+インスタンスパーツとエフェクトパーツには、親の再生速度や停止にかかわらず、自分の経過時間で進む「独立再生」の設定があります（エフェクトパーツはフレームレートの上書きには従います。[エフェクトパーツ §2](./60_effect.ja.md#2-ss_effect_slot_step-の引数)）。独立再生かどうかは、`ss_instance_slot_is_independent` / `ss_effect_slot_is_independent` で分かります（インスタンスパーツは `ss_instance_slot_step` の戻り値の `independent` でも分かります）。
 
 - **親が一時停止中でも、シークで親のフレームが動いていなくても、`step` を呼び続けてください。** 呼ばないと、パーティクルが空中で止まるなど、不自然な見た目になります。
 - 独立再生を始めたりやり直したりできるのは、**明示的に置かれた再生のキー**（`EventInstance` / `EventEffect`）だけです。現在のフレームに明示的なキーが無い場合（アニメーションの先頭に置かなかった場合など）、Brain はフレーム 0 から始める暗黙のキーを使いますが、独立再生の子は、親がループしてもこの暗黙のキーではやり直しません。
