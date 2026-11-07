@@ -156,7 +156,8 @@ namespace SpriteStudio.SsConverter
         ///  bound the walk — `max_depth` directories deep, `max_entries` entries, and
         ///  `max_millis` of wall clock; `ss_converter_scan_budget_exceeded` reports
         ///  whether one of them cut the walk short, in which case the results are partial.
-        ///  `max_millis == 0` means no time limit.
+        ///  `max_millis == 0` means no time limit. A symbolic link to a directory is not
+        ///  followed, unless it is `dir` itself.
         ///
         ///  See `ss_converter_create` on one job at a time: a context scanning is not
         ///  a context converting.

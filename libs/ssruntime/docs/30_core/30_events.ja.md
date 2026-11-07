@@ -21,9 +21,11 @@ ss_runtime_update(ctx, delta_ms);
 const auto* current_animation = binary->animations()->Get(ss_runtime_get_current_animation_index(ctx));  // binary は ssab のルート（ロードと初期化 §5）
 const auto* events = current_animation->events();
 if (events != nullptr) {
-    int count = ss_runtime_get_passed_event_count(ctx);
-    for (int i = 0; i < count; i++) {
-        int event_idx = ss_runtime_get_passed_event_index(ctx, i);
+    std::vector<int> passed(ss_runtime_get_passed_event_count(ctx));
+    for (int i = 0; i < (int)passed.size(); i++) {
+        passed[i] = ss_runtime_get_passed_event_index(ctx, i);
+    }
+    for (int event_idx : passed) {
         if (event_idx < 0 || (uint32_t)event_idx >= events->size()) continue;
         auto per_frame = events->Get(event_idx);
 
@@ -83,6 +85,8 @@ if (events != nullptr) {
 
 `emit_*` は Player がホストに通知する処理を表す、実在しない関数です。オーディオのイベントを受けて音を鳴らす手順は [オーディオ](../50_features/50_audio.ja.md) にあります。
 
+**何かを通知する前に、イベントを読んでください。** `ss_runtime_setup_animation`・`ss_runtime_bind_resource`・`ss_runtime_reset` はイベントを消すので、終了の通知や先のイベントのハンドラが別のアニメーションをセットアップすると、その後には読むものが残りません。
+
 ## 3. イベントが報告されるフレーム
 
 | 操作 | 次の `update` で報告されるフレーム |
@@ -109,6 +113,8 @@ if (events != nullptr) {
 ### 3-3. 走らせなかった tick
 
 **Player が走らせなかった tick では、何も報告しないでください。** 動くものが無いので評価を省いた tick や、画面外のキャラクターを飛ばした tick では `ss_runtime_update` を呼ばないので、報告することがありません。その tick では、前の tick のイベントと、ループ・終了・開始の通知を空にしてください。前の tick の報告を残すと、tick を飛ばしている間ずっと同じイベントで音が鳴り続けたり、とうに過ぎたループや終了をホストが読み続けたりします。tick を飛ばしてよい条件は [アニメーションミキシング §1-6](../50_features/10_animation_mixing.ja.md#1-6-動くものが無い-tick-を省く) にあります。
+
+シークの報告も `update` を待ちます。停止中に tick を飛ばす Player では、その間のシークは tick が走るまで何も報告しません。すぐに報告するには、シークの後に tick を 1 回走らせてください。クロックが止まっていれば、`ss_runtime_update` は何も動かさず、移動先のフレームを報告するだけです。
 
 開始の通知を tick で報告する Player（パルスで公開する場合など）は、tick を飛ばしている間や画面外にいる間に呼ばれた `ss_runtime_play` / `ss_runtime_play_with_start_frame` の開始を取りこぼさず、その後に走った最初の tick で報告してください。
 

@@ -13,8 +13,8 @@ void MyPlayer::tick(float delta_seconds) {
     // 1. Advance time. Pass the elapsed time in milliseconds. The return value is the frame number to draw
     float frame_no = ss_runtime_update(ctx, delta_seconds * 1000.0f);
 
-    // 2. Notify loops and the end (§7)
-    // 3. Notify the events passed in this frame (the Events page)
+    // 2. Read the passed events and the loop and end flags (the Events page, §7)
+    // 3. Notify them. A handler that sets up another animation clears what is not read yet
 
     // 4. Have the Brain compute the state of that frame (§6)
     float draw_frame = sub_frame_enabled ? frame_no : floorf(frame_no);

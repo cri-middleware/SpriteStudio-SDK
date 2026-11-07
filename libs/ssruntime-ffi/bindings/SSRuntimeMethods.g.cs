@@ -1201,7 +1201,8 @@ namespace SpriteStudio.SsRuntime
         public static extern int ss_runtime_get_unit(void* context);
 
         /// <summary>
-        ///  How many events the last `ss_runtime_update` passed. They stay until the next update.
+        ///  How many events the last `ss_runtime_update` passed. They stay until the next one,
+        ///  `ss_runtime_setup_animation`, `ss_runtime_bind_resource` or `ss_runtime_reset`.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_get_passed_event_count", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int ss_runtime_get_passed_event_count(void* context);

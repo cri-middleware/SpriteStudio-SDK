@@ -68,7 +68,7 @@ int hitTestPart(const ss::runtime::FrameData* frame, Point point, const std::set
 
 ### 2-1. 状態の語と優先順
 
-状態の語は `normal` / `hover` / `pressed` / `disabled` / `focused` の 5 つです。ホストの状態からの写し方は Player が決めます（uGUI の Highlighted は `hover`、Godot の `DRAW_HOVER_PRESSED` は `pressed`、Ren'Py の insensitive は `disabled` など）。
+状態の語は `normal` / `hover` / `pressed` / `disabled` / `focused` の 5 つです。ホストの状態からの写し方は Player が決めます（uGUI の Highlighted は `hover`、Godot の `DRAW_HOVER_PRESSED` は `toggle_mode` を除いて `pressed`（§5）、Ren'Py の insensitive は `disabled` など）。
 
 同時に立ったときは、`disabled` > `pressed` > `hover` > `focused` > `normal` の順で 1 つを選んでください。
 

@@ -21,9 +21,11 @@ ss_runtime_update(ctx, delta_ms);
 const auto* current_animation = binary->animations()->Get(ss_runtime_get_current_animation_index(ctx));  // binary is the ssab root (Loading and Initialization §5)
 const auto* events = current_animation->events();
 if (events != nullptr) {
-    int count = ss_runtime_get_passed_event_count(ctx);
-    for (int i = 0; i < count; i++) {
-        int event_idx = ss_runtime_get_passed_event_index(ctx, i);
+    std::vector<int> passed(ss_runtime_get_passed_event_count(ctx));
+    for (int i = 0; i < (int)passed.size(); i++) {
+        passed[i] = ss_runtime_get_passed_event_index(ctx, i);
+    }
+    for (int event_idx : passed) {
         if (event_idx < 0 || (uint32_t)event_idx >= events->size()) continue;
         auto per_frame = events->Get(event_idx);
 
@@ -83,6 +85,8 @@ if (events != nullptr) {
 
 `emit_*` are placeholder functions standing for the Player's notification to the host; they do not exist. How to play a sound on an audio event is in [Audio](../50_features/50_audio.md).
 
+**Read the events before notifying anything.** `ss_runtime_setup_animation`, `ss_runtime_bind_resource` and `ss_runtime_reset` clear them, so a handler of the end notification or of an earlier event that sets up another animation leaves nothing to read after it.
+
 ## 3. Which frames are reported
 
 | Operation | Frames reported by the next `update` |
@@ -109,6 +113,8 @@ A seek, whether playing or stopped, makes the next `update` report the events of
 ### 3-3. Ticks the Player does not run
 
 **Report nothing for a tick the Player does not run.** A tick that skipped evaluation because nothing moves, or that skipped a character off screen, calls no `ss_runtime_update`, so it has nothing to report. On such a tick, empty the previous tick's events and its loop, finish and start notifications. Left in place, the same event keeps playing a sound for as long as ticks are skipped, and the host keeps reading a loop or an end that was crossed long ago. When a tick may be skipped is in [Animation Mixing §1-6](../50_features/10_animation_mixing.md#1-6-skipping-ticks-when-nothing-moves).
+
+A seek waits for an `update` too. On a Player that skips ticks while stopped, a seek made meanwhile reports nothing until a tick runs. To report it at once, run one tick after the seek: with the clock stopped, `ss_runtime_update` moves nothing and only reports the destination frame.
 
 A Player that reports the start notification from a tick (for example as a pulse) must not lose a start from `ss_runtime_play` / `ss_runtime_play_with_start_frame` called while ticks are skipped or while the character is off screen: report it on the first tick that runs after the call.
 

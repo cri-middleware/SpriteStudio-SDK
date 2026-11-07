@@ -123,3 +123,69 @@ fn track_outgoing_event_threshold_round_trips() {
     assert_eq!(ctx.get_track_outgoing_event_threshold(0), Some(0.5), "track 0 keeps it across a setup");
     assert_eq!(ctx.get_track_outgoing_event_threshold(3), None);
 }
+
+/// What an update collected reads against the animation that fired it, and a
+/// source handle comes to name another one, so the events go with the animation.
+#[test]
+fn setting_up_binding_or_resetting_drops_the_collected_events() {
+    prepare();
+    let data = std::fs::read(fixture("overall/UserData.ssab")).expect("read pack");
+    let ssab_data = SsabData::load_copy(&data).unwrap();
+    let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.unwrap();
+    let name = resource.get_animation_names().first().cloned().expect("an animation");
+    let played = || {
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation(&name).unwrap();
+        ctx.play();
+        ctx.update(1000.0);
+        assert!(!ctx.get_passed_event_indices().is_empty(), "fixture sanity: the update passes events");
+        ctx
+    };
+
+    let mut ctx = played();
+    ctx.setup_animation(&name).unwrap();
+    assert!(ctx.get_passed_event_indices().is_empty(), "setup_animation");
+    assert!(ctx.get_passed_event_source_handles().is_empty(), "setup_animation");
+
+    let mut ctx = played();
+    ctx.bind_resource(&resource);
+    assert!(ctx.get_passed_event_indices().is_empty(), "bind_resource");
+    assert!(ctx.get_passed_event_source_handles().is_empty(), "bind_resource");
+
+    let mut ctx = played();
+    ctx.reset();
+    assert!(ctx.get_passed_event_indices().is_empty(), "reset");
+    assert!(ctx.get_passed_event_source_handles().is_empty(), "reset");
+}
+
+/// A seek on a stopped character is reported by the next update, which moves
+/// nothing: what a Player that skips ticks while stopped has to run to report one.
+#[test]
+fn a_seek_while_stopped_is_reported_by_the_next_update() {
+    prepare();
+    let data = std::fs::read(fixture("overall/UserData.ssab")).expect("read pack");
+    let ssab_data = SsabData::load_copy(&data).unwrap();
+    let resource = unsafe { AnimationResource::new(ssab_data.as_slice()) }.unwrap();
+    let name = resource.get_animation_names().first().cloned().expect("an animation");
+    let events = resource.animations()[0].events.expect("fixture sanity: the animation has events");
+    let (index, key) = events.iter().enumerate().find(|(_, e)| e.frame_index() > 0).expect("fixture sanity: a key past frame 0");
+
+    let mut ctx = Context::new();
+    ctx.bind_resource(&resource);
+    ctx.setup_animation(&name).unwrap();
+    let frame = key.frame_index() as f32;
+    ctx.set_frame_no(frame);
+    assert_eq!(ctx.update(1000.0), frame, "a stopped clock moves nothing");
+    assert_eq!(ctx.get_passed_event_indices(), [index as i32]);
+    ctx.update(1000.0);
+    assert!(ctx.get_passed_event_indices().is_empty(), "reported once");
+
+    // The same once it has played and been stopped.
+    ctx.play();
+    ctx.update(1000.0);
+    ctx.stop();
+    ctx.set_frame_no(frame);
+    assert_eq!(ctx.update(1000.0), frame);
+    assert_eq!(ctx.get_passed_event_indices(), [index as i32]);
+}

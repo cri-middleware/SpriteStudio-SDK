@@ -48,6 +48,8 @@ impl<'a> Context<'a> {
         }
     }
 
+    /// The events the last [`Self::update`] passed. They stay until the next one,
+    /// [`Self::setup_animation`], [`Self::bind_resource`] or [`Self::reset`].
     pub fn get_passed_event_indices(&self) -> &[i32] {
         &self.instance.collected_event_indices
     }

@@ -2076,7 +2076,8 @@ pub unsafe extern "C" fn ss_runtime_get_unit(context: *mut c_void) -> i32 {
     }
 }
 
-/// How many events the last `ss_runtime_update` passed. They stay until the next update.
+/// How many events the last `ss_runtime_update` passed. They stay until the next one,
+/// `ss_runtime_setup_animation`, `ss_runtime_bind_resource` or `ss_runtime_reset`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_get_passed_event_count(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = unsafe { get_context(context) } {

@@ -68,7 +68,7 @@ The area an adapter's button takes the pointer in is **the whole display box unl
 
 ### 2-1. The state words and their precedence
 
-There are five state words: `normal`, `hover`, `pressed`, `disabled` and `focused`. How the host's states map onto them is the Player's (uGUI's Highlighted to `hover`, Godot's `DRAW_HOVER_PRESSED` to `pressed`, Ren'Py's insensitive to `disabled`, and so on).
+There are five state words: `normal`, `hover`, `pressed`, `disabled` and `focused`. How the host's states map onto them is the Player's (uGUI's Highlighted to `hover`, Godot's `DRAW_HOVER_PRESSED` to `pressed` outside `toggle_mode` (§5), Ren'Py's insensitive to `disabled`, and so on).
 
 When several are set at once, pick one in the order `disabled` > `pressed` > `hover` > `focused` > `normal`.
 
