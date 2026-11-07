@@ -44,7 +44,7 @@ ssruntime = "7.0.0-beta.1"
 2. **メモリリソースの共有とライフタイム (FFI利用時)**
    - メモリ効率を最適化するため、1つのアニメーションリソース (`AnimationResource`) を複数の再生インスタンス (`Context`) で共有する設計になっています。
    - リソースは内部で参照カウント管理されています。コンテキストにバインドしたままリソースを `ss_resource_destroy` しても安全です（バインドしている全コンテキストが破棄・リセットされるまでデータは保持されます）。
-   - **一方で `ss_resource_create_borrow` に渡したバッファは別問題です。** これはコピーされないため、**リソースが破棄されるまで、呼び出し側がそのメモリを有効かつ不変に保つ必要があります**。保証できない場合は `ss_resource_create_copy` を使用してください。
+   - **一方で `ss_resource_create_borrow` に渡したバッファは別問題です。** これはコピーされないため、**リソース自身と、それを参照する Context・effect slot がすべて破棄されるまで、呼び出し側がそのメモリを有効かつ不変に保つ必要があります**。保証できない場合は `ss_resource_create_copy` を使用してください。
 
 # アーキテクチャ
 
@@ -92,39 +92,49 @@ Rust の機能を C 言語インターフェースを通じて公開していま
 ## C++ での利用例
 
 ```cpp
+#include <cstdio>
 #include "ssruntime.h"
 
-void play_animation(const uint8_t* ssab_data, size_t size) {
+// Quick Start の `Basic.ssab` の `anime_1` を 1 回再生します。
+bool play_animation(const uint8_t* ssab_data, size_t size) {
     // 1. Context の作成
     void* ctx = ss_runtime_create();
-    
-    // 2. Resource のロード (外部メモリの参照。コピーを避け最も効率的)
-    // 注意: resource を破棄するまで、元の ssab_data がメモリ上に維持されている必要があります。
-    void* res = ss_resource_create_borrow(ssab_data, size);
-    
-    // 3. Resource を Context にバインド
-    ss_runtime_bind_resource(ctx, res);
-    
-    // 4. アニメーションの設定と再生開始
-    ss_runtime_setup_animation(ctx, "Wait");
-    ss_runtime_play(ctx);
 
-    // 5. 更新ループ
-    float dt_ms = 1000.0f / 60.0f; // ss_runtime_update はミリ秒を受け取ります
-    while (ss_runtime_is_playing(ctx)) {
-        float frame = ss_runtime_update(ctx, dt_ms);
-        
-        // 6. 描画情報の取得
-        const uint8_t* data;
-        uintptr_t len;
-        // フレーム番号は浮動小数で管理・取得されます（サブフレーム対応）。
-        // 整数フレームのみで再生したい場合は frame の代わりに floorf(frame) を渡します。
-        ss_runtime_get_frame_data(ctx, frame, &data, &len);
+    // 2. Resource のロード (外部メモリの参照。コピーを避け最も効率的)
+    // 注意: resource と context を破棄するまで、ssab_data をメモリ上に維持する必要があります。
+    void* res = ss_resource_create_borrow(ssab_data, size);
+
+    // 3. Resource を Context にバインド
+    // 4. アニメーションの設定
+    bool ok = ss_runtime_bind_resource(ctx, res) && ss_runtime_setup_animation(ctx, "anime_1");
+
+    if (ok) {
+        ss_runtime_set_loop_count(ctx, 1); // 指定しなければ無限にループします
+        ss_runtime_play(ctx);
+
+        // 5. 更新ループ
+        float dt_ms = 1000.0f / 60.0f; // ss_runtime_update はミリ秒を受け取ります
+        while (ok && ss_runtime_is_playing(ctx)) {
+            float frame = ss_runtime_update(ctx, dt_ms);
+
+            // 6. 描画情報の取得
+            const uint8_t* data = nullptr;
+            uintptr_t len = 0;
+            // フレーム番号は浮動小数で管理・取得されます（サブフレーム対応）。
+            // 整数フレームのみで再生したい場合は frame の代わりに floorf(frame) を渡します。
+            ok = ss_runtime_get_frame_data(ctx, frame, &data, &len);
+        }
+    }
+
+    // 失敗した呼び出しは false を返し、理由は context に残ります
+    if (!ok) {
+        std::puts(ss_runtime_error_message(ss_runtime_get_last_error(ctx)));
     }
 
     // リソースとコンテキストの破棄
     ss_resource_destroy(res);
     ss_runtime_destroy(ctx);
+    return ok;
 }
 ```
 

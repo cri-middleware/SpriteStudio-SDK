@@ -44,7 +44,7 @@ When integrating this library into a Player (game engine), please pay close atte
 2. **Resource Sharing and Lifetimes (FFI)**
    - To optimize memory usage, a single animation resource (`AnimationResource`) can be shared across multiple playback instances (`Context`).
    - Resources are reference-counted internally. It is safe to call `ss_resource_destroy` on a resource that is still bound to one or more contexts — the data stays alive until every bound context is destroyed or reset.
-   - **The buffer you pass to `ss_resource_create_borrow` is a different matter:** it is *not* copied, so **the caller must keep that memory valid and unmodified until the resource is destroyed**. Use `ss_resource_create_copy` instead if you cannot guarantee that.
+   - **The buffer you pass to `ss_resource_create_borrow` is a different matter:** it is *not* copied, so **the caller must keep that memory valid and unmodified until the resource and every context and effect slot holding it are destroyed**. Use `ss_resource_create_copy` instead if you cannot guarantee that.
 
 # Architecture
 
@@ -92,39 +92,49 @@ It exposes Rust functionality through a C language interface.
 ## Example C++ Usage
 
 ```cpp
+#include <cstdio>
 #include "ssruntime.h"
 
-void play_animation(const uint8_t* ssab_data, size_t size) {
+// Plays `anime_1` of the Quick Start's `Basic.ssab` once.
+bool play_animation(const uint8_t* ssab_data, size_t size) {
     // 1. Create Context
     void* ctx = ss_runtime_create();
-    
+
     // 2. Load Resource (Reference to external memory. Most efficient, avoiding copies)
-    // Note: The original ssab_data MUST remain in memory until the resource is destroyed.
+    // Note: ssab_data MUST stay in memory until the resource and the context are destroyed.
     void* res = ss_resource_create_borrow(ssab_data, size);
-    
+
     // 3. Bind Resource to Context
-    ss_runtime_bind_resource(ctx, res);
-    
     // 4. Setup Animation
-    ss_runtime_setup_animation(ctx, "Wait");
-    ss_runtime_play(ctx);
+    bool ok = ss_runtime_bind_resource(ctx, res) && ss_runtime_setup_animation(ctx, "anime_1");
 
-    // 5. Update loop
-    float dt_ms = 1000.0f / 60.0f; // ss_runtime_update takes milliseconds
-    while (ss_runtime_is_playing(ctx)) {
-        float frame = ss_runtime_update(ctx, dt_ms);
+    if (ok) {
+        ss_runtime_set_loop_count(ctx, 1); // An animation loops forever until told otherwise
+        ss_runtime_play(ctx);
 
-        // 6. Get rendering information
-        const uint8_t* data;
-        uintptr_t len;
-        // The frame number is managed as a float (Sub-frame support).
-        // Pass floorf(frame) instead of frame when playing on integer frames only.
-        ss_runtime_get_frame_data(ctx, frame, &data, &len);
+        // 5. Update loop
+        float dt_ms = 1000.0f / 60.0f; // ss_runtime_update takes milliseconds
+        while (ok && ss_runtime_is_playing(ctx)) {
+            float frame = ss_runtime_update(ctx, dt_ms);
+
+            // 6. Get rendering information
+            const uint8_t* data = nullptr;
+            uintptr_t len = 0;
+            // The frame number is managed as a float (Sub-frame support).
+            // Pass floorf(frame) instead of frame when playing on integer frames only.
+            ok = ss_runtime_get_frame_data(ctx, frame, &data, &len);
+        }
+    }
+
+    // A call that fails returns false, and the context keeps the reason
+    if (!ok) {
+        std::puts(ss_runtime_error_message(ss_runtime_get_last_error(ctx)));
     }
 
     // Destroy the resource and the context
     ss_resource_destroy(res);
     ss_runtime_destroy(ctx);
+    return ok;
 }
 ```
 
