@@ -94,7 +94,8 @@ if (events != nullptr) {
 | 通常の再生 | 前回の `update` の後から今回までに通過したフレーム |
 | `ss_runtime_play` / `ss_runtime_play_with_start_frame` | 開始フレーム（とそれ以降に通過したフレーム） |
 | `ss_runtime_set_frame_no`（シーク） | 移動先のフレーム。再生中でも停止中でも報告する。**移動元との間のフレームは報告しない** |
-| `ss_runtime_set_animation_section` | 区間の先頭（逆方向なら末尾）のフレーム |
+| `ss_runtime_next_frame` / `ss_runtime_prev_frame` / `ss_runtime_set_track_frame` / `ss_runtime_set_source_frame` | 動かしたソースについて、シークと同じ。主役以外のソースは、イベントを発火するときだけ報告する（[アニメーションミキシング §6](../50_features/10_animation_mixing.ja.md#6-イベント)） |
+| `ss_runtime_set_animation_section` | 区間の先頭（逆方向なら末尾）のフレーム。再生中でも停止中でも報告する |
 
 逆方向の再生でも、通過したフレームのイベントは報告されます。
 

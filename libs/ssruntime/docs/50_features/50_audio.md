@@ -22,6 +22,8 @@ The Player plays a sound **only when playback passes its key** on the timeline. 
 
 However, a seek, whether playing or stopped, makes the next `update` the Player runs report the events (audio included) of the destination frame ([Events §3](../30_core/30_events.md#3-which-frames-are-reported)). If you do not want seeks (scrubs) to play sound, have the Player not play the audio events reported by the first `update` after the seek. The audio on the start frame right after `play` is played.
 
+The other operations that move the playhead report their destination the same way, `ss_runtime_set_animation_section` included. Whether those play sound is up to the Player: a section that keeps playing may want the sound on its first frame, while a section set to hold a pose does not.
+
 ## 4. The lifetime of a sound
 
 **Playback control does not own the lifetime of a sound that is playing.** What `pause` / `resume` / `stop` / setup end (or hold) is the *animation*; do not touch sounds that are already playing.
