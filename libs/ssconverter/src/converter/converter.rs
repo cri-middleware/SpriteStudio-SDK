@@ -199,6 +199,7 @@ where
 
     if !config.convert_config.embedded {
         let assets = crate::utils::get_assets_of_ssab_files(&convert_result, &sspj);
+        let project_dir = path.parent().unwrap_or(std::path::Path::new(""));
         on_log("Copying referenced assets...");
         assets
             .iter()
@@ -206,8 +207,14 @@ where
                 if should_stop.load(Ordering::Relaxed) {
                     return Err(crate::converter::converter_error::ConverterError::Aborted);
                 }
-                on_log(&format!("Copying asset: {}", src_rel_path));
                 let dst = outdir_path.join(dst_rel_path);
+                // The output can be the project's own folder, where the asset already is.
+                // Written onto itself it fails when read-only and is cut short by an
+                // interrupted write.
+                if is_same_file(&project_dir.join(src_rel_path), &dst) {
+                    return Ok(());
+                }
+                on_log(&format!("Copying asset: {}", src_rel_path));
                 let dst_parent = dst.parent().ok_or_else(|| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid output path")))?;
                 if !dst_parent.exists() {
                     let r = std::fs::create_dir_all(dst_parent);
@@ -226,4 +233,9 @@ where
     }
 
     Ok(())
+}
+
+#[cfg(feature = "native")]
+fn is_same_file(a: &std::path::Path, b: &std::path::Path) -> bool {
+    matches!((a.canonicalize(), b.canonicalize()), (Ok(a), Ok(b)) if a == b)
 }
