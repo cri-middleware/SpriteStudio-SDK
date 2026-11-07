@@ -495,7 +495,7 @@ impl PlaybackController {
     /// Returns false, changing nothing, when both ends are in range and the end
     /// is before the start: no section runs backwards.
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) -> bool {
-        let in_range = |frame: i32| frame >= 0 && frame <= self.anime_data_end_frame;
+        let in_range = |frame: i32| frame >= self.anime_data_start_frame.max(0) && frame <= self.anime_data_end_frame;
         if in_range(start_frame) && in_range(end_frame) && end_frame < start_frame {
             return false;
         }
@@ -778,6 +778,32 @@ mod tests {
 
     fn rf(diff: f32, start: i32, end: i32, loops: i32, style: PlaybackStyle, dir: PlaybackDirection) -> (f32, bool) {
         resolve_frame(diff, start, end, loops, style, dir)
+    }
+
+    /// An end before the animation's own start is out of range, as one after its
+    /// end is, for an animation that does not start at frame 0.
+    #[test]
+    fn a_section_end_before_the_animation_start_is_the_animation_edge() {
+        let section = |start: i32, end: i32| {
+            let mut c = PlaybackController::new();
+            c.setup(20, 40, 60);
+            assert!(c.set_animation_section(start, end), "({start}, {end}) is not refused");
+            (c.get_start_frame(), c.get_end_frame(), c.get_frame_no())
+        };
+        assert_eq!(section(0, -1), (20, 40, 20.0));
+        assert_eq!(section(5, 25), (20, 25, 20.0));
+        assert_eq!(section(10, 30), (20, 30, 20.0));
+        assert_eq!(section(-1, 10), (20, 40, 20.0));
+        assert_eq!(section(21, 25), (21, 25, 21.0));
+
+        let mut c = PlaybackController::new();
+        c.setup(20, 40, 60);
+        assert!(!c.set_animation_section(30, 25), "both in range and backwards");
+
+        let mut c = PlaybackController::new();
+        c.setup(-10, 20, 60);
+        assert!(c.set_animation_section(-1, 5));
+        assert_eq!((c.get_start_frame(), c.get_end_frame()), (-10, 5), "a negative end stays the animation's edge");
     }
 
     #[test]
