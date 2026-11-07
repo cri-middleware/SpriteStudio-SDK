@@ -199,7 +199,7 @@ writer が働くのは、次の **両方** を満たすときだけです。
 > [!IMPORTANT]
 > **クリッピング（`mask_write`）にはマスクの DrawBatch が出ません。** クリッピングは通常の描画の DrawBatch としてだけ出るので、`Mask` の DrawBatch だけを見る Player は **クリッピングをすべて取りこぼします。** writer は、PartData を読んで Player が決めてください（§1-3 の 3 つの式）。
 
-**非表示の writer**: Brain は `Hide == true` のパーツを `draw_order` と DrawBatch から除きます。writer ではマスクパーツとクリッピング（`mask_write` の描画パーツ）がこれにあたります。例外は `draw_as_mask` でマスクにした描画パーツで、**`Hide == true` でもマスクの DrawBatch が出ます**（止まるのは自分の色の描画だけで、形は書かれます）。writer が働くかは、**`mask != 0` と `Hide == false` の両方**を Player で判定してください（§2-2）。Brain が除いたパーツを重ねて除くだけなので、この判定はどちらの場合も安全です。
+**非表示の writer**: Brain は `Hide == true` のパーツを `draw_order` と DrawBatch から除きます。writer ではマスクパーツとクリッピング（`mask_write` の描画パーツ）がこれにあたります。例外は `draw_as_mask` でマスクにした描画パーツで、**`Hide == true` でも `draw_order` に残り、マスクの DrawBatch が出ます**（出なくなるのは自分の色の DrawBatch だけです）。このマスクの DrawBatch では何も書かないでください（§2-2）。DrawBatch があるかどうかでは writer が働くかを決められないので、**`mask != 0` と `Hide == false` の両方**を Player で判定してください。
 
 **`mask_indices` を writer の一覧として使わないでください。** FrameData の `mask_indices` は純粋なマスクのパーツの列ですが、**クリッピングを含まず**、**`Hide == true` のマスクパーツも除いていない**ので、`draw_order` と一致しません。writer は、`draw_order` を走査して §1-3 の式で決めてください。
 
