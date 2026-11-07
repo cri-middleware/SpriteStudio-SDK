@@ -114,6 +114,8 @@ A seek, whether playing or stopped, makes the next `update` report the events of
 
 **Report nothing for a tick the Player does not run.** A tick that skipped evaluation because nothing moves, or that skipped a character off screen, calls no `ss_runtime_update`, so it has nothing to report. On such a tick, empty the previous tick's events and its loop, finish and start notifications. Left in place, the same event keeps playing a sound for as long as ticks are skipped, and the host keeps reading a loop or an end that was crossed long ago. When a tick may be skipped is in [Animation Mixing §1-6](../50_features/10_animation_mixing.md#1-6-skipping-ticks-when-nothing-moves).
 
+A seek waits for an `update` too. On a Player that skips ticks while stopped, a seek made meanwhile reports nothing until a tick runs. To report it at once, run one tick after the seek: with the clock stopped, `ss_runtime_update` moves nothing and only reports the destination frame.
+
 A Player that reports the start notification from a tick (for example as a pulse) must not lose a start from `ss_runtime_play` / `ss_runtime_play_with_start_frame` called while ticks are skipped or while the character is off screen: report it on the first tick that runs after the call.
 
 ## 4. When several animations are layered
