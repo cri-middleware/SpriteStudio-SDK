@@ -65,8 +65,8 @@ struct EmitterResourceEntry {
     blend_in: i32,
     resolved_ok: bool,
     blend_byte: u8,
-    quad_origin_x: f32,
-    quad_origin_y: f32,
+    quad_left: f32,
+    quad_top: f32,
     sw: f32,
     sh: f32,
     u0: f32,
@@ -80,8 +80,8 @@ struct EmitterResourceEntry {
 struct ResolvedEmitter {
     ok: bool,
     blend_byte: u8,
-    quad_origin_x: f32,
-    quad_origin_y: f32,
+    quad_left: f32,
+    quad_top: f32,
     sw: f32,
     sh: f32,
     u0: f32,
@@ -89,6 +89,15 @@ struct ResolvedEmitter {
     u1: f32,
     v1: f32,
     cellmap_hash: u32,
+}
+
+/// A particle quad's corners as `(xs, ys)`, in the plan's UV order: left-top,
+/// right-top, left-bottom, right-bottom. `left` and `top` are in the cell's Y-up
+/// space; `y_sign` mirrors the quad for a Y-down target, as it does the particle's
+/// position and rotation, so the texture's top stays on top for either target.
+pub(crate) fn particle_quad(left: f32, top: f32, width: f32, height: f32, y_sign: f32) -> ([f32; 4], [f32; 4]) {
+    let (t, b) = (y_sign * top, y_sign * (top - height));
+    ([left, left + width, left, left + width], [t, t, b, b])
 }
 
 /// High-level effect slot: wraps `EffectContext` with the per-slot lifecycle
@@ -204,7 +213,7 @@ impl<'a> EffectSlot<'a> {
         if let Some(idx) = cache.iter().position(|c| c.cellmap_hash == cellmap_hash && c.cell_hash == cell_hash && c.blend_in == blend_in) {
             return idx;
         }
-        let mut entry = EmitterResourceEntry { cellmap_hash, cell_hash, blend_in, resolved_ok: false, blend_byte: 0, quad_origin_x: 0.0, quad_origin_y: 0.0, sw: 0.0, sh: 0.0, u0: 0.0, v0: 0.0, u1: 0.0, v1: 0.0 };
+        let mut entry = EmitterResourceEntry { cellmap_hash, cell_hash, blend_in, resolved_ok: false, blend_byte: 0, quad_left: 0.0, quad_top: 0.0, sw: 0.0, sh: 0.0, u0: 0.0, v0: 0.0, u1: 0.0, v1: 0.0 };
 
         if cellmap_hash != 0
             && let Some(cellmaps) = ssab.cellmaps()
@@ -217,14 +226,13 @@ impl<'a> EffectSlot<'a> {
 
             let region = cell.region();
             let (src_x, src_y, sw, sh) = (region.x(), region.y(), region.w(), region.h());
-            // `cell.pivot()` is Y-up and the quad is built Y-down, so its Y is
-            // negated, as in `compute_local_vertices`; `y_flip` applies per particle.
+            // The box a Normal part draws this cell in, in the cell's Y-up space.
             let p = cell.pivot();
-            let (pivot_x, pivot_y) = (p.v1(), -p.v2());
+            let (vx, vy) = crate::eval::geometry::compute_local_vertices((sw, sh), (p.v1(), p.v2()), (0.0, 0.0), (false, false), None);
             entry.sw = sw;
             entry.sh = sh;
-            entry.quad_origin_x = -sw * 0.5 + pivot_x * sw;
-            entry.quad_origin_y = -sh * 0.5 + pivot_y * sh;
+            entry.quad_left = vx[0];
+            entry.quad_top = vy[0];
 
             // UV uses cellmap.size_original — the texture dimensions at SSAB build time.
             // Atlas / scaled-texture pipelines must remap UVs engine-side.
@@ -395,19 +403,7 @@ impl<'a> EffectSlot<'a> {
         self.scratch_resolved.reserve(self.scratch_entries.len());
         for (i, _, _) in self.scratch_entries.iter() {
             let e = &self.emitter_resource_cache[*i];
-            self.scratch_resolved.push(ResolvedEmitter {
-                ok: e.resolved_ok,
-                blend_byte: e.blend_byte,
-                quad_origin_x: e.quad_origin_x,
-                quad_origin_y: e.quad_origin_y,
-                sw: e.sw,
-                sh: e.sh,
-                u0: e.u0,
-                v0: e.v0,
-                u1: e.u1,
-                v1: e.v1,
-                cellmap_hash: e.cellmap_hash,
-            });
+            self.scratch_resolved.push(ResolvedEmitter { ok: e.resolved_ok, blend_byte: e.blend_byte, quad_left: e.quad_left, quad_top: e.quad_top, sw: e.sw, sh: e.sh, u0: e.u0, v0: e.v0, u1: e.u1, v1: e.v1, cellmap_hash: e.cellmap_hash });
         }
 
         self.scratch_command_meta.clear();
@@ -425,8 +421,7 @@ impl<'a> EffectSlot<'a> {
                 continue;
             }
 
-            let lx = [r.quad_origin_x, r.quad_origin_x + r.sw, r.quad_origin_x, r.quad_origin_x + r.sw];
-            let ly = [r.quad_origin_y, r.quad_origin_y, r.quad_origin_y + r.sh, r.quad_origin_y + r.sh];
+            let (lx, ly) = particle_quad(r.quad_left, r.quad_top, r.sw, r.sh, y_sign);
             let uvs_corner = [r.u0, r.v0, r.u1, r.v0, r.u0, r.v1, r.u1, r.v1];
 
             for (i, p) in particles[*p_start..*p_end].iter().enumerate() {
