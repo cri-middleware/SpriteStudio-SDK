@@ -26,6 +26,7 @@ where
 {
     #[derive(Deserialize, PartialEq)]
     struct Sounds {
+        #[serde(default)]
         value: Vec<SsSoundFile>,
     }
     Ok(Sounds::deserialize(deserializer)?.value)

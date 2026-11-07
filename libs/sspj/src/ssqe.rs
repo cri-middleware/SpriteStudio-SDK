@@ -27,6 +27,7 @@ where
 {
     #[derive(Deserialize)]
     struct SequenceItemList {
+        #[serde(default)]
         value: Vec<SsSequenceItem>,
     }
     Ok(SequenceItemList::deserialize(deserializer)?.value)
