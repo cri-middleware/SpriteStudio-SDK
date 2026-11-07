@@ -227,7 +227,8 @@ pub fn get_assets_of_ssab_file(ssab_pair: (&String, &[u8]), sspj: &sspj::sspj::S
 
 #[cfg(any(feature = "native", feature = "web"))]
 pub fn get_assets_of_ssab_files(ssab_map: &HashMap<String, Vec<u8>>, sspj: &sspj::sspj::SsProject) -> HashMap<String, String> {
-    ssab_map.iter().flat_map(|(key, value)| self::get_assets_of_ssab_file((key, value), sspj).into_iter().map(|(k, v)| (k.clone(), v.clone()))).collect()
+    // The conversion's output holds the `.ssqb` files too, whose tables are not an `.ssab`'s.
+    ssab_map.iter().filter(|(_, value)| ssab::ssab::ss::format::ss_anime_binary_buffer_has_identifier(value)).flat_map(|(key, value)| self::get_assets_of_ssab_file((key, value), sspj).into_iter().map(|(k, v)| (k.clone(), v.clone()))).collect()
 }
 
 #[cfg(test)]
@@ -345,5 +346,32 @@ mod test {
         assert!(validate_file_path(asset.to_str().expect("Failed to render the path"), &dir).is_err());
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    // The same table under each identifier: what the slots of an `.ssqb` hold is not
+    // what those of an `.ssab` hold, so its bytes are not read as one.
+    #[test]
+    #[cfg(feature = "native")]
+    fn only_an_ssab_is_read_for_its_assets() {
+        use ssab::ssab::ss::format::{CellMapT, SsAnimeBinaryT};
+        use sspj::ssloader::SsLoader;
+
+        let pack = |identifier: &str| {
+            let mut cellmap = CellMapT::default();
+            cellmap.image_path = "image.png".to_string();
+            let mut anime = SsAnimeBinaryT::default();
+            anime.cellmaps = Some(vec![cellmap]);
+            let mut fbb = flatbuffers::FlatBufferBuilder::new();
+            let offset = anime.pack(&mut fbb);
+            fbb.finish(offset, Some(identifier));
+            fbb.finished_data().to_vec()
+        };
+        let base = std::env::current_dir().expect("Failed to get the current directory");
+        let sspj = sspj::sspj::SsProject::load_from_file(&base.ancestors().nth(2).expect("Failed to get the base directory").join("tests/Ringo/Ringo.sspj")).expect("Failed to load the project");
+
+        let ssab = HashMap::from([("pack.ssab".to_string(), pack(ssab::ssab::ss::format::SS_ANIME_BINARY_IDENTIFIER))]);
+        assert!(get_assets_of_ssab_files(&ssab, &sspj).contains_key("image.png"));
+        let ssqb = HashMap::from([("pack.ssqb".to_string(), pack(ssab::ssqb::ss::format::SS_SEQUENCE_BINARY_IDENTIFIER))]);
+        assert!(get_assets_of_ssab_files(&ssqb, &sspj).is_empty());
     }
 }
