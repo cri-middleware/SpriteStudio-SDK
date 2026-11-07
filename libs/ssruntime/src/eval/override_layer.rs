@@ -19,7 +19,7 @@ use crate::runtime::framedata::ss::runtime::{BlendType, PartAttributeCell, PartA
 /// animation (Color and Cell). Visibility has no priority mode.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum PriorityMode {
-    /// `NON`: a temporal one-shot handover. The override wins from the moment it
+    /// A temporal one-shot handover. The override wins from the moment it
     /// is set until playback *decodes a surviving keyframe* of that attribute —
     /// detected by watching the controller's actually-traversed frames
     /// (`get_passed_frames`) for a key frame. This is section / loop / reverse /
@@ -35,9 +35,9 @@ pub enum PriorityMode {
     /// wording matters: the converter prunes flat-hold duplicates, so handover
     /// lands on a key that actually shapes the curve. Cleared on a new animation.
     OverwriteOnNextKeyframe,
-    /// `NOW_ANIMATION`: wins for the current animation; cleared on a new one.
+    /// Wins for the current animation; cleared on a new one.
     HoldUntilNextAnimation,
-    /// `PERMANENT`: wins and persists across animation changes (re-validated by
+    /// Wins and persists across animation changes (re-validated by
     /// index range within the same SSAB).
     Permanent,
 }
@@ -141,7 +141,7 @@ pub fn passed_reaches_key(passed_frames: &[i32], set_frame: i32, skip_set_frame:
     passed_frames.iter().any(|&f| !(skip_set_frame && f == set_frame) && is_key(f))
 }
 
-/// Whether a NON override evaluated in `update` skips its own `set_frame`: on its
+/// Whether an OverwriteOnNextKeyframe override evaluated in `update` skips its own `set_frame`: on its
 /// first evaluation, and on any other in the same update. The traversed frames
 /// change only with the next update, so every evaluation of one update sees
 /// what the first saw and must decide as it did.
@@ -166,7 +166,7 @@ fn run_has_key_at(keys: &KeyColumns, run: Option<crate::eval::keyframes::KeyRun>
 /// accumulate across frames). A cell override likewise appends to `cell_vec`,
 /// overwrites the parallel `cell_meta_per_part` (6 floats/part) + the
 /// `cell_texture_hashes` slot, and repoints `PartState.cell`. `update` is the
-/// context's `Context::update` count, which a NON override's first evaluation
+/// context's `Context::update` count, which an OverwriteOnNextKeyframe override's first evaluation
 /// records.
 #[allow(clippy::too_many_arguments)]
 pub fn apply_part_overrides(
@@ -233,7 +233,7 @@ pub fn apply_part_overrides(
             continue;
         }
 
-        // NON (OverwriteOnNextKeyframe): one-shot temporal handover. The override
+        // OverwriteOnNextKeyframe: one-shot temporal handover. The override
         // wins until playback decodes a surviving PartColor key of this part —
         // i.e. a traversed frame lands on a key (its own set-frame key skipped
         // through the update of its first evaluation). Dropping the slot makes
@@ -282,12 +282,12 @@ pub fn apply_part_overrides(
             continue;
         };
         let cp = &cached_parts[i];
-        // SS6 restricts CellChangeParts to NORMAL; SS7 masks also sample a cell.
+        // SS6 restricts CellChangeParts to NORMAL; masks also sample a cell.
         if cp.part_type_disc != ssab::ssab::ss::format::PartType::PartTypeNormal && !cp.is_mask_contributor {
             continue;
         }
 
-        // NON one-shot handover (see the color pass for the rationale).
+        // OverwriteOnNextKeyframe one-shot handover (see the color pass for the rationale).
         if cell.priority == PriorityMode::OverwriteOnNextKeyframe {
             let skip = skips_set_frame(cell.first_eval_update, update);
             let handed_over = passed_reaches_key(passed_frames, cell.set_frame, skip, |f| run_has_key_at(keys, cp.run(crate::eval::framedata::IDX_ATTRIBUTECELL), f));
@@ -360,7 +360,7 @@ mod tests {
     }
 
     /// Run `apply_part_overrides` with no traversed frames (the common case for
-    /// non-NON tests, and for NON where nothing has been decoded yet).
+    /// tests of the other modes, and for this one where nothing has been decoded yet).
     #[allow(clippy::type_complexity)]
     fn run(ovr: &mut [Option<PartOverride>], cached: &[CachedPartData], parts: &mut [PartState]) -> (Vec<PartAttributePartColor>, Vec<PartAttributeCell>, Vec<f32>, Vec<u32>, Vec<Option<ResolvedCellMeta>>) {
         run_passed(ovr, cached, parts, &[])
@@ -380,7 +380,7 @@ mod tests {
         let mut ws = Vec::new();
         let keyframes = crate::eval::keyframes::empty_keyframes();
         let keys = KeyColumns::new(flatbuffers::root::<ssab::ssab::ss::format::Keyframes>(&keyframes).unwrap(), None);
-        // Update 1: the helpers' NON overrides were first evaluated in update 0.
+        // Update 1: the helpers' OverwriteOnNextKeyframe overrides were first evaluated in update 0.
         apply_part_overrides(ovr, cached, &keys, parts, &mut color_vec, &mut cell_vec, &mut cell_meta, &mut tex_hashes, &mut uv_meta, &mut ws, passed_frames, 1);
         (color_vec, cell_vec, cell_meta, tex_hashes, uv_meta)
     }
@@ -471,13 +471,13 @@ mod tests {
         assert_eq!(cv[idx as usize].blend_type().0, 2, "blend op preserved (Add)");
     }
 
-    // --- Color NON (OverwriteOnNextKeyframe) ---
+    // --- Color OverwriteOnNextKeyframe ---
     //
     // The seam decides handover from `passed_frames` against the part's key
     // run. The pure predicate is unit-tested in `passed_reaches_key_*` below;
     // the end-to-end behaviour with real keyframes / looping lives in the
-    // `override_*_non_*` tests in `tests.rs`. Here we assert only the plumbing
-    // for a part that has no color keys: it can never decode one, so a NON
+    // `override_*_non_*` tests in `src/tests/override_layer.rs`. Here we assert only the plumbing
+    // for a part that has no color keys: it can never decode one, so an OverwriteOnNextKeyframe
     // override applies indefinitely (like Permanent).
 
     #[test]
@@ -487,7 +487,7 @@ mod tests {
         let mut ovr = [Some(color(0, [1, 2, 3, 255], PriorityMode::OverwriteOnNextKeyframe))];
         // Even with frames "passed", a keyless part never hands over.
         let (cv, ..) = run_passed(&mut ovr, &cached, &mut parts, &[0, 5, 10]);
-        assert_eq!(cv.len(), 1, "no color keys → NON override never hands over");
+        assert_eq!(cv.len(), 1, "no color keys → OverwriteOnNextKeyframe override never hands over");
         assert!(parts[0].part_color() >= 0);
         assert!(ovr[0].as_ref().unwrap().color.is_some());
     }
@@ -538,7 +538,7 @@ mod tests {
         assert_eq!(cv.len(), 1);
     }
 
-    // --- passed_reaches_key (the NON handover predicate) ---
+    // --- passed_reaches_key (the OverwriteOnNextKeyframe handover predicate) ---
 
     #[test]
     fn passed_reaches_key_fires_on_a_key_frame() {

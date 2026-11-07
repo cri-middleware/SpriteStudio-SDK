@@ -375,9 +375,9 @@ fn setup_keeps_track_zero_s_settings_after_a_crossfade() {
 }
 
 /// What a cancelled fade leaves on the track fades out with the next one,
-/// in the proportions it was left at. Fading out only the main source left
-/// the other one mixing at its stale weight, which jumped the pose when the
-/// fade began and again when it completed and the leftover was released.
+/// in the proportions it was left at: fading out only the main source would leave
+/// the other one mixing at its stale weight, jumping the pose when the fade begins
+/// and again when it completes.
 #[test]
 fn a_crossfade_after_a_cancel_carries_the_leftover_out() {
     let ssab = load_ringo_resource();

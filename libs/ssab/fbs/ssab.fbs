@@ -515,11 +515,7 @@ enum PartAttributesUpdateFlags: ulong (bit_flags) {
   AttributeSkew,
   AttributeDeform,
   AttributeTexture,
-//  AttributeUserData,    // Reserved
-//  AttributeSignal,      // Reserved
-//  AttributeAudio,       // Reserved
-//  AttributeInstance,    // Reserved
-//  AttributeEffect,      // Reserved
+  // UserData, Signal, Audio, Instance and Effect are events, not part attributes.
 }
 
 table InitialPartAttributes {

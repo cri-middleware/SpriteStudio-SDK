@@ -110,15 +110,7 @@ mod tests {
     use std::path::{Path, PathBuf};
 
     fn load_ssce(path: &Path) {
-        let r = SsCellMap::load_from_file(path);
-        match r {
-            Ok(ss_cell_map) => {
-                println!("{:?}", ss_cell_map);
-            }
-            Err(e) => {
-                panic!("{:?}", e);
-            }
-        }
+        SsCellMap::load_from_file(path).unwrap();
     }
 
     fn get_test_base_path() -> PathBuf {

@@ -37,10 +37,7 @@ mod tests {
     /// Every emitted pack carries its schema version *in the bytes*.
     ///
     /// Neither `version` field declares a FlatBuffers default, so an absent one
-    /// reads back as `0` and this comparison fails. That is the whole guard: with
-    /// a schema default of `1`, writing `1` omitted the field, a reader
-    /// substituted its own version for the absent one, and the runtime's
-    /// `InvalidVersion` check could not fail for any input.
+    /// reads back as `0` and this comparison fails.
     #[test]
     fn an_emitted_pack_carries_its_schema_version() {
         let out_dir = get_test_base_path().join("target").join("ssab_version_test_output");
@@ -115,13 +112,9 @@ mod tests {
         assert!(checked >= 2, "expected an .ssab and an .ssqb, checked {checked}");
     }
 
-    /// `canvas_size` is the authored canvas, not the canvas minus the pivot.
-    ///
-    /// The two used to share one `Rect`, so every reader computed the size as
-    /// `x2 - x1` and silently subtracted the pivot from it. A pivot of `0 -0.5`
-    /// is the ordinary way to author a character standing on the ground, which
-    /// is why `Doll` and `ParticleEffect` both carry one: the old reading turned
-    /// their integral canvases into `320.5`.
+    /// `canvas_size` is the authored canvas, not the canvas minus the pivot. A pivot
+    /// of `0 -0.5` is the ordinary way to author a character standing on the ground,
+    /// which is why `Doll` and `ParticleEffect` both carry one.
     #[test]
     fn canvas_size_is_independent_of_the_pivot() {
         let out_dir = get_test_base_path().join("target").join("ssab_canvas_test_output");

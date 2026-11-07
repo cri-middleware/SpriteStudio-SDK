@@ -26,11 +26,9 @@ fn validate_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Result<(), crate:
 }
 
 pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject, asset_provider: &dyn crate::asset_provider::AssetProvider, embedded: bool) -> Result<ssab::ssab::ss::format::SsAnimeBinaryT, crate::ConverterError> {
-    // effect
     let using_effect_file_names = anime_pack.model.part_list.iter().filter_map(|part| if part.part_type == sspj::sstypes::SsPartType::Effect { Some(part.ref_effect_name.to_string()) } else { None }).collect::<HashSet<String>>();
     let using_effect_file_list = using_effect_file_names.iter().filter_map(|using_effect_file_name| sspj.effect_file_list.iter().find(|effect_file| effect_file.name == *using_effect_file_name)).collect::<Vec<_>>();
 
-    // cellmap
     let effects_use_cellmap_names = using_effect_file_list.iter().flat_map(|f| &f.effect_data.node_list).map(|n| &n.behavior.cell_map_name).filter(|name| !name.is_empty()).cloned().collect::<Vec<String>>();
     let cellmap_names = anime_pack.cellmap_names.iter().map(|cellmap_file| cellmap_file.to_string()).chain(effects_use_cellmap_names).collect::<HashSet<String>>();
     let cellmaps = cellmap_names
@@ -41,7 +39,6 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         })
         .collect::<Vec<_>>();
 
-    // font_bitmap
     let using_font_bitmap_names = anime_pack.model.part_list.iter().filter(|part| part.part_type == sspj::sstypes::SsPartType::Text).filter_map(|part| if part.text_bitmap { Some(part.text_char_map.to_string()) } else { None }).collect::<HashSet<String>>();
     let using_fnt_bitmaps = using_font_bitmap_names
         .iter()
@@ -51,7 +48,6 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         })
         .collect::<HashMap<String, &sspj::sscharmap::SsCharMap>>();
 
-    // sound list
     let using_sound_list =
         if anime_pack.model.part_list.iter().filter(|part| part.part_type == sspj::sstypes::SsPartType::Audio).collect::<Vec<&sspj::ssae::SsPart>>().is_empty() { vec![] } else { sspj.sound_list.iter().collect::<Vec<&sspj::ssse::SsAudioPack>>() };
 

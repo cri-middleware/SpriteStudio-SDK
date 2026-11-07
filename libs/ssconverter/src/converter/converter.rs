@@ -52,7 +52,6 @@ where
     let sspj = asset_provider.load_sspj()?;
 
     on_log(&format!("Starting conversion for {} animations and {} sequences...", sspj.anime_list.len(), sspj.sequence_list.len()));
-    // pack sspj animation data and sequence data to ssab ssab and ssqb structures
     let ssab_model_list = par_iter!(sspj.anime_list)
         .map(|anime_pack| {
             if should_stop.load(Ordering::Relaxed) {
@@ -71,7 +70,6 @@ where
         })
         .collect::<Result<Vec<ssab::ssqb::ss::format::SsSequenceBinaryT>, _>>()?;
 
-    // convert ssab structures to binary data
     let ssab_bins = par_iter!(ssab_model_list)
         .zip(par_iter!(sspj.animepack_names))
         .map(|(anime_binary_t, f)| {
@@ -101,7 +99,6 @@ where
         })
         .collect::<Result<Vec<_>, _>>()?;
 
-    // convert ssqb structures to binary data
     let ssqb_bins = par_iter!(ssqb_model_list)
         .zip(par_iter!(sspj.sequencepack_names))
         .map(|(sequence_binary_t, f)| {

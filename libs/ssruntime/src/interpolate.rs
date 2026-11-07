@@ -474,10 +474,8 @@ mod tests {
         assert_near(rate_ease_elastic_inout(0.0, 2.0), 0.0);
         assert_near(rate_ease_elastic_inout(1.0, 2.0), 1.0);
 
-        // Regression: a keyframe authored without an easing rate yields
-        // power_easing == 0. The in/out variants used to divide by it and
-        // return NaN; all three must stay finite (the inout branch already
-        // guarded this, the in/out twins did not).
+        // A keyframe authored without an easing rate yields power_easing == 0, and
+        // all three must stay finite.
         for &rate in &[0.1_f32, 0.25, 0.5, 0.75, 0.9] {
             assert!(rate_ease_elastic_in(rate, 0.0).is_finite(), "elastic_in NaN at rate {rate}");
             assert!(rate_ease_elastic_out(rate, 0.0).is_finite(), "elastic_out NaN at rate {rate}");

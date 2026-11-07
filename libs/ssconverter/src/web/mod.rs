@@ -28,19 +28,19 @@ pub fn version() -> String {
     crate::version_string()
 }
 
-/// `.ssab` schema version emitted (distinct from build [`version`]).
+/// `.ssab` schema version emitted (distinct from the build's `version`).
 #[wasm_bindgen]
 pub fn ssab_schema_version() -> u32 {
     crate::ssab_schema_version()
 }
 
-/// `.ssqb` schema version emitted (distinct from build [`version`]).
+/// `.ssqb` schema version emitted (distinct from the build's `version`).
 #[wasm_bindgen]
 pub fn ssqb_schema_version() -> u32 {
     crate::ssqb_schema_version()
 }
 
-/// Result of [`convert`].
+/// Result of `convert`.
 #[wasm_bindgen]
 pub struct ConvertResult {
     output: js_sys::Map,
@@ -70,7 +70,7 @@ impl ConvertResult {
 /// whole project directory. It must include exactly one `.sspj`: a project
 /// folder that also holds another one, a backup beside it or a project in a
 /// subfolder, is refused, so leave the others out. `embedded`, `debug`,
-/// `split` and `optimize` mirror [`crate::ConvertConfig`].
+/// `split` and `optimize` mirror `ConvertConfig`.
 #[wasm_bindgen]
 pub fn convert(files: &js_sys::Map, embedded: bool, debug: bool, split: bool, optimize: bool) -> Result<ConvertResult, JsValue> {
     let mut collected: Vec<(String, Vec<u8>)> = Vec::new();

@@ -32,8 +32,8 @@
 //!
 //! # Writing (`converter`)
 //!
-//! Enabling `converter` regenerates the modules with the FlatBuffers *object API*
-//! (`--gen-object-api`), adding owned `…T` structs that can be built up in memory and
+//! Enabling `converter` selects the modules generated with the FlatBuffers *object API*
+//! (`--gen-object-api`), which add owned `…T` structs that can be built up in memory and
 //! packed back into a buffer. Only tools that emit data need this; it implies `std`.
 //!
 //! # Feature flags
@@ -100,15 +100,10 @@ pub const NO_CURVE: u16 = u16::MAX;
 /// The `.ssab` schema version the converter stamps into every pack it emits and
 /// the runtime refuses to read anything else as.
 ///
-/// Both `version` fields declare no FlatBuffers default, so this value is never
-/// equal to one and is therefore always present in the emitted bytes. A pack
-/// that reads back as `0` predates the field being written at all, which is a
-/// state the check has to be able to see — with a schema default of `1` the
-/// reader substituted its own version for the absent field and every pack ever
-/// produced passed, whatever it actually was.
-///
-/// Raise it in the same commit that changes the wire format, and
-/// `an_emitted_pack_carries_its_schema_version` proves the bytes still carry it.
+/// Both `version` fields declare no FlatBuffers default, so an absent one reads as
+/// `0` and is refused too.
+// Raise it in the same commit that changes the wire format, and
+// `an_emitted_pack_carries_its_schema_version` proves the bytes still carry it.
 pub const SSAB_SCHEMA_VERSION: u32 = 1;
 
 /// The `.ssqb` counterpart of [`SSAB_SCHEMA_VERSION`].

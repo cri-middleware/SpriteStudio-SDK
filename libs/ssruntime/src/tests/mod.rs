@@ -36,8 +36,8 @@ fn fixture(pack: &str) -> PathBuf {
 
 fn prepare() {
     // Regenerate fixtures exactly once per test run, always from source, so cached `.ssab`
-    // files can never go stale against the current ssab schema (a stale cache previously caused
-    // flatbuffers to panic on out-of-range reads). `Once` serializes regeneration so the many
+    // files can never go stale against the current ssab schema, which flatbuffers would panic
+    // reading out of range. `Once` serializes regeneration so the many
     // parallel `prepare()` callers don't race on a half-written directory. A failed conversion
     // panics, which poisons the `Once` and so fails every test that needs a pack.
     static INIT: std::sync::Once = std::sync::Once::new();

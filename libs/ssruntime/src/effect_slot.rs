@@ -101,8 +101,7 @@ pub(crate) fn particle_quad(left: f32, top: f32, width: f32, height: f32, y_sign
 }
 
 /// High-level effect slot: wraps `EffectContext` with the per-slot lifecycle
-/// state that previously lived in each Player's effect-slot table. Callers
-/// resolve the active effect event externally (via `Context::get_active_effect_event`)
+/// state. Callers resolve the active effect event externally (via `Context::get_active_effect_event`)
 /// and feed it to `step()` along with frame timing — `step` owns transition
 /// detection, accumulator, dead-effect skip, simulator update, and draw-plan
 /// build in one call.
@@ -301,10 +300,8 @@ impl<'a> EffectSlot<'a> {
             // `independent` controls the *clock* (own delta-time vs parent-synced
             // frame), not whether the effect loops. Looping is a property of the
             // effect resource itself: only genuinely infinite effects loop; finite
-            // ones play once and are culled by the dead-effect early-return below
-            // (which now applies regardless of `independent`). The earlier SS6
-            // carry-over `set_loop(independent)` wrongly looped finite independent
-            // effects forever, so they never died at their lifetime.
+            // ones play once and are culled by the dead-effect early-return below,
+            // whatever `independent` says.
             self.ctx.set_loop(self.is_infinite);
             self.last_event_frame = event_frame;
             self.last_is_synthetic = is_synthetic;

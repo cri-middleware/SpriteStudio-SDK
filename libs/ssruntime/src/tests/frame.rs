@@ -309,8 +309,7 @@ fn evaluate_animation_at_frame() {
     }
 }
 
-// Regression for the subframe-end-frame fix: `get_frame_data` accepts the
-// half-open interval `[start_frame, end_frame + 1)` so a Player doing
+// `get_frame_data` accepts the half-open interval `[start_frame, end_frame + 1)` so a Player doing
 // subframe interpolation can pass the fractional overshoot that briefly
 // lands in `(end_frame, end_frame + 1)` at the end / loop boundary without
 // the runtime erroring (which would blank the whole pose).
@@ -334,8 +333,7 @@ fn get_frame_data_accepts_subframe_overshoot_at_animation_end() {
     let pose_at_end = context.get_frame_data(end_frame as f32).expect("end_frame must be valid").to_vec();
     assert!(!pose_at_end.is_empty(), "end_frame pose should not be empty");
 
-    // Subframe overshoot into `(end_frame, end_frame + 1)` is accepted (it
-    // used to return `InvalidParameter`) and holds the `end_frame` pose
+    // Subframe overshoot into `(end_frame, end_frame + 1)` is accepted and holds the `end_frame` pose
     // exactly — no extrapolation past the final keyframe.
     for overshoot in [0.001_f32, 0.5, 0.999] {
         let frame_no = end_frame as f32 + overshoot;

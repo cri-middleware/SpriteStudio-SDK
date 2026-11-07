@@ -22,21 +22,15 @@
 #   gh run download <id> -D artifacts         # which build's artifacts
 #   scripts/build-release.sh                  # this
 #
-# What this does NOT do is build anything. The seven platform jobs need seven
-# operating systems between them, so there is no local equivalent of the matrix
-# and pretending otherwise would only produce a half-empty release. What it
-# replaces is the part that never needed a matrix in the first place: some two
-# hundred lines of `mv` and `zip` that decide the layout of every archive the
-# SDK ships -- and that six Players download, five of them through
-# scripts/download-sdk.sh. Until this
-# script existed, the only way to try a change to that layout was to push it and
-# watch seven platforms rebuild; against a downloaded run the same check takes
-# seconds, because the artifacts are already built and the layout is all that is
-# being tested.
+# What this does NOT do is build anything. The platform jobs need an operating
+# system each, so there is no local equivalent of the matrix. What it holds is
+# the part that needs no matrix: the `mv` and `zip` that decide the layout of every
+# archive the SDK ships, which the Players download through
+# scripts/download-sdk.sh. Against a downloaded run a change to that layout can be
+# tried in seconds, because the artifacts are already built.
 #
-# Rerunning is safe, and re-running against the same download is the point:
-# unlike the workflow this replaces, the input tree is copied from, never moved
-# out of, so one download serves any number of attempts.
+# Rerunning is safe: the input tree is copied from, never moved out of, so one
+# download serves any number of attempts.
 #
 # The zips are byte-for-byte what a consumer downloads, so verify=yes (the
 # default) opens them again afterwards and checks the handful of things that
@@ -179,8 +173,8 @@ echo "              ($TAG_SOURCE)"
 # A tag that disagrees with the manifest is an error, not a note. The archives
 # would be stamped with the tag while the crates inside call themselves
 # something else, and every Player pins the SDK by that tag in its own
-# scripts/SDK_VERSION.txt -- so the mismatch propagates to six repositories
-# before anyone notices. This cannot fire off a branch: TAG falls back to
+# scripts/SDK_VERSION.txt -- so the mismatch propagates to every Player before
+# anyone notices. This cannot fire off a branch: TAG falls back to
 # MANIFEST_TAG when HEAD is not on a release tag.
 if [ "$TAG" != "$MANIFEST_TAG" ]; then
   echo "" >&2
@@ -246,7 +240,7 @@ fi
 # The archive root is deliberately consumer-neutral -- libs/, include/,
 # bindings/, VERSION, no wrapper directory -- because each Player's
 # scripts/download-sdk.sh maps it into that Player's own build layout. Changing
-# a path here changes six repositories.
+# a path here changes every Player.
 
 STATIC_MAP="
 spritestudio-sdk-libraries-macos/libssconverter.a            libs/macos/
@@ -269,8 +263,7 @@ spritestudio-sdk-libraries-windows/arm64/ssruntime.lib       libs/windows/arm64/
 # The macOS runtime ships as two wrappers of the same universal Mach-O: a
 # .bundle (Unity's native-plugin format) and a versioned .framework (Ren'Py
 # dlopens it by path; Flutter / CocoaPods link it via vendored_frameworks, which
-# cannot consume a loadable .bundle). The bare standalone runtime dylib is no
-# longer shipped -- every consumer moved off it. The bundle has no symlinks so a
+# cannot consume a loadable .bundle). The bundle has no symlinks so a
 # plain copy is fine; the framework arrives as a tar and is unpacked below, so
 # its version symlinks and code signature survive the trip.
 DYNAMIC_MAP="

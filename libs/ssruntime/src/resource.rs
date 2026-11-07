@@ -43,6 +43,8 @@ fn coordinate_slot(coordinate_system: crate::eval::SsCoordinateSystem, origin: c
     usize::from(coordinate_system == crate::eval::SsCoordinateSystem::YDown) | usize::from(origin == crate::eval::SsOrigin::TopLeft) << 1 | usize::from(unit == crate::eval::SsUnit::Normalized) << 2
 }
 
+/// One animation of a pack: its name hash, frame range, rate and canvas, and the
+/// tables playing it reads.
 pub struct AnimationMetadata<'a> {
     pub name_hash: u32,
     pub start_frame: i32,
@@ -236,16 +238,20 @@ impl<'a> PartCacheSource<'a> {
     }
 }
 
+/// The bytes of an `.ssab`, owned or borrowed from the caller.
 pub struct SsabData {
     storage: SsabStorage,
 }
 
 impl SsabData {
+    /// Holds a copy of `ssab_data`.
     pub fn load_copy(ssab_data: &[u8]) -> Result<Self, error::SSRuntimeError> {
         let storage = SsabStorage::Owned(ssab_data.to_vec());
         Ok(Self { storage })
     }
 
+    /// Refers to the `len` bytes at `ptr` in place, with no copy.
+    ///
     /// # Safety
     ///
     /// The caller must ensure:
@@ -263,11 +269,14 @@ impl SsabData {
         Ok(Self { storage: SsabStorage::Borrowed(BorrowedBuffer { ptr, len }) })
     }
 
+    /// The `.ssab` bytes.
     pub fn as_slice(&self) -> &[u8] {
         self.storage.as_slice()
     }
 }
 
+/// A parsed `.ssab`. It is read-only, and can back any number of
+/// [`Context`](crate::Context)s.
 pub struct AnimationResource<'a> {
     pub(crate) data: &'a [u8],
     pub(crate) animations: Vec<AnimationMetadata<'a>>,
@@ -284,9 +293,9 @@ pub struct AnimationResource<'a> {
 /// Invariants (must hold for soundness):
 /// - Fields are private so `data` cannot be mutated or replaced after construction.
 /// - Field declaration order ensures `resource` is dropped before `data`.
-/// - `SsabData::Owned` keeps its `Vec<u8>` buffer at a stable heap address;
-///   `SsabData::Borrowed` requires the caller to keep the memory valid (documented
-///   on `SsabData::load_borrow`).
+/// - An owned `SsabData` keeps its `Vec<u8>` buffer at a stable heap address; a
+///   borrowed one requires the caller to keep the memory valid (documented on
+///   `SsabData::load_borrow`).
 pub struct SsabResource {
     resource: Option<AnimationResource<'static>>,
     data: SsabData,
@@ -425,14 +434,17 @@ impl<'a> AnimationResource<'a> {
         self.source.mesh_buffers.get(layout)?.get()
     }
 
+    /// The `.ssab` bytes this resource reads.
     pub fn get_ssab_data(&self) -> &'a [u8] {
         self.data
     }
 
+    /// The pack's animations, in the order of the ssab's `animations()`.
     pub fn animations(&self) -> &[AnimationMetadata<'a>] {
         &self.animations
     }
 
+    /// The animations' names, in the same order as [`Self::animations`].
     pub fn get_animation_names(&self) -> Vec<alloc::string::String> {
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(self.data) };
         let mut names = Vec::new();
@@ -445,16 +457,20 @@ impl<'a> AnimationResource<'a> {
         names
     }
 
+    /// The position of the animation `name` in [`Self::animations`].
     pub fn find_animation_index(&self, name: &str) -> Option<usize> {
         let hash = fnv1a_hash_str(name);
         self.find_animation_index_by_hash(hash)
     }
 
+    /// [`Self::find_animation_index`] by the [`fnv1a_hash_str`] of the name.
     pub fn find_animation_index_by_hash(&self, hash: u32) -> Option<usize> {
         self.animations.iter().position(|anim| anim.name_hash == hash)
     }
 }
 
+/// The FNV-1a hash of `text`, which is what the `.ssab` stores for a name and the
+/// `_by_hash` calls take.
 pub fn fnv1a_hash_str(text: &str) -> u32 {
     let mut hash: u32 = 2166136261;
     let prime: u32 = 16777619;

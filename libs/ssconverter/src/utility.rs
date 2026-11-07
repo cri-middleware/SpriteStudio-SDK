@@ -121,9 +121,8 @@ mod tests {
         (found.len(), budget_exceeded.load(Ordering::Relaxed))
     }
 
-    // Regression: the depth budget dropped a project below it while
-    // `budget_exceeded` stayed false, so an editor that offers to rescan on a cut
-    // never offered.
+    // A project below the depth budget is dropped, so `budget_exceeded` has to say
+    // so, or an editor that offers to rescan on a cut never offers.
     #[test]
     fn a_walk_cut_by_the_depth_budget_says_so() {
         let root = nested_project("depth-cut");

@@ -46,7 +46,7 @@
 //! while ctx.is_playing() {
 //!     let frame_no = ctx.update(1000.0 / 60.0);
 //!     let framedata: &[u8] = ctx.get_frame_data(frame_no)?;
-//!     // `framedata` is a FlatBuffer — see SCHEMA.md for how to read it.
+//!     // `framedata` is a FlatBuffer: the FrameData schema says how to read it.
 //! }
 //! # Ok(())
 //! # }
@@ -109,7 +109,7 @@
 //! The binary deliverables are built from `ssruntime-ffi`, which passes these through:
 //!
 //! ```text
-//! # Mobile / console / desktop, C-API
+//! # Mobile / desktop, C-API
 //! cargo build -p ssruntime-ffi --no-default-features --features ffi,libc_alloc,panic-handler
 //! # Browser, wasm-bindgen
 //! cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --no-default-features --features web
@@ -152,6 +152,7 @@ extern crate alloc;
 extern crate libm;
 
 #[rustfmt::skip]
+/// The generated bindings of `fbs/framedata.fbs` and `fbs/effect_draw_plan.fbs`.
 /// cbindgen:ignore
 pub mod runtime;
 pub mod error;

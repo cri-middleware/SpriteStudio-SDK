@@ -117,8 +117,7 @@ pub(crate) struct SourceState {
 }
 
 /// The default event threshold: no weight reaches it, so a source fires only
-/// once the host lowers it. It used to be `1.0`, which the weight of a track's
-/// lone source meets, so an overlay fired every event it passed.
+/// once the host lowers it.
 pub(crate) const NO_EVENT_THRESHOLD: f32 = f32::INFINITY;
 
 impl SourceState {
@@ -327,10 +326,9 @@ pub(crate) const MIX_ATTR_FLAGS: [runtime::framedata::ss::runtime::UpdateAttribu
 /// Which attributes `layer`'s source animates on `part`.
 ///
 /// An empty `coverage_vec` means no coverage was recorded for this layer, which
-/// reads as "covers everything" — the pre-coverage behavior. That is what keeps
-/// hand-built layers (unit tests) working unchanged, and it fails safe: an
-/// unrecorded layer contributes as it always did rather than silently dropping
-/// out of the mix.
+/// reads as "covers everything": that keeps hand-built layers (unit tests)
+/// working, and an unrecorded layer contributes rather than silently dropping out
+/// of the mix.
 #[inline]
 fn layer_coverage(layer: &LayerState<'_>, part: usize) -> runtime::framedata::ss::runtime::UpdateAttributeFlags {
     layer.coverage_vec.get(part).copied().unwrap_or(runtime::framedata::ss::runtime::UpdateAttributeFlags::all())
@@ -490,7 +488,7 @@ pub(crate) fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>],
         // The stack starts at the setup pose and each track folds onto it in
         // ascending order. `cur` carries the running resolved value per attribute;
         // `touched` records which ones any track actually spoke for, so the rest
-        // keep the primary's value exactly as they did before tracks existed.
+        // keep the primary's value.
         let floor = setup_pose.get(i).copied().unwrap_or(primary_state);
         let mut cur = [0.0f32; MIX_ATTR_COUNT];
         let mut base = [0.0f32; MIX_ATTR_COUNT];
@@ -540,15 +538,10 @@ pub(crate) fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>],
                 // branch-free and straight-line, which is what lets LLVM keep
                 // vectorizing it.
                 //
-                // This table costs ~22% of the mix stage (65 parts, 2 sources:
-                // 9.9us -> 12.1us per get_frame_data). Two attempts to win it back
-                // measured no better and were dropped: a "coverage is uniform across
-                // sources" fast path (almost never fires — a part is only uniform
-                // when all 26 bits agree) and a branch-free bit-mask form (identical
-                // timing; the cost is the stores, not the branches). Single-source
-                // playback does not reach here at all — `get_frame_data` extracts
-                // straight into the resolved layer instead — so nothing that ships
-                // today pays it.
+                // Two cheaper forms measured no faster: a "coverage is uniform across
+                // sources" fast path, which almost never fires, and a branch-free
+                // bit-mask form, since the cost is the stores. Single-source playback
+                // does not reach here at all.
                 let w = src.weight;
                 let cov = layer_coverage(&layers[j], i);
                 let mut wk = [0.0f32; MIX_ATTR_COUNT];

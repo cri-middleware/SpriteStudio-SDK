@@ -152,11 +152,9 @@ pub struct SsAttributePartsColorKeyValue {
     pub target: SsColorBlendTarget,
     pub blend_type: SsBlendType,
 
-    // ---
     #[serde(default)]
     pub color: SsAttributePartsColorKeyValueColor,
 
-    // ---
     #[serde(rename = "LT", default)]
     pub lt: SsAttributePartsColorKeyValueColor,
     #[serde(rename = "RT", default)]
@@ -165,7 +163,6 @@ pub struct SsAttributePartsColorKeyValue {
     pub lb: SsAttributePartsColorKeyValueColor,
     #[serde(rename = "RB", default)]
     pub rb: SsAttributePartsColorKeyValueColor,
-    // ---
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -429,7 +426,6 @@ impl TryFrom<RawSsAttributeSignalCommandParam> for SsAttributeSignalCommandParam
 
         let typed_value = match raw.param_type {
             SsAttributeSignalCommandParamType::Bool => {
-                // "1", "true" などの揺らぎがある場合はここで吸収できます
                 let b = val_str.parse::<bool>().or_else(|_| match val_str {
                     "1" => Ok(true),
                     "0" => Ok(false),
@@ -775,7 +771,7 @@ impl<'de> Deserialize<'de> for SsAttributeKind {
                                 Ok(SsAttributeKind::PartsColor(parts_color))
                             }
                             "VCOL" => {
-                                // warn!("VCOL is deprecated");
+                                // VCOL is deprecated: the key is accepted and its payload dropped.
                                 Ok(SsAttributeKind::Color)
                             }
                             "SHDR" => {

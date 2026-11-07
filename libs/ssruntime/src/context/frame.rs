@@ -6,6 +6,11 @@ use crate::resource::AnimationMetadata;
 use crate::{error, eval};
 
 impl<'a> Context<'a> {
+    /// Build the FrameData of `frame_no`, which is in
+    /// `[first frame, last frame + 1)` of the animation. See `SCHEMA.md` for how to
+    /// read it. Fails with `NotLoaded` with no resource bound, `AnimationNotFound`
+    /// with no animation set up, and `InvalidParameter` for a `frame_no` out of
+    /// range.
     pub fn get_frame_data(&mut self, frame_no: f32) -> Result<&[u8], error::SSRuntimeError> {
         let Some(resource) = self.eval.resource else {
             return Err(error::SSRuntimeError::NotLoaded);
@@ -122,7 +127,7 @@ impl<'a> Context<'a> {
             for slot in self.instance.override_cell_uv_meta.iter_mut() {
                 *slot = None;
             }
-            // NON handover is decided from the frames the primary actually
+            // OverwriteOnNextKeyframe handover is decided from the frames the primary actually
             // traversed this update (section / loop / reverse / ping-pong
             // correct). Copy them out before the mutable borrows below so the
             // controller borrow is released.

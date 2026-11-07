@@ -17,7 +17,6 @@ pub struct VarianceValue<T> {
 #[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ParticleElementBasic {
-    // pub name: String,
     pub priority: i32,
     pub maximum_particle: i32,
     pub attime_create: i32,
@@ -31,39 +30,25 @@ pub struct ParticleElementBasic {
 }
 impl Default for ParticleElementBasic {
     fn default() -> Self {
-        ParticleElementBasic {
-            // name: String::new(),
-            priority: 64,
-            maximum_particle: 50,
-            attime_create: 1,
-            interval: 1,
-            speed: VarianceValue { value: 5.0, subvalue: 5.0 },
-            lifespan: VarianceValue { value: 30, subvalue: 30 },
-            angle: 0.0,
-            angle_variance: 45.0,
-            lifetime: 30,
-        }
+        ParticleElementBasic { priority: 64, maximum_particle: 50, attime_create: 1, interval: 1, speed: VarianceValue { value: 5.0, subvalue: 5.0 }, lifespan: VarianceValue { value: 30, subvalue: 30 }, angle: 0.0, angle_variance: 45.0, lifetime: 30 }
     }
 }
 
 #[derive(Deserialize, PartialEq, Default, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementRndSeedChange {
-    // pub name: String,
     pub seed: i32,
 }
 
 #[derive(Deserialize, PartialEq, Default, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementDelay {
-    //pub name: String,
     pub delay_time: i32,
 }
 
 #[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementGravity {
-    // pub name: String,
     pub gravity: SsPoint2,
 }
 impl Default for ParticleElementGravity {
@@ -75,7 +60,6 @@ impl Default for ParticleElementGravity {
 #[derive(Deserialize, PartialEq, Default, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementPosition {
-    // pub name: String,
     pub offset_x: VarianceValue<f32>,
     pub offset_y: VarianceValue<f32>,
 }
@@ -83,7 +67,6 @@ pub struct ParticleElementPosition {
 #[derive(Deserialize, PartialEq, Default, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementRotation {
-    // pub name: String,
     pub rotation: VarianceValue<f32>,
     pub rotation_add: VarianceValue<f32>,
 }
@@ -91,38 +74,30 @@ pub struct ParticleElementRotation {
 #[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementRotationTrans {
-    // pub name: String,
     pub rotation_factor: f32,
     pub end_life_time_per: f32,
 }
 impl Default for ParticleElementRotationTrans {
     fn default() -> Self {
-        Self {
-            // name: String::from(""),
-            rotation_factor: 0.0,
-            end_life_time_per: 75.0,
-        }
+        Self { rotation_factor: 0.0, end_life_time_per: 75.0 }
     }
 }
 
 #[derive(Deserialize, PartialEq, Default, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementTransSpeed {
-    // pub name: String,
     pub speed: VarianceValue<f32>,
 }
 
 #[derive(Deserialize, PartialEq, Default, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementTangentialAcceleration {
-    // pub name: String,
     pub acceleration: VarianceValue<f32>,
 }
 
 #[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementInitColor {
-    // pub name: String,
     pub color: VarianceValue<SsU8Color>,
 }
 impl Default for ParticleElementInitColor {
@@ -134,7 +109,6 @@ impl Default for ParticleElementInitColor {
 #[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementTransColor {
-    // pub name: String,
     pub color: VarianceValue<SsU8Color>,
 }
 impl Default for ParticleElementTransColor {
@@ -145,7 +119,6 @@ impl Default for ParticleElementTransColor {
 
 #[derive(Deserialize, PartialEq, Clone, Debug)]
 pub struct ParticleElementAlphaFade {
-    // pub name: String,
     pub disprange: VarianceValue<f32>,
 }
 impl Default for ParticleElementAlphaFade {
@@ -157,7 +130,6 @@ impl Default for ParticleElementAlphaFade {
 #[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementSize {
-    // pub name: String,
     pub size_x: VarianceValue<f32>,
     pub size_y: VarianceValue<f32>,
     pub scale_factor: VarianceValue<f32>,
@@ -171,7 +143,6 @@ impl Default for ParticleElementSize {
 #[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementTransSize {
-    // pub name: String,
     pub size_x: VarianceValue<f32>,
     pub size_y: VarianceValue<f32>,
     pub scale_factor: VarianceValue<f32>,
@@ -185,7 +156,6 @@ impl Default for ParticleElementTransSize {
 #[derive(Deserialize, PartialEq, Default, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticlePointGravity {
-    // pub name: String,
     pub position: SsPoint2,
     pub power: f32,
 }
@@ -193,14 +163,11 @@ pub struct ParticlePointGravity {
 #[derive(Deserialize, PartialEq, Default, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleTurnToDirectionEnabled {
-    // pub name: String,
     pub rotation: f32,
 }
 
 #[derive(Deserialize, PartialEq, Clone, Debug)]
-pub struct ParticleInfiniteEmitEnabled {
-    // pub name: String,
-}
+pub struct ParticleInfiniteEmitEnabled {}
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum SsEffectFunctionType {
@@ -210,7 +177,6 @@ pub enum SsEffectFunctionType {
     Delay(ParticleElementDelay),
     Gravity(ParticleElementGravity),
     Position(ParticleElementPosition),
-    //TransPosition,
     Rotation(ParticleElementRotation),
     TransRotation(ParticleElementRotationTrans),
     TransSpeed(ParticleElementTransSpeed),
@@ -245,7 +211,6 @@ impl<'de> Deserialize<'de> for SsEffectFunctionType {
                 if let Some((key, value)) = map.next_entry::<String, String>()? {
                     return match key.as_str() {
                         "@name" => match value.as_str() {
-                            // "Base",
                             "Basic" => {
                                 let f = ParticleElementBasic::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::Basic(f))
@@ -433,15 +398,7 @@ mod tests {
     use std::path::{Path, PathBuf};
 
     fn load_ssee(path: &Path) {
-        let r = SsEffectFile::load_from_file(path);
-        match r {
-            Ok(ss_effect_file) => {
-                println!("{:?}", ss_effect_file);
-            }
-            Err(e) => {
-                panic!("{:?}", e);
-            }
-        }
+        SsEffectFile::load_from_file(path).unwrap();
     }
 
     fn get_test_base_path() -> PathBuf {

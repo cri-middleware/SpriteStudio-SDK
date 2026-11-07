@@ -32,7 +32,7 @@ pub enum SSRuntimeError {
     NotLoaded,
     /// Invalid parameter (e.g. frame number out of range).
     InvalidParameter,
-    /// Memory allocation failed.
+    /// Reserved: an allocation failure aborts rather than returning this.
     MemoryError,
     /// Effect data is malformed (e.g. missing required fields).
     MalformedEffect,

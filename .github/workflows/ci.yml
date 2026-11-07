@@ -154,7 +154,7 @@ jobs:
             # actually ships as pkg/converter-web, and building the library alone
             # says nothing about it: features are resolved per dependency edge, so
             # the wrapper can drag `native` (rayon + walkdir + std::fs) into the
-            # graph while the line above stays green. It did.
+            # graph while the line above stays green.
             cargo build --target wasm32-unknown-unknown --verbose -p ssconverter-ffi --no-default-features --features "web"
             if cargo tree --target wasm32-unknown-unknown -p ssconverter-ffi --no-default-features --features "web" -e normal | grep -qE '\b(rayon|walkdir)\b'; then
               echo "::error::the browser converter pulled in a native-only dependency (rayon / walkdir)"
@@ -260,7 +260,7 @@ jobs:
 
   # The C ABI keeps its handles alive through Arc counts held as raw pointers,
   # and lends a resource out as 'static. A mistake there is undefined behaviour
-  # that the plain test run passes (a missing refcount increment did); Miri
+  # that the plain test run passes; Miri
   # reports it. The packs are converted natively first: Miri cannot run the
   # converter in any reasonable time.
   miri:

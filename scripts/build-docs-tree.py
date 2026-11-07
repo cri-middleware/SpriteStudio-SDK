@@ -16,22 +16,16 @@ this script materialises what it needs:
         10_introduction.ja.md     ---->    ja/10_introduction/
                                              10_introduction.md
 
-It is the one piece of the MkDocs setup that had no Zensical equivalent, and it
-replaces three things at once:
+It does three things Zensical has no equivalent for:
 
-* `plugins.i18n` with `docs_structure: suffix`, which paired the two files and
-  resolved the `.ja.md` links the Japanese pages carry;
-* `docs/hooks.py`, which stripped the per-page language switcher line;
-* `exclude_docs`, which kept CONTRIBUTING.ja.md out of the site.
+* it pairs the two files and resolves the `.ja.md` links the Japanese pages carry;
+* it strips the per-page language switcher line;
+* it keeps CONTRIBUTING.ja.md out of the site.
 
 It is also where the two `nav` trees are checked against the pages that exist.
 `zensical build --strict` does not do it: a nav entry naming a file that is not
 there still reports "No issues found", and ships a dead link in the navigation of
 every page while the real page is generated outside the nav entirely.
-
-Zensical silently ignores all three -- it reports "No issues found" and produces
-a flat 47-page tree with `.ja` in half the URLs -- so none of them could simply
-be carried over.
 
 Run it before either `zensical build`; `.github/workflows/pages.yml` does.
 """
@@ -63,7 +57,6 @@ NAV_ENTRY = re.compile(r"^\s*-\s+.*?:\s*(\S+\.md)\s*$")
 # Contributor-facing style rules for the guide, not part of the guide. It is also
 # the one Japanese page with no English counterpart, and its `./NN_name.md`
 # filename templates are not real links - published, they would fail the build.
-# This is what `exclude_docs` used to do.
 EXCLUDE = {"CONTRIBUTING.ja.md"}
 
 # The language switcher every page of the guide opens with, in both directions:

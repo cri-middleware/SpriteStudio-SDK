@@ -17,7 +17,7 @@ impl std::error::Error for SspjError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             SspjError::FileError(e) => Some(e),
-            SspjError::XmlParseError(e) => Some(e), // 元のエラーを参照可能にする
+            SspjError::XmlParseError(e) => Some(e),
             SspjError::FntParseError(_) => None,
         }
     }

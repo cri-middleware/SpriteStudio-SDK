@@ -316,9 +316,8 @@ jobs:
           # uploads. What is meant to last is attached to the GitHub Release,
           # which never expires; these are scaffolding — the matrix's handoff to
           # the package job, and a copy of the archives for a run that uploaded
-          # nothing. At ~90 MB a run the default filled the org's shared storage
-          # quota, and a full quota does not degrade: `upload-artifact` fails, so
-          # every release build fails, in a step that has nothing to do with
+          # nothing. A full storage quota does not degrade: `upload-artifact` fails,
+          # so every release build fails, in a step that has nothing to do with
           # whatever was being released.
           #
           # The one thing this shortens is replaying the packaging locally

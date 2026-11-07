@@ -33,8 +33,6 @@ fn test_event_collection_integration() {
 
 /// Only track 0's animation fires by default, even when another track holds
 /// a single source at full weight; that source fires once it opts in.
-/// The default threshold used to be `1.0`, which a lone overlay's weight
-/// meets, so an overlay fired every event it passed.
 #[test]
 fn an_overlay_fires_events_only_once_it_opts_in() {
     prepare();

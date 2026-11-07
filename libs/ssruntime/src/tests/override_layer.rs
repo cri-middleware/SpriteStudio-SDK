@@ -59,7 +59,7 @@ fn override_table_is_created_by_the_first_override() {
     context.setup_animation("anime_1").expect("re-setup");
     assert!(context.instance().part_overrides.is_empty());
 
-    // A PERMANENT color override survives it, and keeps the table.
+    // A Permanent color override survives it, and keeps the table.
     context.set_part_color_override(1, 0, 0xff0000ff, 2).expect("permanent color");
     context.setup_animation("anime_1").expect("re-setup");
     assert_eq!(context.instance().part_overrides.len(), num_parts);
@@ -169,7 +169,7 @@ fn override_color_applies_and_premultiplies() {
     context.get_frame_data(0.0).expect("frame 0");
     assert!(part_color_lt(&context, idx).is_none(), "POS_XYZ expected no baseline color");
 
-    // Mix, opaque 0x80/0x40/0x20/0xFF, NOW priority.
+    // Mix, opaque 0x80/0x40/0x20/0xFF, HoldUntilNextAnimation priority.
     context.set_part_color_override(idx as u32, 0, 0x8040_20FF, 1).expect("set color");
     context.get_frame_data(0.0).expect("frame 0");
 
@@ -221,14 +221,14 @@ fn override_color_priority_non_vs_now() {
     let interval = 1000.0 / context.get_frame_rate().max(1) as f32;
     context.play();
 
-    // NON set right after play(): the first update sits on frame 0 (its own
+    // OverwriteOnNextKeyframe set right after play(): the first update sits on frame 0 (its own
     // keyframe), which is skipped — so the override WINS its set-frame
-    // segment even though color is animated (the old bug hid it entirely).
-    context.set_part_color_override(idx as u32, 0, 0x0102_03FF, 0).expect("set NON");
+    // segment even though color is animated.
+    context.set_part_color_override(idx as u32, 0, 0x0102_03FF, 0).expect("set OverwriteOnNextKeyframe");
     let f = context.update(0.0);
     context.get_frame_data(f).expect("frame 0");
     let (r, g, b, _a) = part_color_lt(&context, idx).expect("override color present");
-    assert_eq!((r, g, b), (0x01, 0x02, 0x03), "NON wins at its set frame (own keyframe skipped)");
+    assert_eq!((r, g, b), (0x01, 0x02, 0x03), "OverwriteOnNextKeyframe wins at its set frame (own keyframe skipped)");
     assert!(context.instance().part_overrides[idx].as_ref().unwrap().color.is_some(), "slot retained on the set frame");
 
     // Play a full loop: playback decodes a PartColor key past frame 0 (or
@@ -238,14 +238,14 @@ fn override_color_priority_non_vs_now() {
         let f = context.update(interval);
         context.get_frame_data(f).expect("frame");
     }
-    assert!(context.instance().part_overrides[idx].as_ref().is_none_or(|o| o.color.is_none()), "NON hands over one-shot after decoding a key");
+    assert!(context.instance().part_overrides[idx].as_ref().is_none_or(|o| o.color.is_none()), "OverwriteOnNextKeyframe hands over one-shot after decoding a key");
 
-    // NOW: wins the keyframe every frame regardless of what the animation drives.
-    context.set_part_color_override(idx as u32, 0, 0x0102_03FF, 1).expect("set NOW");
+    // HoldUntilNextAnimation: wins the keyframe every frame regardless of what the animation drives.
+    context.set_part_color_override(idx as u32, 0, 0x0102_03FF, 1).expect("set HoldUntilNextAnimation");
     let f = context.update(interval);
     context.get_frame_data(f).expect("frame");
     let (r, g, b, _a) = part_color_lt(&context, idx).expect("override color present");
-    assert_eq!((r, g, b), (0x01, 0x02, 0x03), "NOW must override the keyframe");
+    assert_eq!((r, g, b), (0x01, 0x02, 0x03), "HoldUntilNextAnimation must override the keyframe");
 }
 
 #[test]
@@ -267,8 +267,8 @@ fn override_non_reads_the_same_however_often_its_update_is_evaluated() {
     // skip of the set frame keeps them. A Player may read a frame more than
     // once in an update (a part follower, an instance child behind a mask):
     // every read must keep them, as the first does.
-    context.set_part_color_override(idx as u32, 0, 0x0102_03FF, 0).expect("set NON color");
-    context.set_part_cell_override(idx as u32, cm_hash, cell_hash, 0).expect("set NON cell");
+    context.set_part_color_override(idx as u32, 0, 0x0102_03FF, 0).expect("set OverwriteOnNextKeyframe color");
+    context.set_part_cell_override(idx as u32, cm_hash, cell_hash, 0).expect("set OverwriteOnNextKeyframe cell");
     let f = context.update(0.0);
     for read in 0..3 {
         context.get_frame_data(f).expect("frame 0");
@@ -309,16 +309,16 @@ fn override_color_permanent_survives_setup() {
     context.setup_animation("anime_1").expect("setup");
     let idx = context.find_part_index("POS_XYZ") as u32;
 
-    // PERMANENT persists across a new animation...
+    // Permanent persists across a new animation...
     context.set_part_color_override(idx, 0, 0x8040_20FF, 2).expect("set permanent");
     context.setup_animation("anime_1").expect("re-setup");
-    assert!(context.instance().has_any_override(), "PERMANENT must survive setup_animation");
+    assert!(context.instance().has_any_override(), "Permanent must survive setup_animation");
 
-    // ...but NOW does not.
+    // ...but HoldUntilNextAnimation does not.
     context.clear_all_part_overrides();
     context.set_part_color_override(idx, 0, 0x8040_20FF, 1).expect("set now");
     context.setup_animation("anime_1").expect("re-setup");
-    assert!(!context.instance().has_any_override(), "NOW must clear on setup_animation");
+    assert!(!context.instance().has_any_override(), "HoldUntilNextAnimation must clear on setup_animation");
 }
 
 // --- Override Layer: Cell ---
@@ -414,9 +414,9 @@ fn override_cell_priority_non_vs_now() {
     let interval = 1000.0 / context.get_frame_rate().max(1) as f32;
     context.play();
 
-    // NON set right after play(): the first update sits on the frame-0 cell
+    // OverwriteOnNextKeyframe set right after play(): the first update sits on the frame-0 cell
     // key (skipped), so the override WINS its set-frame segment.
-    context.set_part_cell_override(cell_part as u32, base_cm, alt, 0).expect("set NON");
+    context.set_part_cell_override(cell_part as u32, base_cm, alt, 0).expect("set OverwriteOnNextKeyframe");
     let f = context.update(0.0);
     context.get_frame_data(f).expect("frame 0");
     let ci2 = context.instance().resolved_layer.parts_vec[cell_part].cell();
@@ -424,7 +424,7 @@ fn override_cell_priority_non_vs_now() {
         let c = &context.instance().resolved_layer.cell_vec[ci2 as usize];
         (c.cellmap_name_hash(), c.name_hash())
     };
-    assert_eq!(got, (base_cm, alt), "NON wins at its set frame (own key skipped)");
+    assert_eq!(got, (base_cm, alt), "OverwriteOnNextKeyframe wins at its set frame (own key skipped)");
     assert!(context.instance().part_overrides[cell_part].as_ref().unwrap().cell.is_some());
 
     // Play a full loop: a cell key is decoded → one-shot handover, dropped.
@@ -433,10 +433,10 @@ fn override_cell_priority_non_vs_now() {
         let f = context.update(interval);
         context.get_frame_data(f).expect("frame");
     }
-    assert!(context.instance().part_overrides[cell_part].as_ref().is_none_or(|o| o.cell.is_none()), "cell NON hands over after decoding a key");
+    assert!(context.instance().part_overrides[cell_part].as_ref().is_none_or(|o| o.cell.is_none()), "cell OverwriteOnNextKeyframe hands over after decoding a key");
 
-    // NOW: wins the keyframed cell every frame.
-    context.set_part_cell_override(cell_part as u32, base_cm, alt, 1).expect("set NOW");
+    // HoldUntilNextAnimation: wins the keyframed cell every frame.
+    context.set_part_cell_override(cell_part as u32, base_cm, alt, 1).expect("set HoldUntilNextAnimation");
     let f = context.update(interval);
     context.get_frame_data(f).expect("frame");
     let ci3 = context.instance().resolved_layer.parts_vec[cell_part].cell();
@@ -444,7 +444,7 @@ fn override_cell_priority_non_vs_now() {
         let c = &context.instance().resolved_layer.cell_vec[ci3 as usize];
         (c.cellmap_name_hash(), c.name_hash())
     };
-    assert_eq!(got, (base_cm, alt), "NOW must override the keyframed cell");
+    assert_eq!(got, (base_cm, alt), "HoldUntilNextAnimation must override the keyframed cell");
 }
 
 #[test]
@@ -478,9 +478,8 @@ fn override_cell_changes_uvs() {
     };
 
     // Override to the alt cell: the SAMPLED UVs must change — not just the
-    // quad size/texture. (Regression: compute_local_uvs used the keyframe
-    // cell and ignored the override, so only size/texture changed.)
-    context.set_part_cell_override(cell_part as u32, base_cm, alt, 1).expect("set NOW");
+    // quad size/texture.
+    context.set_part_cell_override(cell_part as u32, base_cm, alt, 1).expect("set HoldUntilNextAnimation");
     context.get_frame_data(0.0).expect("frame 0");
     let overridden_uvs: Vec<f32> = context.instance().globals.local_uvs[base..base + 10].to_vec();
 
@@ -497,17 +496,17 @@ fn override_cell_permanent_survival_and_sentinel_clear() {
     let (cm_hash, cell_hash, _, _) = first_cell(&context);
     let idx = context.find_part_index("POS_XYZ") as u32;
 
-    // PERMANENT persists across a new animation...
+    // Permanent persists across a new animation...
     context.set_part_cell_override(idx, cm_hash, cell_hash, 2).expect("set permanent");
     context.setup_animation("anime_1").expect("re-setup");
-    assert!(context.instance().has_any_override(), "PERMANENT cell must survive setup_animation");
+    assert!(context.instance().has_any_override(), "Permanent cell must survive setup_animation");
 
     // ...and the (0,0) sentinel reverts to the animation (clears).
     context.set_part_cell_override(idx, 0, 0, 2).expect("sentinel clear");
     assert!(!context.instance().has_any_override(), "(0,0) must clear the cell override");
 
-    // NOW does not survive setup.
+    // HoldUntilNextAnimation does not survive setup.
     context.set_part_cell_override(idx, cm_hash, cell_hash, 1).expect("set now");
     context.setup_animation("anime_1").expect("re-setup");
-    assert!(!context.instance().has_any_override(), "NOW cell must clear on setup_animation");
+    assert!(!context.instance().has_any_override(), "HoldUntilNextAnimation cell must clear on setup_animation");
 }

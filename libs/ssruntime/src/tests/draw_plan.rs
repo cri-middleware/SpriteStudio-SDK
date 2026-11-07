@@ -113,8 +113,7 @@ fn test_nines_stretch_batch_and_geometry() {
     let frame_buf = context.get_frame_data(1.0).expect("Failed to get frame data").to_vec();
     let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(&frame_buf) };
 
-    // The part must take part in the draw plan — it used to be dropped
-    // before `draw_order` was even built.
+    // The part takes part in the draw plan.
     let rank = frame_data.draw_order().iter().position(|slot| frame_data.parts().get(slot as usize).part_index() as usize == part_index).expect("the nines part must appear in draw_order");
     let batch = frame_data.draw_batches().iter().find(|b| b.kind() == crate::runtime::framedata::ss::runtime::DrawBatchKind::Nines).expect("a Nines batch must be emitted");
     assert_eq!(batch.start_rank() as usize, rank);

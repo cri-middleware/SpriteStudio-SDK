@@ -18,7 +18,7 @@ fn run<S: AsRef<OsStr>>(args: &[S]) -> (bool, String) {
     (output.status.success(), String::from_utf8_lossy(&output.stderr).into_owned())
 }
 
-/// A path that does not exist used to be skipped, and the run exited 0.
+/// A path that does not exist fails the run rather than being skipped.
 #[test]
 fn a_path_that_does_not_exist_fails_the_run() {
     let dir = scratch("missing");
@@ -31,7 +31,7 @@ fn a_path_that_does_not_exist_fails_the_run() {
     assert!(out.join("Ringo.ssab").exists(), "the project that does exist was not converted");
 }
 
-/// The first failure used to end the run, so the others went unreported.
+/// The first failure does not end the run, so every one is reported.
 #[test]
 fn every_project_that_fails_is_reported() {
     let dir = scratch("broken");

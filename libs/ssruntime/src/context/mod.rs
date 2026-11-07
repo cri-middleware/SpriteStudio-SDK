@@ -183,7 +183,7 @@ pub(crate) struct InstanceState<'a> {
     /// geometry/texture channels). Empty when no override is active this frame.
     override_cell_uv_meta: Vec<Option<crate::eval::framedata::ResolvedCellMeta>>,
     /// How many times `Context::update` has run: the update an evaluation
-    /// belongs to, which a NON override's first evaluation records.
+    /// belongs to, which an OverwriteOnNextKeyframe override's first evaluation records.
     updates: u64,
 }
 
@@ -227,10 +227,10 @@ impl<'a> InstanceState<'a> {
         }
     }
 
-    /// On a new animation within the same SSAB: drop Visibility and NON/NOW
-    /// priority Color/Cell overrides, keep PERMANENT ones, then resize to the
+    /// On a new animation within the same SSAB: drop Visibility and OverwriteOnNextKeyframe and
+    /// HoldUntilNextAnimation Color/Cell overrides, keep Permanent ones, then resize to the
     /// new part count (part identity is stable within an SSAB; parts beyond the
-    /// new count are dropped by the resize — the PERMANENT re-validation).
+    /// new count are dropped by the resize — the Permanent re-validation).
     fn retain_permanent_overrides_on_setup(&mut self, num_parts: usize) {
         use crate::eval::override_layer::PriorityMode;
         if self.part_overrides.is_empty() {
@@ -352,6 +352,10 @@ impl<'a> InstanceState<'a> {
     }
 }
 
+/// The playback state of one animated object: a stack of tracks, each playing an
+/// animation of the bound resource, layered onto the setup pose. Bind a resource
+/// with [`Self::bind_resource`] and select an animation with
+/// [`Self::setup_animation`] before playing.
 pub struct Context<'a> {
     eval: EvaluationContext<'a>,
     instance: InstanceState<'a>,
@@ -376,10 +380,13 @@ impl<'a> Context<'a> {
 }
 
 impl<'a> Context<'a> {
+    /// An empty context.
     pub fn new() -> Self {
         Context { eval: EvaluationContext::new(), instance: InstanceState::new() }
     }
 
+    /// Back to the just-created state: the resource is unbound, and the overrides
+    /// and the playback and coordinate settings are cleared.
     pub fn reset(&mut self) {
         self.eval.resource = None;
         self.eval.fb.reset();
@@ -401,14 +408,18 @@ impl<'a> Context<'a> {
         self.instance.globals.mesh_layout = NO_MESH_LAYOUT;
     }
 
+    /// What the frame computes; see [`RenderMode`](crate::eval::RenderMode).
     pub fn set_render_mode(&mut self, mode: crate::eval::RenderMode) {
         self.instance.render_mode = mode;
     }
 
+    /// What [`Self::set_render_mode`] stored.
     pub fn render_mode(&self) -> crate::eval::RenderMode {
         self.instance.render_mode
     }
 
+    /// Bind `resource`, dropping the tracks and the overrides. The coordinate
+    /// settings stay. [`Self::setup_animation`] comes next.
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
         self.eval.resource = Some(resource);
         self.eval.fb.reset();
@@ -424,15 +435,20 @@ impl<'a> Context<'a> {
         // Configuration (coordinate_system, origin, unit) is preserved.
     }
 
+    /// The bound resource's `.ssab` bytes.
     pub fn get_ssab_data(&self) -> Option<&[u8]> {
         self.eval.resource.map(|r| r.get_ssab_data())
     }
 
+    /// Select the animation `name` and move to its first frame. This does not start
+    /// it; [`Self::play`] does. It drops every track but 0, the section and the loop
+    /// count, and keeps the speed, the frame rate, the frame skip and the direction.
     pub fn setup_animation(&mut self, name: &str) -> Result<(), error::SSRuntimeError> {
         let hash = fnv1a_hash_str(name);
         self.setup_animation_by_hash(hash)
     }
 
+    /// [`Self::setup_animation`] by the FNV-1a hash of the name.
     pub fn setup_animation_by_hash(&mut self, hash: u32) -> Result<(), error::SSRuntimeError> {
         let Some(resource) = self.eval.resource else {
             return Err(error::SSRuntimeError::NotLoaded);
@@ -462,8 +478,8 @@ impl<'a> Context<'a> {
         }
         self.instance.resolved_layer.resize_for_parts(num_parts, cursor_c, cell_c, color_c, shader_c, deform_c);
 
-        // Override Layer: a new animation clears Visibility and NON/NOW
-        // Color/Cell overrides but keeps PERMANENT ones.
+        // Override Layer: a new animation clears Visibility and OverwriteOnNextKeyframe and
+        // HoldUntilNextAnimation Color/Cell overrides but keeps Permanent ones.
         self.instance.retain_permanent_overrides_on_setup(num_parts);
 
         let globals = &mut self.instance.globals;

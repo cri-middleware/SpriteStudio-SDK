@@ -6,8 +6,6 @@ use crate::eval;
 use crate::mix::TrackFade;
 
 impl<'a> Context<'a> {
-    // Playhead getters
-
     pub fn get_frame_no(&self) -> f32 {
         self.instance.primary_source().controller.get_frame_no()
     }
@@ -24,8 +22,6 @@ impl<'a> Context<'a> {
     pub fn just_looped(&self) -> bool {
         self.instance.primary_source().controller.just_looped()
     }
-
-    // Playback state and setting getters
 
     /// `true` while the clock runs and track 0 has not finished. A held
     /// character is still playing.
@@ -144,8 +140,6 @@ impl<'a> Context<'a> {
         self.instance.tracks[0].policy.speed_scale
     }
 
-    // Playback setup
-
     /// Track 0's [`Self::set_track_skip_frames`].
     pub fn set_skip_frames(&mut self, skip: bool) {
         self.instance.set_track_policy(0, |p| p.is_skip_frames = skip, |c| c.set_skip_frames(skip));
@@ -215,8 +209,6 @@ impl<'a> Context<'a> {
     pub fn get_unit(&self) -> crate::eval::SsUnit {
         self.instance.unit
     }
-
-    // Playback control
 
     /// Advance every source's controller by `delta` milliseconds and return the
     /// frame to hand to [`Self::get_frame_data`]: that of track 0's main
