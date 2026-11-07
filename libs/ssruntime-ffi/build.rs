@@ -53,6 +53,14 @@ fn main() {
         .exclude_item("LIFE_EXTEND_MIN")
         .exclude_item("NINES_MAX_TILE_DIV")
         .exclude_item("NINES_MAX_TILE_QUADS")
+        // Not part of the C-API: the no_std panic stub, and the allocator
+        // symbols a host defines or the runtime imports from its libc.
+        .exclude_item("rust_eh_personality")
+        .exclude_item("em_malloc")
+        .exclude_item("em_free")
+        .exclude_item("em_posix_memalign")
+        .exclude_item("ss_custom_alloc")
+        .exclude_item("ss_custom_free")
         .generate()
     {
         Ok(bindings) => {

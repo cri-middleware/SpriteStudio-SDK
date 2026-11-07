@@ -41,8 +41,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define ASSET_PATH_SEPARATOR '/'
-
 enum CConverterError
 #if defined(__cplusplus) || __STDC_VERSION__ >= 202311L
   : int32_t

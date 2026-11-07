@@ -249,18 +249,6 @@ typedef struct ss_event_instance_info {
 extern "C" {
 #endif // __cplusplus
 
-void rust_eh_personality(void);
-
-extern uint8_t *em_malloc(uintptr_t size);
-
-extern void em_free(void *ptr);
-
-extern int32_t em_posix_memalign(void **memptr, uintptr_t align, uintptr_t size);
-
-extern uint8_t *ss_custom_alloc(uintptr_t size, uintptr_t align);
-
-extern void ss_custom_free(void *ptr, uintptr_t size, uintptr_t align);
-
 void ss_runtime_set_log_callback(SsLogCallback callback);
 
 /**
