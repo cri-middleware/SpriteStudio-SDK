@@ -2615,6 +2615,15 @@ mod tests {
         assert!(!web.contains("{:?}"), "src/web/mod.rs formats something with Debug. A fallible binding reports through `js_error`.");
     }
 
+    /// A JS exception is an `Error`, so that whoever catches it finds `message` and a
+    /// stack. Nothing on this face has another use for a plain string.
+    #[test]
+    fn the_wasm_face_throws_errors_not_strings() {
+        let web = std::fs::read_to_string("src/web/mod.rs").expect("read web/mod.rs");
+        assert!(web.contains("JsError::new"), "js_message is gone; this test is pinning nothing");
+        assert!(!web.contains("JsValue::from_str"), "src/web/mod.rs builds a plain string. A fallible binding reports through `js_error` or `js_message`.");
+    }
+
     /// The `ss_*` symbols this module actually exports, read from its own source
     /// rather than from the generated header — the header is a build artifact,
     /// and a test that needs one built first is a test that gets skipped.
