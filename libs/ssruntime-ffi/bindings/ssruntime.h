@@ -802,6 +802,11 @@ bool ss_runtime_set_animation_section(void *context, int start_frame, int end_fr
  * Advance by `delta` **milliseconds** and return the frame to pass to
  * `ss_runtime_get_frame_data`. With animation mixing it advances every track and fade;
  * the frame returned is track 0's.
+ *
+ * `delta` must not be negative. A negative value does not play backwards, and where it
+ * leaves the playhead is unspecified. Clamp it to 0 first: a browser's
+ * `requestAnimationFrame` timestamp can be earlier than the `performance.now()` read
+ * before it.
  */
 float ss_runtime_update(void *context, float delta);
 

@@ -1227,6 +1227,11 @@ pub unsafe extern "C" fn ss_runtime_set_animation_section(context: *mut c_void, 
 /// Advance by `delta` **milliseconds** and return the frame to pass to
 /// `ss_runtime_get_frame_data`. With animation mixing it advances every track and fade;
 /// the frame returned is track 0's.
+///
+/// `delta` must not be negative. A negative value does not play backwards, and where it
+/// leaves the playhead is unspecified. Clamp it to 0 first: a browser's
+/// `requestAnimationFrame` timestamp can be earlier than the `performance.now()` read
+/// before it.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_update(context: *mut c_void, delta: f32) -> c_float {
     if let Some(ffi_context) = unsafe { get_context(context) } {
