@@ -105,6 +105,14 @@ impl SsProject {
     }
 }
 
+fn load_listed_from_file<L: crate::ssloader::SsLoader>(path: &std::path::Path, name: String) -> Result<L::Output, crate::sspj_error::SspjError> {
+    L::load_from_file(path).map_err(|e| e.in_file(name))
+}
+
+fn load_listed_from_maps<L: crate::ssloader::SsLoader>(key: String, maps: &HashMap<String, String>) -> Result<L::Output, crate::sspj_error::SspjError> {
+    L::load_from_maps(&key, maps).map_err(|e| e.in_file(key))
+}
+
 impl crate::ssloader::SsLoader for SsProject {
     type Output = SsProject;
     fn load_from_file(path: &std::path::Path) -> Result<Self::Output, crate::sspj_error::SspjError> {
@@ -120,15 +128,23 @@ impl crate::ssloader::SsLoader for SsProject {
         let ((sound_list, (sequence_list, charmap_dic)), (cellmap_list, (effect_file_list, anime_list))) = join(
             || {
                 join(
-                    || par_iter!(sspj.audiopack_names).map(|audiopack| crate::ssse::SsAudioPack::load_from_file(&parent_path_buf.join(audiopack))).collect::<Result<Vec<crate::ssse::SsAudioPack>, crate::sspj_error::SspjError>>(),
+                    || {
+                        par_iter!(sspj.audiopack_names)
+                            .map(|audiopack| load_listed_from_file::<crate::ssse::SsAudioPack>(&parent_path_buf.join(audiopack), normalize_asset_path(audiopack)))
+                            .collect::<Result<Vec<crate::ssse::SsAudioPack>, crate::sspj_error::SspjError>>()
+                    },
                     || {
                         join(
-                            || par_iter!(sspj.sequencepack_names).map(|sequencepack| crate::ssqe::SsSequencePack::load_from_file(&parent_path_buf.join(sequencepack))).collect::<Result<Vec<crate::ssqe::SsSequencePack>, crate::sspj_error::SspjError>>(),
+                            || {
+                                par_iter!(sspj.sequencepack_names)
+                                    .map(|sequencepack| load_listed_from_file::<crate::ssqe::SsSequencePack>(&parent_path_buf.join(sequencepack), normalize_asset_path(sequencepack)))
+                                    .collect::<Result<Vec<crate::ssqe::SsSequencePack>, crate::sspj_error::SspjError>>()
+                            },
                             || {
                                 par_iter!(sspj.charmap_names)
                                     .map(|charmap_name| {
                                         let path = parent_path_buf.join(charmap_name);
-                                        let charmap_data = crate::sscharmap::SsCharMap::load_from_file(&path)?;
+                                        let charmap_data = load_listed_from_file::<crate::sscharmap::SsCharMap>(&path, normalize_asset_path(charmap_name))?;
                                         Ok((charmap_name.to_string(), charmap_data))
                                     })
                                     .collect::<Result<HashMap<String, crate::sscharmap::SsCharMap>, crate::sspj_error::SspjError>>()
@@ -140,18 +156,25 @@ impl crate::ssloader::SsLoader for SsProject {
             || {
                 join(
                     || {
-                        let p = parent_path_buf.join(&sspj.settings.cell_map_base_directory);
-                        par_iter!(sspj.cellmap_names).map(|cellmap| crate::ssce::SsCellMap::load_from_file(&p.join(cellmap))).collect::<Result<Vec<crate::ssce::SsCellMap>, crate::sspj_error::SspjError>>()
+                        let base = &sspj.settings.cell_map_base_directory;
+                        let p = parent_path_buf.join(base);
+                        par_iter!(sspj.cellmap_names).map(|cellmap| load_listed_from_file::<crate::ssce::SsCellMap>(&p.join(cellmap), join_asset_path(base, cellmap))).collect::<Result<Vec<crate::ssce::SsCellMap>, crate::sspj_error::SspjError>>()
                     },
                     || {
                         join(
                             || {
-                                let p = parent_path_buf.join(&sspj.settings.effect_base_directory);
-                                par_iter!(sspj.effect_file_names).map(|effect_file| crate::ssee::SsEffectFile::load_from_file(&p.join(effect_file))).collect::<Result<Vec<crate::ssee::SsEffectFile>, crate::sspj_error::SspjError>>()
+                                let base = &sspj.settings.effect_base_directory;
+                                let p = parent_path_buf.join(base);
+                                par_iter!(sspj.effect_file_names)
+                                    .map(|effect_file| load_listed_from_file::<crate::ssee::SsEffectFile>(&p.join(effect_file), join_asset_path(base, effect_file)))
+                                    .collect::<Result<Vec<crate::ssee::SsEffectFile>, crate::sspj_error::SspjError>>()
                             },
                             || {
-                                let p = parent_path_buf.join(&sspj.settings.anime_base_directory);
-                                par_iter!(sspj.animepack_names).map(|animepack| crate::ssae::SsAnimePack::load_from_file(&p.join(animepack))).collect::<Result<Vec<crate::ssae::SsAnimePack>, crate::sspj_error::SspjError>>()
+                                let base = &sspj.settings.anime_base_directory;
+                                let p = parent_path_buf.join(base);
+                                par_iter!(sspj.animepack_names)
+                                    .map(|animepack| load_listed_from_file::<crate::ssae::SsAnimePack>(&p.join(animepack), join_asset_path(base, animepack)))
+                                    .collect::<Result<Vec<crate::ssae::SsAnimePack>, crate::sspj_error::SspjError>>()
                             },
                         )
                     },
@@ -177,23 +200,23 @@ impl crate::ssloader::SsLoader for SsProject {
         };
         let mut sspj = quick_xml::de::from_str::<SsProject>(xml_data).map_err(crate::sspj_error::SspjError::XmlParseError)?;
 
-        sspj.sound_list = par_iter!(sspj.audiopack_names).map(|audiopack| crate::ssse::SsAudioPack::load_from_maps(&normalize_asset_path(audiopack), maps)).collect::<Result<Vec<crate::ssse::SsAudioPack>, crate::sspj_error::SspjError>>()?;
+        sspj.sound_list = par_iter!(sspj.audiopack_names).map(|audiopack| load_listed_from_maps::<crate::ssse::SsAudioPack>(normalize_asset_path(audiopack), maps)).collect::<Result<Vec<crate::ssse::SsAudioPack>, crate::sspj_error::SspjError>>()?;
         sspj.sequence_list =
-            par_iter!(sspj.sequencepack_names).map(|sequence_name| crate::ssqe::SsSequencePack::load_from_maps(&normalize_asset_path(sequence_name), maps)).collect::<Result<Vec<crate::ssqe::SsSequencePack>, crate::sspj_error::SspjError>>()?;
+            par_iter!(sspj.sequencepack_names).map(|sequence_name| load_listed_from_maps::<crate::ssqe::SsSequencePack>(normalize_asset_path(sequence_name), maps)).collect::<Result<Vec<crate::ssqe::SsSequencePack>, crate::sspj_error::SspjError>>()?;
         sspj.charmap_dic = par_iter!(sspj.charmap_names)
             .map(|charmap_name| {
-                let charmap_data = crate::sscharmap::SsCharMap::load_from_maps(&normalize_asset_path(charmap_name), maps)?;
+                let charmap_data = load_listed_from_maps::<crate::sscharmap::SsCharMap>(normalize_asset_path(charmap_name), maps)?;
                 Ok((charmap_name.to_string(), charmap_data))
             })
             .collect::<Result<HashMap<String, crate::sscharmap::SsCharMap>, crate::sspj_error::SspjError>>()?;
         sspj.cellmap_list = par_iter!(sspj.cellmap_names)
-            .map(|cellmap_name| crate::ssce::SsCellMap::load_from_maps(&join_asset_path(&sspj.settings.cell_map_base_directory, cellmap_name), maps))
+            .map(|cellmap_name| load_listed_from_maps::<crate::ssce::SsCellMap>(join_asset_path(&sspj.settings.cell_map_base_directory, cellmap_name), maps))
             .collect::<Result<Vec<crate::ssce::SsCellMap>, crate::sspj_error::SspjError>>()?;
         sspj.effect_file_list = par_iter!(sspj.effect_file_names)
-            .map(|effect_file_name| crate::ssee::SsEffectFile::load_from_maps(&join_asset_path(&sspj.settings.effect_base_directory, effect_file_name), maps))
+            .map(|effect_file_name| load_listed_from_maps::<crate::ssee::SsEffectFile>(join_asset_path(&sspj.settings.effect_base_directory, effect_file_name), maps))
             .collect::<Result<Vec<crate::ssee::SsEffectFile>, crate::sspj_error::SspjError>>()?;
         sspj.anime_list = par_iter!(sspj.animepack_names)
-            .map(|animepack_name| crate::ssae::SsAnimePack::load_from_maps(&join_asset_path(&sspj.settings.anime_base_directory, animepack_name), maps))
+            .map(|animepack_name| load_listed_from_maps::<crate::ssae::SsAnimePack>(join_asset_path(&sspj.settings.anime_base_directory, animepack_name), maps))
             .collect::<Result<Vec<crate::ssae::SsAnimePack>, crate::sspj_error::SspjError>>()?;
 
         Ok(sspj)
@@ -208,6 +231,7 @@ impl crate::ssloader::SsLoader for SsProject {
 mod tests {
     use super::*;
     use crate::ssloader::SsLoader;
+    use crate::sspj_error::SspjError;
     use std::path::{Path, PathBuf};
 
     fn load_sspj(path: &Path) {
@@ -254,6 +278,34 @@ mod tests {
         assert!(from_maps.effect_file_list == on_disk.effect_file_list);
         assert!(from_maps.sound_list == on_disk.sound_list);
         assert!(from_maps.charmap_dic == on_disk.charmap_dic);
+    }
+
+    fn sspj_listing(element: &str, base_directory: &str, file: &str) -> String {
+        format!(
+            r#"<SpriteStudioProject version="2.00.00"><name>p</name><settings><animeBaseDirectory>{base_directory}</animeBaseDirectory><effectBaseDirectory>{base_directory}</effectBaseDirectory><exportBaseDirectory>export</exportBaseDirectory><queryExportBaseDirectory>1</queryExportBaseDirectory><wrapMode>clamp</wrapMode><filterMode>linear</filterMode></settings><{element}><value>{file}</value></{element}></SpriteStudioProject>"#
+        )
+    }
+
+    #[test]
+    fn a_listed_file_that_fails_to_parse_is_named() {
+        let maps = HashMap::from([("p.sspj".to_string(), sspj_listing("effectFileNames", "effects", "broken.ssee")), ("effects/broken.ssee".to_string(), "<SpriteStudioEffect".to_string())]);
+
+        let e = SsProject::load_from_maps("p.sspj", &maps).unwrap_err();
+
+        assert!(matches!(&e, SspjError::InFile { path, source } if path == "effects/broken.ssee" && matches!(**source, SspjError::XmlParseError(_))), "{e:?}");
+        assert!(e.to_string().starts_with("effects/broken.ssee: XML Parse Error: "), "{e}");
+    }
+
+    #[test]
+    fn a_listed_file_missing_on_disk_is_named() {
+        let dir = std::env::temp_dir().join(format!("sspj-missing-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).expect("Failed to create the scratch directory");
+        std::fs::write(dir.join("p.sspj"), sspj_listing("animepackNames", "", "missing.ssae")).expect("Failed to write the project");
+
+        let e = SsProject::load_from_file(&dir.join("p.sspj")).unwrap_err();
+        let _ = std::fs::remove_dir_all(&dir);
+
+        assert!(matches!(&e, SspjError::InFile { path, source } if path == "missing.ssae" && matches!(**source, SspjError::FileError(_))), "{e:?}");
     }
 
     #[test]

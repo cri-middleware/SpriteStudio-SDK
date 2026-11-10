@@ -14,7 +14,7 @@ impl std::fmt::Display for ConverterError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ConverterError::IoError(e) => write!(f, "IO Error: {}", e),
-            ConverterError::SspjError(e) => write!(f, "SSPJ Parse Error: {}", e),
+            ConverterError::SspjError(e) => write!(f, "{}", e),
             ConverterError::ConversionFailed(s) => write!(f, "Conversion Failed: {}", s),
             ConverterError::Aborted => write!(f, "Aborted"),
         }
