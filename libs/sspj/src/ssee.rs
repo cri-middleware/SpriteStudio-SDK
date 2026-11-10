@@ -163,6 +163,7 @@ pub struct ParticlePointGravity {
 #[derive(Deserialize, PartialEq, Default, Clone, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleTurnToDirectionEnabled {
+    #[serde(default)]
     pub rotation: f32,
 }
 
@@ -403,6 +404,14 @@ mod tests {
 
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()
+    }
+
+    /// Older `.ssee` files leave `<Rotation>` out of TurnToDirection; SpriteStudio6-SDK reads it as 0.
+    #[test]
+    fn turn_to_direction_without_rotation_reads_as_zero() {
+        let f = quick_xml::de::from_str::<SsEffectFunctionType>(r#"<value name="TurnToDirection"><name>TurnToDirection</name></value>"#).unwrap();
+
+        assert_eq!(f, SsEffectFunctionType::TurnToDirectionEnabled(ParticleTurnToDirectionEnabled { rotation: 0.0 }));
     }
 
     #[test]
