@@ -32,7 +32,7 @@ To pin a version, replace `latest/download` with `download/<tag>`. `SHA256SUMS` 
 
 ## Build from source
 
-Requires a Rust toolchain ([rustup](https://rustup.rs/)), version **1.99 or newer**. From the repository root:
+Requires a Rust toolchain ([rustup](https://rustup.rs/)), version **1.100 or newer**. From the repository root:
 
 ```bash
 $ cargo install --path cli
