@@ -15,4 +15,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Animation Mixing**: a track stack. Tracks fold onto the setup pose in ascending order, each with its own `alpha` and an interpolative or additive operator; several animations can share a track and mix by weight. Covers crossfades (`ss_runtime_crossfade`), overlays, additive offset axes, and fading a track out to the rest pose.
 - **Custom Allocator Injection**: `custom_alloc` feature lets game engines / consoles supply their own allocator and abort handler via `ss_custom_alloc` / `ss_custom_free` / `ss_custom_abort` C symbols — no wrapper crate required.
 - **Documentation**: bilingual (EN/JA) README, contribution guidelines and Player Porting Guide, the guide also published at https://cri-middleware.github.io/SpriteStudio-SDK/.
-- **Minimum Supported Rust Version**: building from source requires Rust 1.99 or newer.
+- **Minimum Supported Rust Version**: building from source requires Rust 1.100 or newer.
