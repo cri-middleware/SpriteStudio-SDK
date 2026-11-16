@@ -1391,8 +1391,8 @@ pub unsafe extern "C" fn ss_runtime_set_track_animation_by_hash(context: *mut c_
     report(ffi_context, "ss_runtime_set_track_animation_by_hash", |ctx| ctx.set_track_animation_by_hash(track, hash))
 }
 
-/// The strength of `track`: `0` contributes nothing, `1` all of it, and other values
-/// extrapolate. Returns `false` with `InvalidParameter` for a `NaN` or a track that does
+/// The strength of `track`: `0` contributes nothing, `1` all of it, and values above
+/// `1` extrapolate. Returns `false` with `InvalidParameter` for a `NaN` or a track that does
 /// not exist.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_runtime_set_track_alpha(context: *mut c_void, track: u32, alpha: c_float) -> bool {
