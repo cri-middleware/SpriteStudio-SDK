@@ -1019,9 +1019,9 @@ mod tests {
         let mut hint = 0;
         let data = eval_deform_owned(&buf, 5.0, &mut hint).unwrap();
         // Zero-tangent Hermite at midpoint = 0.5 → x = prev + (next-prev) * 0.5
-        for i in 0..4 {
+        for (i, c) in data.coordinate[..4].iter().enumerate() {
             let exp = (i as f32) + 5.0;
-            assert!((data.coordinate[i].x() - exp).abs() < 1e-5, "x at {i}: got {} want {exp}", data.coordinate[i].x());
+            assert!((c.x() - exp).abs() < 1e-5, "x at {i}: got {} want {exp}", c.x());
         }
     }
 }
