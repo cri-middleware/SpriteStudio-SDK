@@ -720,8 +720,8 @@ namespace SpriteStudio.SsRuntime
         public static extern bool ss_runtime_set_track_animation_by_hash(void* context, uint track, uint hash);
 
         /// <summary>
-        ///  The strength of `track`: `0` contributes nothing, `1` all of it, and other values
-        ///  extrapolate. Returns `false` with `InvalidParameter` for a `NaN` or a track that does
+        ///  The strength of `track`: `0` contributes nothing, `1` all of it, and values above
+        ///  `1` extrapolate. Returns `false` with `InvalidParameter` for a `NaN` or a track that does
         ///  not exist.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "ss_runtime_set_track_alpha", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]

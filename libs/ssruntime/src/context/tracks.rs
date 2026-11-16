@@ -35,9 +35,9 @@ impl<'a> Context<'a> {
     /// track, and is silent when a source is the only one animating an attribute.
     ///
     /// Alpha is not clamped: values above 1 extrapolate, which is occasionally
-    /// what an overlay wants, and a negative one extrapolates away from the track's
-    /// pose. At `0` the track contributes nothing. Track 0 at alpha 0 resolves to
-    /// the setup pose, which is how an animation fades out to rest.
+    /// what an overlay wants. At `0` the track contributes nothing. Track 0 at
+    /// alpha 0 resolves to the setup pose, which is how an animation fades out to
+    /// rest.
     pub fn set_track_alpha(&mut self, track: u32, alpha: f32) -> Result<(), error::SSRuntimeError> {
         let t = self.instance.tracks.get_mut(track as usize).ok_or(error::SSRuntimeError::InvalidParameter)?;
         if alpha.is_nan() {
