@@ -770,8 +770,8 @@ mod tests {
         assert!(!state.particle_state.born[1]);
 
         EffectSimulator::update_emitter(&mut state, &emitter_params, &emit_patterns, &offset_patterns, 5.0, 0);
-        for i in 0..=5 {
-            assert!(state.particle_state.exist[i]);
+        for &exist in &state.particle_state.exist[..=5] {
+            assert!(exist);
         }
         assert!(!state.particle_state.exist[6]);
 
