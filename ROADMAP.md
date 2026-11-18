@@ -2,9 +2,9 @@
 
 Each item below states a **primary deliverable**. A few entries also list **Co-decided** sub-bullets — those are design points settled as part of the parent work so adjacent API contracts stay consistent. They are not separate tasks and should not be split into independent issues. This file lists unfinished work and deliberate non-goals only; concrete API and design belong with the code and the Player Porting Guide.
 
-## Phase 3: Feature Expansion (Post-Release)
+## Phase 3: Feature Expansion
 
-*(Phase 3 is post-release work, implemented without `.fbs` schema changes — additions go to FFI APIs and runtime state only; any item that turns out to need a schema change is reconsidered for an earlier phase.)*
+*(Phase 3 is implemented without `.fbs` schema changes — additions go to FFI APIs and runtime state only; an item that turns out to need a schema change is decided on its own, as a new `.ssab` format version.)*
 
 - [ ] **Discrete-attribute resolution through the mix** — the topmost track that keys a discrete attribute (cell, visibility and the rest), above a threshold, should supply it; today all of them come from track 0's main animation, which a crossfade on track 0 hands over when it begins. Not built: it moves `DrawBatch` split points, which then have to be re-evaluated after the mix, and the rule still wants a designer's confirmation.
 - [ ] **Per-part masks for mixing** — an explicit per-track part mask. A track already reaches only as far as its animation keys, which covers overlays authored for the purpose (upper-body aim, damage reactions); a mask is what densely-keyed existing assets need to be layered without re-authoring.
