@@ -37,6 +37,19 @@ fn panic(_info: &::core::panic::PanicInfo) -> ! {
 #[unsafe(no_mangle)]
 pub extern "C" fn rust_eh_personality() {}
 
+// The prebuilt `alloc` keeps its landing pads under panic = "abort", so the binary
+// references `_Unwind_Resume`. Name the unwinder the std targets link, or a host
+// that has not loaded one fails to dlopen the library.
+#[cfg(all(not(feature = "std"), not(test), feature = "panic-handler", target_os = "linux", target_env = "gnu"))]
+#[link(name = "gcc_s")]
+unsafe extern "C" {}
+
+// On 32-bit ARM the unwinder finds its tables through libdl's `dl_unwind_find_exidx`.
+#[cfg(all(not(feature = "std"), not(test), feature = "panic-handler", target_os = "android"))]
+#[link(name = "unwind")]
+#[link(name = "dl")]
+unsafe extern "C" {}
+
 #[cfg(all(not(feature = "std"), not(feature = "web"), target_arch = "wasm32", feature = "wasm_alloc"))]
 mod wasm_allocator {
     #[global_allocator]
