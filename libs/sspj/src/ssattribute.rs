@@ -152,11 +152,9 @@ pub struct SsAttributePartsColorKeyValue {
     pub target: SsColorBlendTarget,
     pub blend_type: SsBlendType,
 
-    // ---
     #[serde(default)]
     pub color: SsAttributePartsColorKeyValueColor,
 
-    // ---
     #[serde(rename = "LT", default)]
     pub lt: SsAttributePartsColorKeyValueColor,
     #[serde(rename = "RT", default)]
@@ -165,7 +163,6 @@ pub struct SsAttributePartsColorKeyValue {
     pub lb: SsAttributePartsColorKeyValueColor,
     #[serde(rename = "RB", default)]
     pub rb: SsAttributePartsColorKeyValueColor,
-    // ---
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -429,7 +426,6 @@ impl TryFrom<RawSsAttributeSignalCommandParam> for SsAttributeSignalCommandParam
 
         let typed_value = match raw.param_type {
             SsAttributeSignalCommandParamType::Bool => {
-                // "1", "true" などの揺らぎがある場合はここで吸収できます
                 let b = val_str.parse::<bool>().or_else(|_| match val_str {
                     "1" => Ok(true),
                     "0" => Ok(false),
@@ -462,6 +458,7 @@ where
 {
     #[derive(Deserialize)]
     struct SignalCommandParamList {
+        #[serde(default)]
         value: Vec<SsAttributeSignalCommandParam>,
     }
     Ok(SignalCommandParamList::deserialize(deserializer)?.value)
@@ -478,6 +475,7 @@ where
 {
     #[derive(Deserialize)]
     struct SignalCommandList {
+        #[serde(default)]
         value: Vec<SsAttributeSignalCommand>,
     }
     Ok(SignalCommandList::deserialize(deserializer)?.value)
@@ -505,6 +503,8 @@ pub struct SsAttributeInstanceKeyValue {
     pub pingpong: bool,
     #[serde(default)]
     pub independent: bool,
+    #[serde(default)]
+    pub reverse: bool,
     pub loop_num: i32,
     pub start_label: String,
     pub start_offset: i32,
@@ -555,7 +555,7 @@ pub struct SsDeformValue {
 pub struct SsAttributeDeformKeyValue {
     pub vsize: i32,
     #[serde(deserialize_with = "parse_ss_point3_list")]
-    pub vchg: Vec<SsDeformValue>, // TODO: fix changing from String to SsMeshBindInfo
+    pub vchg: Vec<SsDeformValue>,
 }
 fn parse_ss_point3_list<'de, D>(deserializer: D) -> Result<Vec<SsDeformValue>, D::Error>
 where
@@ -773,7 +773,7 @@ impl<'de> Deserialize<'de> for SsAttributeKind {
                                 Ok(SsAttributeKind::PartsColor(parts_color))
                             }
                             "VCOL" => {
-                                // warn!("VCOL is deprecated");
+                                // VCOL is deprecated: the key is accepted and its payload dropped.
                                 Ok(SsAttributeKind::Color)
                             }
                             "SHDR" => {

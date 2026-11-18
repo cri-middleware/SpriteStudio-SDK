@@ -1,0 +1,147 @@
+//! POD return types shared across the runtime API surface.
+//!
+//! These are plain `#[repr(C)]` structs designed for return-by-value across
+//! the FFI boundary, but the definitions live at the crate root (not under
+//! `ffi/`) so they are also reachable from the `Context` API and from the
+//! `web` feature without dragging in the C extern "C" surface.
+//!
+//! They are intentionally separate from ssab/effect_draw_plan FlatBuffers data —
+//! FB is for persistent or zero-copy bulk data, POD is for ephemeral per-call
+//! return values.
+
+#![allow(non_camel_case_types)]
+
+/// Resolved per-slot Instance event state, returned by
+/// `ss_runtime_get_active_event_instance`.
+///
+/// The runtime forward-scans the parent's `EventsPerFrame` and reports the
+/// most recent `EventInstance` whose `frame_index <= current parent frame`
+/// for `slot_index`. When no event is active, the function returns SS6
+/// default semantics: `is_synthetic_default = true`, `loop_num = 1`,
+/// `speed = 1.0`, all label hashes 0 (unset), all flags false.
+///
+/// `start_label_hash` / `end_label_hash` are returned raw. They are
+/// already resolved internally by `ss_instance_slot_step` against the
+/// child runtime context, which keeps late binding intact across
+/// dynamic-swap of the child ssab.
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct ss_event_instance_info {
+    /// Parent `frame_index` this `EventInstance` was emitted at; 0 for synthetic default.
+    pub event_frame: i32,
+    /// 0 = unset → the child animation's start frame.
+    pub start_label_hash: u32,
+    pub start_offset: i32,
+    /// 0 = unset → the child animation's end frame.
+    pub end_label_hash: u32,
+    pub end_offset: i32,
+    /// -1 = infinite, >=1 = finite count.
+    pub loop_num: i32,
+    pub speed: f32,
+    pub independent: bool,
+    pub reverse: bool,
+    pub pingpong: bool,
+    /// `true` = SS6 default (no real event active), `false` = real `EventInstance`.
+    pub is_synthetic_default: bool,
+}
+
+impl ss_event_instance_info {
+    pub const fn synthetic_default() -> Self {
+        Self { event_frame: 0, start_label_hash: 0, start_offset: 0, end_label_hash: 0, end_offset: 0, loop_num: 1, speed: 1.0, independent: false, reverse: false, pingpong: false, is_synthetic_default: true }
+    }
+}
+
+impl Default for ss_event_instance_info {
+    fn default() -> Self {
+        Self::synthetic_default()
+    }
+}
+
+/// Resolved per-slot Effect event state, returned by
+/// `ss_runtime_get_active_effect_event`.
+///
+/// The runtime forward-scans the parent's `EventsPerFrame` and reports the
+/// most recent `EventEffect` whose `frame_index <= current parent frame`
+/// for `slot_index`. When no event is active, the runtime falls back to the
+/// part's `InitialEvents.effect` (if present); if neither exists, returns
+/// SS6 default semantics: `is_synthetic_default = true`, `start_time = 0`,
+/// `speed = 1.0`, `independent = false`.
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct ss_effect_event_info {
+    /// Parent `frame_index` this `EventEffect` was emitted at; 0 for synthetic default
+    /// or `InitialEvents.effect` fallback.
+    pub event_frame: i32,
+    pub start_time: i32,
+    pub speed: f32,
+    pub independent: bool,
+    /// `true` = no real `EventEffect` matched (either `InitialEvents.effect` fallback
+    /// or full SS6 default), `false` = real `EventEffect` matched.
+    pub is_synthetic_default: bool,
+}
+
+impl ss_effect_event_info {
+    pub const fn synthetic_default() -> Self {
+        Self { event_frame: 0, start_time: 0, speed: 1.0, independent: false, is_synthetic_default: true }
+    }
+}
+
+impl Default for ss_effect_event_info {
+    fn default() -> Self {
+        Self::synthetic_default()
+    }
+}
+
+/// Result of `EffectSlot::step` / `ss_effect_slot_step`.
+///
+/// `draw_plan_buf` is a FlatBuffer-encoded `EffectDrawPlan` (see
+/// `fbs/effect_draw_plan.fbs`). It is valid only when `visible == true`,
+/// and only until the next `step` call on the same slot — callers must consume
+/// it within the same frame and not retain pointers across calls.
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct ss_effect_step_result {
+    pub visible: bool,
+    pub draw_plan_buf: *const u8,
+    pub draw_plan_len: usize,
+}
+
+impl ss_effect_step_result {
+    pub const fn not_visible() -> Self {
+        Self { visible: false, draw_plan_buf: core::ptr::null(), draw_plan_len: 0 }
+    }
+}
+
+impl Default for ss_effect_step_result {
+    fn default() -> Self {
+        Self::not_visible()
+    }
+}
+
+/// Result of `InstanceSlot::step` / `ss_instance_slot_step`.
+///
+/// `transitioned == true` indicates a new EventInstance edge — `step` has
+/// configured the child for the new key without starting it, so the caller
+/// plays the child on this tick. Frame stepping is already applied inside
+/// `step`, so callers only consume `child_frame_no` to redraw.
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct ss_instance_step_result {
+    pub visible: bool,
+    pub transitioned: bool,
+    pub independent: bool,
+    pub child_frame_no: f32,
+    pub child_looped: bool,
+}
+
+impl ss_instance_step_result {
+    pub const fn not_visible() -> Self {
+        Self { visible: false, transitioned: false, independent: false, child_frame_no: 0.0, child_looped: false }
+    }
+}
+
+impl Default for ss_instance_step_result {
+    fn default() -> Self {
+        Self::not_visible()
+    }
+}

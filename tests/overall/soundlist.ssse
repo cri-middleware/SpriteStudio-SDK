@@ -19,7 +19,7 @@
 			<value>
 				<Alias>test</Alias>
 				<filename>sound/test.mp3</filename>
-				<msec>79516</msec>
+				<msec>30040</msec>
 			</value>
 		</sounds>
 	</table>

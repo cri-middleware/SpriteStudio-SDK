@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<SpriteStudioAnimePack version="2.00.04" edition="Professional">
+<SpriteStudioAnimePack version="2.03.00" editorVersion="7.6.0">
 	<settings>
 		<fps>30</fps>
 		<frameCount>11</frameCount>
@@ -28,7 +28,11 @@
 				<imagePivot>0 0</imagePivot>
 			</value>
 		</bgSettings>
-		<outStartNum>0</outStartNum>
+		<playArea.isON>0</playArea.isON>
+		<playArea.start>0</playArea.start>
+		<playArea.end>0</playArea.end>
+		<loop>1</loop>
+		<simulatePixelArtSize>0 0</simulatePixelArtSize>
 	</settings>
 	<name>e010</name>
 	<exportPath></exportPath>
@@ -41,6 +45,8 @@
 				<type>null</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -56,6 +62,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>star2</name>
@@ -64,6 +71,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -79,6 +88,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>star1</name>
@@ -87,6 +97,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -102,6 +114,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>010a</name>
@@ -110,6 +123,8 @@
 				<type>effect</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -126,6 +141,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>magiccircle2</name>
@@ -134,6 +150,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -149,6 +167,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>magiccircle2_1</name>
@@ -157,6 +176,8 @@
 				<type>normal</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -172,6 +193,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
 				<name>010b</name>
@@ -180,6 +202,8 @@
 				<type>effect</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -196,6 +220,7 @@
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
 				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
 			</value>
 		</partList>
 		<boneList />
@@ -236,10 +261,16 @@
 						<imagePivot>0 0</imagePivot>
 					</value>
 				</bgSettings>
-				<outStartNum>0</outStartNum>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
+			<guidelines />
 			<isSetup>1</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -284,10 +315,16 @@
 						<imagePivot>0 0</imagePivot>
 					</value>
 				</bgSettings>
-				<outStartNum>0</outStartNum>
+				<playArea.isON>0</playArea.isON>
+				<playArea.start>0</playArea.start>
+				<playArea.end>0</playArea.end>
+				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
+			<guidelines />
 			<isSetup>0</isSetup>
+			<lastFrame>0</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -333,29 +370,29 @@
 						</attribute>
 						<attribute tag="SCLX">
 							<key time="0" ipType="linear">
-								<value>0.918604671955109</value>
+								<value>0.91860467</value>
 							</key>
 							<key time="73" ipType="linear">
-								<value>2.85216951370239</value>
+								<value>2.8521695</value>
 							</key>
 							<key time="119" ipType="linear">
-								<value>0.918604671955109</value>
+								<value>0.91860467</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLY">
 							<key time="0" ipType="linear">
-								<value>1.9020619392395</value>
+								<value>1.9020619</value>
 							</key>
 							<key time="73" ipType="linear">
-								<value>2.16059327125549</value>
+								<value>2.1605933</value>
 							</key>
 							<key time="119" ipType="linear">
-								<value>1.9020619392395</value>
+								<value>1.9020619</value>
 							</key>
 						</attribute>
 						<attribute tag="ALPH">
 							<key time="0" ipType="linear">
-								<value>0.790000021457672</value>
+								<value>0.79000002</value>
 							</key>
 						</attribute>
 						<attribute tag="HIDE">
@@ -399,29 +436,29 @@
 						</attribute>
 						<attribute tag="SCLX">
 							<key time="0" ipType="linear">
-								<value>0.53906238079071</value>
+								<value>0.53906238</value>
 							</key>
 							<key time="73" ipType="linear">
-								<value>4.70705604553223</value>
+								<value>4.707056</value>
 							</key>
 							<key time="119" ipType="linear">
-								<value>0.53906238079071</value>
+								<value>0.53906238</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLY">
 							<key time="0" ipType="linear">
-								<value>3.12499976158142</value>
+								<value>3.1249998</value>
 							</key>
 							<key time="73" ipType="linear">
-								<value>1.14710891246796</value>
+								<value>1.1471089</value>
 							</key>
 							<key time="119" ipType="linear">
-								<value>3.12499976158142</value>
+								<value>3.1249998</value>
 							</key>
 						</attribute>
 						<attribute tag="ALPH">
 							<key time="0" ipType="linear">
-								<value>0.380000025033951</value>
+								<value>0.38000003</value>
 							</key>
 						</attribute>
 						<attribute tag="HIDE">
@@ -533,10 +570,10 @@
 								<value>0</value>
 							</key>
 							<key time="11" ipType="linear">
-								<value>0.439999997615814</value>
+								<value>0.44</value>
 							</key>
 							<key time="34" ipType="linear">
-								<value>0.800000011920929</value>
+								<value>0.80000001</value>
 							</key>
 							<key time="48" ipType="linear">
 								<value>0</value>
@@ -545,10 +582,10 @@
 								<value>0</value>
 							</key>
 							<key time="60" ipType="linear">
-								<value>0.439999997615814</value>
+								<value>0.44</value>
 							</key>
 							<key time="83" ipType="linear">
-								<value>0.800000011920929</value>
+								<value>0.80000001</value>
 							</key>
 							<key time="97" ipType="linear">
 								<value>0</value>
@@ -566,7 +603,7 @@
 									<blendType>mix</blendType>
 									<color>
 										<rgba>FFF8FF0E</rgba>
-										<rate>0.572549045085907</rate>
+										<rate>0.57254905</rate>
 									</color>
 								</value>
 							</key>
@@ -576,7 +613,7 @@
 									<blendType>mix</blendType>
 									<color>
 										<rgba>FF18D000</rgba>
-										<rate>0.572549045085907</rate>
+										<rate>0.57254905</rate>
 									</color>
 								</value>
 							</key>
@@ -651,10 +688,10 @@
 								<value>0</value>
 							</key>
 							<key time="20" ipType="linear">
-								<value>0.439999997615814</value>
+								<value>0.44</value>
 							</key>
 							<key time="45" ipType="linear">
-								<value>0.800000011920929</value>
+								<value>0.80000001</value>
 							</key>
 							<key time="59" ipType="linear">
 								<value>0</value>
@@ -663,10 +700,10 @@
 								<value>0</value>
 							</key>
 							<key time="71" ipType="linear">
-								<value>0.439999997615814</value>
+								<value>0.44</value>
 							</key>
 							<key time="96" ipType="linear">
-								<value>0.800000011920929</value>
+								<value>0.80000001</value>
 							</key>
 							<key time="110" ipType="linear">
 								<value>0</value>
@@ -684,7 +721,7 @@
 									<blendType>mix</blendType>
 									<color>
 										<rgba>FF0013BB</rgba>
-										<rate>0.545098066329956</rate>
+										<rate>0.54509807</rate>
 									</color>
 								</value>
 							</key>
@@ -714,7 +751,7 @@
 								<value>0.5</value>
 							</key>
 							<key time="83" ipType="linear">
-								<value>0.800000011920929</value>
+								<value>0.80000001</value>
 							</key>
 						</attribute>
 						<attribute tag="SCLY">
@@ -722,12 +759,12 @@
 								<value>0.5</value>
 							</key>
 							<key time="83" ipType="linear">
-								<value>0.800000011920929</value>
+								<value>0.80000001</value>
 							</key>
 						</attribute>
 						<attribute tag="ALPH">
 							<key time="7" ipType="linear">
-								<value>0.800000011920929</value>
+								<value>0.80000001</value>
 							</key>
 							<key time="120" ipType="linear">
 								<value>0</value>

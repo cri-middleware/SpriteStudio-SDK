@@ -2,7 +2,7 @@
 
 # libssconverter
 
-A library for converting SpriteStudio 7 project files (`.sspj`) into runtime-optimized binary formats (`.ssab`, `.ssqb`).
+A library for converting SpriteStudio project files (`.sspj`) into runtime-optimized binary formats (`.ssab`, `.ssqb`).
 
 It utilizes `sspj` to parse the project and `ssab` to generate FlatBuffers binaries.
 
@@ -11,7 +11,6 @@ It utilizes `sspj` to parse the project and `ssab` to generate FlatBuffers binar
 - **Project Conversion**: Converts `.sspj` (project) to `.ssab` (animation) and `.ssqe` (sequence) to `.ssqb`.
 - **Optimization**: Deduplicates data structures (like coordinates, colors, strings) during FlatBuffers serialization. This can significantly reduce the binary size (often by 50% or more for complex animations) and improves cache efficiency during runtime playback.
 - **Embedded Mode**: Optionally embeds referenced assets (images, etc.) directly into the binary.
-- **File Watching**: Monitors the project directory for changes and automatically re-converts files.
 - **C-API / FFI**: Provides C-compatible interfaces for integration with other languages (C++, etc.).
 
 # Installation
@@ -20,32 +19,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ssconverter = { path = "libs/ssconverter" }
-```
-
-# Usage (Rust)
-
-```rust
-use std::path::Path;
-use ssconverter::{convert_sspj_to_ssab_files, ConverterConfig, ConvertConfig};
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let sspj_path = Path::new("path/to/project.sspj");
-    
-    let config = ConverterConfig {
-        convert_config: ConvertConfig {
-            optimize: true,   // Enable deduplication
-            embedded: false,  // Do not embed textures
-            ..Default::default()
-        },
-        output: None, // Use default output directory (e.g. project_ssab/)
-    };
-
-    // Convert and save files (with a logging callback)
-    convert_sspj_to_ssab_files(sspj_path, &config, &|msg| println!("{}", msg))?;
-    
-    Ok(())
-}
+ssconverter = "7.0.0-beta.1"
 ```
 
 # FFI (C/C++)
@@ -53,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 This library exposes a C API for creating converters and monitoring progress.
 For detailed integration instructions, see the [libssconverter Integration Guide](./docs/USAGE.md).
 
-Headers are generated in `target/ssconverter.h` by `cbindgen`.
+`ssconverter.h` is a C header that C++ can include as well. A build of `ssconverter-ffi` writes it, with the C# bindings `SSConverterMethods.g.cs`, to `libs/ssconverter-ffi/target/`. Committed copies of both are in `libs/ssconverter-ffi/bindings/`, to read without building, and a release's library zips carry them in `include/` and `bindings/`.
 
 
 ## Example C++ API Usage
@@ -62,22 +36,23 @@ Headers are generated in `target/ssconverter.h` by `cbindgen`.
 #include "ssconverter.h"
 
 void convert() {
-    ss_converter_context* ctx = ss_converter_create();
+    Context* ctx = ss_converter_create();
     
     // Start conversion in a background thread
+    // The 4th argument (embedded) packs textures into the .ssab; pass false for the conventional layout.
     // Pass nullptr for the logging callback if not needed
-    ss_converter_convert(ctx, "path/to/project.sspj", "output/dir", nullptr);
+    ss_converter_convert(ctx, "path/to/project.sspj", "output/dir", false, nullptr);
     
     // Wait for finish
-    while (ss_converter_is_running(ctx)) {
+    while (!ss_converter_is_finished(ctx)) {
         // sleep or update progress
     }
     
     // Check result
     CConverterError result = ss_converter_get_result(ctx);
     if (result != CConverterError::Success) {
-        char* err_msg;
-        size_t len;
+        const char* err_msg = nullptr;
+        uintptr_t len = 0;
         ss_converter_get_error(ctx, &err_msg, &len);
         printf("Error: %.*s\n", (int)len, err_msg);
     }
@@ -89,13 +64,19 @@ void convert() {
 
 # Build Features
 
-- **`ffi`** (default): Enables C-API and static/dynamic library generation.
-- **`web`**: Enables WASM support (experimental).
+- **`ffi`**: Compiles the C-API, the `extern "C"` functions of the `ffi` module. Implies `native`. The static and dynamic libraries are built from `ssconverter-ffi`, the sibling crate that turns this feature on.
+- **`native`** (default): Native build (CLI / Tauri backend) — parallel conversion, filesystem I/O, and directory scanning. Implies `parallel` and `scan`.
+- **`parallel`**: Parallel conversion via `rayon`. Propagates to `sspj`'s parallel parsing.
+- **`scan`**: Directory traversal (`walkdir`) for batch conversion.
+- **`web`**: Browser WASM bindings (`wasm32-unknown-unknown`). Sequential, since `rayon` cannot spawn threads there. Build with `--no-default-features --features web`.
 
 # Architecture
 
-- **`converter`**: Core logic for mapping `sspj` data structures to `ssab` FlatBuffers schemas.
+- **`converter`**: The conversion entry points (`convert_sspj_to_ssab_files` and its variants), `ConvertConfig` and `ConverterError`.
+- **`model_t`**: The mapping from `sspj` data structures to the `ssab` Object API structs (`…T`): parts, animations and keyframes, cell maps, effects, sounds and fonts.
 - **`cache`**: Implements caching and deduplication logic for FlatBuffers objects to reduce file size.
-- **`watcher`**: Directory watching functionality using `notify-debouncer-mini`.
-- **`ffi`**: C-API wrapper functions.
+- **`scan`**: Bounded directory traversal for batch `.sspj` discovery (`scan` feature).
+- **`utility`**: Path collection helpers used by `ssconverter-cli` (`scan` feature).
+- **`ffi`**: C-API wrapper functions (`ffi` feature).
+- **`web`**: `wasm-bindgen` entry points for in-browser conversion (`web` feature).
 

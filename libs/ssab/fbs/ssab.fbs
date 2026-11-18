@@ -5,21 +5,35 @@ table Vec2 {
   v2: float;
 }
 
-table Rect {
-  x1: float;
-  y1: float;
-  x2: float;
-  y2: float;
+table Bounds {
+  left: float;
+  top: float;
+  right: float;
+  bottom: float;
 }
 
-table U8Rect {
+table Region {
+  x: float;
+  y: float;
+  w: float;
+  h: float;
+}
+
+table MinMax2 {
+  x_min: float;
+  y_min: float;
+  x_max: float;
+  y_max: float;
+}
+
+table U8Color {
   a: ubyte;
   r: ubyte;
   g: ubyte;
   b: ubyte;
 }
 
-table SsCurve {
+struct KeyCurve {
   start_time: float;
   start_value: float;
   end_time: float;
@@ -127,45 +141,45 @@ table FloatValueEntry {
 }
 
 table StringValueEntry {
-  value: string;
+  value: string (required);
 }
 
 table Vec2ValueEntry {
-  value: Vec2;
+  value: Vec2 (required);
 }
 
-table RectValueEntry {
-  value: Rect;
+table MinMax2ValueEntry {
+  value: MinMax2 (required);
 }
 
 table EventUserData {
   part_index: ushort (key);
 
-  value: PartAttributeUserData;
+  value: PartAttributeUserData (required);
 }
 
 table EventSignal {
   part_index: ushort (key);
 
-  value: PartAttributeSignal;
+  value: PartAttributeSignal (required);
 }
 
 table EventAudio {
   part_index: ushort (key);
 
-  value: PartAttributeAudio;
+  value: PartAttributeAudio (required);
 }
 
 table EventInstance {
   part_index: ushort (key);
 
-  value: PartAttributeInstance;
+  value: PartAttributeInstance (required);
 }
 
 table EventEffect {
   part_index: ushort (key);
 
-  value: PartAttributeEffect;
+  value: PartAttributeEffect (required);
 }
 
 table EventsPerFrame {
@@ -180,23 +194,24 @@ table EventsPerFrame {
 
 table Cell {
   name_hash: uint32 (key);
-  name: string;
+  name: string (required);
 
-  rectangle: Rect;
-  pivot: Vec2;
+  region: Region (required);
+  pivot: Vec2 (required);
   rotated: bool;
 
-  table_coordinate: [Vec2];
+  table_coord_x: [float];
+  table_coord_y: [float];
   table_index_vertex: [ushort];
 }
 
 table CellMap {
   name_hash: uint32 (key);
-  name: string;
+  name: string (required);
 
-  image_path: string;
-  image_path_hash: uint32;
-  size_original: Vec2;
+  image_path: string (required);
+  image_path_hash: uint32; // fnv1a(image_path); used as embedded_assets key when embedded
+  size_original: Vec2 (required);
 
   wrap_mode: TexWrapMode;
   filter_mode: TexFilterMode;
@@ -211,13 +226,13 @@ enum EffectNodeType: ubyte {
 }
 
 table EffectParticlePointGravity {
-  position: Vec2;
+  position: Vec2 (required);
   power: float;
 }
 
-table RectAndVec2ValueTable {
-  size: Rect;
-  scale_factor_value: Vec2; // min, max
+table MinMax2AndVec2ValueTable {
+  size: MinMax2;
+  scale_factor_value: Vec2 (required); // min, max
 }
 
 table EffectParticleElementTransColor {
@@ -236,8 +251,8 @@ table EffectParticleElementRotationTrans {
 }
 
 table EffectParticleElementRotation {
-  rotation_value: Vec2; // min, max
-  rotation_add_value: Vec2; // min, max
+  rotation_value: Vec2 (required); // min, max
+  rotation_add_value: Vec2 (required); // min, max
 }
 
 table EffectParticleElementBasic {
@@ -259,7 +274,7 @@ union EffectNodeBehavior {
   EffectParticleElementRndSeedChange: IntValueEntry,
   EffectParticleElementDelay: IntValueEntry,
   EffectParticleElementGravity: Vec2ValueEntry,
-  EffectParticleElementPosition: RectValueEntry,
+  EffectParticleElementPosition: MinMax2ValueEntry,
   EffectParticleElementRotation,
   EffectParticleElementRotationTrans,
   EffectParticleElementTransSpeed: Vec2ValueEntry,
@@ -267,8 +282,8 @@ union EffectNodeBehavior {
   EffectParticleElementInitColor,
   EffectParticleElementTransColor,
   EffectParticleElementAlphaFade: Vec2ValueEntry,
-  EffectParticleElementSize: RectAndVec2ValueTable,
-  EffectParticleElementTransSize: RectAndVec2ValueTable,
+  EffectParticleElementSize: MinMax2AndVec2ValueTable,
+  EffectParticleElementTransSize: MinMax2AndVec2ValueTable,
   EffectParticlePointGravity,
   EffectParticleTurnToDirectionEnabled: FloatValueEntry,
   EffectParticleInfiniteEmitEnabled: IntValueEntry,
@@ -282,26 +297,27 @@ table EffectNode {
   index: short;
   parent_index: short;
   effect_node_type: EffectNodeType;
-  cell_index: short;
+  cell_name_hash: uint32;
+  cell_map_name_hash: uint32;
   blend_type: RenderBlendType;
   behavior: [EffectNodeBehaviorWrapper];
 }
 
 table Effect {
   name_hash: uint32 (key);
-  name: string;
+  name: string (required);
   fps: short;
   is_lock_rand_seed: bool;
   lock_rand_seed: short;
-  layout_scale: Vec2;
-  effect_node: [EffectNode];
+  layout_scale: Vec2 (required);
+  effect_node: [EffectNode] (required);
 }
 
 table SoundFile {
   name_hash: uint32 (key);
   name: string;
   file_path: string;
-  file_path_hash: uint32;
+  file_path_hash: uint32; // fnv1a(file_path); used as embedded_assets key when embedded
   time_total: uint;
 }
 
@@ -313,7 +329,7 @@ table SoundList {
 
 table FontGlyphBitmap {
   id: ushort (key);
-  atlas: Rect;
+  atlas: Region;
   offset: Vec2;
   width_advance: float;
   text: string;
@@ -338,17 +354,25 @@ table FontBitmap {
   size_texture_original: Vec2;
 
   name_texture: [string];
-  name_texture_hash: [uint32];
+  name_texture_hash: [uint32]; // fnv1a(name_texture[i]); used as embedded_assets key when embedded
   table_data: [FontGlyphBitmap];
 }
 
+table PartMeshBinding {
+  vertex_influence_offset: [uint32];
+  influence_bone:          [ushort];
+  influence_weight:        [float];
+  influence_coord_x:       [float];
+  influence_coord_y:       [float];
+}
+
 table PartAttributeCell {
- map_id: int; // hash or name
- name_hash: uint32; // instead of name: string;
+ cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
+ name_hash: uint32; // fnv1a(cell name)
 }
 
 table  SsAttributePartColorKeyValueColor {
-  rgba: U8Rect;
+  rgba: U8Color;
   rate: float;
 }
 
@@ -371,27 +395,28 @@ table PartAttributeInstance {
   pingpong: bool;
   independent: bool;
   loop_num: int;
-  start_label_hash: uint32; // instead of start_label: string;
+  start_label_hash: uint32;
   start_offset: int;
-  end_label_hash: uint32; // instead of end_label: string;
+  end_label_hash: uint32;
   end_offset: int;
   speed: float;
+  reverse: bool;
 }
 
 table PartAttributeEffect {
-  cur_keyframe: int;
   start_time: int;
   speed: float;
-  loopflag: int;
+  independent: bool;
 }
 
 table PartAttributeDeform {
-  coordinate: [Vec2];
+  coord_x: [float];
+  coord_y: [float];
   index: [short];
 }
 
 table PartAttributeShader {
-  id: string;
+  id: string (required);
   id_hash: uint32;
   param0: float;
   param1: float;
@@ -401,15 +426,15 @@ table PartAttributeShader {
   param5: float;
   param6: float;
   param7: float;
-  map0_id: int;
-  map0_name_hash: uint32; // instead of map0_name: string;
-  map1_id: int;
-  map1_name_hash: uint32; // instead of map1_name: string;
+  map0_cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
+  map0_name_hash: uint32;
+  map1_cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
+  map1_name_hash: uint32;
 }
 
 table PartAttributeUserData {
   integer: IntValueEntry;
-  rect: Rect;
+  rect: Bounds;
   point: Vec2;
   str: string;
 }
@@ -433,21 +458,21 @@ union SignalCommandParamValue {
 }
 
 table SignalCommandParam {
-  param_id: string;
+  param_id: string (required);
   type: SignalCommandParamType;
-  value: SignalCommandParamValue;
+  value: SignalCommandParamValue (required);
 }
 
 table PartAttributeSignal {
   active: bool;
-  command_id: string;
-  params: [SignalCommandParam];
+  command_id: string (required);
+  params: [SignalCommandParam] (required);
 }
 
 table PartAttributeAudio {
   sound_list_name_hash: uint32; // fnv1a(SoundList.name) — addresses SoundList
   sound_name_hash: uint32;      // fnv1a(alias) — addresses SoundFile within the SoundList
-  sound_name: string;           // alias (kept for diagnostics)
+  sound_name: string (required);// alias (kept for diagnostics)
   loop_num: int;
 }
 
@@ -490,11 +515,7 @@ enum PartAttributesUpdateFlags: ulong (bit_flags) {
   AttributeSkew,
   AttributeDeform,
   AttributeTexture,
-//  AttributeUserData,    // Reserved
-//  AttributeSignal,      // Reserved
-//  AttributeAudio,       // Reserved
-//  AttributeInstance,    // Reserved
-//  AttributeEffect,      // Reserved
+  // UserData, Signal, Audio, Instance and Effect are events, not part attributes.
 }
 
 table InitialPartAttributes {
@@ -513,7 +534,7 @@ table InitialPartAttributes {
   local_scale_y: float = 1.0;
   alpha: float = 1.0;
   local_alpha: float = 1.0;
-  priority: float = 0.0;
+  priority: int = 0;
   flip_h: bool = false;
   flip_v: bool = false;
   hide: bool = false;
@@ -560,7 +581,6 @@ enum ShapeType: ubyte {
 
 table PartTypeShape {
   shape_type: ShapeType;
-  shape_mask: bool;
 }
 
 enum TextAnchor: ubyte {
@@ -585,7 +605,6 @@ table PartTypeText {
   text_size: int;
   text_space: float;
   text_smooth: bool;
-  text_mask: bool;
   text_width: int;
   text_height: int;
   e_anchor: TextAnchor;
@@ -597,15 +616,17 @@ table PartTypeNines {
   nines_margin_t: int;
   nines_margin_b: int;
   nines_fill_mode: int;
-  nines_mask: bool;
 }
 
 table PartTypeInstance {
-  ref_anime_hash: uint32; // instead of ref_anime: string;
+  ref_anime_pack: string (required);
+  ref_anime_pack_hash: uint32;
+  ref_anime_name: string (required);
+  ref_anime_name_hash: uint32;
 }
 
 table PartTypeEffect {
-  ref_effect_name_hash: uint32; // instead of ref_effect_name: string;
+  ref_effect_name_hash: uint32;
 }
 
 union PartType {
@@ -629,178 +650,107 @@ union PartType {
 }
 
 table PartData {
-  name: string;
+  name: string (required);
   parent_index: short;
   bounds_type: BoundsType;
   blend_type: BlendType;
+  visible_inside_mask: bool;
+  mask_write: bool;
+  mask_influence: bool;
+  // Unified pure-mask flag for drawing parts (Shape/Text/Nines).
+  draw_as_mask: bool;
+  output_influence: bool = true;
+  mesh_binding: PartMeshBinding;
 
   part_type: PartType;
 }
 
 table Label {
   name_hash: uint32 (key);
-  name: string;
+  name: string (required);
   time: int;
 }
 
-table PartAnimationDataCellValue {
-  index: ushort (key);
-
-  value: PartAttributeCell;
-}
-
-table PartAnimationDataFloatValue {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: float;
-
-  curve: SsCurve;
-  easing_rate: float = 0;
-}
-
-table PartAnimationDataIntValue {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: int;
-
-  curve: SsCurve;
-  easing_rate: float = 0;
-}
-
-table PartAnimationDataUIntValue {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: uint32;
-}
-
-table PartAnimationDataBoolValue {
-  index: ushort (key);
-
-  value: bool;
-}
-
-table PartAnimationDataPartColor {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: PartAttributePartColor;
-
-  curve: SsCurve;
-  easing_rate: float = 0;
-}
-
-table PartAnimationDataShader {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: PartAttributeShader;
-
-  curve: SsCurve;
-  easing_rate: float = 0;
-}
-
-table PartAnimationDataVertex {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: PartAttributeVertex;
-
-  curve: SsCurve;
-  easing_rate: float = 0;
-}
-
-table PartAnimationDataInstance {
-  index: ushort (key);
-
-  value: PartAttributeInstance;
-}
-
-table PartAnimationDataEffect {
-  index: ushort (key);
-
-  value: PartAttributeEffect;
-}
-
-table PartAnimationDataVec2 {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: Vec2;
-
-  curve: SsCurve;
-  easing_rate: float = 0;
-}
-
-table PartAnimationDataDeform {
-  index: ushort (key);
-  interpolation: InterpolationType = None;
-
-  value: PartAttributeDeform;
-
-  curve: SsCurve;
-  easing_rate: float = 0;
-}
-
+// One part's keyframes in one animation, an attribute at a time: the run in
+// `SsAnimeBinary.keyframes` that holds them, or the default, 0xFFFFFFFF, when
+// the animation has no keys for that attribute on this part.
 table PartAnimationData {
-  cell_array: [PartAnimationDataCellValue];
-  position_x_array: [PartAnimationDataFloatValue];
-  position_y_array: [PartAnimationDataFloatValue];
-  position_z_array: [PartAnimationDataFloatValue];
-  rotation_x_array: [PartAnimationDataFloatValue];
-  rotation_y_array: [PartAnimationDataFloatValue];
-  rotation_z_array: [PartAnimationDataFloatValue];
-  scale_x_array: [PartAnimationDataFloatValue];
-  scale_y_array: [PartAnimationDataFloatValue];
-  local_scale_x_array: [PartAnimationDataFloatValue];
-  local_scale_y_array: [PartAnimationDataFloatValue];
-  alpha_array: [PartAnimationDataFloatValue];
-  local_alpha_array: [PartAnimationDataFloatValue];
-  priority_array: [PartAnimationDataIntValue];
-  flip_h_array: [PartAnimationDataBoolValue];
-  flip_v_array: [PartAnimationDataBoolValue];
-  hide_array: [PartAnimationDataBoolValue];
-  part_color_array: [PartAnimationDataPartColor];
-  shader_array: [PartAnimationDataShader];
-  vertex_array: [PartAnimationDataVertex];
-  pivot_x_array: [PartAnimationDataFloatValue];
-  pivot_y_array: [PartAnimationDataFloatValue];
-  anchor_x_array: [PartAnimationDataFloatValue];
-  anchor_y_array: [PartAnimationDataFloatValue];
-  size_x_array: [PartAnimationDataFloatValue];
-  size_y_array: [PartAnimationDataFloatValue];
-  img_flip_h_array: [PartAnimationDataBoolValue];
-  img_flip_v_array: [PartAnimationDataBoolValue];
-  uv_translation_x_array: [PartAnimationDataFloatValue];
-  uv_translation_y_array: [PartAnimationDataFloatValue];
-  uv_rotation_z_array: [PartAnimationDataFloatValue];
-  uv_scale_x_array: [PartAnimationDataFloatValue];
-  uv_scale_y_array: [PartAnimationDataFloatValue];
-  bounding_radius_array: [PartAnimationDataFloatValue];
-  mask_array: [PartAnimationDataFloatValue];
-  skew_array: [PartAnimationDataVec2];
-  deform_array: [PartAnimationDataDeform];
-  texture_array: [PartAnimationDataUIntValue];
+  cell_keys: uint = 4294967295;
+  position_x_keys: uint = 4294967295;
+  position_y_keys: uint = 4294967295;
+  position_z_keys: uint = 4294967295;
+  rotation_x_keys: uint = 4294967295;
+  rotation_y_keys: uint = 4294967295;
+  rotation_z_keys: uint = 4294967295;
+  scale_x_keys: uint = 4294967295;
+  scale_y_keys: uint = 4294967295;
+  local_scale_x_keys: uint = 4294967295;
+  local_scale_y_keys: uint = 4294967295;
+  alpha_keys: uint = 4294967295;
+  local_alpha_keys: uint = 4294967295;
+  priority_keys: uint = 4294967295;
+  flip_h_keys: uint = 4294967295;
+  flip_v_keys: uint = 4294967295;
+  hide_keys: uint = 4294967295;
+  part_color_keys: uint = 4294967295;
+  shader_keys: uint = 4294967295;
+  vertex_keys: uint = 4294967295;
+  pivot_x_keys: uint = 4294967295;
+  pivot_y_keys: uint = 4294967295;
+  anchor_x_keys: uint = 4294967295;
+  anchor_y_keys: uint = 4294967295;
+  size_x_keys: uint = 4294967295;
+  size_y_keys: uint = 4294967295;
+  img_flip_h_keys: uint = 4294967295;
+  img_flip_v_keys: uint = 4294967295;
+  uv_translation_x_keys: uint = 4294967295;
+  uv_translation_y_keys: uint = 4294967295;
+  uv_rotation_z_keys: uint = 4294967295;
+  uv_scale_x_keys: uint = 4294967295;
+  uv_scale_y_keys: uint = 4294967295;
+  bounding_radius_keys: uint = 4294967295;
+  mask_keys: uint = 4294967295;
+  skew_keys: uint = 4294967295;
+  deform_keys: uint = 4294967295;
+  texture_keys: uint = 4294967295;
 }
 
-table PartMeshData {
-  part_index: ushort (key);
+// Every keyframe of every animation in the pack, one column per field: key `k`
+// is `frame[k]`, `interpolation[k]`, `curve[k]` and `value[k]`. The keys of one
+// attribute of one part in one animation are a run, in frame order, and runs
+// with the same keys are stored once.
+table Keyframes {
+  // Where each run starts, plus where the last one ends: run `r` is keys
+  // `runs[r]` up to, but not including, `runs[r + 1]`.
+  runs: [uint] (required);
+  frame: [ushort] (required);
+  interpolation: [InterpolationType] (required);
+  // An index into `curves` for Hermite and Bezier, into `easing_rates` for the
+  // six ease types that take a rate, 0xFFFF for every other key.
+  curve: [ushort] (required);
+  // The value's bits, read by the attribute the run belongs to: a float's for
+  // the float attributes, an int's for priority, 0 or 1 for the bool ones, the
+  // texture hash for texture, and an index into the matching table below for
+  // cell, part_color, shader, vertex, skew and deform.
+  value: [uint] (required);
 
-  uv: [float];
-  indices: [int];
-  count_coordinate_mesh: int;
-  index_coordinate_deform: [int];
+  // Each distinct value once.
+  curves: [KeyCurve] (required);
+  easing_rates: [float] (required);
+  cells: [PartAttributeCell] (required);
+  part_colors: [PartAttributePartColor] (required);
+  shaders: [PartAttributeShader] (required);
+  vertices: [PartAttributeVertex] (required);
+  skews: [Vec2] (required);
+  deforms: [PartAttributeDeform] (required);
 }
 
 table AnimationData {
-  name: string (key);
+  name: string (required);
   name_hash: uint32;
 
-  parts_initial_attributes: [InitialPartAttributes];
-  parts_animation_data: [PartAnimationData];
-  parts_mesh_data: [PartMeshData];
+  parts_initial_attributes: [InitialPartAttributes] (required);
+  parts_animation_data: [PartAnimationData] (required);
 
   events: [EventsPerFrame];
   initial_events: [InitialEvents];
@@ -812,12 +762,20 @@ table AnimationData {
   total_frame: short;
   fps: short;
 
-  canvas: Rect;
+  canvas_size: Vec2 (required);
+  pivot: Vec2 (required);
 }
 
 table ExternalTexture {
   name_hash: uint32 (key);
   name: string;
+}
+
+table ExternalInstance {
+  anime_pack_name: string;
+  anime_pack_name_hash: uint32;
+  anime_name: string;
+  anime_name_hash: uint32;
 }
 
 table EmbeddedAsset {
@@ -828,13 +786,13 @@ table EmbeddedAsset {
 }
 
 table SsAnimeBinary {
-  version: uint = 0x00000001;
+  version: uint;
 
-  name: string;
+  name: string (required);
   name_hash: uint32;
 
-  parts: [PartData];
-  animations: [AnimationData];
+  parts: [PartData] (required);
+  animations: [AnimationData] (required);
 
   cellmaps: [CellMap];
   effects: [Effect];
@@ -842,9 +800,11 @@ table SsAnimeBinary {
   font_bitmaps: [FontBitmap];
 
   external_textures: [ExternalTexture];
-  external_instances: [string];
+  external_instances: [ExternalInstance];
 
   embedded_assets: [EmbeddedAsset];
+
+  keyframes: Keyframes (required);
 }
 
 file_identifier "SSAB";

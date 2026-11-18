@@ -3,34 +3,56 @@ resolver = "3"
 members = [
     "cli",
     "libs/ssconverter",
+    "libs/ssconverter-ffi",
     "libs/sspj",
     "libs/ssab",
     "libs/ssruntime",
-    "libs/ssinterpolate",
+    "libs/ssruntime-ffi",
 ]
 [workspace.package]
-version = "7.0.0-alpha01"
+version = "7.0.0-beta.1"
 edition = "2024"
+rust-version = "1.100"
 authors = ["CRI Middleware Co., Ltd."]
-license-file = "LICENSE.md"
-repository = "https://github.com/SpriteStudio/SpriteStudio7-SDK"
+license = "BSD-3-Clause"
+repository = "https://github.com/cri-middleware/SpriteStudio-SDK"
 homepage = "https://www.webtech.co.jp/eng/spritestudio/"
-description = "Software development kit for OPTPiX SpriteStudio 7 projects"
+# Inherited only by the two `publish = false` FFI crates. Every crate that goes to
+# crates.io spells out its own `description` / `keywords` / `categories`: those are
+# what a reader sees in search results, and a published version can never edit them.
+description = "Software development kit for SpriteStudio projects"
 
 
 [workspace.dependencies]
-sspj = { path = "libs/sspj" }
-ssconverter = { path = "libs/ssconverter" }
-ssab = { path = "libs/ssab", default-features = false }
-ssruntime = { path = "libs/ssruntime" }
-ssinterpolate = { path = "libs/ssinterpolate" }
+sspj = { version = "7.0.0-beta.1", path = "libs/sspj", default-features = false }
+# `default-features = false` so the browser build can exist at all: a member cannot
+# turn off an inherited dependency's defaults, so leaving `native` (rayon + walkdir
+# + std::fs) on here puts it in every graph, `--no-default-features` included.
+# Members that want it ask for `features = ["native"]`.
+ssconverter = { version = "7.0.0-beta.1", path = "libs/ssconverter", default-features = false }
+ssab = { version = "7.0.0-beta.1", path = "libs/ssab", default-features = false }
+ssruntime = { version = "7.0.0-beta.1", path = "libs/ssruntime" }
 flatbuffers = { version = "25.12.19", default-features = false }
-wide = { version = "1.3.0", default-features = false }
+wide = { version = "1.7.1", default-features = false }
 libm = "0.2.16"
-wasm-bindgen = "0.2.120"
+# `race::OnceBox` alone: a lock-free, no_std "build once on first use" for the
+# runtime's per-animation cache. No std, no critical-section.
+once_cell = { version = "1.21.4", default-features = false, features = ["race", "alloc"] }
+wasm-bindgen = { version = "0.2.130", default-features = false }
+dlmalloc = "0.2.14"
 rayon = "1.12.0"
-cbindgen = "0.29.2"
-vergen-gitcl = { version = "9.1.0", features = ["build"] }
+# `default-features = false` is load-bearing: libc's default feature set enables
+# `libc/std`, which would pull std into the pure-no_std `libc_alloc` deliverables.
+libc = { version = "0.2.191", default-features = false }
+serde = { version = "1.0.229", features = ["derive"] }
+quick-xml = { version = "0.42.0", features = ["serialize"] }
+clap = { version = "4.6.7", features = ["derive"] }
+ordered-float = "5.5.1"
+walkdir = "2.5.0"
+js-sys = "0.3.107"
+cbindgen = "0.29.4"
+csbindgen = "1.9.8"
+vergen-gitcl = { version = "10.0.3", features = ["build"] }
 
 [profile.dev]
 panic = "abort"

@@ -1,59 +1,92 @@
-name: Bug Report / バグ報告
-description: Create a report to help us improve SpriteStudio7-SDK. / 不具合の報告
-title: "[Bug]: "
+name: 🛠️ Bug report / 不具合の報告
+description: Something in the converter or the runtime behaves incorrectly. / コンバーターやランタイムの動作に問題がある場合。
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for reporting a bug! / 不具合の報告ありがとうございます！
-        Please provide as much information as possible to help us investigate. / 調査をスムーズに行うため、可能な限り詳細な情報を提供してください。
+        Thanks for taking the time to report this.
+
+        Before filing, please [search existing issues](https://github.com/cri-middleware/SpriteStudio-SDK/issues?q=is%3Aissue).
+        **Do not attach proprietary `.sspj` files here** — this is a public tracker. Send them privately through the
+        [Japanese Help Center form](https://www.webtech.co.jp/help/ja/spritestudio7/inquiries/ssplayer_tool/), which takes a zip of up to 8 MB.
+
+        投稿前に既存の Issue を検索してください。**業務データの `.sspj` は公開の場である本 Issue に添付しないでください。** 送付が必要な場合は[ヘルプセンター](https://www.webtech.co.jp/help/ja/spritestudio7/inquiries/ssplayer_tool/)をご利用ください（8 MB までの zip を添付できます）。
 
   - type: textarea
-    id: description
+    id: what-happened
     attributes:
-      label: Description / 不具合の内容
-      description: A clear and concise description of what the bug is. / どのような不具合が発生しているか、簡潔に説明してください。
+      label: What happened? / 症状
+      description: What you expected, and what you got instead. / 期待した挙動と、実際の挙動。
     validations:
       required: true
 
   - type: textarea
-    id: reproduction
+    id: repro
     attributes:
-      label: Steps to Reproduce / 再現手順
-      description: Steps to reproduce the behavior. / 不具合を再現させるための手順を詳しく書いてください。
+      label: Steps to reproduce / 再現手順
+      description: |
+        The smallest sequence that shows the problem. A minimal `.sspj` or `.ssab`, and the few
+        API calls that trigger it, help a lot.
+        問題を再現できる最小限の手順。最小限の `.sspj` / `.ssab` と、問題を起こす API 呼び出しがあると助かります。
       placeholder: |
-        1. Open '...'
-        2. Run '...'
-        3. See error
+        1. Convert "..." with ssconverter-cli
+        2. Load the .ssab and play "..."
+        3. See ...
     validations:
       required: true
 
-  - type: textarea
-    id: expected_behavior
+  - type: dropdown
+    id: component
     attributes:
-      label: Expected Behavior / 期待される動作
-      description: A clear and concise description of what you expected to happen. / 本来どのような動作を期待していたか説明してください。
+      label: Which part? / どの部分か
+      options:
+        - Converter (ssconverter, .sspj → .ssab / .ssqb)
+        - ssconverter-cli
+        - Runtime (ssruntime, playback)
+        - C ABI or wasm (ssconverter-ffi / ssruntime-ffi)
+        - Format crates (ssab, sspj)
+        - Porting guide / documentation
+        - Not sure / わからない
     validations:
       required: true
 
   - type: input
-    id: environment
+    id: version
     attributes:
-      label: Environment / 実行環境
-      description: OS version, Rust version, target platform, etc. / OS バージョン、Rust のバージョン、ターゲットプラットフォームなど。
-      placeholder: e.g. macOS Sonoma, Rust 1.77, target wasm32
+      label: SDK version / SDK のバージョン
+      description: The release tag, or the commit you are on. / リリースタグ、またはコミット。
     validations:
       required: true
 
-  - type: textarea
-    id: additional_context
+  - type: input
+    id: host
     attributes:
-      label: Additional Context / 補足情報
-      description: Add any other context about the problem here. / その他、不具合に関する補足情報があれば記載してください。
+      label: Where do you use it? / 利用先
+      description: |
+        A SpriteStudio player (which one and its version), your own engine, or the CLI on its own.
+        SpriteStudio Player（名前とバージョン）、自社エンジン、CLI 単体など。
+      placeholder: SSPlayerForUnity / own C++ engine / ssconverter-cli
 
-  - type: markdown
+  - type: input
+    id: environment
     attributes:
-      value: |
-        ---
-        **Note:** If possible, please attach a sample project (.sspj) or reproduction data to help us investigate faster. / 可能であれば、調査を早めるためにサンプルプロジェクト (.sspj) や再現データを添付してください。
+      label: OS, target and Rust version / OS・ターゲット・Rust のバージョン
+      description: The Rust version only matters if you build from source. / Rust のバージョンはソースからビルドする場合のみ。
+      placeholder: macOS 26 (aarch64-apple-darwin), Rust 1.100
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output / 出力
+      description: Any errors, warnings, or stack traces. / エラー・警告・スタックトレース。
+      render: text
+
+  - type: textarea
+    id: other-players
+    attributes:
+      label: Does it reproduce on more than one SpriteStudio player? / 複数の SpriteStudio Player で再現しますか？
+      description: |
+        If it reproduces on one player only, the cause may be that player rather than the shared
+        runtime, and saying so here saves a round trip.
+        1 つの Player でしか再現しない場合は、共通ランタイムではなくその Player 側の可能性があるため、その旨をお書きください。

@@ -19,7 +19,10 @@ impl CharMapLoader for SsCharMapInfo {
     type Output = SsCharMapInfo;
 
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
-        Ok(SsCharMapInfo { face: parts["face"].trim_matches('"').to_string(), unicode: parts["unicode"].as_str() == "1", smooth: parts["smooth"].as_str() == "1" })
+        let face = parts.get("face").ok_or_else(|| SspjError::FntParseError("Missing key: face".to_string()))?.trim_matches('"');
+        let unicode = parts.get("unicode").ok_or_else(|| SspjError::FntParseError("Missing key: unicode".to_string()))?;
+        let smooth = parts.get("smooth").ok_or_else(|| SspjError::FntParseError("Missing key: smooth".to_string()))?;
+        Ok(SsCharMapInfo { face: face.to_string(), unicode: unicode.as_str() == "1", smooth: smooth.as_str() == "1" })
     }
 }
 
@@ -85,13 +88,15 @@ impl CharMapLoader for SsCharMapChar {
 
 #[derive(Deserialize, PartialEq, Default, Debug)]
 pub struct SsCharMapKerning {
-    pub id: i32,
+    pub first: i32,
+    pub second: i32,
+    pub amount: i32,
 }
 impl CharMapLoader for SsCharMapKerning {
     type Output = SsCharMapKerning;
 
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
-        Ok(SsCharMapKerning { id: get_parse!(parts, "id") })
+        Ok(SsCharMapKerning { first: get_parse!(parts, "first"), second: get_parse!(parts, "second"), amount: get_parse!(parts, "amount") })
     }
 }
 
@@ -101,7 +106,7 @@ pub struct SsCharMap {
     pub common: SsCharMapCommon,
     pub pages: HashMap<i32, SsCharMapPage>,
     pub chars: HashMap<i32, SsCharMapChar>,
-    pub kernings: HashMap<i32, SsCharMapKerning>,
+    pub kernings: Vec<SsCharMapKerning>,
 }
 
 impl SsLoader for SsCharMap {
@@ -111,10 +116,10 @@ impl SsLoader for SsCharMap {
         let mut ss_char_map = SsCharMap::default();
         let mut chars_count: usize = 0;
         let mut kernings_count: usize = 0;
+        let (mut has_info, mut has_common) = (false, false);
         for line in s.lines() {
             let splits = line.splitn(2, ' ').collect::<Vec<&str>>();
             if splits.len() != 2 {
-                // invalid line
                 continue;
             }
             let order = splits[0];
@@ -132,9 +137,11 @@ impl SsLoader for SsCharMap {
             match order {
                 "info" => {
                     ss_char_map.info = SsCharMapInfo::load(&parts)?;
+                    has_info = true;
                 }
                 "common" => {
                     ss_char_map.common = SsCharMapCommon::load(&parts)?;
+                    has_common = true;
                 }
                 "page" => {
                     let page = SsCharMapPage::load(&parts)?;
@@ -151,16 +158,18 @@ impl SsLoader for SsCharMap {
                     kernings_count = get_parse!(parts, "count");
                 }
                 "kerning" => {
-                    let kerning = SsCharMapKerning::load(&parts)?;
-                    ss_char_map.kernings.insert(kerning.id, kerning);
+                    ss_char_map.kernings.push(SsCharMapKerning::load(&parts)?);
                 }
                 _ => {
-                    // invalid line
                     continue;
                 }
             }
         }
-        // validation
+        // BMFont's XML format has no line that starts with `info` or `common`, so it would otherwise
+        // load as a font with no glyphs.
+        if !has_info || !has_common {
+            return Err(SspjError::FntParseError("No info or common line: only BMFont's text format is supported, not XML or binary".to_string()));
+        }
         if chars_count != ss_char_map.chars.len() {
             return Err(SspjError::FntParseError(format!("Invalid number of chars count={} chars.len()={}", chars_count, ss_char_map.chars.len())));
         }
@@ -181,12 +190,11 @@ fn split_ignoring_quotes(delimiter: char, s: &str) -> Vec<String> {
         match &c {
             '"' => {
                 in_quote = !in_quote;
-                current_part.push(c); // Include the quote in the part
+                current_part.push(c);
             }
             _ if c == delimiter && !in_quote => {
-                // If a space is encountered outside of quotes, finalize the current part
                 if !current_part.is_empty() {
-                    parts.push(current_part.trim().to_string()); // Trim potential leading/trailing spaces
+                    parts.push(current_part.trim().to_string());
                     current_part.clear();
                 }
             }
@@ -196,7 +204,6 @@ fn split_ignoring_quotes(delimiter: char, s: &str) -> Vec<String> {
         }
     }
 
-    // Add the last part if it's not empty
     if !current_part.is_empty() {
         parts.push(current_part.trim().to_string());
     }
@@ -211,19 +218,37 @@ mod tests {
     use std::path::{Path, PathBuf};
 
     fn load_ssfnt(path: &Path) {
-        let r = SsCharMap::load_from_file(path);
-        match &r {
-            Ok(ss_char_map) => {
-                println!("{:?}", ss_char_map);
-            }
-            Err(e) => {
-                panic!("{:?}", e);
-            }
-        }
+        SsCharMap::load_from_file(path).unwrap();
     }
 
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()
+    }
+
+    /// A `.fnt` that is not BMFont's carries an info line without `face` /
+    /// `unicode` / `smooth`. That is malformed input, not a reason to end the
+    /// host process.
+    #[test]
+    fn an_info_line_missing_a_key_is_an_error() {
+        let fnt = "info size=12\ncommon lineHeight=1 base=1 scaleW=1 scaleH=1 pages=0\nchars count=0\nkernings count=0";
+        let e = SsCharMap::load(fnt).expect_err("a missing info key must be reported, not panic");
+        assert!(matches!(e, SspjError::FntParseError(_)), "{e:?}");
+    }
+
+    /// A kerning line has no `id`, and must not fail the font.
+    #[test]
+    fn kerning_lines_are_read() {
+        let fnt = "info face=\"F\" unicode=1 smooth=0\ncommon lineHeight=1 base=1 scaleW=1 scaleH=1 pages=0\nchars count=0\nkernings count=2\nkerning first=65 second=86 amount=-2\nkerning first=86 second=65 amount=-1";
+        let ss_char_map = SsCharMap::load(fnt).expect("a font with kerning lines must load");
+        assert_eq!(ss_char_map.kernings, [SsCharMapKerning { first: 65, second: 86, amount: -2 }, SsCharMapKerning { first: 86, second: 65, amount: -1 }]);
+    }
+
+    /// The XML format is an error, not a font with no glyphs.
+    #[test]
+    fn an_xml_fnt_is_an_error() {
+        let fnt = "<?xml version=\"1.0\"?>\n<font>\n  <info face=\"F\" unicode=\"1\" smooth=\"0\"/>\n  <common lineHeight=\"1\" base=\"1\" scaleW=\"1\" scaleH=\"1\" pages=\"0\"/>\n  <chars count=\"0\"/>\n</font>";
+        let e = SsCharMap::load(fnt).expect_err("an XML font must be reported");
+        assert!(matches!(e, SspjError::FntParseError(_)), "{e:?}");
     }
 
     #[test]

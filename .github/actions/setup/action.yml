@@ -1,5 +1,5 @@
 name: Setup
-description: Setup build dependencies for SpriteStudio7-SDK
+description: Setup build dependencies for SpriteStudio-SDK
 
 inputs:
   platform:
@@ -13,13 +13,27 @@ runs:
   using: composite
   steps:
     - name: Setup Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
       with:
+        # Pinned by SHA, so the channel must be named explicitly here.
+        toolchain: stable
         components: clippy, rustfmt
+
+    - name: Setup Rust cache
+      uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      with:
+        # The key is the job id and the runner OS, which the jobs of one matrix
+        # share. Without the platform they would share one cache: only the first
+        # to finish could save it, and the others would restore its target dir.
+        key: ${{ inputs.platform }}
+        # Only develop writes caches; ci.yml's schedule refreshes them. A PR's
+        # cache is visible to that PR alone, so saving one per PR would only fill
+        # the 10 GB quota and evict the develop caches every PR restores from.
+        save-if: ${{ github.ref == 'refs/heads/develop' }}
 
     - name: Setup Android dependencies
       if: inputs.platform == 'android'
-      uses: nttld/setup-ndk@v1
+      uses: nttld/setup-ndk@ed92fe6cadad69be94a966a7ee3271275e62f779 # v1.6.0
       with:
         ndk-version: r23c
         link-to-sdk: true

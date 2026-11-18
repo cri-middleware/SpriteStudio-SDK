@@ -1,187 +1,53 @@
-# SpriteStudio7-SDK
+# SpriteStudio-SDK — AI Agent Guide
 
-## Minimal operating rules
+## Operating rules
 
-* Keep changes scoped to the requested task.
-* Do not commit unless the user explicitly asks.
-* Before editing, read files in full, especially if the read tool truncates them.
-* Follow existing code style in touched files (naming, type usage, control flow, and error handling patterns).
+*   Keep changes scoped to the requested task. Unrequested hardening is a suggestion, not a commit; a defect
+    you actually hit in the code you touched is not — fix it, or say plainly why you did not.
+*   Before editing, read enough surrounding context to understand callers and invariants, the ones below
+    included.
+*   **Anything that exists twice changes twice** — a page and its translation, a `.sh` and its `.ps1`.
+    Missing one half is this family's most common defect.
+*   **Never break a line between two Japanese characters**; Chrome renders the break as a space.
+*   **Finish with this repository's checks**: `scripts/check.sh`, ci.yml's lint job and its workspace tests. Add
+    `features=yes` when code behind a feature changed, and `docs=yes` when `libs/ssruntime/docs` did. Read
+    its summary, not its exit code — a check whose prerequisite is missing skips itself.
+*   **Do not restate what another file owns**; the table below says which file. A fact no file owns goes
+    where its staleness will be noticed.
+*   **For `clippy --fix`, `git add` your edits first and pass `--allow-staged`**, never `--allow-dirty`, so
+    clippy's edits land unstaged and apart from yours.
 
-## Project Overview
+## What this repo is
 
-**SpriteStudio7-SDK** is a software development kit designed to work with [OPTPiX SpriteStudio 7](https://www.webtech.co.jp/eng/spritestudio/) projects. It provides a suite of tools and libraries for parsing project files (`.sspj`), converting them into an optimized binary format (`.ssab`), and playing back animations at runtime.
+A Rust workspace that converts SpriteStudio projects (`.sspj`) into the FlatBuffers binary `.ssab` and
+plays them through `libssruntime`: a stateless **Brain** emitting per-frame state and cross-engine
+**DrawBatch** plans, which Players (the **Body**) render. The runtime is `no_std`-first.
 
-### Core Goals & Strategy
+## Where each answer is written
 
-*   **Portability & Maintainability**: Centralize animation logic in a platform-agnostic Rust core (`libssruntime`) and use a common binary format (`ssab`) to simplify Player implementations across different game engines (Unity, Godot, Web, etc.).
-*   **Performance & Efficiency**:
-    *   **SSAB Format**: A FlatBuffers-based binary format that stores only change points (sparse data) to minimize file size and memory footprint.
-    *   **Runtime Logic**: `libssruntime` handles complex interpolation (Hermite, Bezier) and state management, providing calculated local attributes to Players to avoid redundant logic in every engine.
-*   **Workflow**:
-    *   **SSConverter**: Converts XML-based `.sspj` projects to optimized `.ssab` files.
-    *   **Player-Runtime Split**: `libssruntime` acts as the "Brain" (calculations), while the "Player" acts as the "Body" (rendering and engine integration).
+| Question | File |
+|---|---|
+| What the SDK is, and its crates | [README.md](./README.md) |
+| Constraints, build, test, the docs site | [CONTRIBUTING.md](./CONTRIBUTING.md) |
+| Releases, maintainers only | [RELEASING.md](./RELEASING.md) |
+| Plans and non-goals | [ROADMAP.md](./ROADMAP.md) |
+| Runtime semantics a Player must honour | the [Player Porting Guide](./libs/ssruntime/docs/README.md) |
+| How the guide's pages are written and translated | [its authoring rules](./libs/ssruntime/docs/CONTRIBUTING.ja.md), in Japanese |
+| What official Players owe users, and the reference Player | [MAINTAINING_PLAYERS.md](./MAINTAINING_PLAYERS.md) |
+| Binary layouts | [ssab SCHEMA](./libs/ssab/SCHEMA.md), [FrameData SCHEMA](./libs/ssruntime/SCHEMA.md) |
 
-## Strategic Architectural Advantages
+## Invariants
 
-SpriteStudio7-SDK is designed to provide professional-grade animation capabilities with a focus on the following architectural and functional strengths:
-
-*   **Data-Oriented "Brain" Architecture**: Unlike monolithic runtimes that force a specific object-oriented structure, SS7-SDK provides a pure, stateless calculation engine. This allows seamless integration into modern **ECS (Entity Component System)** and Job Systems, providing the flexibility that professional engine developers crave.
-*   **Zero-copy & SIMD Performance**: By utilizing **FlatBuffers** for zero-deserialization overhead and Rust's **SIMD** capabilities for batch interpolation, SS7-SDK delivers superior performance in high-density scenarios (e.g., thousands of characters) where traditional runtimes hit CPU and GC bottlenecks.
-*   **Specialization in Cel-Animation & Effects**: While many 2D animation tools focus heavily on skeletal mesh deformation, SS7-SDK excels in high-fidelity **cel-animation** and integrated **particle simulation (SSEE)**. This "All-in-one" package is optimized for the "ケレン味" (stylized aesthetics) of Japanese animation.
-*   **Cross-Platform Determinism**: A single Rust core ensures **100% bit-identical results** across all platforms (Mobile, Console, Web/Wasm). This eliminates platform-specific animation bugs and significantly reduces QA and maintenance costs for multi-platform projects.
-
-### Roadmap (Ongoing & Future)
-
-**Phase 1: Core Architecture & API Stabilization (Pre-Release)**
-*   [x] Restructure and improve Player Implementation Documentation.
-*   [x] Add SSAB and FrameData schema documentation.
-*   [x] Web (WASM) support for direct JS/TS usage via `wasm-pack`.
-*   [x] Support for `no_std` environments (embedded/bare-metal).
-*   [ ] SSPlayer for Godot integration (serves as both C-API validation and Player migration).
-
-**Phase 2: Ecosystem & Integration**
-*   [ ] Migration of existing Players to use `ssruntime`.
-*   [ ] `ssplayer-wgpu` implementation.
-
-**Phase 3: Feature Expansion (Post-Release)**
-*(Note: Phase 3 items are expected to be implemented without `.fbs` schema changes — additions go to FFI APIs and runtime state only. Any item that turns out to require schema changes should be reconsidered for an earlier phase.)*
-*   [ ] Animation Mixing/Blending implementation in `ssruntime` (whole-animation weighted blend).
-*   [ ] Per-part mask support (extends Mixing/Blending with per-part targeting; also enables selective evaluation).
-*   [ ] Animation Instancing: shared evaluation context for driving many instances of the same animation, consumable by Players (e.g., for crowd-style rendering).
-*   [ ] State machine implementation.
-
-### Key Components
-
-*   **`cli` (ssconverter-cli)**: A command-line tool that wraps `ssconverter` to convert SpriteStudio project files (`.sspj`) into binary animation files (`.ssab`). It supports batch processing and parallel conversion.
-    *   [**CLI README**](./cli/README.md) ([日本語](./cli/README.ja.md))
-*   **`libs/sspj`**: A pure Rust library responsible for parsing the XML-based SpriteStudio project files (`.sspj`, `.ssae`, `.ssee`, etc.) using `quick-xml` and `serde`.
-*   **`libs/ssconverter`**: The core conversion logic that transforms parsed `sspj` data into the `ssab` binary format. It utilizes `rayon` for parallel processing and exposes a C-API for integration.
-    *   [**Converter Usage Guide**](./libs/ssconverter/docs/USAGE.md) ([日本語](./libs/ssconverter/docs/USAGE.ja.md))
-*   **`libs/ssab`**: Defines the schema and structure for the `.ssab` binary format, utilizing **FlatBuffers** for efficient serialization and deserialization.
-    *   [**SSAB Schema Documentation**](./libs/ssab/SCHEMA.md)
-*   **`libs/ssinterpolate`**: A platform-agnostic math library for animation interpolations.
-*   **`libs/ssruntime`**: A platform-agnostic runtime library for playing back `.ssab` animations. It handles playback control, interpolation, and state updates, exposing a C-API for integration into game engines (e.g., Unity, Unreal, custom engines). **Note:** It does not handle rendering directly; it provides the state required for a renderer.
-    *   [**FrameData Schema Documentation**](./libs/ssruntime/SCHEMA.md) ([日本語](./libs/ssruntime/SCHEMA.ja.md))
-
-## Architecture & Technologies
-
-*   **Language**: Rust (Edition 2024)
-*   **Build System**: Cargo (Workspace)
-*   **Serialization**:
-    *   **XML**: `quick-xml`, `serde` (for parsing project files)
-    *   **Binary**: `flatbuffers` (for runtime data)
-*   **CLI**: `clap`
-*   **Concurrency**: `rayon` (for parallel conversion)
-*   **FFI**: `cbindgen` is used to generate C/C++ headers for `ssconverter` and `ssruntime`.
-
-## AI Agent Instructions & Constraints
-
-When modifying code in this repository, you MUST adhere to the following rules:
-
-*   **Automated Formatting & Linting:** AFTER editing any `.rs` files, you MUST run the following commands to ensure formatting and static analysis fixes are applied automatically:
-    ```bash
-    cargo clippy --workspace --all-targets --fix --allow-dirty --allow-staged -- -D warnings
-    cargo fmt
-    ```
-    *(Note: `--allow-dirty` and `--allow-staged` are often needed for `cargo fix` when running in uncommitted workspaces).*
-*   **no_std strictness:** `libssruntime` must remain `#![no_std]` compatible. NEVER introduce `std` dependencies or standard library calls (like `std::time`, `std::fs`, or `std::collections` that require `std`) into the runtime core. Use `alloc` or `core` instead.
-*   **FFI Boundaries:** When modifying the C-API in `ssruntime` or `ssconverter`, you must ensure that memory safety is preserved across the FFI boundary. Avoid exposing Rust-specific structures directly.
-*   **Serialization/FlatBuffers:** If you modify anything related to `.ssab` parsing, be aware that it relies on FlatBuffers zero-copy deserialization. Do not introduce allocations during the playback loop unless explicitly necessary.
-
-## SpriteStudio Terminology (Glossary)
-
-*   **`.sspj`**: The main SpriteStudio project file (XML format).
-*   **`.ssae`**: Animation data file (XML format). Contains keyframes and part structures.
-*   **`.ssce`**: Cell map data file (XML format). Defines how textures are sliced.
-*   **`.ssee`**: Effect data file (XML format). Defines particle systems.
-*   **`.ssab`**: The optimized binary format (FlatBuffers) compiled by `ssconverter`, used by `libssruntime`.
-*   **Part**: A node in the animation hierarchy.
-*   **Attribute**: Animatable properties of a Part (e.g., Position, Rotation, Alpha, UV translation).
-
-## Building and Running
-
-### Prerequisites
-
-*   Rust toolchain (stable)
-*   `rustup` (for cross-compilation targets if needed)
-
-### Build Commands
-
-*   **Build Release**:
-    ```bash
-    cargo build --release
-    ```
-
-*   **Build CLI Only**:
-    ```bash
-    cargo build -p ssconverter-cli --release
-    ```
-
-### Verification Commands (For Agents)
-
-Run these commands to verify your changes:
-*   **Linting:** `cargo clippy --workspace --all-targets -- -D warnings`
-*   **Formatting:** `cargo fmt --all -- --check`
-*   **Testing (All):** `cargo test --workspace`
-*   **Testing (no_std explicitly):** `cargo build -p ssruntime --no-default-features --features ffi,libc_alloc,panic-handler`
-
-### Updating `.fbs` Files (Code Generation)
-
-If you modify or update the `.fbs` files in `libs/ssab/fbs/` or `libs/ssruntime/fbs/`, you MUST regenerate the Rust code.
-Regeneration requires the `flatc` command (Google FlatBuffers Compiler) to be installed.
-
-Run the corresponding script for your platform from the respective library directory:
-
-**Windows (PowerShell):**
-```powershell
-./scripts/generate.ps1
-```
-
-**macOS / Linux (Bash):**
-```bash
-./scripts/generate.sh
-```
-
-### Release Scripts
-
-Platform-specific release scripts are located in the `scripts/` directory. These scripts typically handle cross-compilation and bundling of universal binaries (e.g., using `lipo` on macOS).
-
-*   `scripts/release-android.sh`
-*   `scripts/release-ios-sim.sh`
-*   `scripts/release-ios.sh`
-*   `scripts/release-linux.sh`
-*   `scripts/release-macos.sh`
-*   `scripts/release-wasm.sh`
-*   `scripts/release-web.sh`
-*   `scripts/release-windows-arm64.ps1`
-*   `scripts/release-windows.ps1`
-
-## Development Conventions
-
-*   **Workspace**: All crates are part of a single Cargo workspace. Dependencies between local crates are specified with `{ path = "..." }` or `{ workspace = true }`.
-*   **Versioning**: The project uses centralized workspace versioning. The version is defined in the root `Cargo.toml` (`[workspace.package]`) and inherited by all member crates.
-*   **Documentation**:
-    *   [**Player Implementation Guide (Japanese)**](./libs/ssruntime/docs/README.ja.md): Step-by-step guide for building a custom renderer.
-    *   [**SSAB Schema**](./libs/ssab/SCHEMA.md): Detailed description of the optimized binary asset format.
-    *   [**FrameData Schema**](./libs/ssruntime/SCHEMA.md) ([日本語](./libs/ssruntime/SCHEMA.ja.md)): Specification of the runtime data exchange interface.
-    *   [**Converter Usage Guide**](./libs/ssconverter/docs/USAGE.md) ([日本語](./libs/ssconverter/docs/USAGE.ja.md)): How to invoke `ssconverter` / `ssconverter-cli`.
-    *   [**CLI README**](./cli/README.md) ([日本語](./cli/README.ja.md)): Command-line interface reference.
-*   **Testing**: Unit tests are co-located with source code or in the `tests/` directory. The CLI has integration tests that run conversions on sample projects in `tests/`.
-*   **FFI**: Libraries intended for external use (`ssconverter`, `ssruntime`) expose C-compatible APIs and use `cbindgen` for header generation.
-*   **Formatting**: Standard `rustfmt` guidelines are enforced. Auto-formatting and linting (`clippy`) are checked in CI.
-
-## Player Implementation Guidelines
-
-The playback environment of SpriteStudio7-SDK is clearly separated into two components: **libssruntime** (Brain), which is responsible for the calculation logic, and the **Player** (Body), which handles the actual rendering and platform-dependent processing.
-
-For detailed implementation steps and technical specifications, please refer to the following guide:
-
-- [**Player Implementation Guide (Japanese)**](./libs/ssruntime/docs/README.ja.md)
-
-### Core Design Philosophy
-*   **libssruntime (Brain)**: The animation calculator. Responsible for keyframe interpolation, time management, and calculation of local attributes.
-*   **Player (Body)**: The renderer. Responsible for parsing `ssab` metadata, managing textures, matrix transformations to world coordinates, and final rendering.
-*   **Boundary**: `libssruntime` does not return metadata required for rendering (e.g., texture paths or part names). These must be obtained directly by the Player by referencing the `ssab` (FlatBuffers) data.
-*   **Schemas**:
-    *   The Player uses the [**SSAB Schema**](./libs/ssab/SCHEMA.md) to read metadata and keyframe data.
-    *   The Player uses the [**FrameData Schema**](./libs/ssruntime/SCHEMA.md) to receive evaluated part states from the Brain.
+*   **The DrawBatch contract is the cross-engine rendering API.** `DrawBatch`, Mask batches,
+    `mask_indices`, particle quad slots and `EffectSlot` / `InstanceSlot` / `ExternalInstance` reach every
+    Player, so a change breaks all of them at once. Confirm with the user first, and say so in the PR.
+*   **`cargo build -p ssruntime-ffi` alone needs the allocator and panic features spelled out**: every
+    release deliverable is pure `no_std`, and `ssconverter`, which supplies them through `std`, is not in
+    that graph.
+*   **Doctests need an allocator**: a lone `cargo test --doc -p ssruntime` fails on "no global memory
+    allocator found". Run them workspace-wide, or add `--features ssruntime/std`.
+*   **The Player Porting Guide keeps its layout**: pages in `libs/ssruntime/docs` beside their `.ja.md`
+    translations, readable on GitHub and deep-linked by SpriteStudio-Docs. Edit the authored pages, never
+    the generated `build/docs`.
+*   **A `> [!NOTE]` inside a `1. ` list item needs four spaces of indent**; the three a continuation gives
+    render as literal `[!NOTE]`, with no warning.

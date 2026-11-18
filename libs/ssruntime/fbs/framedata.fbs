@@ -1,8 +1,8 @@
 namespace ss.runtime;
 
 struct PartAttributeCell {
- map_id: int; // hash or name
- name_hash: uint32; // instead of name: string;
+ cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
+ name_hash: uint32; // fnv1a(cell name)
 }
 
 struct Vec2 {
@@ -10,7 +10,7 @@ struct Vec2 {
   y: float;
 }
 
-struct U8Rect {
+struct U8Color {
   a: ubyte;
   r: ubyte;
   g: ubyte;
@@ -18,7 +18,7 @@ struct U8Rect {
 }
 
 struct  SsAttributePartColorKeyValueColor {
-  rgba: U8Rect;
+  rgba: U8Color;
   rate: float;
 }
 
@@ -51,6 +51,7 @@ struct PartAttributeVertex {
   rt: Vec2;
   lb: Vec2;
   rb: Vec2;
+  center: Vec2;
 }
 
 table PartAttributeDeform {
@@ -59,7 +60,7 @@ table PartAttributeDeform {
 }
 
 struct PartAttributeShader {
-  id_hash: uint32; // instead of id: string;
+  id_hash: uint32;
   param0: float;
   param1: float;
   param2: float;
@@ -68,10 +69,10 @@ struct PartAttributeShader {
   param5: float;
   param6: float;
   param7: float;
-  map0_id: int;
-  map0_name_hash: uint32; // instead of map0_name: string;
-  map1_id: int;
-  map1_name_hash: uint32; // instead of map1_name: string;
+  map0_cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
+  map0_name_hash: uint32;
+  map1_cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
+  map1_name_hash: uint32;
 }
 
 enum UpdateAttributeFlags: ulong (bit_flags) {
@@ -133,7 +134,7 @@ struct PartState {
 
   alpha: float;
   local_alpha: float;
-  priority: float;
+  priority: int;
 
   pivot_x: float;
   pivot_y: float;
@@ -169,14 +170,40 @@ struct PartState {
   img_flip_v: bool;
 }
 
+enum DrawBatchKind: ubyte {
+  Normal,
+  Shape,
+  Instance,
+  Effect,
+  Mesh,
+  Text,
+  Nines,
+  Mask,
+}
+
+struct DrawBatch {
+  start_rank: ushort;
+  count: ushort;
+  texture_hash: uint32;
+  vertex_count: ushort;
+  index_count: ushort;
+  blend_type: BlendType;
+  kind: DrawBatchKind;
+  flags: ubyte;
+}
+
 table FrameData {
-  parts: [PartState];
+  parts: [PartState] (required);
 
   cells: [PartAttributeCell];
   parts_color: [PartAttributePartColor];
   shaders: [PartAttributeShader];
   vertices: [PartAttributeVertex];
   deforms: [PartAttributeDeform];
+
+  draw_order: [ushort] (required);
+  draw_batches: [DrawBatch] (required);
+  mask_indices: [ushort] (required);
 }
 
 root_type FrameData;

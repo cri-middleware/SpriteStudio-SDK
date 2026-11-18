@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<SpriteStudioAnimePack version="2.02.00" editorVersion="7.5.0">
+<SpriteStudioAnimePack version="2.03.00" editorVersion="7.6.0">
 	<settings>
 		<fps>30</fps>
 		<frameCount>11</frameCount>
@@ -32,6 +32,7 @@
 		<playArea.start>0</playArea.start>
 		<playArea.end>0</playArea.end>
 		<loop>1</loop>
+		<simulatePixelArtSize>0 0</simulatePixelArtSize>
 	</settings>
 	<name>Mask</name>
 	<order>10</order>
@@ -57,7 +58,7 @@
 				</ineheritRates>
 				<alphaBlendType>mix</alphaBlendType>
 				<show>1</show>
-				<locked>0</locked>
+				<locked>1</locked>
 				<expandAttribute>0</expandAttribute>
 				<expandChildren>1</expandChildren>
 				<refCellTag></refCellTag>
@@ -65,7 +66,7 @@
 				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
-				<name>White</name>
+				<name>Normal-CutOut</name>
 				<arrayIndex>1</arrayIndex>
 				<parentIndex>0</parentIndex>
 				<type>normal</type>
@@ -91,8 +92,198 @@
 				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
-				<name>Jigsaw</name>
+				<name>Mask-Hole</name>
 				<arrayIndex>2</arrayIndex>
+				<parentIndex>1</parentIndex>
+				<type>mask</type>
+				<boundsType>none</boundsType>
+				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
+				<maskParams>
+					<isSoftMask>0</isSoftMask>
+				</maskParams>
+				<ineheritRates>
+					<ALPH>1</ALPH>
+					<IFLH>0</IFLH>
+					<IFLV>0</IFLV>
+					<FLPH>0</FLPH>
+					<FLPV>0</FLPV>
+					<HIDE>0</HIDE>
+				</ineheritRates>
+				<alphaBlendType>mix</alphaBlendType>
+				<show>1</show>
+				<locked>0</locked>
+				<expandAttribute>0</expandAttribute>
+				<expandChildren>1</expandChildren>
+				<refCellTag></refCellTag>
+				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
+			</value>
+			<value>
+				<name>Normal-Clipping-True_1</name>
+				<arrayIndex>3</arrayIndex>
+				<parentIndex>0</parentIndex>
+				<type>normal</type>
+				<boundsType>none</boundsType>
+				<inheritType>parent</inheritType>
+				<visibleInsideMask>1</visibleInsideMask>
+				<writeMask>0</writeMask>
+				<ineheritRates>
+					<ALPH>1</ALPH>
+					<IFLH>0</IFLH>
+					<IFLV>0</IFLV>
+					<FLPH>0</FLPH>
+					<FLPV>0</FLPV>
+					<HIDE>0</HIDE>
+				</ineheritRates>
+				<alphaBlendType>mix</alphaBlendType>
+				<show>1</show>
+				<locked>0</locked>
+				<expandAttribute>0</expandAttribute>
+				<expandChildren>1</expandChildren>
+				<refCellTag></refCellTag>
+				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
+			</value>
+			<value>
+				<name>Mask-Hole_1</name>
+				<arrayIndex>4</arrayIndex>
+				<parentIndex>3</parentIndex>
+				<type>mask</type>
+				<boundsType>none</boundsType>
+				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
+				<maskParams>
+					<isSoftMask>0</isSoftMask>
+				</maskParams>
+				<ineheritRates>
+					<ALPH>1</ALPH>
+					<IFLH>0</IFLH>
+					<IFLV>0</IFLV>
+					<FLPH>0</FLPH>
+					<FLPV>0</FLPV>
+					<HIDE>0</HIDE>
+				</ineheritRates>
+				<alphaBlendType>mix</alphaBlendType>
+				<show>1</show>
+				<locked>0</locked>
+				<expandAttribute>0</expandAttribute>
+				<expandChildren>1</expandChildren>
+				<refCellTag></refCellTag>
+				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
+			</value>
+			<value>
+				<name>Normal-WriteMask-True</name>
+				<arrayIndex>5</arrayIndex>
+				<parentIndex>0</parentIndex>
+				<type>normal</type>
+				<boundsType>none</boundsType>
+				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>1</writeMask>
+				<ineheritRates>
+					<ALPH>1</ALPH>
+					<IFLH>0</IFLH>
+					<IFLV>0</IFLV>
+					<FLPH>0</FLPH>
+					<FLPV>0</FLPV>
+					<HIDE>0</HIDE>
+				</ineheritRates>
+				<alphaBlendType>mix</alphaBlendType>
+				<show>1</show>
+				<locked>0</locked>
+				<expandAttribute>0</expandAttribute>
+				<expandChildren>1</expandChildren>
+				<refCellTag></refCellTag>
+				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
+			</value>
+			<value>
+				<name>Normal-Clipping-True</name>
+				<arrayIndex>6</arrayIndex>
+				<parentIndex>5</parentIndex>
+				<type>normal</type>
+				<boundsType>none</boundsType>
+				<inheritType>parent</inheritType>
+				<visibleInsideMask>1</visibleInsideMask>
+				<writeMask>0</writeMask>
+				<ineheritRates>
+					<ALPH>1</ALPH>
+					<IFLH>0</IFLH>
+					<IFLV>0</IFLV>
+					<FLPH>0</FLPH>
+					<FLPV>0</FLPV>
+					<HIDE>0</HIDE>
+				</ineheritRates>
+				<alphaBlendType>mix</alphaBlendType>
+				<show>1</show>
+				<locked>0</locked>
+				<expandAttribute>0</expandAttribute>
+				<expandChildren>1</expandChildren>
+				<refCellTag></refCellTag>
+				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
+			</value>
+			<value>
+				<name>Mesh-WriteMask-True</name>
+				<arrayIndex>7</arrayIndex>
+				<parentIndex>0</parentIndex>
+				<type>mesh</type>
+				<boundsType>none</boundsType>
+				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>1</writeMask>
+				<meshWeightType>0</meshWeightType>
+				<meshWeightStrong>3</meshWeightStrong>
+				<ineheritRates>
+					<ALPH>1</ALPH>
+					<IFLH>0</IFLH>
+					<IFLV>0</IFLV>
+					<FLPH>0</FLPH>
+					<FLPV>0</FLPV>
+					<HIDE>0</HIDE>
+				</ineheritRates>
+				<alphaBlendType>mix</alphaBlendType>
+				<show>1</show>
+				<locked>0</locked>
+				<expandAttribute>0</expandAttribute>
+				<expandChildren>1</expandChildren>
+				<refCellTag></refCellTag>
+				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
+			</value>
+			<value>
+				<name>Normal-Clipping-True_2</name>
+				<arrayIndex>8</arrayIndex>
+				<parentIndex>7</parentIndex>
+				<type>normal</type>
+				<boundsType>none</boundsType>
+				<inheritType>parent</inheritType>
+				<visibleInsideMask>1</visibleInsideMask>
+				<writeMask>0</writeMask>
+				<ineheritRates>
+					<ALPH>1</ALPH>
+					<IFLH>0</IFLH>
+					<IFLV>0</IFLV>
+					<FLPH>0</FLPH>
+					<FLPV>0</FLPV>
+					<HIDE>0</HIDE>
+				</ineheritRates>
+				<alphaBlendType>mix</alphaBlendType>
+				<show>1</show>
+				<locked>0</locked>
+				<expandAttribute>0</expandAttribute>
+				<expandChildren>1</expandChildren>
+				<refCellTag></refCellTag>
+				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
+			</value>
+			<value>
+				<name>Jigsaw</name>
+				<arrayIndex>9</arrayIndex>
 				<parentIndex>0</parentIndex>
 				<type>normal</type>
 				<boundsType>none</boundsType>
@@ -117,15 +308,17 @@
 				<outputInfluence>1</outputInfluence>
 			</value>
 			<value>
-				<name>mask_Hole32</name>
-				<arrayIndex>3</arrayIndex>
-				<parentIndex>0</parentIndex>
+				<name>mask_Circle_Reversed</name>
+				<arrayIndex>10</arrayIndex>
+				<parentIndex>9</parentIndex>
 				<type>mask</type>
 				<boundsType>none</boundsType>
 				<inheritType>parent</inheritType>
 				<visibleInsideMask>0</visibleInsideMask>
 				<writeMask>0</writeMask>
-				<maskParams />
+				<maskParams>
+					<isSoftMask>0</isSoftMask>
+				</maskParams>
 				<ineheritRates>
 					<ALPH>1</ALPH>
 					<IFLH>0</IFLH>
@@ -143,9 +336,152 @@
 				<maskInfluence>1</maskInfluence>
 				<outputInfluence>1</outputInfluence>
 			</value>
+			<value>
+				<name>mask_Circle_1</name>
+				<arrayIndex>11</arrayIndex>
+				<parentIndex>9</parentIndex>
+				<type>mask</type>
+				<boundsType>none</boundsType>
+				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
+				<maskParams>
+					<isSoftMask>0</isSoftMask>
+				</maskParams>
+				<ineheritRates>
+					<ALPH>1</ALPH>
+					<IFLH>0</IFLH>
+					<IFLV>0</IFLV>
+					<FLPH>0</FLPH>
+					<FLPV>0</FLPV>
+					<HIDE>0</HIDE>
+				</ineheritRates>
+				<alphaBlendType>mix</alphaBlendType>
+				<show>1</show>
+				<locked>0</locked>
+				<expandAttribute>0</expandAttribute>
+				<expandChildren>1</expandChildren>
+				<refCellTag></refCellTag>
+				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
+			</value>
+			<value>
+				<name>mask_Circle_Unmasked</name>
+				<arrayIndex>12</arrayIndex>
+				<parentIndex>9</parentIndex>
+				<type>mask</type>
+				<boundsType>none</boundsType>
+				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
+				<maskParams>
+					<isSoftMask>0</isSoftMask>
+				</maskParams>
+				<ineheritRates>
+					<ALPH>1</ALPH>
+					<IFLH>0</IFLH>
+					<IFLV>0</IFLV>
+					<FLPH>0</FLPH>
+					<FLPV>0</FLPV>
+					<HIDE>0</HIDE>
+				</ineheritRates>
+				<alphaBlendType>mix</alphaBlendType>
+				<show>1</show>
+				<locked>0</locked>
+				<expandAttribute>0</expandAttribute>
+				<expandChildren>1</expandChildren>
+				<refCellTag></refCellTag>
+				<maskInfluence>0</maskInfluence>
+				<outputInfluence>1</outputInfluence>
+			</value>
+			<value>
+				<name>mask_Circle_3</name>
+				<arrayIndex>13</arrayIndex>
+				<parentIndex>9</parentIndex>
+				<type>mask</type>
+				<boundsType>none</boundsType>
+				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
+				<maskParams>
+					<isSoftMask>0</isSoftMask>
+				</maskParams>
+				<ineheritRates>
+					<ALPH>1</ALPH>
+					<IFLH>0</IFLH>
+					<IFLV>0</IFLV>
+					<FLPH>0</FLPH>
+					<FLPV>0</FLPV>
+					<HIDE>0</HIDE>
+				</ineheritRates>
+				<alphaBlendType>mix</alphaBlendType>
+				<show>1</show>
+				<locked>0</locked>
+				<expandAttribute>0</expandAttribute>
+				<expandChildren>1</expandChildren>
+				<refCellTag></refCellTag>
+				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
+			</value>
+			<value>
+				<name>Jigsaw_1</name>
+				<arrayIndex>14</arrayIndex>
+				<parentIndex>0</parentIndex>
+				<type>normal</type>
+				<boundsType>none</boundsType>
+				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
+				<ineheritRates>
+					<ALPH>1</ALPH>
+					<IFLH>0</IFLH>
+					<IFLV>0</IFLV>
+					<FLPH>0</FLPH>
+					<FLPV>0</FLPV>
+					<HIDE>0</HIDE>
+				</ineheritRates>
+				<alphaBlendType>mix</alphaBlendType>
+				<show>1</show>
+				<locked>0</locked>
+				<expandAttribute>0</expandAttribute>
+				<expandChildren>1</expandChildren>
+				<refCellTag></refCellTag>
+				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
+			</value>
+			<value>
+				<name>Shape-Mask-True</name>
+				<arrayIndex>15</arrayIndex>
+				<parentIndex>14</parentIndex>
+				<type>shape</type>
+				<boundsType>none</boundsType>
+				<inheritType>parent</inheritType>
+				<visibleInsideMask>0</visibleInsideMask>
+				<writeMask>0</writeMask>
+				<ineheritRates>
+					<ALPH>1</ALPH>
+					<IFLH>0</IFLH>
+					<IFLV>0</IFLV>
+					<FLPH>0</FLPH>
+					<FLPV>0</FLPV>
+					<HIDE>0</HIDE>
+				</ineheritRates>
+				<alphaBlendType>mix</alphaBlendType>
+				<shapeType>rectangle</shapeType>
+				<shapeMask>1</shapeMask>
+				<show>1</show>
+				<locked>0</locked>
+				<expandAttribute>0</expandAttribute>
+				<expandChildren>1</expandChildren>
+				<refCellTag></refCellTag>
+				<maskInfluence>1</maskInfluence>
+				<outputInfluence>1</outputInfluence>
+			</value>
 		</partList>
 		<boneList />
-		<meshList />
+		<meshList>
+			<value />
+		</meshList>
 	</Model>
 	<cellmapNames>
 		<value>common.ssce</value>
@@ -186,6 +522,7 @@
 				<playArea.start>0</playArea.start>
 				<playArea.end>0</playArea.end>
 				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
 			<guidelines />
@@ -195,6 +532,39 @@
 				<partAnime>
 					<partName>root</partName>
 					<attributes>
+						<attribute tag="HIDE">
+							<key time="0">
+								<value>0</value>
+							</key>
+						</attribute>
+					</attributes>
+				</partAnime>
+				<partAnime>
+					<partName>Mesh-WriteMask-True</partName>
+					<attributes>
+						<attribute tag="CELL">
+							<key time="0">
+								<value>
+									<mapId>0</mapId>
+									<name>Jigsaw_Mesh</name>
+								</value>
+							</key>
+						</attribute>
+						<attribute tag="POSX">
+							<key time="0">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="POSY">
+							<key time="0">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="ROTZ">
+							<key time="0">
+								<value>0</value>
+							</key>
+						</attribute>
 						<attribute tag="HIDE">
 							<key time="0">
 								<value>0</value>
@@ -214,7 +584,7 @@
 				<canvasSize>320 320</canvasSize>
 				<pivot>0 0</pivot>
 				<bgColor>FF323232</bgColor>
-				<gridSize>32</gridSize>
+				<gridSize>16</gridSize>
 				<gridColor>FF808080</gridColor>
 				<ik_depth>3</ik_depth>
 				<startFrame>0</startFrame>
@@ -239,6 +609,7 @@
 				<playArea.start>0</playArea.start>
 				<playArea.end>0</playArea.end>
 				<loop>1</loop>
+				<simulatePixelArtSize>0 0</simulatePixelArtSize>
 			</settings>
 			<labels />
 			<guidelines />
@@ -256,13 +627,46 @@
 					</attributes>
 				</partAnime>
 				<partAnime>
-					<partName>White</partName>
+					<partName>Normal-CutOut</partName>
 					<attributes>
 						<attribute tag="CELL">
 							<key time="0">
 								<value>
 									<mapId>0</mapId>
-									<name>White</name>
+									<name>Jigsaw</name>
+								</value>
+							</key>
+						</attribute>
+						<attribute tag="POSX">
+							<key time="0" ipType="linear">
+								<value>-96</value>
+							</key>
+						</attribute>
+						<attribute tag="POSY">
+							<key time="0" ipType="linear">
+								<value>64</value>
+							</key>
+						</attribute>
+						<attribute tag="ROTZ">
+							<key time="0" ipType="linear">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="HIDE">
+							<key time="0">
+								<value>0</value>
+							</key>
+						</attribute>
+					</attributes>
+				</partAnime>
+				<partAnime>
+					<partName>Mask-Hole</partName>
+					<attributes>
+						<attribute tag="CELL">
+							<key time="0">
+								<value>
+									<mapId>0</mapId>
+									<name>Hole32</name>
 								</value>
 							</key>
 						</attribute>
@@ -281,14 +685,42 @@
 								<value>0</value>
 							</key>
 						</attribute>
-						<attribute tag="SCLX">
-							<key time="0" ipType="linear">
-								<value>1.5</value>
+						<attribute tag="HIDE">
+							<key time="0">
+								<value>0</value>
 							</key>
 						</attribute>
-						<attribute tag="SCLY">
+						<attribute tag="MASK">
 							<key time="0" ipType="linear">
-								<value>1.5</value>
+								<value>255</value>
+							</key>
+						</attribute>
+					</attributes>
+				</partAnime>
+				<partAnime>
+					<partName>Normal-Clipping-True_1</partName>
+					<attributes>
+						<attribute tag="CELL">
+							<key time="0">
+								<value>
+									<mapId>0</mapId>
+									<name>Jigsaw</name>
+								</value>
+							</key>
+						</attribute>
+						<attribute tag="POSX">
+							<key time="0" ipType="linear">
+								<value>-32</value>
+							</key>
+						</attribute>
+						<attribute tag="POSY">
+							<key time="0" ipType="linear">
+								<value>64</value>
+							</key>
+						</attribute>
+						<attribute tag="ROTZ">
+							<key time="0" ipType="linear">
+								<value>0</value>
 							</key>
 						</attribute>
 						<attribute tag="HIDE">
@@ -299,7 +731,83 @@
 					</attributes>
 				</partAnime>
 				<partAnime>
-					<partName>Jigsaw</partName>
+					<partName>Mask-Hole_1</partName>
+					<attributes>
+						<attribute tag="CELL">
+							<key time="0">
+								<value>
+									<mapId>0</mapId>
+									<name>Hole32</name>
+								</value>
+							</key>
+						</attribute>
+						<attribute tag="POSX">
+							<key time="0" ipType="linear">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="POSY">
+							<key time="0" ipType="linear">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="ROTZ">
+							<key time="0" ipType="linear">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="HIDE">
+							<key time="0">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="MASK">
+							<key time="0" ipType="linear">
+								<value>255</value>
+							</key>
+						</attribute>
+					</attributes>
+				</partAnime>
+				<partAnime>
+					<partName>Normal-WriteMask-True</partName>
+					<attributes>
+						<attribute tag="CELL">
+							<key time="0">
+								<value>
+									<mapId>0</mapId>
+									<name>Circle</name>
+								</value>
+							</key>
+						</attribute>
+						<attribute tag="POSX">
+							<key time="0" ipType="linear">
+								<value>32</value>
+							</key>
+						</attribute>
+						<attribute tag="POSY">
+							<key time="0" ipType="linear">
+								<value>64</value>
+							</key>
+						</attribute>
+						<attribute tag="ROTZ">
+							<key time="0" ipType="linear">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="HIDE">
+							<key time="0">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="MASK">
+							<key time="0" ipType="linear">
+								<value>255</value>
+							</key>
+						</attribute>
+					</attributes>
+				</partAnime>
+				<partAnime>
+					<partName>Normal-Clipping-True</partName>
 					<attributes>
 						<attribute tag="CELL">
 							<key time="0">
@@ -332,13 +840,41 @@
 					</attributes>
 				</partAnime>
 				<partAnime>
-					<partName>mask_Hole32</partName>
+					<partName>Mesh-WriteMask-True</partName>
+					<attributes>
+						<attribute tag="POSX">
+							<key time="0" ipType="linear">
+								<value>96</value>
+							</key>
+						</attribute>
+						<attribute tag="POSY">
+							<key time="0" ipType="linear">
+								<value>64</value>
+							</key>
+						</attribute>
+						<attribute tag="MASK">
+							<key time="0" ipType="linear">
+								<value>254</value>
+							</key>
+						</attribute>
+						<attribute tag="DEFM">
+							<key time="0" ipType="linear">
+								<value>
+									<vsize>36</vsize>
+									<vchg>16 0 8.50 -7.00 1 8.50 -7.00 4 -7.50 -8.00 5 -7.50 -8.00 6 8.50 -7.00 7 8.50 -7.00 10 -7.50 -8.00 11 -7.50 -8.00 24 8.00 8.00 25 8.00 8.00 28 -4.50 7.00 29 -4.50 7.00 30 8.00 8.00 31 8.00 8.00 34 -4.50 7.00 35 -4.50 7.00 </vchg>
+								</value>
+							</key>
+						</attribute>
+					</attributes>
+				</partAnime>
+				<partAnime>
+					<partName>Normal-Clipping-True_2</partName>
 					<attributes>
 						<attribute tag="CELL">
 							<key time="0">
 								<value>
 									<mapId>0</mapId>
-									<name>Hole32</name>
+									<name>Jigsaw</name>
 								</value>
 							</key>
 						</attribute>
@@ -362,11 +898,271 @@
 								<value>0</value>
 							</key>
 						</attribute>
-						<attribute tag="MASK">
+					</attributes>
+				</partAnime>
+				<partAnime>
+					<partName>Jigsaw</partName>
+					<attributes>
+						<attribute tag="CELL">
+							<key time="0">
+								<value>
+									<mapId>0</mapId>
+									<name>Jigsaw</name>
+								</value>
+							</key>
+						</attribute>
+						<attribute tag="POSX">
+							<key time="0" ipType="linear">
+								<value>-64</value>
+							</key>
+						</attribute>
+						<attribute tag="POSY">
+							<key time="0" ipType="linear">
+								<value>-64</value>
+							</key>
+						</attribute>
+						<attribute tag="ROTZ">
 							<key time="0" ipType="linear">
 								<value>0</value>
 							</key>
-							<key time="10" ipType="linear">
+						</attribute>
+						<attribute tag="LSCX">
+							<key time="0" ipType="linear">
+								<value>2</value>
+							</key>
+						</attribute>
+						<attribute tag="LSCY">
+							<key time="0" ipType="linear">
+								<value>2</value>
+							</key>
+						</attribute>
+						<attribute tag="HIDE">
+							<key time="0">
+								<value>0</value>
+							</key>
+						</attribute>
+					</attributes>
+				</partAnime>
+				<partAnime>
+					<partName>mask_Circle_Reversed</partName>
+					<attributes>
+						<attribute tag="CELL">
+							<key time="0">
+								<value>
+									<mapId>0</mapId>
+									<name>Circle</name>
+								</value>
+							</key>
+						</attribute>
+						<attribute tag="POSX">
+							<key time="0" ipType="linear">
+								<value>-16</value>
+							</key>
+						</attribute>
+						<attribute tag="POSY">
+							<key time="0" ipType="linear">
+								<value>32</value>
+							</key>
+						</attribute>
+						<attribute tag="ROTZ">
+							<key time="0" ipType="linear">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="HIDE">
+							<key time="0">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="MASK">
+							<key time="0" ipType="linear">
+								<value>255</value>
+							</key>
+						</attribute>
+					</attributes>
+				</partAnime>
+				<partAnime>
+					<partName>mask_Circle_1</partName>
+					<attributes>
+						<attribute tag="CELL">
+							<key time="0">
+								<value>
+									<mapId>0</mapId>
+									<name>Circle</name>
+								</value>
+							</key>
+						</attribute>
+						<attribute tag="POSX">
+							<key time="0" ipType="linear">
+								<value>16</value>
+							</key>
+						</attribute>
+						<attribute tag="POSY">
+							<key time="0" ipType="linear">
+								<value>32</value>
+							</key>
+						</attribute>
+						<attribute tag="ROTZ">
+							<key time="0" ipType="linear">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="HIDE">
+							<key time="0">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="MASK">
+							<key time="0" ipType="linear">
+								<value>255</value>
+							</key>
+						</attribute>
+					</attributes>
+				</partAnime>
+				<partAnime>
+					<partName>mask_Circle_Unmasked</partName>
+					<attributes>
+						<attribute tag="CELL">
+							<key time="0">
+								<value>
+									<mapId>0</mapId>
+									<name>Circle</name>
+								</value>
+							</key>
+						</attribute>
+						<attribute tag="POSX">
+							<key time="0" ipType="linear">
+								<value>-16</value>
+							</key>
+						</attribute>
+						<attribute tag="POSY">
+							<key time="0" ipType="linear">
+								<value>-32</value>
+							</key>
+						</attribute>
+						<attribute tag="ROTZ">
+							<key time="0" ipType="linear">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="HIDE">
+							<key time="0">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="MASK">
+							<key time="0" ipType="linear">
+								<value>255</value>
+							</key>
+						</attribute>
+					</attributes>
+				</partAnime>
+				<partAnime>
+					<partName>mask_Circle_3</partName>
+					<attributes>
+						<attribute tag="CELL">
+							<key time="0">
+								<value>
+									<mapId>0</mapId>
+									<name>Circle</name>
+								</value>
+							</key>
+						</attribute>
+						<attribute tag="POSX">
+							<key time="0" ipType="linear">
+								<value>16</value>
+							</key>
+						</attribute>
+						<attribute tag="POSY">
+							<key time="0" ipType="linear">
+								<value>-32</value>
+							</key>
+						</attribute>
+						<attribute tag="ROTZ">
+							<key time="0" ipType="linear">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="HIDE">
+							<key time="0">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="MASK">
+							<key time="0" ipType="linear">
+								<value>255</value>
+							</key>
+						</attribute>
+					</attributes>
+				</partAnime>
+				<partAnime>
+					<partName>Jigsaw_1</partName>
+					<attributes>
+						<attribute tag="CELL">
+							<key time="0">
+								<value>
+									<mapId>0</mapId>
+									<name>Jigsaw</name>
+								</value>
+							</key>
+						</attribute>
+						<attribute tag="POSX">
+							<key time="0" ipType="linear">
+								<value>64</value>
+							</key>
+						</attribute>
+						<attribute tag="POSY">
+							<key time="0" ipType="linear">
+								<value>-64</value>
+							</key>
+						</attribute>
+						<attribute tag="ROTZ">
+							<key time="0" ipType="linear">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="LSCX">
+							<key time="0" ipType="linear">
+								<value>2</value>
+							</key>
+						</attribute>
+						<attribute tag="LSCY">
+							<key time="0" ipType="linear">
+								<value>2</value>
+							</key>
+						</attribute>
+						<attribute tag="HIDE">
+							<key time="0">
+								<value>0</value>
+							</key>
+						</attribute>
+					</attributes>
+				</partAnime>
+				<partAnime>
+					<partName>Shape-Mask-True</partName>
+					<attributes>
+						<attribute tag="POSX">
+							<key time="0" ipType="linear">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="POSY">
+							<key time="0" ipType="linear">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="ROTZ">
+							<key time="0" ipType="linear">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="HIDE">
+							<key time="0">
+								<value>0</value>
+							</key>
+						</attribute>
+						<attribute tag="MASK">
+							<key time="0" ipType="linear">
 								<value>255</value>
 							</key>
 						</attribute>

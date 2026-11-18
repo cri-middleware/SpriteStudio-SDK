@@ -3,10 +3,13 @@ name = "ssab"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
-license-file.workspace = true
+rust-version.workspace = true
+license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description.workspace = true
+description = "The .ssab / .ssqb binary format for SpriteStudio — the FlatBuffers schema shared by converter and runtime"
+keywords = ["spritestudio", "animation", "gamedev", "flatbuffers", "no-std"]
+categories = ["game-development", "graphics", "encoding", "no-std"]
 
 [dependencies]
 flatbuffers = { workspace = true }

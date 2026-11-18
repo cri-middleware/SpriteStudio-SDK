@@ -1,0 +1,108 @@
+# INHERIT merges mappings, but a locale config's sequence (nav, plugins, extra.social, ...)
+# replaces the base's whole: define each sequence here or in the locale configs, never both.
+
+site_name: SpriteStudio SDK
+site_author: "CRI Middleware Co., Ltd."
+repo_name: "cri-middleware/SpriteStudio-SDK"
+repo_url: "https://github.com/cri-middleware/SpriteStudio-SDK"
+copyright: "Copyright &copy; CRI Middleware Co., Ltd."
+strict: true
+
+theme:
+  name: material
+  custom_dir: overrides
+  font: false
+  favicon: assets/favicon.svg
+  icon:
+    logo: material/cog
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.tracking
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.copy
+    - content.tabs.link
+
+plugins:
+  - search
+  - redirects
+  - llmstxt:
+      full_output: llms-full.txt
+      markdown_description: |
+        Player Porting Guide: how to implement a SpriteStudio player for any engine on top of
+        `libssruntime`. Read `10_introduction/20_limitations` and `20_design/30_api_conventions`
+        first, since both shape a player's design. Pages are numbered in reading order -
+        introduction, design, core playback (`30_core`), parts (`40_parts`), features
+        (`50_features`) and troubleshooting (`60_troubleshooting`), which is organised by
+        symptom. The Rust API of `ssruntime` is rustdoc HTML at `api/ssruntime/` under the site
+        root; it is not part of this file. The converter CLI, `ssconverter-cli`, is documented in
+        `cli/README.md` (https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/cli/README.md),
+        with a fixed download URL per platform.
+      sections:
+        Docs:
+          - "*.md"
+
+markdown_extensions:
+  - toc:
+      permalink: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path:
+        - .
+      check_paths: true
+  - pymdownx.quotes:
+      callouts: true
+
+extra:
+  alternate:
+    - name: English
+      link: ""
+      lang: en
+    - name: 日本語
+      link: ja/
+      lang: ja

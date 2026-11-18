@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCharMap>) -> Vec<ssab::ssab::ss::format::FontBitmapT> {
+pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCharMap>) -> Result<Vec<ssab::ssab::ss::format::FontBitmapT>, crate::ConverterError> {
     let mut v = charmap_dic
         .iter()
         .map(|(key, charmap)| {
-            let parent_path = std::path::Path::new(&key).parent();
+            let parent_path = crate::utils::asset_path_parent(key);
 
             let mut bitmap = ssab::ssab::ss::format::FontBitmapT::default();
 
@@ -37,7 +37,9 @@ pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCh
 
             let mut pages: Vec<_> = charmap.pages.values().collect();
             pages.sort_by_key(|p| p.id);
-            let name_textures = pages.into_iter().map(|p| if let Some(parent_path) = parent_path { parent_path.join(&p.file).to_string_lossy().to_string() } else { p.file.clone() }).collect::<Vec<_>>();
+            // The `.fnt` names its page textures relative to the charmap file, so they are rebased on
+            // the charmap's directory. `/` is the separator on every host — see `join_asset_path`.
+            let name_textures = pages.into_iter().map(|p| crate::utils::join_asset_path(parent_path.unwrap_or_default(), &p.file)).collect::<Vec<_>>();
             if name_textures.is_empty() {
                 bitmap.name_texture_hash = None;
                 bitmap.name_texture = None;
@@ -49,15 +51,22 @@ pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCh
             let mut table_data = charmap
                 .chars
                 .values()
+                // BMFont's invalid-char glyph (-1) is not a character, so no text can draw it.
+                .filter(|c| c.id != -1)
                 .map(|c| {
+                    // `id` is 16 bits: truncating would put the glyph on another character's id.
+                    let Ok(id) = u16::try_from(c.id) else {
+                        let code = if c.id < 0 { format!("id {}", c.id) } else { format!("U+{:04X}", c.id) };
+                        return Err(crate::ConverterError::ConversionFailed(format!("{key}: glyph {code} is outside U+0000..U+FFFF, the range a bitmap font covers; draw such characters with an outline font")));
+                    };
                     let mut glyph = ssab::ssab::ss::format::FontGlyphBitmapT::default();
-                    glyph.id = c.id as u16;
+                    glyph.id = id;
 
-                    let mut atlas = ssab::ssab::ss::format::RectT::default();
-                    atlas.x1 = c.src_rect.x1 as f32;
-                    atlas.y1 = c.src_rect.y1 as f32;
-                    atlas.x2 = c.src_rect.x2 as f32; // width
-                    atlas.y2 = c.src_rect.y2 as f32; // height
+                    let mut atlas = ssab::ssab::ss::format::RegionT::default();
+                    atlas.x = c.src_rect.x1 as f32;
+                    atlas.y = c.src_rect.y1 as f32;
+                    atlas.w = c.src_rect.x2 as f32;
+                    atlas.h = c.src_rect.y2 as f32;
                     glyph.atlas = Some(Box::new(atlas));
 
                     let mut offset = ssab::ssab::ss::format::Vec2T::default();
@@ -70,18 +79,18 @@ pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCh
                     glyph.page = c.page as i8;
                     glyph.channel = 0;
 
-                    glyph
+                    Ok(glyph)
                 })
-                .collect::<Vec<_>>();
+                .collect::<Result<Vec<_>, _>>()?;
 
             table_data.sort_by_key(|g| g.id);
             bitmap.table_data = if table_data.is_empty() { None } else { Some(table_data) };
 
-            bitmap
+            Ok(bitmap)
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>, crate::ConverterError>>()?;
     v.sort_by_key(|e| e.name_hash);
-    v
+    Ok(v)
 }
 
 #[cfg(test)]
@@ -102,7 +111,7 @@ mod tests {
 
         charmap_dic.insert("MockFontData".to_string(), &mock_charmap);
 
-        let result = convert_font_bitmaps(&charmap_dic);
+        let result = convert_font_bitmaps(&charmap_dic).expect("convert");
 
         assert_eq!(result.len(), 1);
         let bitmap = &result[0];
@@ -130,14 +139,67 @@ mod tests {
         assert_eq!(glyph.page, 0);
 
         let atlas = glyph.atlas.as_ref().unwrap();
-        assert_eq!(atlas.x1, 205.0);
-        assert_eq!(atlas.y1, 421.0);
-        assert_eq!(atlas.x2, 7.0);
-        assert_eq!(atlas.y2, 5.0);
+        assert_eq!(atlas.x, 205.0);
+        assert_eq!(atlas.y, 421.0);
+        assert_eq!(atlas.w, 7.0);
+        assert_eq!(atlas.h, 5.0);
 
         let offset = glyph.offset.as_ref().unwrap();
         assert_eq!(offset.v1, -3.0);
         assert_eq!(offset.v2, 29.0);
+    }
+
+    /// A glyph above U+FFFF has no 16-bit id, so it is an error rather than a truncation
+    /// (U+20BB7 to U+0BB7, a Tamil letter).
+    #[test]
+    fn a_glyph_above_u_ffff_is_an_error() {
+        let mut mock_charmap = SsCharMap::default();
+        for id in [0x0BB7, 0x20BB7] {
+            mock_charmap.chars.insert(id, SsCharMapChar { id, ..Default::default() });
+        }
+        let charmap_dic = HashMap::from([("mock.fnt".to_string(), &mock_charmap)]);
+
+        let e = convert_font_bitmaps(&charmap_dic).expect_err("a glyph above U+FFFF must be reported");
+
+        let message = e.to_string();
+        assert!(message.contains("mock.fnt") && message.contains("U+20BB7"), "{message}");
+    }
+
+    /// BMFont's invalid-char glyph has no 16-bit id either.
+    #[test]
+    fn the_invalid_char_glyph_is_left_out() {
+        let mut mock_charmap = SsCharMap::default();
+        for id in [0x0BB7, -1] {
+            mock_charmap.chars.insert(id, SsCharMapChar { id, ..Default::default() });
+        }
+        let charmap_dic = HashMap::from([("mock.fnt".to_string(), &mock_charmap)]);
+
+        let result = convert_font_bitmaps(&charmap_dic).expect("convert");
+
+        let ids: Vec<u16> = result[0].table_data.as_ref().unwrap().iter().map(|g| g.id).collect();
+        assert_eq!(ids, [0x0BB7]);
+    }
+
+    #[test]
+    fn test_page_textures_are_rebased_with_forward_slash() {
+        let mut charmap_dic = HashMap::new();
+
+        let mut mock_charmap = SsCharMap::default();
+        mock_charmap.pages.insert(0, SsCharMapPage { id: 0, file: "mock_0.png".to_string() });
+        mock_charmap.pages.insert(1, SsCharMapPage { id: 1, file: "mock_1.png".to_string() });
+
+        // The sspj names a charmap by its `/`-separated relative path; the page textures are
+        // rebased on that directory and must read the same on every host OS.
+        charmap_dic.insert("font/nested/mock.fnt".to_string(), &mock_charmap);
+
+        let result = convert_font_bitmaps(&charmap_dic).expect("convert");
+
+        let name_texture = result[0].name_texture.as_ref().unwrap();
+        assert_eq!(name_texture, &["font/nested/mock_0.png".to_string(), "font/nested/mock_1.png".to_string()]);
+
+        let name_texture_hash = result[0].name_texture_hash.as_ref().unwrap();
+        assert_eq!(name_texture_hash[0], crate::utils::fnv1a_hash_str("font/nested/mock_0.png"));
+        assert_eq!(name_texture_hash[1], crate::utils::fnv1a_hash_str("font/nested/mock_1.png"));
     }
 
     #[test]
@@ -157,7 +219,7 @@ mod tests {
         let mut charmap_dic = HashMap::new();
         charmap_dic.insert("RoundedMPlus".to_string(), &charmap);
 
-        let result = convert_font_bitmaps(&charmap_dic);
+        let result = convert_font_bitmaps(&charmap_dic).expect("convert");
 
         assert_eq!(result.len(), 1);
         let bitmap = &result[0];
@@ -184,10 +246,10 @@ mod tests {
         assert_eq!(space_glyph.page, 0);
 
         let atlas = space_glyph.atlas.as_ref().unwrap();
-        assert_eq!(atlas.x1, 205.0);
-        assert_eq!(atlas.y1, 421.0);
-        assert_eq!(atlas.x2, 7.0);
-        assert_eq!(atlas.y2, 5.0);
+        assert_eq!(atlas.x, 205.0);
+        assert_eq!(atlas.y, 421.0);
+        assert_eq!(atlas.w, 7.0);
+        assert_eq!(atlas.h, 5.0);
 
         let offset = space_glyph.offset.as_ref().unwrap();
         assert_eq!(offset.v1, -3.0);

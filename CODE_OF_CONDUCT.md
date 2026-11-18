@@ -19,6 +19,25 @@ Examples of unacceptable behavior include:
 - Public or private harassment
 - Publishing others' private information, such as a physical or email address, without their explicit permission
 - Other conduct which could reasonably be considered inappropriate in a professional setting
+- Pressuring others through repeated, demanding, or coercive communications
+
+## Scope
+
+This Code of Conduct applies within all project spaces — including but not limited to GitHub Issues, Pull Requests, Discussions, and any communication between participants in this open-source project.
+
+## Enforcement
+The project maintainers are responsible for clarifying and enforcing our standards of acceptable behavior and will take appropriate and fair corrective action in response to any behavior that they deem inappropriate, threatening, offensive, or harmful.
+
+To report a violation privately, use the **inquiry form** listed under *Private Inquiries* in [SUPPORT.md](./SUPPORT.md) — it is the project's confidential channel, and a conduct report is handled as such rather than as a technical inquiry. State clearly that your report concerns the Code of Conduct.
+
+If your report concerns a maintainer, or you would rather not go through the project at all, GitHub's [Report abuse](https://github.com/contact/report-abuse) form reaches GitHub Support directly.
+
+Do not use public GitHub Issues to report a Code of Conduct violation.
+
+## Attribution
+
+This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org/), version 2.1, available at
+[https://www.contributor-covenant.org/version/2/1/code_of_conduct.html](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html).
 
 ---
 
@@ -43,10 +62,21 @@ Examples of unacceptable behavior include:
 - 公開・非公開を問わないハラスメント行為
 - 明示的な許可なく、住所やメールアドレスなどの他者の個人情報を公開すること
 - 専門的な場において不適切と合理的にみなされるその他の行為
+- 他者に対する、威圧的・要求的、または執拗な働きかけによる圧力
 
----
+### 適用範囲
 
-## Enforcement
-The project maintainers are responsible for clarifying and enforcing our standards of acceptable behavior and will take appropriate and fair corrective action in response to any behavior that they deem inappropriate, threatening, offensive, or harmful.
+本行動規範は、本プロジェクトに関わるすべての場 ―― GitHub Issues、Pull Request、Discussions、および本オープンソースプロジェクトの参加者間のすべてのコミュニケーション ―― に適用されます。
 
-Issues or complaints may be reported privately to the maintainers or via the official **Help Center** link provided in `SUPPORT.md`.
+### 違反への対応
+プロジェクトのメンテナーは、許容される行動の基準を明確にし、それを守らせる責任を負います。不適切、脅迫的、攻撃的、または有害とみなした行動に対しては、適切かつ公正な是正措置を取ります。
+
+行動規範への違反を非公開で報告する場合は、[SUPPORT.md](./SUPPORT.md) の *個別のお問い合わせ* にあるヘルプセンターのお問い合わせフォームをご利用ください。本プロジェクトの非公開の連絡窓口であり、技術的なお問い合わせではなく行動規範に関する報告として取り扱われます。行動規範に関する報告である旨を明記してください。
+
+報告の対象がメンテナー自身である場合や、プロジェクトを介さずに報告したい場合は、GitHub の [不正行為の報告フォーム](https://github.com/contact/report-abuse)から GitHub サポートへ直接連絡できます。
+
+行動規範への違反の報告に、公開の GitHub Issues を使用しないでください。
+
+### 出典
+
+本行動規範は、[Contributor Covenant](https://www.contributor-covenant.org/) のバージョン 2.1 を基にしています。原文は [https://www.contributor-covenant.org/version/2/1/code_of_conduct.html](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html) にあります。

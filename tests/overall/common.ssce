@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<SpriteStudioCellMap version="2.01.01" editorVersion="7.3.0">
+<SpriteStudioCellMap version="2.02.00" editorVersion="7.5.1">
 	<name>common</name>
 	<exportPath></exportPath>
 	<generator>SpriteStudio</generator>
@@ -245,6 +245,150 @@
 			<meshTriList />
 		</cell>
 		<cell>
+			<name>Jigsaw_Mesh</name>
+			<pos>96 176</pos>
+			<size>64 64</size>
+			<pivot>0 0</pivot>
+			<rotated>0</rotated>
+			<trimmed>0</trimmed>
+			<untrimmedSize>0 0</untrimmedSize>
+			<orgImageName></orgImageName>
+			<posStable>0</posStable>
+			<ismesh>1</ismesh>
+			<divtype>boxdiv</divtype>
+			<divw>5</divw>
+			<divh>5</divh>
+			<innerPoint />
+			<outerPoint>
+				<value>0 0</value>
+				<value>12.8 0</value>
+				<value>25.6 0</value>
+				<value>38.4 0</value>
+				<value>51.2 0</value>
+				<value>64 0</value>
+				<value>0 12.8</value>
+				<value>12.8 12.8</value>
+				<value>25.6 12.8</value>
+				<value>38.4 12.8</value>
+				<value>51.2 12.8</value>
+				<value>64 12.8</value>
+				<value>0 25.6</value>
+				<value>12.8 25.6</value>
+				<value>25.6 25.6</value>
+				<value>38.4 25.6</value>
+				<value>51.2 25.6</value>
+				<value>64 25.6</value>
+				<value>0 38.4</value>
+				<value>12.8 38.4</value>
+				<value>25.6 38.4</value>
+				<value>38.4 38.4</value>
+				<value>51.2 38.4</value>
+				<value>64 38.4</value>
+				<value>0 51.2</value>
+				<value>12.8 51.2</value>
+				<value>25.6 51.2</value>
+				<value>38.4 51.2</value>
+				<value>51.2 51.2</value>
+				<value>64 51.2</value>
+				<value>0 64</value>
+				<value>12.8 64</value>
+				<value>25.6 64</value>
+				<value>38.4 64</value>
+				<value>51.2 64</value>
+				<value>64 64</value>
+			</outerPoint>
+			<meshPointList>
+				<value>0 0</value>
+				<value>12.8 0</value>
+				<value>25.6 0</value>
+				<value>38.4 0</value>
+				<value>51.2 0</value>
+				<value>64 0</value>
+				<value>0 12.8</value>
+				<value>12.8 12.8</value>
+				<value>25.6 12.8</value>
+				<value>38.4 12.8</value>
+				<value>51.2 12.8</value>
+				<value>64 12.8</value>
+				<value>0 25.6</value>
+				<value>12.8 25.6</value>
+				<value>25.6 25.6</value>
+				<value>38.4 25.6</value>
+				<value>51.2 25.6</value>
+				<value>64 25.6</value>
+				<value>0 38.4</value>
+				<value>12.8 38.4</value>
+				<value>25.6 38.4</value>
+				<value>38.4 38.4</value>
+				<value>51.2 38.4</value>
+				<value>64 38.4</value>
+				<value>0 51.2</value>
+				<value>12.8 51.2</value>
+				<value>25.6 51.2</value>
+				<value>38.4 51.2</value>
+				<value>51.2 51.2</value>
+				<value>64 51.2</value>
+				<value>0 64</value>
+				<value>12.8 64</value>
+				<value>25.6 64</value>
+				<value>38.4 64</value>
+				<value>51.2 64</value>
+				<value>64 64</value>
+			</meshPointList>
+			<meshTriList>
+				<value>0 1 6</value>
+				<value>1 6 7</value>
+				<value>1 2 7</value>
+				<value>2 7 8</value>
+				<value>2 3 8</value>
+				<value>3 8 9</value>
+				<value>3 4 9</value>
+				<value>4 9 10</value>
+				<value>4 5 10</value>
+				<value>5 10 11</value>
+				<value>6 7 12</value>
+				<value>7 12 13</value>
+				<value>7 8 13</value>
+				<value>8 13 14</value>
+				<value>8 9 14</value>
+				<value>9 14 15</value>
+				<value>9 10 15</value>
+				<value>10 15 16</value>
+				<value>10 11 16</value>
+				<value>11 16 17</value>
+				<value>12 13 18</value>
+				<value>13 18 19</value>
+				<value>13 14 19</value>
+				<value>14 19 20</value>
+				<value>14 15 20</value>
+				<value>15 20 21</value>
+				<value>15 16 21</value>
+				<value>16 21 22</value>
+				<value>16 17 22</value>
+				<value>17 22 23</value>
+				<value>18 19 24</value>
+				<value>19 24 25</value>
+				<value>19 20 25</value>
+				<value>20 25 26</value>
+				<value>20 21 26</value>
+				<value>21 26 27</value>
+				<value>21 22 27</value>
+				<value>22 27 28</value>
+				<value>22 23 28</value>
+				<value>23 28 29</value>
+				<value>24 25 30</value>
+				<value>25 30 31</value>
+				<value>25 26 31</value>
+				<value>26 31 32</value>
+				<value>26 27 32</value>
+				<value>27 32 33</value>
+				<value>27 28 33</value>
+				<value>28 33 34</value>
+				<value>28 29 34</value>
+				<value>29 34 35</value>
+			</meshTriList>
+		</cell>
+		<cell>
 			<name>Arrow</name>
 			<pos>96 176</pos>
 			<size>64 64</size>
@@ -298,6 +442,23 @@
 		<cell>
 			<name>Hole32</name>
 			<pos>8 184</pos>
+			<size>64 64</size>
+			<pivot>0 0</pivot>
+			<rotated>0</rotated>
+			<trimmed>0</trimmed>
+			<untrimmedSize>0 0</untrimmedSize>
+			<orgImageName></orgImageName>
+			<posStable>0</posStable>
+			<ismesh>0</ismesh>
+			<divtype>unknown</divtype>
+			<innerPoint />
+			<outerPoint />
+			<meshPointList />
+			<meshTriList />
+		</cell>
+		<cell>
+			<name>Circle</name>
+			<pos>176 176</pos>
 			<size>64 64</size>
 			<pivot>0 0</pivot>
 			<rotated>0</rotated>
@@ -534,4 +695,12 @@
 			<meshTriList />
 		</cell>
 	</cells>
+	<useCellMapOptOption>0</useCellMapOptOption>
+	<cellMapOptOption>
+		<fitToImage>0</fitToImage>
+		<margeSameImage>0</margeSameImage>
+		<compressOneColor>0</compressOneColor>
+		<includeZeroAlpha>0</includeZeroAlpha>
+		<shapePadding>8</shapePadding>
+	</cellMapOptOption>
 </SpriteStudioCellMap>

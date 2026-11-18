@@ -9,7 +9,7 @@
 	<overrideTexSettings>0</overrideTexSettings>
 	<wrapMode>clamp</wrapMode>
 	<filterMode>linear</filterMode>
-	<imagePathAtImport>C:/Users/ikeda.WEBTECH/Desktop/2018SSサンプル作業部屋/ボックスくん/アニメ/00_基本モーション/box_00_00.png</imagePathAtImport>
+	<imagePathAtImport></imagePathAtImport>
 	<packInfoFilePath></packInfoFilePath>
 	<texPackSettings>
 		<maxSize>4096 4096</maxSize>

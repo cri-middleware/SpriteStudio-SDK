@@ -36,7 +36,7 @@ One `.ssab` file is generated **per `.ssae` (animation pack)**. The `.ssab` cont
  └─ .ssqe (sequence pack)   ──────► .ssqb (SsSequenceBinary)
 ```
 
-Each `.ssab` is self-contained: it embeds only the ss*e resources that the specific animation pack references. Resources not used by the pack are excluded.
+Each `.ssab` is self-contained: it embeds only the ss*e resources that the specific animation pack references. Resources not used by the pack are excluded. The exception is sound: a pack with an Audio part carries every `.ssse` of the project.
 
 ---
 
@@ -53,11 +53,12 @@ Each `.ssab` is self-contained: it embeds only the ss*e resources that the speci
 | `animations` | [AnimationData] | `SsAnimePack.anime_list` (ssae) | All animations in this pack |
 | `cellmaps` | [CellMap] | `SsCellMap` (ssce) | Only cellmaps referenced by this pack (including those used by effects) |
 | `effects` | [Effect] | `SsEffectFile` (ssee) | Only effects referenced by Effect-type parts |
-| `sound_lists` | [SoundList] | `SsAudioPack` (ssse) | Included only if the pack contains Audio-type parts |
+| `sound_lists` | [SoundList] | `SsAudioPack` (ssse) | Every `SoundList` of the project when the pack contains an Audio-type part; none otherwise |
 | `font_bitmaps` | [FontBitmap] | `SsCharMap` (fnt) | Only bitmap fonts used by Text-type parts with `text_bitmap == true` |
-| `external_textures` | [ExternalTexture] | — | External texture references |
-| `external_instances` | [string] | — | `"pack_name/anime_name"` for cross-pack instance references |
+| `external_textures` | [ExternalTexture] | — | External texture references; sorted by `name_hash`. Union of the project's `<ExternalTextures>` list and every distinct `TextureName` named by a `TCHG` key in this pack (including cellmap images such as `common.png`). This is the reverse-lookup table a Player needs to turn a `TCHG` hash — and hence `DrawBatch.texture_hash` — back into a loadable name, so it must cover both sources. |
+| `external_instances` | [ExternalInstance] | — | Cross-pack instance references; sorted by `(anime_pack_name_hash, anime_name_hash)`. The table carries no FlatBuffers `(key)`, so a reader scans the vector rather than calling `LookupByKey`. Each entry carries `anime_pack_name_hash` (matches `SsAnimeBinary.name_hash` of the target pack), `anime_pack_name` (used to locate the sibling `<pack>.ssab` file), `anime_name_hash`, and `anime_name` (diagnostic). |
 | `embedded_assets` | [EmbeddedAsset] | — | Optionally embedded binary assets (images, sounds, etc.) |
+| `keyframes` | Keyframes | `SsAnimePack.anime_list` (ssae) | Every keyframe of every animation in this pack, one column per field. See Keyframe Data |
 
 ---
 
@@ -71,6 +72,12 @@ Each `.ssab` is self-contained: it embeds only the ss*e resources that the speci
 | `parent_index` | short | `parent_index` | Parent part index |
 | `bounds_type` | BoundsType | `bounds_type` | Bounding calculation mode |
 | `blend_type` | BlendType | `alpha_blend_type` | Renamed field |
+| `visible_inside_mask` | bool | `visible_inside_mask` | The polarity of a masked drawing part: `1` = draw inside the mask / `0` = draw outside → [Mask §2-4](../ssruntime/docs/40_parts/40_mask.md#2-4-polarity-whether-to-draw-inside-or-outside-the-mask) |
+| `mask_write` | bool | `write_mask` | Renamed field. Turns a drawn part into a **clipping** writer. Clipping emits no `DrawBatchKind::Mask`, so the writer list has to be settled from this flag → [Mask §1-3](../ssruntime/docs/40_parts/40_mask.md#1-3-part-roles-and-mask_influence) |
+| `mask_influence` | bool | `mask_influence` | **A dual definition whose meaning changes with the role**: on a mask writer it is the OP (`0` = increment / `1` = invert); on a masked drawing part it is the target flag (`1` = affected / `0` = opted out). Clipping is both a writer and a drawing part, so the same value serves both meanings at once. Do not drop either one → [Mask §1-3](../ssruntime/docs/40_parts/40_mask.md#1-3-part-roles-and-mask_influence) |
+| `draw_as_mask` | bool | `shape_mask` / `text_mask` / `nines_mask` | Unified pure-mask flag for drawing parts (Shape/Text/Nines). Mutually-exclusive per-type tags in the source .ssae. `PartTypeMask` is always a pure mask regardless of this flag |
+| `output_influence` | bool (default `true`) | `output_influence` | Carried through from the authoring data unchanged; `libssruntime` does not read it |
+| `mesh_binding` | PartMeshBinding | (computed) | Per-vertex bone influences for `PartTypeMesh`. See [Mesh Binding](#mesh-binding) below. Optional; absent for non-mesh parts. |
 | `part_type` | PartType (union) | `part_type` + type-specific fields | See below |
 
 ### Part Type Union
@@ -81,10 +88,10 @@ In ssae, the part type is a simple enum (`SsPartType`) and type-specific data (e
 |-------------------|----------------|------|
 | `PartTypeNull` | `SsPartType::Null` | None |
 | `PartTypeNormal` | `SsPartType::Normal` | None |
-| `PartTypeShape` | `SsPartType::Shape` | `shape_type`, `shape_mask` |
-| `PartTypeText` | `SsPartType::Text` | `text`, `text_bitmap`, `text_family`, etc. |
-| `PartTypeNines` | `SsPartType::Nines` | `nines_margin_l/r/t/b`, `nines_fill_mode`, `nines_mask` |
-| `PartTypeInstance` | `SsPartType::Instance` | `ref_anime_hash` (ssae: `ref_anime_pack` + `ref_anime` as strings) |
+| `PartTypeShape` | `SsPartType::Shape` | `shape_type` |
+| `PartTypeText` | `SsPartType::Text` | `text`, `text_bitmap`, `text_family`, `text_char_map`, `text_size`, `text_space`, `text_smooth`, `text_width`, `text_height`, `e_anchor` |
+| `PartTypeNines` | `SsPartType::Nines` | `nines_margin_l/r/t/b`, `nines_fill_mode` |
+| `PartTypeInstance` | `SsPartType::Instance` | `ref_anime_pack` + `ref_anime_pack_hash`, `ref_anime_name` + `ref_anime_name_hash` (ssae: `ref_anime_pack` + `ref_anime` as strings) |
 | `PartTypeArmature` | `SsPartType::Armature` | None |
 | `PartTypeEffect` | `SsPartType::Effect` | `ref_effect_name_hash` (ssae: `ref_effect_name` as string) |
 | `PartTypeMesh` | `SsPartType::Mesh` | None |
@@ -112,11 +119,21 @@ The following ssae pack and model-level fields are not included in ssab:
 The following ssae `SsPart` fields are editor-only and not included in ssab:
 
 - `array_index`, `show`, `locked`, `color_label` (editor UI state)
-- `inherit_type`, `inherit_rates` (resolved at conversion time)
-- `mask_influence` (editor setting)
+- `inherit_type`, `inherit_rates` (`HIDE` is resolved at conversion time; the other rates are not used)
 - `bone_length`, `bone_position`, `bone_rotation` (bone editing data)
 - `weight_position`, `weight_impact`, `mesh_weight_type`, `mesh_weight_strong` (mesh weight editing)
 - `ik_depth`, `ik_rotation_arrow` (IK solver parameters)
+
+### Mesh Binding
+
+For `PartTypeMesh`, the converter resolves the ssae mesh-weight description into per-vertex bone influences and stores them on `PartData.mesh_binding`. Other part types omit the field. The influences are **parallel arrays indexed by a prefix-offset table**, not nested tables: one vector allocation per part rather than one per vertex.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `vertex_influence_offset` | [uint32] | Prefix offsets — one per mesh vertex **plus a trailing total**, so it holds `vertex_count + 1` entries. Vertex `i`'s influences are the half-open range `[offset[i], offset[i + 1])` in the four arrays below, and the outer index matches the mesh vertex order. |
+| `influence_bone` | [ushort] | Part index of the influencing bone — already remapped from the ssae bone-list index to the corresponding part index, so the runtime can index `parts` directly. |
+| `influence_weight` | [float] | Influence weight, normalised to `0.0`-`1.0` (ssae authors it as a percentage). |
+| `influence_coord_x` / `influence_coord_y` | [float] | Bind-pose offset of the vertex relative to the influencing bone, split across two arrays. |
 
 ---
 
@@ -141,10 +158,11 @@ The following ssae `SsPart` fields are editor-only and not included in ssab:
 |-----------|------|-----------|-------|
 | `name_hash` | uint32 (key) | — | Hash for fast lookup |
 | `name` | string | `name` | Cell name |
-| `rectangle` | Rect | `pos` + `size` | ssce uses pos/size pair; ssab uses rectangle (x1,y1,x2,y2) |
+| `region` | Region | `pos` + `size` | Stored verbatim: `x,y` = `pos`, `w,h` = `size` |
 | `pivot` | Vec2 | `pivot` | Cell pivot point |
 | `rotated` | bool | `rotated` | Whether cell is rotated in atlas |
-| `table_coordinate` | [Vec2] | `mesh_point_list` | Mesh vertex coordinates |
+| `table_coord_x` | [float] | `mesh_point_list[*].x` | SoA mesh vertex X coordinates |
+| `table_coord_y` | [float] | `mesh_point_list[*].y` | SoA mesh vertex Y coordinates |
 | `table_index_vertex` | [ushort] | `mesh_tri_list` | Mesh triangle indices (flattened from SsPoint3) |
 
 ### Fields Not Carried Over
@@ -161,16 +179,16 @@ The following ssae `SsPart` fields are editor-only and not included in ssab:
 
 | ssab field | Type | ssae field | Notes |
 |-----------|------|-----------|-------|
-| `name` | string (key) | `name` | Animation name |
-| `name_hash` | uint32 | — | Hash for fast lookup |
+| `name` | string (required) | `name` | Animation name. `(required)` enforces presence at verify time, but no `(key)` because the array preserves sspj source order so "first animation" semantics stay deterministic — sorting by key for `LookupByKey` would break that. |
+| `name_hash` | uint32 | — | fnv1a(name). Use linear scan for hash-based lookup. |
 | `start_frame` | short | `settings.start_frame` | Start frame |
 | `end_frame` | short | `settings.end_frame` | End frame |
 | `total_frame` | short | `settings.frame_count` | Total frame count |
 | `fps` | short | `settings.fps` | Frames per second |
-| `canvas` | Rect | `settings.canvas_size` | Canvas dimensions |
+| `canvas_size` | Vec2 (required) | `settings.canvas_size` | Authored canvas dimensions, in pixels. |
+| `pivot` | Vec2 (required) | `settings.pivot` | Normalized position of the runtime origin within the canvas. Defaults to `0, 0` (canvas center). |
 | `parts_initial_attributes` | [InitialPartAttributes] | Setup animation data | See Initial Attributes section |
 | `parts_animation_data` | [PartAnimationData] | `part_animes` | See Animation Data Layout section |
-| `parts_mesh_data` | [PartMeshData] | `SsModel.mesh_list` | Mesh UV/index data |
 | `events` | [EventsPerFrame] | Event attributes per part | See Events section |
 | `initial_events` | [InitialEvents] | Setup animation events | Initial event state |
 | `labels` | [Label] | `labels` | Animation labels |
@@ -202,61 +220,71 @@ SsAnimation
 
 Each attribute is identified by a tag string (e.g., `"POSX"`, `"ROTZ"`, `"ALPH"`).
 
-### ssab: Columnar (per-part, arrays per attribute type)
+### ssab: a run of keys per attribute, the keys in columns
 
-In ssab, each part's animation data contains a fixed set of **typed arrays**, one per attribute:
+In ssab, each part's `PartAnimationData` names, per attribute, the run of keys that animates it, and the keys of every animation in the pack sit in one set of columns, `SsAnimeBinary.keyframes`:
 
 ```
-AnimationData
-  └─ parts_animation_data: [PartAnimationData]   // one per part
-       ├─ position_x_array: [{ index: 0, value: 10.0 }, { index: 30, value: 50.0 }]
-       ├─ rotation_z_array: [{ index: 0, value: 0.0 }, { index: 15, value: 90.0 }]
-       ├─ alpha_array: [{ index: 0, value: 1.0 }]
-       └─ (all other arrays are empty/null)
+SsAnimeBinary
+  ├─ animations: [AnimationData]
+  │    └─ parts_animation_data: [PartAnimationData]   // one per part
+  │         ├─ position_x_keys: 3                     // run 3
+  │         ├─ rotation_z_keys: 4                     // run 4
+  │         └─ (every other field absent: no keys)
+  └─ keyframes: Keyframes
+       ├─ runs:          [ …, 10, 12, 14, … ]         // run 3 is keys 10 and 11
+       ├─ frame:         [ …, 0, 30, 0, 15, … ]
+       ├─ interpolation: [ …, Linear, None, Linear, None, … ]
+       ├─ curve:         [ …, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, … ]
+       └─ value:         [ …, 10.0, 50.0, 0.0, 90.0, … ]   // a float's bits
 ```
+
+A `PartAnimationData` field is the index of a run, or its default `0xFFFFFFFF` (`ssab::NO_KEYS`) when the animation does not key that attribute on that part. Run `r` is keys `runs[r]` up to, but not including, `runs[r + 1]`. Runs with the same keys are stored once, so the setup pose every animation is seeded with costs one run however many animations name it.
 
 ### Attribute Tag Mapping
 
-| ssae Tag | ssab Array | Value Type |
+The value column says how a key's `Keyframes.value` is read for that attribute.
+
+| ssae Tag | ssab Field | Value |
 |---------|-----------|-----------|
-| `CELL` | `cell_array` | PartAnimationDataCellValue |
-| `POSX` | `position_x_array` | PartAnimationDataFloatValue |
-| `POSY` | `position_y_array` | PartAnimationDataFloatValue |
-| `POSZ` | `position_z_array` | PartAnimationDataFloatValue |
-| `ROTX` | `rotation_x_array` | PartAnimationDataFloatValue |
-| `ROTY` | `rotation_y_array` | PartAnimationDataFloatValue |
-| `ROTZ` | `rotation_z_array` | PartAnimationDataFloatValue |
-| `SCLX` | `scale_x_array` | PartAnimationDataFloatValue |
-| `SCLY` | `scale_y_array` | PartAnimationDataFloatValue |
-| `LSCX` | `local_scale_x_array` | PartAnimationDataFloatValue |
-| `LSCY` | `local_scale_y_array` | PartAnimationDataFloatValue |
-| `ALPH` | `alpha_array` | PartAnimationDataFloatValue |
-| `LALP` | `local_alpha_array` | PartAnimationDataFloatValue |
-| `PRIO` | `priority_array` | PartAnimationDataIntValue |
-| `FLPH` | `flip_h_array` | PartAnimationDataBoolValue |
-| `FLPV` | `flip_v_array` | PartAnimationDataBoolValue |
-| `HIDE` | `hide_array` | PartAnimationDataBoolValue |
-| `PCOL` | `part_color_array` | PartAnimationDataPartColor |
-| `SHDR` | `shader_array` | PartAnimationDataShader |
-| `VERT` | `vertex_array` | PartAnimationDataVertex |
-| `PVTX` | `pivot_x_array` | PartAnimationDataFloatValue |
-| `PVTY` | `pivot_y_array` | PartAnimationDataFloatValue |
-| `ANCX` | `anchor_x_array` | PartAnimationDataFloatValue |
-| `ANCY` | `anchor_y_array` | PartAnimationDataFloatValue |
-| `SIZX` | `size_x_array` | PartAnimationDataFloatValue |
-| `SIZY` | `size_y_array` | PartAnimationDataFloatValue |
-| `IFLH` | `img_flip_h_array` | PartAnimationDataBoolValue |
-| `IFLV` | `img_flip_v_array` | PartAnimationDataBoolValue |
-| `UVTX` | `uv_translation_x_array` | PartAnimationDataFloatValue |
-| `UVTY` | `uv_translation_y_array` | PartAnimationDataFloatValue |
-| `UVRZ` | `uv_rotation_z_array` | PartAnimationDataFloatValue |
-| `UVSX` | `uv_scale_x_array` | PartAnimationDataFloatValue |
-| `UVSY` | `uv_scale_y_array` | PartAnimationDataFloatValue |
-| `BNDR` | `bounding_radius_array` | PartAnimationDataFloatValue |
-| `MASK` | `mask_array` | PartAnimationDataFloatValue |
-| `VERT` (skew) | `skew_array` | PartAnimationDataVec2 | *Note: ssae's `VERT` tag contains both vertex offsets and skew data in a single `SsAttributeVertexKeyValue`. In ssab, these are split into separate `vertex_array` and `skew_array`.* |
-| `DEFM` | `deform_array` | PartAnimationDataDeform |
-| `TCHG` | `texture_array` | PartAnimationDataUIntValue |
+| `CELL` | `cell_keys` | index into `cells` (PartAttributeCell) |
+| `POSX` | `position_x_keys` | `float` |
+| `POSY` | `position_y_keys` | `float` |
+| `POSZ` | `position_z_keys` | `float` |
+| `ROTX` | `rotation_x_keys` | `float` |
+| `ROTY` | `rotation_y_keys` | `float` |
+| `ROTZ` | `rotation_z_keys` | `float` |
+| `SCLX` | `scale_x_keys` | `float` |
+| `SCLY` | `scale_y_keys` | `float` |
+| `LSCX` | `local_scale_x_keys` | `float` |
+| `LSCY` | `local_scale_y_keys` | `float` |
+| `ALPH` | `alpha_keys` | `float` |
+| `LALP` | `local_alpha_keys` | `float` |
+| `PRIO` | `priority_keys` | `int` |
+| `FLPH` | `flip_h_keys` | `bool` (0 or 1) |
+| `FLPV` | `flip_v_keys` | `bool` (0 or 1) |
+| `HIDE` | `hide_keys` | `bool` (0 or 1) |
+| `PCOL` | `part_color_keys` | index into `part_colors` (PartAttributePartColor) |
+| `SHDR` | `shader_keys` | index into `shaders` (PartAttributeShader) |
+| `VERT` | `vertex_keys` | index into `vertices` (PartAttributeVertex) |
+| `PVTX` | `pivot_x_keys` | `float` |
+| `PVTY` | `pivot_y_keys` | `float` |
+| `ANCX` | `anchor_x_keys` | `float` |
+| `ANCY` | `anchor_y_keys` | `float` |
+| `SIZX` | `size_x_keys` | `float` |
+| `SIZY` | `size_y_keys` | `float` |
+| `IFLH` | `img_flip_h_keys` | `bool` (0 or 1) |
+| `IFLV` | `img_flip_v_keys` | `bool` (0 or 1) |
+| `UVTX` | `uv_translation_x_keys` | `float` |
+| `UVTY` | `uv_translation_y_keys` | `float` |
+| `UVRZ` | `uv_rotation_z_keys` | `float` |
+| `UVSX` | `uv_scale_x_keys` | `float` |
+| `UVSY` | `uv_scale_y_keys` | `float` |
+| `BNDR` | `bounding_radius_keys` | `float` |
+| `MASK` | `mask_keys` | `float` |
+| `VERT` (skew) | `skew_keys` | index into `skews` (Vec2). *Note: ssae's `VERT` tag contains both vertex offsets and skew data in a single `SsAttributeVertexKeyValue`. In ssab, these are split into separate `vertex_keys` and `skew_keys`.* |
+| `DEFM` | `deform_keys` | index into `deforms` (PartAttributeDeform) |
+| `TCHG` | `texture_keys` | `uint32`. *Value is `fnv1a(TextureName)`, resolvable via `external_textures`. An empty `TextureName` (authored "no override") is normalised to `0` rather than hashed, so it stays distinguishable from a real texture and matches the `texture` default; step-evaluated, never interpolated.* |
 
 ### Event Attributes (special handling)
 
@@ -285,21 +313,22 @@ AnimationData.events: [EventsPerFrame]
 
 ## Keyframe Data
 
-### Interpolation
+### Columns
 
-| ssab field | ssae field | Notes |
+| `Keyframes` column | ssae field | Notes |
 |-----------|-----------|-------|
-| `index` (ushort, key) | `time` (i32) | Frame index / time |
+| `frame` (ushort) | `time` (i32) | Frame index |
 | `interpolation` | `ip_type` | Interpolation type enum |
-| `value` | `value` | The attribute value |
+| `curve` (ushort) | `curve`, `easing_rate` | An index; see below |
+| `value` (uint) | `value` | The value's bits, or an index; see Attribute Tag Mapping |
 
-In ssae, keyframes can also carry `curve` data (`SsCurve`) for Bezier/Hermite interpolation with `start_time`, `start_value`, `end_time`, `end_value`, and `sync_start_end`. In ssab, curve data is not stored per-keyframe; the interpolation type enum alone determines the easing behavior.
+In ssae, keyframes can also carry `curve` data (`SsCurve`) for Bezier/Hermite interpolation with `start_time`, `start_value`, `end_time`, `end_value`, and `sync_start_end`. ssab stores each distinct set of the four control values once, in `Keyframes.curves` (`KeyCurve`), and each distinct easing rate once, in `Keyframes.easing_rates`. A key's `curve` indexes `curves` when it is Hermite or Bezier, `easing_rates` when it is one of the six eases that take a rate (`EaseIn`, `EaseOut`, `EaseInOut`, `EaseElasticIn`, `EaseElasticOut`, `EaseElasticInOut`), and is `0xFFFF` (`ssab::NO_CURVE`) for every other key. `sync_start_end` is an authoring-side convenience and is not carried. Compound values — cells, part colors, shaders, vertices, skews and deforms — are likewise stored once each, in the table the attribute tag mapping names, and the key's `value` is the index.
 
 ### Cell Attribute
 
 | ssab `PartAttributeCell` | ssae `SsAttributeCellKeyValue` | Notes |
 |-------------------------|-------------------------------|-------|
-| `map_id` (int) | `map_id` (i32) | Cell map index |
+| `cellmap_name_hash` (uint32) | `map_id` (i32) | fnv1a hash of the cellmap name (without `.ssce`). Resolved from `sspj.cellmap_names[map_id]` at convert time so the runtime can look up the cellmap by hash even when only a subset is bundled. |
 | `name_hash` (uint32) | `name` (String) | Hash instead of string |
 
 ### Audio Attribute
@@ -322,12 +351,15 @@ The `InitialPartAttributes` table stores the default/setup state for each part. 
 A 64-bit bitmask indicating which attributes have been set to non-default values. This allows the runtime to skip unchanged attributes during initialization.
 
 ```
-Bit 0:  AttributeCell
-Bit 1:  AttributePosX
-Bit 2:  AttributePosY
+Bit  0: AttributeCell
+Bit  1: AttributePosX
+Bit  2: AttributePosY
 ...
-Bit 36: AttributeTexture
+Bit 36: AttributeDeform
+Bit 37: AttributeTexture
 ```
+
+38 flags are defined in total; the bit assignment order matches the declaration order in `PartAttributesUpdateFlags`.
 
 ### Default Values
 
@@ -339,7 +371,7 @@ Bit 36: AttributeTexture
 | `local_scale_x/y` | 1.0 |
 | `alpha` | 1.0 |
 | `local_alpha` | 1.0 |
-| `priority` | 0.0 |
+| `priority` | 0 |
 | `flip_h/v` | false |
 | `hide` | false |
 | `pivot_x/y` | 0.0 |
@@ -376,10 +408,11 @@ Bit 36: AttributeTexture
 |-----------|-----------|-------|
 | `index` | `array_index` | Node index |
 | `parent_index` | `parent_index` | Parent node index |
-| `effect_node_type` | `node_type` | Root / Emitter / Particle |
-| `cell_index` | `behavior.cell_name` + `behavior.cell_map_name` | Resolved to index |
-| `blend_type` | `behavior.blend_type` | Render blend mode |
-| `behavior` | `behavior.list` | Particle behaviors (as union array) |
+| `effect_node_type` | `node_type` | Root / Emitter / Particle (`EffectNodeType` enum) |
+| `cell_name_hash` | `behavior.cell_name` | fnv1a hash of the cell name |
+| `cell_map_name_hash` | `behavior.cell_map_name` | fnv1a hash of the cellmap name (without `.ssce`) |
+| `blend_type` | `behavior.blend_type` | `RenderBlendType` enum — restricted to `Mix` / `Add` (not the full `BlendType` set used by parts) |
+| `behavior` | `behavior.list` | Particle behaviors (as union array, wrapped by `EffectNodeBehaviorWrapper`) |
 
 ### Effect Node Behaviors
 
@@ -391,7 +424,7 @@ ssee uses a tagged enum (`SsEffectFunctionType`) with named variants. ssab uses 
 | `"OverWriteSeed"` | `EffectParticleElementRndSeedChange` | IntValueEntry |
 | `"Delay"` | `EffectParticleElementDelay` | IntValueEntry |
 | `"Gravity"` | `EffectParticleElementGravity` | Vec2ValueEntry |
-| `"init_position"` | `EffectParticleElementPosition` | RectValueEntry |
+| `"init_position"` | `EffectParticleElementPosition` | MinMax2ValueEntry |
 | `"init_rotation"` | `EffectParticleElementRotation` | Dedicated table |
 | `"trans_rotation"` | `EffectParticleElementRotationTrans` | Dedicated table |
 | `"trans_speed"` | `EffectParticleElementTransSpeed` | Vec2ValueEntry |
@@ -399,8 +432,8 @@ ssee uses a tagged enum (`SsEffectFunctionType`) with named variants. ssab uses 
 | `"init_vertexcolor"` | `EffectParticleElementInitColor` | Dedicated table |
 | `"trans_vertexcolor"` | `EffectParticleElementTransColor` | Dedicated table |
 | `"trans_colorfade"` | `EffectParticleElementAlphaFade` | Vec2ValueEntry |
-| `"init_size"` | `EffectParticleElementSize` | RectAndVec2ValueTable |
-| `"trans_size"` | `EffectParticleElementTransSize` | RectAndVec2ValueTable |
+| `"init_size"` | `EffectParticleElementSize` | MinMax2AndVec2ValueTable |
+| `"trans_size"` | `EffectParticleElementTransSize` | MinMax2AndVec2ValueTable |
 | `"add_pointgravity"` | `EffectParticlePointGravity` | Dedicated table |
 | `"TurnToDirection"` | `EffectParticleTurnToDirectionEnabled` | FloatValueEntry |
 | `"InfiniteEmit"` | `EffectParticleInfiniteEmitEnabled` | IntValueEntry |
@@ -454,12 +487,13 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | `name_hash` | — | Hash for fast lookup |
 | `name` | — | Font name |
 | `name_face` | `info.face` | Font face name |
-| `size` | — | Font size |
-| `padding_l/r/u/d` | — | Padding values |
+| `size` | — | Fixed `0` (not carried from `.fnt`; see [9-Slice, Shape, and Text §3-2](../ssruntime/docs/40_parts/30_special_parts.md#fontbitmap--fontglyphbitmap-the-bitmap-font-glyph-table)) |
+| `padding_l/r/u/d` | — | Fixed `0` (not carried from `.fnt`) |
 | `base` | `common.base` | Baseline |
 | `height_line` | `common.line_height` | Line height |
-| `scale` | `common.scale_w/h` | Texture scale |
-| `size_texture_original` | — | Original texture size |
+| `scale` | — | Fixed `(1.0, 1.0)` (not carried from `.fnt`) |
+| `spacing` | — | Fixed `(0.0, 0.0)` (not carried from `.fnt`; use `PartTypeText.text_space` for letter spacing) |
+| `size_texture_original` | `common.scale_w/h` | Original texture size |
 | `name_texture` | `pages[*].file` | Texture file names |
 | `name_texture_hash` | — | Hash array of texture file names |
 | `table_data` | `chars` | Glyph data |
@@ -468,13 +502,13 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 
 | ssab field | fnt field | Notes |
 |-----------|----------|-------|
-| `id` | `id` | Character ID (Unicode code point) |
-| `atlas` | `src_rect` | Source rectangle in atlas |
+| `id` | `id` | Character ID (a UTF-16 code unit) |
+| `atlas` | `x` / `y` / `width` / `height` | The glyph's region in the page image |
 | `offset` | `offset` | Glyph rendering offset |
 | `width_advance` | `xadvance` | Horizontal advance width |
 | `text` | — | Character text (derived from id in fnt) |
 | `page` | `page` | Texture page index |
-| `channel` | — | Channel index |
+| `channel` | — | Fixed `0` (not carried from `.fnt`) |
 
 ---
 
@@ -505,8 +539,8 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 |-----------|-----------|-------|
 | `ref_anime_pack` | `ref_anime_pack` | Referenced animation pack name |
 | `ref_anime_pack_hash` | — | Hash for fast lookup |
-| `ref_anime` | `ref_anime` | Referenced animation name |
-| `ref_anime_hash` | — | Hash for fast lookup |
+| `ref_anime_name` | `ref_anime` | Referenced animation name |
+| `ref_anime_name_hash` | — | Hash for fast lookup |
 | `repeat_count` | `repeat_count` | Number of repeats |
 
 The sequence format is largely identical between ssqe and ssqb, with minimal transformation.
@@ -539,18 +573,21 @@ All enums have a 1:1 mapping between ss*e and ssab. Key enums:
 | ssab Type | Definition | ss*e Equivalent |
 |----------|-----------|----------------|
 | `Vec2` | `{ v1: float, v2: float }` | `SsPoint2 { x, y }` |
-| `Rect` | `{ x1, y1, x2, y2: float }` | `SsIRect { x1, y1, x2, y2 }` or pos+size pair |
-| `U8Rect` | `{ a, r, g, b: ubyte }` | `SsU8Color { a, r, g, b }` |
+| `Bounds` | `{ left, top, right, bottom: float }` | `SsIRect { x1, y1, x2, y2 }` — the user-data rectangle, authored as four edges |
+| `Region` | `{ x, y, w, h: float }` | a `pos` + `size` pair (`.ssce`), or `x`/`y`/`width`/`height` (`.fnt`) |
+| `MinMax2` | `{ x_min, y_min, x_max, y_max: float }` | a `value` / `subvalue` pair per axis (effect randomization range) |
+| `U8Color` | `{ a, r, g, b: ubyte }` | `SsU8Color { a, r, g, b }` |
+| `KeyCurve` | `{ start_time, start_value, end_time, end_value: float }` (struct) | `SsCurve` without `sync_start_end` |
 
 ---
 
 ## Key Design Decisions in ssab
 
-1. **Per-ssae conversion**: Each ssab corresponds to a single ssae animation pack, bundling only the ss*e resources (ssce, ssee, ssse, fnt) that the pack actually uses. The sspj project file is not represented in ssab.
+1. **Per-ssae conversion**: Each ssab corresponds to a single ssae animation pack, bundling only the ss*e resources (ssce, ssee, fnt) that the pack actually uses, plus every ssse of the project when the pack has an Audio part. The sspj project file is not represented in ssab.
 
-2. **Hash-based lookups**: All named entities include a `name_hash: uint32` field for O(1) lookup, avoiding string comparisons at runtime.
+2. **Hash-based lookups**: Named entities carry a `name_hash: uint32` (FNV-1a of the name), so a lookup compares integers, not strings. The tables whose `name_hash` is a `(key)` — cells, cell maps, effects, sounds, labels and the like — are written sorted by it, so they can be binary-searched; the runtime does so for cells, cell maps and effects, and finds an animation or a part by a linear scan.
 
-3. **Columnar animation data**: Attribute values are stored in typed arrays rather than tagged enums, enabling efficient iteration over a single attribute across frames.
+3. **Columnar keyframes**: Every key of the pack sits in one set of columns — frame, interpolation, curve, value — and a part's attribute names a run of them, so a key search walks contiguous memory and a key costs nine bytes. Runs, curves and compound values that repeat are stored once.
 
 4. **Event separation**: Event-type attributes (user data, signals, audio, instance, effect) are stored per-frame rather than per-part, optimizing frame-based event dispatch.
 

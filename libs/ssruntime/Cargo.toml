@@ -3,40 +3,57 @@ name = "ssruntime"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
-license-file.workspace = true
+rust-version.workspace = true
+license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description.workspace = true
+description = "no_std playback engine for SpriteStudio animations — per-frame transforms, mesh deformation, and a cross-engine draw plan"
+keywords = ["spritestudio", "animation", "gamedev", "skeletal", "no-std"]
+categories = ["game-development", "graphics", "no-std", "multimedia"]
 
 [dependencies]
 flatbuffers = { workspace = true }
 ssab = { workspace = true }
-ssinterpolate = { workspace = true }
 libm = { workspace = true }
+once_cell = { workspace = true }
 wasm-bindgen = { workspace = true, optional = true }
-libc = { version = "1.0.0-alpha.3", optional = true }
+dlmalloc = { workspace = true, optional = true, features = ["global"] }
+libc = { workspace = true, optional = true }
 wide = { workspace = true }
 
+# ssconverter is used only by the integration tests (regenerating .ssab fixtures
+# from .sspj). It is a dev-dependency — not part of the public `std` feature — so
+# that enabling `std` (e.g. a wasm consumer that needs an std allocator) does not
+# drag the native converter into the build graph.
+[dev-dependencies]
+ssconverter = { workspace = true, features = ["native"] }
+
 [features]
-default = ["ffi", "std"]
+default = []
+# C-API exports. Default on ssruntime-ffi, which is what the build scripts name.
 ffi = []
-web = ["wasm-bindgen"]
-std = ["flatbuffers/std", "ssab/std"]
+# wasm-bindgen bindings for JS/TS interop.
+web = ["wasm-bindgen/std"]
+# Developer ergonomics only: pulls std into flatbuffers/ssab and lets the test
+# modules compile. Never used by a release script -- every deliverable is no_std.
+std = ["flatbuffers/std", "ssab/std", "wasm-bindgen?/std"]
+# #[global_allocator] for no_std FFI builds -- pick exactly one.
+# libc malloc/free (mobile, desktop).
 libc_alloc = ["dep:libc"]
+# dlmalloc (wasm32-unknown-unknown).
+wasm_alloc = ["dep:dlmalloc"]
+# Emscripten libc malloc/free, with manual over-alignment.
+emscripten_alloc = []
+# Host-provided ss_custom_alloc / ss_custom_free / ss_custom_abort symbols, for
+# game-console and engine allocators. Build as staticlib.
+custom_alloc = []
+# #[panic_handler] for no_std FFI builds; custom_alloc's aborts route through it.
 panic-handler = []
 
 [lints.clippy]
 too_many_arguments = "allow"
 
-[dev-dependencies]
-ssconverter = { workspace = true }
-
 [lib]
-crate-type = ["rlib", "staticlib", "cdylib"]
+crate-type = ["rlib"]
 
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = false
 
-[build-dependencies]
-cbindgen = { workspace = true }
-csbindgen = "1.9.7"

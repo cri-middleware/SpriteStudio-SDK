@@ -1,14 +1,11 @@
 name: release
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       upload_release:
-        description: 'Upload to GitHub Release'
+        description: 'Draft the GitHub Release, to publish by hand. Only from a v* tag that has no Release yet; from a branch the run is a build.'
         required: false
-        default: false
+        default: true
         type: boolean
 
 env:
@@ -17,24 +14,40 @@ env:
   PYTHONIOENCODING: utf8
   KEYCHAIN_PATH: app-signing.keychain-db
 
+# Default to read-only; the package job below elevates to contents: write only
+# where it creates the GitHub Release.
+permissions:
+  contents: read
+
+# One run per ref at a time. A second dispatch of the same tag waits for the
+# first rather than cancelling it, so a half-built release is never abandoned.
 concurrency:
-  group: ci-cargo-${{ github.actor }}-${{ github.head_ref || github.run_number }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: 🐧 Linux (GCC)
-            os: ubuntu-latest
+          - name: 🐧 Linux (x86_64, GCC)
+          # A Linux binary runs only on a glibc at least as new as the one it was
+          # built against, and ubuntu-latest is moving to 26.04. 24.04 keeps the
+          # floor where the aarch64 build is, on the only ARM image GitHub has.
+            os: ubuntu-24.04
             platform: linux
             arch: x86_64
 
-          - name: 🏁 Windows (x86_64, MSVC)
+          - name: 🐧 Linux (aarch64, GCC)
+            os: ubuntu-24.04-arm
+            platform: linux
+            arch: aarch64
+
+          - name: 🏁 Windows (x86_64 + arm64, MSVC)
             os: windows-latest
             platform: windows
             arch: x86_64
@@ -60,42 +73,101 @@ jobs:
             arch: wasm32
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          submodules: recursive
+      # A run from a release/ branch or a v* tag is the release or its QA build
+      # (RELEASING.md steps 3 and 5). The steps below skip signing and
+      # notarization when a secret is absent, and pass; for those runs a missing
+      # secret fails here instead.
+      - name: Require the signing secrets
+        if: (matrix.platform == 'macos' || matrix.platform == 'ios') && (startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/release/'))
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          APPLE_DEV_ID_APP_CERT: ${{ secrets.APPLE_DEV_ID_APP_CERT }}
+          APPLE_DEV_ID_APP_NAME: ${{ secrets.APPLE_DEV_ID_APP_NAME }}
+          ASC_API_KEY_PASS: ${{ secrets.ASC_API_KEY_PASS }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+        run: |
+          required="APPLE_DEV_ID_APP_CERT APPLE_DEV_ID_APP_NAME"
+          if [ "$PLATFORM" = macos ]; then
+            required="$required ASC_API_KEY_PASS ASC_API_ISSUER_ID ASC_API_KEY_ID"
+          fi
+          missing=""
+          for name in $required; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::a run from $GITHUB_REF_NAME ships signed, and these secrets are not set:$missing"
+            exit 1
+          fi
 
-      - name: setup for SpriteStudio7-SDK
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: setup for SpriteStudio-SDK
         uses: ./.github/actions/setup
         with:
           platform: ${{ matrix.platform }}
           os: ${{ matrix.os }}
 
-#      - name: Retrieve the secret and decode it to a file
-#        if: matrix.platform == 'macos' || matrix.platform == 'ios'
-#        env:
-#          DEV_CERT_APPLICATION: ${{ secrets.DEV_CERT_APPLICATION }}
-#          DEV_CERT_PASS: ${{ secrets.DEV_CERT_PASS }}
-#          KC_PASS: ${{ secrets.KC_PASS }}
-#        run: |
-#          # create variables
-#          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-#
-#          # import certificate and provisioning profile from secrets
-#          echo -n "$DEV_CERT_APPLICATION" | base64 --decode > $CERTIFICATE_PATH
-#
-#          # create temporary keychain
-#          security create-keychain -p "$KC_PASS" ${{ env.KEYCHAIN_PATH }}
-#          security set-keychain-settings -lut 21600 ${{ env.KEYCHAIN_PATH }}
-#          security unlock-keychain -p "$KC_PASS" ${{ env.KEYCHAIN_PATH }}
-#
-#          # import certificate to keychain
-#          security import $CERTIFICATE_PATH -P "$DEV_CERT_PASS" -f pkcs12 -k ${{ env.KEYCHAIN_PATH }} -T /usr/bin/codesign
-#          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" ${{ env.KEYCHAIN_PATH }}
-#          security list-keychain -d user -s ${{ env.KEYCHAIN_PATH }}
+      # Import the Developer ID Application certificate into an ephemeral
+      # keychain so codesign (run inside the release scripts) can find the
+      # signing identity. No-ops when the certificate secret is absent, leaving
+      # the artifacts unsigned; the first step allows that only outside a release.
+      - name: Set up signing keychain
+        if: matrix.platform == 'macos' || matrix.platform == 'ios'
+        env:
+          APPLE_DEV_ID_APP_CERT: ${{ secrets.APPLE_DEV_ID_APP_CERT }}
+          APPLE_DEV_ID_APP_CERT_PASS: ${{ secrets.APPLE_DEV_ID_APP_CERT_PASS }}
+        run: |
+          if [ -z "$APPLE_DEV_ID_APP_CERT" ]; then
+            echo "APPLE_DEV_ID_APP_CERT not set — skipping keychain setup (artifacts will be unsigned)."
+            exit 0
+          fi
+
+          CERTIFICATE_PATH="$RUNNER_TEMP/build_certificate.p12"
+          # Random per-run password for the throwaway keychain; never persisted.
+          # (The org also holds a TMP_KC_PASS secret, deliberately unused here —
+          # generating the password per run is strictly better than sharing one.)
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 24)"
+
+          echo -n "$APPLE_DEV_ID_APP_CERT" | base64 --decode > "$CERTIFICATE_PATH"
+
+          # Create, harden and unlock a temporary keychain.
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import the cert and authorize codesign to use its private key.
+          security import "$CERTIFICATE_PATH" -P "$APPLE_DEV_ID_APP_CERT_PASS" -f pkcs12 -k "$KEYCHAIN_PATH" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Put the keychain on the search list so codesign resolves the identity.
+          security list-keychain -d user -s "$KEYCHAIN_PATH" login.keychain-db
+          # What codesign can sign with. GitHub masks secret values, so the part
+          # of a name that matches APPLE_DEV_ID_APP_NAME prints as ***.
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+
+          rm -f "$CERTIFICATE_PATH"
+
+      # Decode the App Store Connect API key (.p8) used to notarize the shipped
+      # macOS binaries and expose its path to the macOS build step. No-ops when
+      # the secret is absent, as above. macOS only (iOS has no notarization).
+      - name: Prepare Apple API key
+        if: matrix.platform == 'macos'
+        env:
+          ASC_API_KEY_PASS: ${{ secrets.ASC_API_KEY_PASS }}
+        run: |
+          if [ -z "$ASC_API_KEY_PASS" ]; then
+            echo "ASC_API_KEY_PASS not set — skipping API key setup (artifacts will not be notarized)."
+            exit 0
+          fi
+          echo "$ASC_API_KEY_PASS" | base64 --decode > "$RUNNER_TEMP/apple_api_key.p8"
+          echo "APPLE_API_KEY_PATH=$RUNNER_TEMP/apple_api_key.p8" >> "$GITHUB_ENV"
 
       - name: build Linux
-        if: matrix.platform == 'linux' && matrix.arch == 'x86_64'
+        if: matrix.platform == 'linux'
         run: |
           ./scripts/release-linux.sh
           mkdir -p bin
@@ -103,53 +175,70 @@ jobs:
           mkdir -p lib
           cp target/release/*.a lib/
           cp target/release/*.so lib/
+          mkdir -p lib/include
+          # cbindgen emits one plain-C header (.h) per crate. It carries
+          # `extern "C"` guards, so it serves C and C++ alike (ffigen and the
+          # framework module map need this one).
+          cp libs/ssruntime-ffi/target/ssruntime.h lib/include/
+          cp libs/ssconverter-ffi/target/ssconverter.h lib/include/
+          # csbindgen C# FFI bindings (platform-independent; Linux is the canonical
+          # source, mirroring how the .h headers above are collected). Consumers
+          # such as SSPlayerForUnity need these to compile against the libs.
+          mkdir -p lib/bindings
+          cp libs/ssruntime-ffi/target/SSRuntimeMethods.g.cs lib/bindings/
+          cp libs/ssconverter-ffi/target/SSConverterMethods.g.cs lib/bindings/
 
+      # release-macos.sh signs the universal dylibs + CLI (hardened runtime +
+      # timestamp) and notarizes everything it ships — CLI, libssconverter.dylib,
+      # libssruntime.framework, ssruntime.bundle — when these APPLE_* env vars are
+      # present. APPLE_API_KEY_PATH is set by the "Prepare Apple API key" step above.
       - name: build macOS
         if: matrix.platform == 'macos' && matrix.arch == 'universal'
         env:
-          DEV_ID_APPLICATION: ${{ secrets.DEV_ID_APPLICATION }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_DEV_ID_APP_NAME }}
+          APPLE_API_ISSUER: ${{ secrets.ASC_API_ISSUER_ID }}
+          APPLE_API_KEY: ${{ secrets.ASC_API_KEY_ID }}
         run: |
           rustup target add aarch64-apple-darwin
           rustup target add x86_64-apple-darwin
           ./scripts/release-macos.sh
 
-          # TODO: codesign
-          # for f in ./target/universal-apple-darwin/*.dylib
-          # do
-          #   codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" $f --deep --options runtime --timestamp
-          # done
-          # codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" ssconverter-cli --deep --options runtime --timestamp
-          # TODO: notary
           mkdir -p bin
-          cp -r target/universal-apple-darwin/ssconverter-cli bin/
+          cp -r target/universal-apple-darwin/release/ssconverter-cli bin/
           mkdir -p lib
-          cp target/universal-apple-darwin/*.a lib/
-          cp target/universal-apple-darwin/*.dylib lib/
+          cp target/universal-apple-darwin/release/*.a lib/
+          cp target/universal-apple-darwin/release/*.dylib lib/
+          # Unity consumes libssruntime as a .bundle (macOS's documented native-
+          # plugin format). It has no version symlinks, so unlike the framework a
+          # plain recursive copy survives the artifact upload/download and zip.
+          cp -R target/universal-apple-darwin/release/ssruntime.bundle lib/
+          # Tar the versioned libssruntime.framework so its version symlinks +
+          # code signature survive the artifact upload/download and the final
+          # `zip` (both of which would otherwise dereference symlinks and
+          # invalidate the signature). The package job untars it into libs/macos/.
+          tar -C target/universal-apple-darwin/release -cf lib/libssruntime.framework.tar libssruntime.framework
 
+      # release-ios-xcframework.sh signs both xcframeworks (dynamic frameworks +
+      # each bundle) when APPLE_SIGNING_IDENTITY is present (iOS is not notarized).
       - name: build iOS
         if: matrix.platform == 'ios' && matrix.arch == 'universal'
         env:
-          DEV_ID_APPLICATION: ${{ secrets.DEV_ID_APPLICATION }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_DEV_ID_APP_NAME }}
         run: |
           rustup target add aarch64-apple-ios
+          rustup target add aarch64-apple-ios-sim
           rustup target add x86_64-apple-ios
-          ./scripts/release-ios.sh
+          ./scripts/release-ios-xcframework.sh
 
-          # TODO: codesign
-          # for f in ./target/universal-apple-ios/*.dylib
-          # do
-          #   codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" $f --deep --options runtime --timestamp
-          # done
-
-          mkdir -p lib
-          cp target/universal-apple-ios/*.a lib/
-          cp target/universal-apple-ios/*.dylib lib/
+          mkdir -p lib/static lib/dynamic
+          cp -R target/xcframework/static/libssruntime.xcframework lib/static/
+          cp -R target/xcframework/dynamic/libssruntime.xcframework lib/dynamic/
 
 
       - name: build Android
         if: matrix.platform == 'android'
         run: |
-          cargo install cargo-ndk
+          cargo install cargo-ndk --locked
           rustup target add aarch64-linux-android
           rustup target add armv7-linux-androideabi
           rustup target add x86_64-linux-android
@@ -179,164 +268,190 @@ jobs:
           cp target/x86_64-pc-windows-msvc/release/*.lib lib/x86_64/
           cp target/x86_64-pc-windows-msvc/release/*.dll lib/x86_64/
 
+          # arm64 cross-compiles from this x86_64 runner (MSVC ships the ARM64
+          # toolchain), so it rides the same job instead of a matrix entry —
+          # the same shape as the Android job emitting three ABIs at once.
+          # The CLI lands in its own tree and ships as its own artifact: the
+          # packaging step zips every ssconverter-cli-* artifact with `zip -rj`,
+          # which would collide two ssconverter-cli.exe at the zip root.
+          rustup target add aarch64-pc-windows-msvc
+          ./scripts/release-windows-arm64.ps1
+          mkdir bin-arm64
+          cp target/aarch64-pc-windows-msvc/release/ssconverter-cli.exe bin-arm64/
+          mkdir lib/arm64
+          cp target/aarch64-pc-windows-msvc/release/*.lib lib/arm64/
+          cp target/aarch64-pc-windows-msvc/release/*.dll lib/arm64/
+
+      - name: Install wasm-pack
+        if: matrix.platform == 'web'
+        uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
+        with:
+          tool: wasm-pack
+
       - name: build Web
         if: matrix.platform == 'web'
         run: |
           rustup target add wasm32-unknown-unknown
-          ./scripts/release-wasm.sh
-          # Use faster binary installer for wasm-pack
-          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-          ./scripts/release-web.sh
+          rustup toolchain install nightly
+          rustup target add wasm32-unknown-unknown --toolchain nightly
+          rustup component add rust-src --toolchain nightly
+          
+          ./scripts/release-emscripten.sh
           mkdir -p lib
           cp target/wasm32-unknown-unknown/release/*.a lib/
-          cp target/wasm32-unknown-unknown/release/*.wasm lib/
-          cp -r pkg/web lib/js
+          
+          ./scripts/release-web.sh
+          cp -r pkg/runtime-web/release lib/runtime-web
+          cp -r pkg/runtime-web-nosimd/release lib/runtime-web-nosimd
+          cp -r pkg/converter-web/release lib/converter-web
 
       - name: Upload artifact ssconverter-cli
         if: matrix.platform == 'windows' || matrix.platform == 'linux' || matrix.platform == 'macos'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: ssconverter-cli-${{ matrix.platform }}
+          name: ssconverter-cli-${{ matrix.platform }}${{ (matrix.platform == 'linux' && matrix.arch == 'aarch64') && '-aarch64' || '' }}
           path: bin
           if-no-files-found: error
+          # A week, not the 90-day default, on every artifact this workflow
+          # uploads. What is meant to last is attached to the GitHub Release,
+          # which never expires; these are scaffolding — the matrix's handoff to
+          # the package job, and a copy of the archives for a run that uploaded
+          # nothing. A full storage quota does not degrade: `upload-artifact` fails,
+          # so every release build fails, in a step that has nothing to do with
+          # whatever was being released.
+          #
+          # The one thing this shortens is replaying the packaging locally
+          # (`gh run download <run-id>` — see scripts/build-release.sh): only
+          # runs from the last week can be replayed. That is the recent ones,
+          # which are the ones worth replaying.
+          retention-days: 7
+
+      - name: Upload artifact ssconverter-cli (Windows arm64)
+        if: matrix.platform == 'windows'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ssconverter-cli-windows-arm64
+          path: bin-arm64
+          if-no-files-found: error
+          retention-days: 7 # see the first upload step
 
       - name: Upload artifact libraries
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: spritestudio7-sdk-libraries-${{ matrix.platform }}
+          name: spritestudio-sdk-libraries-${{ matrix.platform }}${{ (matrix.platform == 'linux' && matrix.arch == 'aarch64') && '-aarch64' || '' }}
           path: lib
           if-no-files-found: error
+          retention-days: 7 # see the first upload step
 
   package:
     needs: release
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write # softprops/action-gh-release creates the GitHub Release
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
       - name: Download all artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: artifacts
 
-      - id: commit
-        uses: prompt/actions-commit-hash@v4
-
-      - name: Zip all artifacts
-        run: |
-          cd artifacts
-
-          rm -rf static
-          mkdir -p static/runtime
-          pushd static/runtime
-          mkdir -p libs
-          pushd libs
-          echo ${{ steps.commit.outputs.hash }} > VERSION
-          mkdir -p macos
-          mkdir -p web
-          mkdir -p ios
-          mkdir -p linux/x86_64
-          mkdir -p android/arm32
-          mkdir -p android/arm64
-          mkdir -p android/x86_64
-          mkdir -p windows/x86_64
-          popd # libs
-
-          mv ../../spritestudio7-sdk-libraries-macos/libssconverter.a libs/macos/
-          mv ../../spritestudio7-sdk-libraries-macos/libssruntime.a libs/macos/
-          mv ../../spritestudio7-sdk-libraries-web/libssruntime.a libs/web/
-          mv ../../spritestudio7-sdk-libraries-ios/libssruntime.a libs/ios/
-          mv ../../spritestudio7-sdk-libraries-linux/libssconverter.a libs/linux/x86_64
-          mv ../../spritestudio7-sdk-libraries-linux/libssruntime.a libs/linux/x86_64
-          mv ../../spritestudio7-sdk-libraries-android/arm64/libssruntime.a libs/android/arm64
-          mv ../../spritestudio7-sdk-libraries-android/armv7/libssruntime.a libs/android/arm32
-          mv ../../spritestudio7-sdk-libraries-android/x86_64/libssruntime.a libs/android/x86_64
-          mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssconverter.lib libs/windows/x86_64
-          mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssruntime.lib libs/windows/x86_64
-          # pushd libs/windows
-          # cp x86_64/ssconverter.lib ssconverter.windows.editor.x86_64.lib
-          # cp x86_64/ssconverter.lib ssconverter.windows.template_debug.x86_64.lib
-          # cp x86_64/ssconverter.lib ssconverter.windows.template_release.x86_64.lib
-          # cp x86_64/ssruntime.lib ssruntime.windows.editor.x86_64.lib
-          # cp x86_64/ssruntime.lib ssruntime.windows.template_debug.x86_64.lib
-          # cp x86_64/ssruntime.lib ssruntime.windows.template_release.x86_64.lib
-          # popd # libs/windows
-
-          popd # static/runtime
-
-          rm -rf dynamic
-          mkdir -p dynamic/runtime
-          pushd dynamic/runtime
-          mkdir -p libs
-          pushd libs
-          echo ${{ steps.commit.outputs.hash }} > VERSION
-          mkdir -p macos
-          mkdir -p web
-          mkdir -p ios
-          mkdir -p linux/x86_64
-          mkdir -p android/arm32
-          mkdir -p android/arm64
-          mkdir -p android/x86_64
-          mkdir -p windows/x86_64
-          popd # libs
-
-          mv ../../spritestudio7-sdk-libraries-macos/libssconverter.dylib libs/macos/
-          mv ../../spritestudio7-sdk-libraries-macos/libssruntime.dylib libs/macos/
-          mv ../../spritestudio7-sdk-libraries-web/ssruntime.wasm libs/web/
-          mv ../../spritestudio7-sdk-libraries-ios/libssruntime.dylib libs/ios/
-          mv ../../spritestudio7-sdk-libraries-linux/libssconverter.so libs/linux/x86_64
-          mv ../../spritestudio7-sdk-libraries-linux/libssruntime.so libs/linux/x86_64
-          mv ../../spritestudio7-sdk-libraries-android/arm64/libssruntime.so libs/android/arm64
-          mv ../../spritestudio7-sdk-libraries-android/armv7/libssruntime.so libs/android/arm32
-          mv ../../spritestudio7-sdk-libraries-android/x86_64/libssruntime.so libs/android/x86_64
-          mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssconverter.dll libs/windows/x86_64
-          mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssruntime.dll libs/windows/x86_64
-
-          popd # static/runtime
-
-          rm -rf ../output
-          mkdir -p ../output
-          mv static ../output/
-          mv dynamic ../output/
-
-      - name: Upload final release package
-        uses: actions/upload-artifact@v7
+      # A toolchain, so it stays a step of its own — a failure to install it is
+      # then legible as one in the run summary, the same reason pages.yml keeps
+      # prepare-docs.sh separate. Generating the notices is not a toolchain
+      # concern and lives in the script below.
+      - name: Install cargo-about
+        uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
         with:
-          name: spritestudio7-sdk-static-libs
-          path: output/static
+          tool: cargo-about
 
-      - name: Upload final release package
-        uses: actions/upload-artifact@v7
-        with:
-          name: spritestudio7-sdk-dynamic-libs
-          path: output/dynamic
-
-      - name: Archive release packages
+      # The ref decides what the run is: a v* tag is a release, anything else is
+      # a build, kept on the run and drafting nothing. A tag that already has a
+      # Release, draft or published, keeps it as it is, so a run from an old tag
+      # rebuilds without touching the files people have downloaded and checked
+      # against its SHA256SUMS. To have a Release made again, delete it first.
+      - name: Decide on the GitHub Release
+        id: release
+        if: inputs.upload_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          mkdir -p release-dist
-          zip -r release-dist/spritestudio7-sdk-static-libs.zip output/static
-          zip -r release-dist/spritestudio7-sdk-dynamic-libs.zip output/dynamic
+          case "$GITHUB_REF" in
+            refs/tags/v*) ;;
+            *) echo "::notice::${GITHUB_REF_NAME} is not a v* tag — a build, no Release."; exit 0 ;;
+          esac
+          if out="$(gh release view "$GITHUB_REF_NAME" --json isDraft 2>&1)"; then
+            echo "::notice::${GITHUB_REF_NAME} already has a Release — left as it is. Delete it to have it made again."
+          elif [ "$out" = "release not found" ]; then
+            echo "draft=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "$out"
+            exit 1
+          fi
 
-          # Create web specific package (JS/TS glue code and WASM)
-          zip -rj release-dist/spritestudio7-sdk-web.zip artifacts/spritestudio7-sdk-libraries-web/js/*
+      # scripts/build-release.sh IS the release package: the third-party notices,
+      # the static/ dynamic/ web/ layout every Player's download-sdk.sh reads, the
+      # archives and SHA256SUMS. Every option is spelled out so a release cannot
+      # change because a default did, and so that the command below is the one a
+      # human runs locally — after `git checkout <tag>` and `gh run download <this
+      # run> -D artifacts` — to reproduce these exact archives without rebuilding
+      # seven platforms.
+      #
+      # The tag is not passed in: the script reads GITHUB_REF_NAME, so the release
+      # is named after the ref this was dispatched from and there is no second
+      # place for that to be decided.
+      - name: Assemble the release archives
+        run: ./scripts/build-release.sh in=artifacts out=release-dist licenses=yes verify=yes clean=yes
 
-          for dir in artifacts/ssconverter-cli-*; do
-            if [ -d "$dir" ]; then
-              platform=${dir#artifacts/ssconverter-cli-}
-              zip -rj "release-dist/ssconverter-cli-${platform}.zip" "$dir"
-            fi
-          done
+      # Keep the assembled archives on the run even when nothing is uploaded to a
+      # Release, so a build from a branch is still useful — and so the zips a
+      # human reviews are the same bytes the Release would carry.
+      - name: Upload final release package
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: spritestudio-sdk-release-dist
+          path: release-dist
+          if-no-files-found: error
+          retention-days: 7 # see the first upload step
+
+      # The pre-release mark the draft carries: one once a full release is
+      # tagged, none before (scripts/release-channel.sh).
+      # A patch to an earlier line also names the full release before it in that
+      # line, which the generated notes start from instead of the newest release.
+      - name: Read the Release's channel
+        id: channel
+        if: steps.release.outputs.draft == 'true'
+        run: |
+          channel="$(./scripts/release-channel.sh "$GITHUB_REF_NAME")"
+          echo "::notice::${GITHUB_REF_NAME} is a ${channel} release"
+          echo "channel=${channel}" >> "$GITHUB_OUTPUT"
+          if [ "$channel" = old ]; then
+            previous="$(git tag --list "${GITHUB_REF_NAME%.*}.*" --sort=v:refname |
+              awk -v tag="$GITHUB_REF_NAME" '$0 == tag { print previous; exit } $0 !~ /-|[0-9](a|b|rc)[0-9]+$/ { previous = $0 }')"
+            echo "previous=${previous}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Create GitHub Release
-        if: |
-          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
-          (github.event_name == 'workflow_dispatch' && github.event.inputs.upload_release == 'true')
-        uses: softprops/action-gh-release@v3
+        if: steps.release.outputs.draft == 'true'
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           files: |
             release-dist/*.zip
+            release-dist/SHA256SUMS
+          # The ref this was dispatched from, which the decision above has
+          # established is a v* tag — the same string build-release.sh stamped
+          # into every archive's VERSION.
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
-          draft: false
-          prerelease: false
+          previous_tag: ${{ steps.channel.outputs.previous }}
+          # Always a draft: a person checks the assets and the generated notes,
+          # then publishes it from the GitHub UI as it is marked. A draft cannot
+          # be made Latest; publishing one that is not a pre-release makes it so.
+          draft: true
+          prerelease: ${{ steps.channel.outputs.channel == 'prerelease' }}

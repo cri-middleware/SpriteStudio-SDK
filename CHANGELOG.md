@@ -5,20 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [7.0.0-alpha01] - 2026-04-23
-### Added
-- **Initial Public Release** of the SpriteStudio7-SDK.
-- **Unified Conversion Pipeline**: A complete workflow for converting SpriteStudio 7 XML projects (`.sspj`) into optimized FlatBuffers-based binary data (`.ssab`) via `ssconverter-cli`.
-- **Platform-Agnostic Runtime**: A modular, `no_std` compatible runtime library (`ssruntime`) providing core animation playback logic with FFI and WASM support.
-- **High-Performance Math Core**: SIMD-optimized transformation and interpolation logic (SSE/WASM SIMD128) for efficient frame calculations.
-- **Flexible Integration**: Native support for multiple coordinate systems (Y-Up/Y-Down) and a stateless data model designed for easy integration with modern rendering engines.
-- **Robust Event System**: A comprehensive event collection and management API, including support for custom user data and missed-event prevention.
-- **Multi-Platform Support**: Validated CI/CD and release pipelines for Linux, Windows, macOS, Android, iOS, and Web (WASM).
-- **Developer Documentation**: Bilingual documentation (English/Japanese) and detailed guidelines for implementing custom players.
+## [7.0.0-beta.1] - 2026-11-18
 
-### Known Limitations
-- **Particle Effect (SSEE)**: Core simulation logic and emitter tree construction are currently unimplemented.
-- **Font Bitmap**: Font-related properties and character map texture resolution are stubs.
-- **Z-sort Priority**: Spatial Z-value transformation is not currently factored into part priority ordering.
-- **Mesh Bind Info**: Conversion of vertex bind information for mesh deformation is not yet supported.
-- **Code Signing**: Release binaries for macOS and iOS are not code-signed or notarized.
+### Added
+- **Initial Public Release**: SpriteStudio-SDK (`ssconverter-cli` + `libssruntime`), supporting projects authored in SpriteStudio 7.6 or later.
+- **Core Runtime**: Engine-agnostic, `#![no_std]` brain with zero-math integration and SIMD (f32x4) state computation.
+- **Features**: Supports Mesh Deformation, Particles (SSEE), Instances, and Skew, 9-Slice and Shape parts.
+- **Integrations**: C-API and Web (WASM) ready.
+- **Animation Mixing**: a track stack. Tracks fold onto the setup pose in ascending order, each with its own `alpha` and an interpolative or additive operator; several animations can share a track and mix by weight. Covers crossfades (`ss_runtime_crossfade`), overlays, additive offset axes, and fading a track out to the rest pose.
+- **Custom Allocator Injection**: `custom_alloc` feature lets game engines / consoles supply their own allocator and abort handler via `ss_custom_alloc` / `ss_custom_free` / `ss_custom_abort` C symbols — no wrapper crate required.
+- **Documentation**: bilingual (EN/JA) README, contribution guidelines and Player Porting Guide, the guide also published at https://cri-middleware.github.io/SpriteStudio-SDK/.
+- **Minimum Supported Rust Version**: building from source requires Rust 1.100 or newer.

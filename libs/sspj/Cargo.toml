@@ -3,16 +3,25 @@ name = "sspj"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
-license-file.workspace = true
+rust-version.workspace = true
+license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description.workspace = true
+description = "Parser for SpriteStudio project files (.sspj / .ssae / .ssce / .ssee / .ssqe / .ssse)"
+keywords = ["spritestudio", "animation", "gamedev", "parser", "xml"]
+categories = ["parser-implementations", "game-development", "graphics"]
 
 [lib]
 crate-type = ["rlib"]
 
 [dependencies]
-serde = {  version = "1.0.228", features = ["derive"] }
-quick-xml = {  version = "0.39.2", features = ["serialize"] }
-rayon = { workspace = true }
+serde = { workspace = true }
+quick-xml = { workspace = true }
+rayon = { workspace = true, optional = true }
+
+[features]
+default = ["parallel"]
+# Parallel parsing via rayon. Disable (e.g. for wasm32 targets, where rayon
+# cannot spawn threads) to fall back to sequential iteration.
+parallel = ["dep:rayon"]
 

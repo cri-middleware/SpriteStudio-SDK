@@ -1,23 +1,33 @@
-[**日本語**](./README.ja.md) | [**English**](./README.md)
-# SpriteStudio7-SDK
+[**English**](./README.md) | [**日本語**](./README.ja.md)
+# SpriteStudio SDK
 
-[![CI](https://github.com/SpriteStudio/SpriteStudio7-SDK/actions/workflows/ci.yml/badge.svg)](https://github.com/SpriteStudio/SpriteStudio7-SDK/actions/workflows/ci.yml)
+A high-performance, engine-agnostic animation player SDK for **SpriteStudio**.
+This SDK allows you to easily implement and play **raster-based 2D animations** on any game engine or rendering framework.
 
-A Software Development Kit for sspj projects that are created by [OPTPiX SpriteStudio](https://www.webtech.co.jp/eng/spritestudio/) 7 or higher flexibly to implement an animation player on any game engines or platforms.
+📚 How this SDK, the official players, and the conversion tools fit together is documented in [**SpriteStudio Docs**](https://cri-middleware.github.io/SpriteStudio-Docs/), the portal for the whole ecosystem.
 
-## Overview
+🤖 For AI assistants, the Player Porting Guide is also served as Markdown: [`llms.txt`](https://cri-middleware.github.io/SpriteStudio-SDK/llms.txt) indexes the pages and [`llms-full.txt`](https://cri-middleware.github.io/SpriteStudio-SDK/llms-full.txt) holds all of them in one file.
+
+## 🎯 Compatibility
+
+SpriteStudio-SDK `7.x.x` supports projects authored in **SpriteStudio 7.6 or later**.
+
+## 🔄 The Workflow (How it works)
+
+1. **Convert:** Use the provided CLI tool (`ssconverter-cli`) to convert your SpriteStudio project (`.sspj`) into a highly optimized binary format (`.ssab`).
+2. **Play Anywhere:** Pass the `.ssab` file to this SDK runtime. **The SDK is designed to play any `.ssab` file**, supporting the SpriteStudio feature set out of the box. Text drawing and audio playback are the Player's side of the split (a Player is the engine-side integration that draws what `libssruntime` computes) — see [Limitations §1](./libs/ssruntime/docs/10_introduction/20_limitations.md#1-the-player-implements-text-and-sound).
 
 The following diagram shows the workflow of converting assets and playing animations using this SDK:
 
 > **Diagram Legend**
 > - **Shapes**: `[ ]` Data/Files, `( )` Libraries/Components, `[[ ]]` Tools/Applications.
-> - **Arrows**: `-->` Data Flow, `-.->` Dependency/Reference.
+> - **Arrows**: `-->` Data Flow.
 > - **Borders**: Dashed borders indicate generated files.
 
 ```mermaid
 graph LR
     subgraph Assets ["Project Assets"]
-        SS[" .sspj / .ssae / .ssce "]
+        SS[" .sspj (root)<br/>+ .ssae / .ssce / .ssee / .ssqe "]
         IMG[" Images / .png "]
     end
 
@@ -31,8 +41,7 @@ graph LR
 
     subgraph Runtime ["Runtime (Playback)"]
         BIN --> RT(" libssruntime ")
-        RT -.-> INT(" libssinterpolate ")
-        RT --> STATE[" Part States / Mesh Info "]
+        RT --> STATE[" Part States / Mesh Info<br/>+ DrawBatch Plan "]
     end
 
     subgraph Engine ["Your Game Engine"]
@@ -44,26 +53,47 @@ graph LR
     class BIN generated;
 ```
 
-- Libraries
-    - [libsspj](./libs/sspj/README.md): a library that parses `sspj` projects that consist of `sspj`, `ssae`, `ssee`, `ssse`, `charmap` files.
-    - [libssab](./libs/ssab/README.md): a library that creates and parses `ssab` files, which are animation binary files.
-    - [libssinterpolate](./libs/ssinterpolate/README.md): a platform-agnostic math library for animation interpolations.
-    - [libssconverter](./libs/ssconverter/README.md): a library that parses `sspj` projects and creates `ssab` files.
-    - [libssruntime](./libs/ssruntime/README.md): a library that helps implement an animation player. The features are controlling playback, extracting keyframes, and doing interpolation.
-- Tool
-    - [ssconverter-cli](./cli/README.md): a command-line tool that parses `sspj` projects and creates `ssab` files.
+## ✨ Key Supported Features
 
-## Quick Start
+* **Standard Animations:** Bone hierarchies, transforms, and full keyframe interpolations (Bezier, Hermite, Linear, etc.).
+* **Sub-frame Interpolation:** Smooth, continuous playback beyond the base framerate. Perfect for high-refresh-rate displays (144Hz+) and slow-motion effects.
+* **Mesh & Deform:** Fully supported mesh weights and vertex deformations for raster images.
+* **Particle Effects:** High-performance particle simulation matching the SpriteStudio editor.
+* **Sequences (`.ssqe`):** Converted to `.ssqb`; the Player plays the items in order ([Sequence](./libs/ssruntime/docs/50_features/40_sequence.md)).
+* **Instance & Masks:** Sub-animation instancing and stencil mask clipping.
+* **Events & User Data:** Frame-accurate callbacks for audio, signals, and user data.
+
+## 💡 Why choose this SDK?
+
+* **1. Zero-Math Integration & Cross-Engine Visual Consistency**
+  The SDK handles all complex state computations (bone matrices, mesh deformations, and hierarchical opacity/colors) and outputs an optimized `DrawBatch` plan. Your engine just reads the generated vertices and renders the primitives. Every renderer consumes the same `DrawBatch` plan, structurally eliminating the most common source of engine-specific visual drift.
+* **2. Ultra-Compact Payload & Universal SIMD Performance**
+  We designed the `.ssab` binary format to minimize the data footprint. By utilizing a columnar data layout and hash-based lookups, we achieved an ultra-compact file size that requires zero parsing overhead. This data-oriented design perfectly aligns with our runtime architecture, which leverages **SIMD (f32x4)** across all environments. The result is maximum playback performance with minimal memory and CPU cache footprint.
+* **3. Extreme Portability (Built with `#![no_std]` Rust)**
+  The core runtime is written in strictly `#![no_std]` Rust, meaning it has zero dependencies on operating systems or standard libraries. It integrates seamlessly via C-API or WASM, allowing it to run anywhere—from memory-constrained mobile/embedded devices to web browsers—with rock-solid stability and zero unpredictable allocations.
+
+## 📦 Libraries & Tools
+
+- Libraries
+    - [libsspj](./libs/sspj/README.md): a library that parses `sspj` projects, which consist of `sspj`, `ssae`, `ssce`, `ssee`, `ssqe`, `ssse` and bitmap-font character map (`fnt`) files.
+    - [libssab](./libs/ssab/README.md): a library that creates and parses `ssab` files, which are animation binary files.
+    - [libssconverter](./libs/ssconverter/README.md): a library that parses `sspj` projects and creates `ssab` and `ssqb` files.
+    - [libssruntime](./libs/ssruntime/README.md): the playback Brain. Computes per-frame part states (transforms, mesh deformations, color) and emits a cross-engine `DrawBatch` plan that any renderer can consume.
+- Tool
+    - [ssconverter-cli](./cli/README.md): a command-line tool that parses `sspj` projects and creates `ssab` and `ssqb` files.
+
+## 🚀 Quick Start
 
 Follow these steps to convert a sample project and see the SDK in action.
 
 ### 1. Download the Tools or Libraries
-Download the latest version of the tools for your platform from the [GitHub Releases](https://github.com/SpriteStudio/SpriteStudio7-SDK/releases) page.
+Download the latest version of the tools for your platform from the [GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) page.
 - **ssconverter-cli**: Pre-built binaries are available for **Windows**, **macOS**, and **Linux**.
-- **Web (WASM)**: A pre-built package for direct JavaScript/TypeScript usage is available as `spritestudio7-sdk-web.zip`.
+- **Native libraries (C-API)**: `spritestudio-sdk-static-libs.zip` holds the static libraries and `spritestudio-sdk-dynamic-libs.zip` the dynamic ones: `libssruntime` for each platform and `libssconverter` for Windows, macOS and Linux in `libs/`, the C headers in `include/`, and the C# bindings in `bindings/`.
+- **Web (WASM)**: A pre-built package for direct JavaScript/TypeScript usage is available as `spritestudio-sdk-web-libs.zip`.
 
 ### 2. Convert a Sample Project
-Run the downloaded tool to convert one of the bundled test projects into the binary `.ssab` format:
+Convert one of the sample projects in this repository's `tests/` folder (clone the repository, or download the Release's *Source code* zip) into the binary `.ssab` format. Run the downloaded tool from the root of that checkout; the commands below assume you put the extracted `ssconverter-cli` there:
 
 **Windows:**
 ```powershell
@@ -75,45 +105,28 @@ Run the downloaded tool to convert one of the bundled test projects into the bin
 ./ssconverter-cli tests/overall/overall.sspj
 ```
 
-The converted `.ssab` files will be generated in the `tests/overall/overall_ssab/` directory.
+The converted `.ssab` files will be generated in the `tests/overall/overall/` directory.
 
 ### 3. Integrate into Your Engine
-Refer to the [libssruntime README](./libs/ssruntime/README.md) for instructions on how to load and play these `.ssab` files in your own game engine or application. For detailed implementation steps, see the [Player Implementation Guide](./libs/ssruntime/docs/README.ja.md) (Japanese).
+Refer to the [libssruntime README](./libs/ssruntime/README.md) for instructions on how to load and play these `.ssab` files in your own game engine or application. For detailed implementation steps, see the [Player Porting Guide](./libs/ssruntime/docs/README.md), also published as a searchable site at [cri-middleware.github.io/SpriteStudio-SDK](https://cri-middleware.github.io/SpriteStudio-SDK/).
 
 ### Sample Data
 
-This repository includes several sample projects in the `tests/` directory to verify different features of SpriteStudio 7:
+This repository includes several sample projects in the `tests/` directory to verify different features of SpriteStudio:
 
-- `tests/overall/overall.sspj`: A comprehensive project covering basic to advanced features (recommended for initial testing).
+- `tests/overall/overall.sspj`: A comprehensive project covering basic to advanced features, the one the Player Porting Guide's implementation steps use.
 - `tests/allAttributeV7/allAttributeV7.sspj`: Verifies all animation attributes.
 - `tests/allPartsV7/allPartsV7.sspj`: Verifies all part types.
 - `tests/ParticleEffect/ParticleEffect.sspj`: Verifies particle effects.
+- `tests/Ringo/Ringo.sspj`: Test project for Ringo.
+- `tests/Doll/Doll.sspj`: A character combining instance and effect parts.
 
 You can use these projects as references when implementing your own player or verifying the SDK's behavior.
 
-## Tools Usage
-### ssconverter-cli
-reference: [ssconverter-cli](./cli/README.md)
+## 💬 Support & Feedback
 
-## For SDK Developers
-### Prepare
-install [rustup](https://rustup.rs/)
+If you encounter bugs, need help, or want to suggest features, please refer to our [Support Guide](./SUPPORT.md).
 
-### Build
+## 🛠️ For SDK Developers
 
-```bash
-cargo build --release
-```
-
-### Test
-#### Unit tests
-
-```bash
-cargo test
-```
-
-#### tests for converting from sspj files to ssab files
-
-```bash
-./target/release/ssconverter-cli ./
-```
+Building the SDK, the checks a change has to pass, and the documentation site are covered in [CONTRIBUTING.md](./CONTRIBUTING.md#development-environment).

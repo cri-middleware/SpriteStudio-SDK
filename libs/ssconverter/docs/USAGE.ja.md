@@ -1,17 +1,17 @@
+[**English**](./USAGE.md) | [**日本語**](./USAGE.ja.md)
+
 # libssconverter 組み込みガイド
 
-`libssconverter` は、SpriteStudio 7 のプロジェクトファイル (`.sspj`) をランタイム向けの最適化バイナリ形式 (`.ssab`) に変換するための C 互換ライブラリです。
-自作のゲームエンジンやツール、開発用エディタにインプロセスでのコンバート機能を組み込む際に利用します。
+`libssconverter` は、SpriteStudio のプロジェクトファイル (`.sspj`) をランタイム向けの最適化バイナリ形式 (`.ssab`, `.ssqb`) に変換するための C 互換ライブラリです。自作のゲームエンジンやツール、開発用エディタにインプロセスでのコンバート機能を組み込む際に利用します。
 
 ## 1. 準備
 
 ### ライブラリのリンク
 
-`libssconverter` は Rust で実装されており、C-API を通じて利用します。
-プラットフォームに応じた静的ライブラリまたは動的ライブラリをプロジェクトにリンクしてください。
+`libssconverter` は Rust で実装されており、C-API を通じて利用します。プラットフォームに応じた静的ライブラリまたは動的ライブラリをプロジェクトにリンクしてください。どちらもヘッダとともに、リリースのネイティブライブラリの zip に入っています（[SDK の README](../../../README.ja.md#1-ツールライブラリをダウンロードする)）。
 
-- **Windows**: `ssconverter.lib` (および `ssconverter.dll` if shared)
-- **macOS/Linux**: `libssconverter.a` (および `libssconverter.dylib`/`.so` if shared)
+- **Windows**: `ssconverter.lib`（静的）または `ssconverter.dll`（共有）
+- **macOS/Linux**: `libssconverter.a`（静的）または `libssconverter.dylib` / `.so`（共有）
 
 また、各プラットフォームで必要なシステムライブラリ（pthread, dl 等）を適宜追加してください。
 
@@ -44,8 +44,10 @@ const char* sspj_path = "C:/Assets/Character.sspj";
 const char* output_dir = "C:/Project/Assets/SSAB/";
 
 // 変換を開始
-// 第4引数はログ用コールバック（不要な場合は nullptr）
-ss_converter_convert(ctx, sspj_path, output_dir, [](const char* msg) {
+// 第4引数は embedded 出力（テクスチャを .ssab に内包）の有効化。従来どおり（テクスチャを隣接 PNG として
+// 参照）にする場合は false を指定します。
+// 第5引数はログ用コールバック（不要な場合は nullptr）
+ss_converter_convert(ctx, sspj_path, output_dir, /*embedded=*/false, [](const char* msg) {
     printf("SSConverter: %s\n", msg);
 });
 ```
@@ -59,6 +61,7 @@ void on_update() {
     if (ctx && ss_converter_is_finished(ctx)) {
         // 変換が完了した
         on_conversion_complete(ctx);
+        ctx = nullptr;  // 上で破棄したので、これ以降はポーリングしない
     }
 }
 ```
@@ -75,12 +78,12 @@ void on_conversion_complete(Context* ctx) {
         printf("変換成功！\n");
     } else {
         // エラー詳細の取得
-        char* err_msg = nullptr;
+        const char* err_msg = nullptr;
         uintptr_t len = 0;
         ss_converter_get_error(ctx, &err_msg, &len);
         if (err_msg) {
             printf("エラー: %.*s\n", (int)len, err_msg);
-            // ss_converter_get_error で得られたメモリは ss_converter_destroy で解放されます
+            // ss_converter_get_error で得られたバッファは、同一 Context で次の変換を開始するか ss_converter_destroy を呼ぶまで有効です
         }
     }
 
@@ -99,39 +102,22 @@ void on_conversion_complete(Context* ctx) {
 ss_converter_abort(ctx);
 ```
 
-## 4. 実装例: Godot Plugin での利用
+> **注意**: `ss_converter_abort` を呼び出した直後に `ss_converter_destroy` を呼び出さないでください。ワーカースレッドが完全に停止するまで待ち、必ず `ss_converter_is_finished(ctx) == true` になってから破棄してください。詳細は後述のエディタ連携のベストプラクティスを参照してください。
 
-`SSPlayerForGodot` では、エディタへのファイルドロップ時に `libssconverter` を呼び出し、インプロセスで `.ssab` を生成しています。
+## 4. エディタへの組み込みとベストプラクティス
 
-```cpp
-// gd_ss_import_dock.cpp の抜粋
+ゲームエンジン（Godot や Unity など）のエディタ拡張として `libssconverter` を組み込む場合、単一ファイルの変換だけでなく、以下の対応が求められます。
 
-void GdSsImportControl::_notification(int p_what) {
-    if (p_what == NOTIFICATION_PROCESS) {
-        if (is_importing) {
-            bool all_finished = true;
-            for (void* ctx : import_contexts) {
-                if (!ss_converter_is_finished((Context*)ctx)) {
-                    all_finished = false;
-                    break;
-                }
-            }
+- 複数ファイル・ディレクトリの再帰的な一括バッチコンバート
+- エディタのメインループでのポーリングとプログレス表示
+- ユーザーキャンセル時の安全な中断（UAF を防ぐための `abort` と `destroy` の連携）
 
-            if (all_finished) {
-                // 終了処理とリソースのスキャン
-                is_importing = false;
-                set_process(false);
-                // ... cleanup contexts ...
-            }
-        }
-    }
-}
-```
+これらの詳細な実装パターンや、Godot / Unity 向けの具体的なコード例については、Player 移植ガイドの以下を参照してください。
 
-このように、複数のファイルを同時に並列変換することも可能です（`libssconverter` 内部でも `rayon` による並列処理が行われますが、コンテキストを複数作ることで複数のプロジェクトを並行して扱うことができます）。
+👉 **[エディタ統合](../../ssruntime/docs/50_features/60_editor_integration.ja.md)**
 
 ## 5. 注意事項
 
 - **メモリ管理**: `ss_converter_create` で作成したコンテキストは、必ず `ss_converter_destroy` で破棄してください。
-- **スレッドセーフ**: 変換処理は内部スレッドで行われますが、同一の `Context` に対して複数の `ss_converter_convert` を同時に呼び出さないでください。
+- **スレッドセーフ**: 1 つの `Context` が同時に実行できるジョブは 1 つだけです。内部スレッドでジョブが実行されている間は、同一の `Context` に対して新たな `ss_converter_convert` や `ss_converter_scan_dir` を呼び出さないでください。
 - **パスの形式**: ライブラリに渡すパスは、絶対パスを使用することを推奨します。

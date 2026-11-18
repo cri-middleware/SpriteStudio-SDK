@@ -1,21 +1,33 @@
+//! `ssconverter-cli` — command-line front end for
+//! [`ssconverter`](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssconverter).
+//!
+//! Converts SpriteStudio projects (`.sspj`) into the runtime binaries (`.ssab`,
+//! `.ssqb`) in either single or batch mode, the latter walking directories for projects
+//! and converting them in parallel. It is a thin shell around the library: argument
+//! parsing, progress logging, and exit codes only — the conversion itself, and therefore
+//! the bytes produced, are identical to what the GUI and the in-engine converters emit.
+//!
+//! Run `ssconverter-cli --help` for the full option list, or see the
+//! [usage guide](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/cli/README.md).
+
 use clap::{CommandFactory, Parser};
 use std::ffi::OsString;
 use std::path::PathBuf;
-use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
+use std::process::ExitCode;
+use std::sync::LazyLock;
 use std::thread::JoinHandle;
 
-const VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "+", env!("VERGEN_GIT_SHA"));
+static VERSION: LazyLock<String> = LazyLock::new(|| format!("{}+{} (ssab schema v{}, ssqb schema v{})", env!("CARGO_PKG_VERSION"), env!("VERGEN_GIT_SHA"), ssconverter::ssab_schema_version(), ssconverter::ssqb_schema_version()));
+
 #[derive(Parser, Debug)]
 #[command(
     name = "ssconverter-cli",
-    version = VERSION,
-    about = "Converts SpriteStudio 7 projects (.sspj) to optimized binary files (.ssab)",
+    version = VERSION.as_str(),
+    about = "Converts SpriteStudio projects (.sspj) to optimized binary files (.ssab)",
     override_usage = "
-  single mode: convert a single sspj project or a single sspj project zip file
+  single mode: convert a single sspj project
   usage:
     $ ssconverter-cli [OPTIONS] <sspj_file>
-    $ ssconverter-cli [OPTIONS] <sspj_zip_file>
 
   batch mode: convert multiple sspj projects
   usage:
@@ -27,7 +39,7 @@ struct Cli {
     #[arg(
         required = true,
         value_name = "PATHS", 
-        help = "Paths to .sspj files, zip archives, or directories containing projects",
+        help = "Paths to .sspj files or directories containing projects",
         num_args = 1..
     )]
     files: Vec<PathBuf>,
@@ -37,54 +49,36 @@ struct Cli {
 
     #[arg(short, long, value_name = "directory", help = "output directory path (available for single mode only)")]
     out_dir: Option<OsString>,
-
-    #[arg(short, long, help = "watch modifying a sspj project")]
-    watch: bool,
 }
 
-/*
-fn version_string() -> String {
-    let sha = env!("VERGEN_GIT_SHA");
-    let short_sha = if sha.len() >= 7 { &sha[..7] } else { sha };
-    format!("{}+{}", env!("CARGO_PKG_VERSION"), short_sha)
-}
- */
-
-fn main() -> Result<(), ssconverter::ConverterError> {
+fn main() -> ExitCode {
     let args = Cli::parse();
     let mut cmd = Cli::command();
 
-    let sspj_paths = ssconverter::utility::parse_args(&args.files);
-    if sspj_paths.is_empty() {
-        eprintln!("Error: No SpriteStudio project files found at the specified paths.");
-        eprintln!("{}", cmd.render_usage());
-        std::process::exit(1);
+    // The walk below skips a path that does not exist without a word.
+    let missing: Vec<&PathBuf> = args.files.iter().filter(|path| !path.exists()).collect();
+    for path in &missing {
+        eprintln!("Error: {} does not exist.", path.display());
     }
 
-    println!("{} {}", cmd.get_name(), VERSION);
+    let sspj_paths = ssconverter::utility::parse_args(&args.files);
+    if sspj_paths.is_empty() {
+        if missing.len() < args.files.len() {
+            eprintln!("Error: No SpriteStudio project files found at the specified paths.");
+            eprintln!("{}", cmd.render_usage());
+        }
+        return ExitCode::FAILURE;
+    }
+
+    println!("{} {}", cmd.get_name(), *VERSION);
 
     let mut config = ssconverter::ConverterConfig::default();
     if sspj_paths.len() == 1 {
         config.convert_config = ssconverter::ConvertConfig { embedded: args.embedded, ..Default::default() };
         config.output = args.out_dir;
-        if args.watch {
-            // watch mode
-            let should_stop = Arc::new(AtomicBool::new(false));
-            let s = should_stop.clone();
-            ctrlc::set_handler(move || {
-                s.store(true, std::sync::atomic::Ordering::Relaxed);
-                println!("\nStopping watcher...");
-            })
-            .expect("Error setting Ctrl-C handler");
-
-            println!("Watching for changes in {:?}... (Press Ctrl+C to stop)", sspj_paths[0].as_path());
-            ssconverter::watch::watch_sspj_project(sspj_paths[0].as_path(), &config, should_stop)?;
-            return Ok(());
-        }
     } else {
-        // batch mode
         config.convert_config = ssconverter::ConvertConfig { embedded: args.embedded, ..Default::default() };
-        config.output = None; // batch mode does not support out_dir
+        config.output = None;
     }
 
     let mut handlers: Vec<JoinHandle<Result<(), ssconverter::ConverterError>>> = vec![];
@@ -96,42 +90,25 @@ fn main() -> Result<(), ssconverter::ConverterError> {
             std::thread::spawn(move || ssconverter::convert_sspj_to_ssab_files(p.as_path(), &c, &|msg| println!("{}", msg)))
         })
     });
-    for h in handlers {
-        match h.join() {
-            Ok(result) => result?,
-            Err(_) => {
-                eprintln!("Thread panic occurred");
-                panic!("A thread has panicked during execution");
-            }
-        }
+    // Every conversion is joined, so a failure neither cuts the others short nor
+    // hides theirs.
+    let mut failed = 0;
+    for (path, handler) in sspj_paths.iter().zip(handlers) {
+        let error = match handler.join() {
+            Ok(Ok(())) => continue,
+            Ok(Err(e)) => e.to_string(),
+            Err(_) => "the conversion panicked".to_string(),
+        };
+        eprintln!("Error: {}: {}", path.display(), error);
+        failed += 1;
     }
 
+    if failed > 0 {
+        eprintln!("{} of {} conversions failed.", failed, sspj_paths.len());
+    }
+    if failed > 0 || !missing.is_empty() {
+        return ExitCode::FAILURE;
+    }
     println!("All conversions completed successfully.");
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-
-    use rayon::prelude::*;
-    use std::path::{Path, PathBuf};
-
-    static TARGET_SSPJ_FILES: [&str; 4] = ["tests/ParticleEffect/ParticleEffect.sspj", "tests/allAttributeV7/allAttributeV7.sspj", "tests/allPartsV7/allPartsV7.sspj", "tests/overall/overall.sspj"];
-
-    fn get_test_base_path() -> PathBuf {
-        std::env::current_dir().expect("Failed to get the current directory").parent().expect("Failed to get the base directory").to_path_buf()
-    }
-
-    #[test]
-    fn test_convert_ssab() {
-        TARGET_SSPJ_FILES.par_iter().for_each(|&f| {
-            let p = Path::new(f);
-            let config = ssconverter::ConverterConfig::default();
-            let r = ssconverter::convert_sspj_to_ssab_files(get_test_base_path().join(p).as_path(), &config, &|msg: &str| println!("{}", msg));
-            match r {
-                Ok(_) => {}
-                Err(e) => panic!("{:?}", e),
-            }
-        });
-    }
+    ExitCode::SUCCESS
 }

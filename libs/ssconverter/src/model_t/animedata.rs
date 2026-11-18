@@ -6,7 +6,7 @@ fn convert_animedata_labels(labels: &[sspj::ssae::SsLabel]) -> Vec<ssab::ssab::s
         .map(|label| {
             let mut l = ssab::ssab::ss::format::LabelT::default();
             l.name_hash = crate::utils::fnv1a_hash_str(&label.name);
-            l.name = if label.name.is_empty() { None } else { Some(label.name.to_string()) };
+            l.name = label.name.to_string();
             l.time = label.time;
             l
         })
@@ -24,7 +24,6 @@ fn convert_events_per_frames_part(
 ) {
     for part_anime in &anime_data.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
-            // not found part (an illegal case)
             continue;
         };
 
@@ -45,11 +44,11 @@ fn convert_events_per_frames_part(
                             Box::new(i)
                         });
                         userdata.rect = key.value.rect.as_ref().map(|v| {
-                            let mut r = ssab::ssab::ss::format::RectT::default();
-                            r.x1 = v.x1 as f32;
-                            r.x2 = v.x2 as f32;
-                            r.y1 = v.y1 as f32;
-                            r.y2 = v.y2 as f32;
+                            let mut r = ssab::ssab::ss::format::BoundsT::default();
+                            r.left = v.x1 as f32;
+                            r.right = v.x2 as f32;
+                            r.top = v.y1 as f32;
+                            r.bottom = v.y2 as f32;
                             Box::new(r)
                         });
                         userdata.point = key.value.point.as_ref().map(|v| {
@@ -59,7 +58,7 @@ fn convert_events_per_frames_part(
                             Box::new(p)
                         });
                         userdata.str = key.value.user_string.as_ref().map(|v| v.to_string());
-                        u_args.value = Some(Box::new(userdata));
+                        u_args.value = Box::new(userdata);
 
                         let events_per_frame = map_events_per_frames.entry(key.time).or_insert_with(|| {
                             let mut e = ssab::ssab::ss::format::EventsPerFrameT::default();
@@ -78,16 +77,16 @@ fn convert_events_per_frames_part(
                             s_args.part_index = part_index;
                             let mut s = ssab::ssab::ss::format::PartAttributeSignalT::default();
                             s.active = command.active;
-                            s.command_id = Some(command.command_id.to_string());
+                            s.command_id = command.command_id.to_string();
                             s.params = if command.params.is_empty() {
-                                None
+                                Vec::new()
                             } else {
-                                let v = command
+                                command
                                     .params
                                     .iter()
                                     .map(|v| {
                                         let mut command_param_t = ssab::ssab::ss::format::SignalCommandParamT::default();
-                                        command_param_t.param_id = Some(v.param_id.to_string());
+                                        command_param_t.param_id = v.param_id.to_string();
                                         command_param_t.type_ = match &v.param_type {
                                             sspj::ssattribute::SsAttributeSignalCommandParamType::Bool => ssab::ssab::ss::format::SignalCommandParamType::Bool,
                                             sspj::ssattribute::SsAttributeSignalCommandParamType::Index => ssab::ssab::ss::format::SignalCommandParamType::Index,
@@ -119,7 +118,7 @@ fn convert_events_per_frames_part(
                                             }
                                             sspj::ssattribute::SsAttributeSignalCommandParamValue::Text(v) => {
                                                 let mut s = ssab::ssab::ss::format::StringValueEntryT::default();
-                                                s.value = Some(v.to_string());
+                                                s.value = v.to_string();
                                                 ssab::ssab::ss::format::SignalCommandParamValueT::Text(Box::new(s))
                                             }
                                             sspj::ssattribute::SsAttributeSignalCommandParamValue::None => {
@@ -130,10 +129,9 @@ fn convert_events_per_frames_part(
 
                                         command_param_t
                                     })
-                                    .collect::<Vec<_>>();
-                                Some(v)
+                                    .collect::<Vec<_>>()
                             };
-                            s_args.value = Some(Box::new(s));
+                            s_args.value = Box::new(s);
 
                             let events_per_frame = map_events_per_frames.entry(key.time).or_insert_with(|| {
                                 let mut e = ssab::ssab::ss::format::EventsPerFrameT::default();
@@ -145,41 +143,31 @@ fn convert_events_per_frames_part(
                     });
                 }
                 sspj::ssattribute::SsAttributeKind::Instance(v) => {
-                    // MEMO: "Instance" is complemented by backfilling.
+                    // MEMO: no frame-0 backfill. When a part's first Instance key
+                    // is after frame 0, no frame-0 event is emitted; the runtime
+                    // supplies the implicit frame-0 playback key (`_start..=_end`,
+                    // speed 1.0, play-once, forward) via `synthetic_default`.
                     v.keys.iter().for_each(|key| {
                         let mut instance_t = ssab::ssab::ss::format::PartAttributeInstanceT::default();
                         instance_t.pingpong = key.value.pingpong;
                         instance_t.independent = key.value.independent;
-                        instance_t.loop_num = key.value.loop_num;
+                        instance_t.reverse = key.value.reverse;
+                        // SS6's `SsInstanceAttr` carried both `infinity: bool`
+                        // and `loop_num: i32`; SpriteStudio's `PartAttributeInstance`
+                        // collapses them into a single `loop_num` where -1
+                        // means infinite, matching `PlaybackController`'s
+                        // convention. Encode the `infinity` flag here so the
+                        // runtime never has to guess.
+                        instance_t.loop_num = if key.value.infinity { -1 } else { key.value.loop_num };
                         instance_t.start_label_hash = crate::utils::fnv1a_hash_str(&key.value.start_label);
                         instance_t.start_offset = key.value.start_offset;
                         instance_t.end_label_hash = crate::utils::fnv1a_hash_str(&key.value.end_label);
                         instance_t.end_offset = key.value.end_offset;
                         instance_t.speed = key.value.speed;
 
-                        // Complement for frame 0.
-                        if 0 < key.time {
-                            let events_per_frame_0 = map_events_per_frames.entry(0).or_insert_with(|| {
-                                let mut e_frame_0 = ssab::ssab::ss::format::EventsPerFrameT::default();
-                                e_frame_0.frame_index = 0;
-                                e_frame_0
-                            });
-
-                            if events_per_frame_0.instances.get_or_insert_with(Vec::new).iter().position(|item| item.part_index == part_index).is_none() {
-                                let instance_t_frame_0 = instance_t.clone();
-
-                                let mut i_args_frame_0 = ssab::ssab::ss::format::EventInstanceT::default();
-                                i_args_frame_0.part_index = part_index;
-                                i_args_frame_0.value = Some(Box::new(instance_t_frame_0));
-
-                                events_per_frame_0.instances.get_or_insert_with(Vec::new).push(i_args_frame_0);
-                            }
-                        }
-
-                        // for target frame.
                         let mut i_args = ssab::ssab::ss::format::EventInstanceT::default();
                         i_args.part_index = part_index;
-                        i_args.value = Some(Box::new(instance_t));
+                        i_args.value = Box::new(instance_t);
 
                         let events_per_frame = map_events_per_frames.entry(key.time).or_insert_with(|| {
                             let mut e = ssab::ssab::ss::format::EventsPerFrameT::default();
@@ -197,37 +185,19 @@ fn convert_events_per_frames_part(
                     });
                 }
                 sspj::ssattribute::SsAttributeKind::Effect(v) => {
-                    // MEMO: "Effect" is complemented by backfilling.
+                    // MEMO: no frame-0 backfill. When an effect part's first Effect
+                    // key is after frame 0, no frame-0 event is emitted; the runtime
+                    // supplies the implicit frame-0 playback key (start_time 0,
+                    // speed 1.0) via `synthetic_default`.
                     v.keys.iter().for_each(|key| {
                         let mut effect_t = ssab::ssab::ss::format::PartAttributeEffectT::default();
-                        effect_t.cur_keyframe; // TODO: implement
                         effect_t.start_time = key.value.start_time;
                         effect_t.speed = key.value.speed;
-                        effect_t.loopflag; // TODO: implement
+                        effect_t.independent = key.value.independent;
 
-                        // Complement for frame 0.
-                        if 0 < key.time {
-                            let events_per_frame_0 = map_events_per_frames.entry(0).or_insert_with(|| {
-                                let mut e_frame_0 = ssab::ssab::ss::format::EventsPerFrameT::default();
-                                e_frame_0.frame_index = 0;
-                                e_frame_0
-                            });
-
-                            if events_per_frame_0.effects.get_or_insert_with(Vec::new).iter().position(|item| item.part_index == part_index).is_none() {
-                                let effect_t_frame_0 = effect_t.clone();
-
-                                let mut e_args_frame_0 = ssab::ssab::ss::format::EventEffectT::default();
-                                e_args_frame_0.part_index = part_index;
-                                e_args_frame_0.value = Some(Box::new(effect_t_frame_0));
-
-                                events_per_frame_0.effects.get_or_insert_with(Vec::new).push(e_args_frame_0);
-                            }
-                        }
-
-                        // for target frame.
                         let mut e_args = ssab::ssab::ss::format::EventEffectT::default();
                         e_args.part_index = part_index;
-                        e_args.value = Some(Box::new(effect_t));
+                        e_args.value = Box::new(effect_t);
 
                         let events_per_frame = map_events_per_frames.entry(key.time).or_insert_with(|| {
                             let mut e = ssab::ssab::ss::format::EventsPerFrameT::default();
@@ -252,9 +222,9 @@ fn convert_events_per_frames_part(
                         let mut audio_t = ssab::ssab::ss::format::PartAttributeAudioT::default();
                         audio_t.sound_list_name_hash = sound_list_id_to_name_hash.get(&key.value.sound_list_id).copied().unwrap_or(0);
                         audio_t.sound_name_hash = crate::utils::fnv1a_hash_str(&key.value.sound_name);
-                        audio_t.sound_name = Some(key.value.sound_name.to_string());
+                        audio_t.sound_name = key.value.sound_name.to_string();
                         audio_t.loop_num = key.value.loop_num;
-                        a_args.value = Some(Box::new(audio_t));
+                        a_args.value = Box::new(audio_t);
 
                         let events_per_frame = map_events_per_frames.entry(key.time).or_insert_with(|| {
                             let mut e = ssab::ssab::ss::format::EventsPerFrameT::default();
@@ -271,9 +241,7 @@ fn convert_events_per_frames_part(
                         }
                     });
                 }
-                _ => {
-                    // skip
-                }
+                _ => {}
             }
         });
     }
@@ -298,14 +266,20 @@ fn convert_events_per_frames(
         Some(vec_map.into_iter().map(|(_, v)| v).collect::<Vec<ssab::ssab::ss::format::EventsPerFrameT>>())
     }
 }
-fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>) -> ssab::ssab::ss::format::AnimationDataT {
+fn convert_animedatat(
+    anime_data: &sspj::ssae::SsAnimation,
+    setup_animation: &sspj::ssae::SsAnimation,
+    parts_map: &HashMap<String, &sspj::ssae::SsPart>,
+    sound_list_id_to_name_hash: &HashMap<i32, u32>,
+    cellmaps: &CellmapResolver,
+    keyframes: &mut super::keyframes::KeyframesBuilder,
+) -> Result<ssab::ssab::ss::format::AnimationDataT, crate::ConverterError> {
     let mut anime_data_t = ssab::ssab::ss::format::AnimationDataT::default();
 
     anime_data_t.name = anime_data.name.to_string();
     anime_data_t.name_hash = crate::utils::fnv1a_hash_str(&anime_data.name);
-    anime_data_t.parts_initial_attributes = Some(convert_parts_initial_attributes(setup_animation));
-    anime_data_t.parts_animation_data = Some(convert_parts_animation_data(anime_data, setup_animation, parts_map));
-    anime_data_t.parts_mesh_data = None;
+    anime_data_t.parts_initial_attributes = convert_parts_initial_attributes(setup_animation, parts_map, cellmaps);
+    anime_data_t.parts_animation_data = convert_parts_animation_data(anime_data, setup_animation, parts_map, cellmaps).iter().map(|part_keys| keyframes.part(part_keys)).collect::<Result<_, _>>()?;
     anime_data_t.initial_events = convert_parts_initial_events(setup_animation, parts_map, sound_list_id_to_name_hash);
     anime_data_t.events = convert_events_per_frames(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash);
     anime_data_t.labels = if anime_data.labels.is_empty() { None } else { Some(convert_animedata_labels(&anime_data.labels)) };
@@ -313,14 +287,16 @@ fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, setup_animation: &ss
     anime_data_t.end_frame = anime_data.settings.end_frame as i16;
     anime_data_t.total_frame = anime_data.settings.frame_count as i16;
     anime_data_t.fps = anime_data.settings.fps as i16;
-    let mut canvas = ssab::ssab::ss::format::RectT::default();
-    canvas.x1 = anime_data.settings.pivot.x;
-    canvas.y1 = anime_data.settings.pivot.y;
-    canvas.x2 = anime_data.settings.canvas_size.x;
-    canvas.y2 = anime_data.settings.canvas_size.y;
-    anime_data_t.canvas = Some(Box::new(canvas));
+    let mut canvas_size = ssab::ssab::ss::format::Vec2T::default();
+    canvas_size.v1 = anime_data.settings.canvas_size.x;
+    canvas_size.v2 = anime_data.settings.canvas_size.y;
+    anime_data_t.canvas_size = Box::new(canvas_size);
+    let mut pivot = ssab::ssab::ss::format::Vec2T::default();
+    pivot.v1 = anime_data.settings.pivot.x;
+    pivot.v2 = anime_data.settings.pivot.y;
+    anime_data_t.pivot = Box::new(pivot);
 
-    anime_data_t
+    Ok(anime_data_t)
 }
 
 fn convert_interpolation_type(interpolation: &sspj::sstypes::SsInterpolationType) -> ssab::ssab::ss::format::InterpolationType {
@@ -353,17 +329,16 @@ fn convert_interpolation_type(interpolation: &sspj::sstypes::SsInterpolationType
     }
 }
 
-fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::format::InitialPartAttributesT, setup_attributes: &[sspj::ssattribute::SsAttributeKind]) {
-    // MEMO: This function. Since only “setup” is targeted, “key.time == 0” might not be necessary.
-    //       It's required because the caller is attempting to composite with frame 0,
-    //         but that should probably be done during key-frame placement ?    Yuzu.
+fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::format::InitialPartAttributesT, setup_attributes: &[sspj::ssattribute::SsAttributeKind], cellmaps: &CellmapResolver, part_type: &sspj::sstypes::SsPartType) {
+    // Only frame-0 ("setup") keys are composited here: the caller builds the
+    // initial part attributes from frame 0, so keys with `time == 0` are the
+    // ones that matter.
     setup_attributes.iter().for_each(|attribute| {
-        //        p_args.update_flag = 0;
         match attribute {
             sspj::ssattribute::SsAttributeKind::Cell(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeCellT::default();
-                    value.map_id = _key.value.map_id;
+                    value.cellmap_name_hash = cellmaps.name_hash(_key.value.map_id);
                     value.name_hash = crate::utils::fnv1a_hash_str(&_key.value.name);
                     p_args.cell = Some(Box::new(value));
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeCell;
@@ -443,8 +418,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             }
             sspj::ssattribute::SsAttributeKind::Prio(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
-                    // TODO: When Z-sort, priority must be based on  spatially transformed Z-values. Yuzu.
-                    p_args.priority = _key.value as f32;
+                    p_args.priority = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePrio;
                 }
             }
@@ -468,61 +442,16 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             }
             sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
-                    let mut value = ssab::ssab::ss::format::PartAttributePartColorT::default();
-                    value.blend_type = convert_alpha_blend_type(&_key.value.blend_type);
-
-                    let mut color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                    let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-
-                    //                    color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                    //                    rgba = ssab::ssab::ss::format::U8RectT::default();
-                    rgba.a = _key.value.lt.rgba.a;
-                    rgba.r = _key.value.lt.rgba.r;
-                    rgba.g = _key.value.lt.rgba.g;
-                    rgba.b = _key.value.lt.rgba.b;
-                    color.rgba = Some(Box::new(rgba));
-                    color.rate = _key.value.lt.rate;
-                    value.lt = Some(Box::new(color));
-
-                    color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                    rgba = ssab::ssab::ss::format::U8RectT::default();
-                    rgba.a = _key.value.rt.rgba.a;
-                    rgba.r = _key.value.rt.rgba.r;
-                    rgba.g = _key.value.rt.rgba.g;
-                    rgba.b = _key.value.rt.rgba.b;
-                    color.rgba = Some(Box::new(rgba));
-                    color.rate = _key.value.rt.rate;
-                    value.rt = Some(Box::new(color));
-
-                    color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                    rgba = ssab::ssab::ss::format::U8RectT::default();
-                    rgba.a = _key.value.lb.rgba.a;
-                    rgba.r = _key.value.lb.rgba.r;
-                    rgba.g = _key.value.lb.rgba.g;
-                    rgba.b = _key.value.lb.rgba.b;
-                    color.rgba = Some(Box::new(rgba));
-                    color.rate = _key.value.lb.rate;
-                    value.lb = Some(Box::new(color));
-
-                    color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                    rgba = ssab::ssab::ss::format::U8RectT::default();
-                    rgba.a = _key.value.rb.rgba.a;
-                    rgba.r = _key.value.rb.rgba.r;
-                    rgba.g = _key.value.rb.rgba.g;
-                    rgba.b = _key.value.rb.rgba.b;
-                    color.rgba = Some(Box::new(rgba));
-                    color.rate = _key.value.rb.rate;
-                    value.rb = Some(Box::new(color));
-
+                    let value = build_part_attribute_part_color_t(&_key.value, part_type);
                     p_args.part_color = Some(Box::new(value));
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePartColor;
                 }
             }
-            sspj::ssattribute::SsAttributeKind::Color => { /* MEMO: Not Supported (Feature prior to Ver.6.0) */ }
+            sspj::ssattribute::SsAttributeKind::Color => { /* VCOL is a pre-SS6 attribute and is not converted. */ }
             sspj::ssattribute::SsAttributeKind::Shader(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeShaderT::default();
-                    value.id = Some(_key.value.id.clone());
+                    value.id = _key.value.id.clone();
                     value.id_hash = crate::utils::fnv1a_hash_str(&_key.value.id);
 
                     value.param0 = _key.value.param0;
@@ -534,9 +463,9 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                     value.param6 = _key.value.param6;
                     value.param7 = _key.value.param7;
 
-                    value.map0_id = _key.value.map0.map_id;
+                    value.map0_cellmap_name_hash = cellmaps.name_hash(_key.value.map0.map_id);
                     value.map0_name_hash = crate::utils::fnv1a_hash_str(&_key.value.map0.name);
-                    value.map1_id = _key.value.map1.map_id;
+                    value.map1_cellmap_name_hash = cellmaps.name_hash(_key.value.map1.map_id);
                     value.map1_name_hash = crate::utils::fnv1a_hash_str(&_key.value.map1.name);
 
                     p_args.shader = Some(Box::new(value));
@@ -546,7 +475,6 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             sspj::ssattribute::SsAttributeKind::Vertex(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     if _key.value.use_skew.unwrap_or(false) {
-                        // Skew
                         match &_key.value.skew {
                             None => {
                                 p_args.skew_x = 0.0_f32;
@@ -561,11 +489,9 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
 
                         p_args.vertex = None; // Mutually exclusive with "Vertex"
                     } else {
-                        // Vertex
                         let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
                         let mut coordinate = ssab::ssab::ss::format::Vec2T::default();
 
-                        //                       coordinate = ssab::ssab::ss::format::Vec2T::default();
                         if let Some(_lt) = _key.value.lt.as_ref() {
                             coordinate.v1 = _lt.x;
                             coordinate.v2 = _lt.y;
@@ -695,32 +621,20 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             sspj::ssattribute::SsAttributeKind::Deform(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeDeformT::default();
-
-                    let mut coordinate = Vec::new();
-                    let mut index = Vec::<i16>::new();
-                    _key.value.vchg.iter().for_each(|_item| {
-                        let mut vec2 = ssab::ssab::ss::format::Vec2T::default();
-                        vec2.v1 = _item.x;
-                        vec2.v2 = _item.y;
-                        coordinate.push(vec2);
-                        index.push(_item.x_index as i16);
-                    });
-
-                    value.coordinate = Some(coordinate);
-                    value.index = Some(index);
+                    value.coord_x = Some(_key.value.vchg.iter().map(|p| p.x).collect());
+                    value.coord_y = Some(_key.value.vchg.iter().map(|p| p.y).collect());
+                    value.index = Some(_key.value.vchg.iter().map(|p| p.x_index as i16).collect());
                     p_args.deform = Some(Box::new(value));
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeDeform;
                 }
             }
             sspj::ssattribute::SsAttributeKind::Texchange(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
-                    p_args.texture = crate::utils::fnv1a_hash_str(&_key.value.texture_name);
+                    p_args.texture = crate::utils::fnv1a_hash_texture_name(&_key.value.texture_name);
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeTexture;
                 }
             }
-            _ => {
-                // Empty.
-            }
+            _ => {}
         }
     });
 }
@@ -740,11 +654,11 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
                         Box::new(i)
                     });
                     value.rect = _key.value.rect.as_ref().map(|v| {
-                        let mut r = ssab::ssab::ss::format::RectT::default();
-                        r.x1 = v.x1 as f32;
-                        r.x2 = v.x2 as f32;
-                        r.y1 = v.y1 as f32;
-                        r.y2 = v.y2 as f32;
+                        let mut r = ssab::ssab::ss::format::BoundsT::default();
+                        r.left = v.x1 as f32;
+                        r.right = v.x2 as f32;
+                        r.top = v.y1 as f32;
+                        r.bottom = v.y2 as f32;
                         Box::new(r)
                     });
                     value.point = _key.value.point.as_ref().map(|v| {
@@ -764,16 +678,16 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
                     _key.value.commands.iter().for_each(|command| {
                         let mut value = ssab::ssab::ss::format::PartAttributeSignalT::default();
                         value.active = command.active;
-                        value.command_id = Some(command.command_id.to_string());
+                        value.command_id = command.command_id.to_string();
                         value.params = if command.params.is_empty() {
-                            None
+                            Vec::new()
                         } else {
-                            let params = command
+                            command
                                 .params
                                 .iter()
                                 .map(|p| {
                                     let mut command_param_t = ssab::ssab::ss::format::SignalCommandParamT::default();
-                                    command_param_t.param_id = Some(p.param_id.to_string());
+                                    command_param_t.param_id = p.param_id.to_string();
                                     command_param_t.type_ = match &p.param_type {
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::Bool => ssab::ssab::ss::format::SignalCommandParamType::Bool,
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::Index => ssab::ssab::ss::format::SignalCommandParamType::Index,
@@ -806,7 +720,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
                                         }
                                         sspj::ssattribute::SsAttributeSignalCommandParamValue::Text(v) => {
                                             let mut s = ssab::ssab::ss::format::StringValueEntryT::default();
-                                            s.value = Some(v.to_string());
+                                            s.value = v.to_string();
                                             ssab::ssab::ss::format::SignalCommandParamValueT::Text(Box::new(s))
                                         }
                                         sspj::ssattribute::SsAttributeSignalCommandParamValue::None => {
@@ -817,9 +731,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
 
                                     command_param_t
                                 })
-                                .collect::<Vec<_>>();
-
-                            Some(params)
+                                .collect::<Vec<_>>()
                         };
 
                         initial_event_t.signal = Some(Box::new(value));
@@ -832,7 +744,10 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
                     let mut value = ssab::ssab::ss::format::PartAttributeInstanceT::default();
                     value.pingpong = _key.value.pingpong;
                     value.independent = _key.value.independent;
-                    value.loop_num = _key.value.loop_num;
+                    value.reverse = _key.value.reverse;
+                    // Collapse SS6's `infinity` flag into the `.ssab`'s `loop_num = -1`.
+                    // See SsAttributeKind::Instance handling above for details.
+                    value.loop_num = if _key.value.infinity { -1 } else { _key.value.loop_num };
                     value.start_label_hash = crate::utils::fnv1a_hash_str(&_key.value.start_label);
                     value.start_offset = _key.value.start_offset;
                     value.end_label_hash = crate::utils::fnv1a_hash_str(&_key.value.end_label);
@@ -848,6 +763,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
                     let mut value = ssab::ssab::ss::format::PartAttributeEffectT::default();
                     value.start_time = _key.value.start_time;
                     value.speed = _key.value.speed;
+                    value.independent = _key.value.independent;
 
                     initial_event_t.effect = Some(Box::new(value));
                     flag_exist_event = true;
@@ -858,16 +774,14 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
                     let mut value = ssab::ssab::ss::format::PartAttributeAudioT::default();
                     value.sound_list_name_hash = sound_list_id_to_name_hash.get(&_key.value.sound_list_id).copied().unwrap_or(0);
                     value.sound_name_hash = crate::utils::fnv1a_hash_str(&_key.value.sound_name);
-                    value.sound_name = Some(_key.value.sound_name.to_string());
+                    value.sound_name = _key.value.sound_name.to_string();
                     value.loop_num = _key.value.loop_num;
 
                     initial_event_t.audio = Some(Box::new(value));
                     flag_exist_event = true;
                 }
             }
-            _ => {
-                // Empty.
-            }
+            _ => {}
         }
     });
 
@@ -876,18 +790,85 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
     }
 }
 
-fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation) -> Vec<ssab::ssab::ss::format::InitialPartAttributesT> {
-    anime_data
-        .part_animes
-        .iter()
-        .map(|part_anime| {
-            let mut part_attribute_t = ssab::ssab::ss::format::InitialPartAttributesT::default();
-            // TODO: impl
-            merge_setup_attributes_to_part_attribute_t(&mut part_attribute_t, &part_anime.attributes);
+fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, cellmaps: &CellmapResolver) -> Vec<ssab::ssab::ss::format::InitialPartAttributesT> {
+    // Index-aligned with the part list (same convention as `convert_parts_animation_data`):
+    // size to the part count and place each entry by `array_index`, so the runtime can
+    // address `parts_initial_attributes[part_index]` directly. Parts absent from the
+    // setup animation keep `InitialPartAttributesT::default()`.
+    let mut parts_initial_attributes_t = Vec::<ssab::ssab::ss::format::InitialPartAttributesT>::new();
+    parts_initial_attributes_t.resize(parts_map.len(), ssab::ssab::ss::format::InitialPartAttributesT::default());
 
-            part_attribute_t
-        })
-        .collect::<Vec<_>>()
+    for part_anime in &anime_data.part_animes {
+        let Some(p) = parts_map.get(&part_anime.part_name) else {
+            continue;
+        };
+
+        let index_part = p.array_index as usize;
+        merge_setup_attributes_to_part_attribute_t(&mut parts_initial_attributes_t[index_part], &part_anime.attributes, cellmaps, &p.part_type);
+
+        // A bone's rest pose lives in the ssae `bonePosition`/`boneRotation` tags
+        // rather than in setup keyframes; reflect it into the setup-pose transform
+        // so the bone's rest frame is represented like any other part.
+        if matches!(p.part_type, sspj::sstypes::SsPartType::Armature) {
+            let attr = &mut parts_initial_attributes_t[index_part];
+            attr.position_x = p.bone_position.x;
+            attr.position_y = p.bone_position.y;
+            attr.rotation_z = p.bone_rotation;
+            attr.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePosX;
+            attr.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePosY;
+            attr.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeRotZ;
+        }
+    }
+
+    bake_hide_inheritance_initial(&mut parts_initial_attributes_t, parts_map);
+
+    parts_initial_attributes_t
+}
+
+/// Bakes SpriteStudio's per-part HIDE inheritance into the setup-pose `hide` of each
+/// part's [`InitialPartAttributes`] — the scalar counterpart of
+/// `bake_hide_inheritance`, which does the same for the per-frame `hide_array`.
+/// A part that inherits HIDE (`ineheritRates/HIDE`) adopts its parent's
+/// already-resolved setup hidden state, so the setup keys written to the SSAB
+/// reflect inheritance just like the animation keyframes do.
+fn bake_hide_inheritance_initial(parts_initial_attributes_t: &mut [ssab::ssab::ss::format::InitialPartAttributesT], parts_map: &HashMap<String, &sspj::ssae::SsPart>) {
+    let num_parts = parts_initial_attributes_t.len();
+
+    // Index parts by `array_index` for parent lookups.
+    let mut parts_by_index: Vec<Option<&sspj::ssae::SsPart>> = vec![None; num_parts];
+    for part in parts_map.values() {
+        let idx = part.array_index as usize;
+        if idx < num_parts {
+            parts_by_index[idx] = Some(part);
+        }
+    }
+
+    // effective[i] = part i's setup hidden state after resolving inheritance.
+    // Parts are visited in `array_index` order (parent before child), so the
+    // inheritance is transitive down a chain of HIDE-inheriting parts.
+    let mut effective: Vec<bool> = Vec::with_capacity(num_parts);
+
+    for i in 0..num_parts {
+        let own = parts_initial_attributes_t[i].hide;
+
+        let Some(part) = parts_by_index[i] else {
+            effective.push(own);
+            continue;
+        };
+
+        let parent_idx = part.parent_index;
+        let inherits = part.inherit_rates.hide && parent_idx >= 0 && (parent_idx as usize) < i;
+        let eff = if inherits { own || effective[parent_idx as usize] } else { own };
+
+        if eff != own {
+            // Inheritance turned a visible part hidden — record it as an
+            // explicitly-set attribute, matching a real setup HIDE key.
+            let attr = &mut parts_initial_attributes_t[i];
+            attr.hide = true;
+            attr.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeHide;
+        }
+        effective.push(eff);
+    }
 }
 
 fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>) -> Option<Vec<ssab::ssab::ss::format::InitialEventsT>> {
@@ -896,7 +877,6 @@ fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map:
 
     for part_anime in &anime_data.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
-            // not found part (an illegal case)
             continue;
         };
 
@@ -915,12 +895,12 @@ macro_rules! process_interpolatable_attribute {
 
             match &key.ip_type {
                 sspj::sstypes::SsInterpolationType::Hermite | sspj::sstypes::SsInterpolationType::Bezier => {
-                    let mut curve_t = ssab::ssab::ss::format::SsCurveT::default();
+                    let mut curve_t = ssab::ssab::ss::format::KeyCurveT::default();
                     curve_t.start_time = key.curve.start_time;
                     curve_t.start_value = key.curve.start_value;
                     curve_t.end_time = key.curve.end_time;
                     curve_t.end_value = key.curve.end_value;
-                    args.curve = Some(Box::new(curve_t));
+                    args.curve = Some(curve_t);
                 }
                 sspj::sstypes::SsInterpolationType::EaseIn
                 | sspj::sstypes::SsInterpolationType::EaseOut
@@ -957,7 +937,14 @@ macro_rules! process_interpolatable_attribute {
 }
 
 macro_rules! process_simple_attribute {
-    ($keys:expr, $target_array:expr, $arg_type:ty, $extract_value:expr) => {{
+    // A synthesized frame-0 key clones the first frame-1+ key's value.
+    ($keys:expr, $target_array:expr, $arg_type:ty, $extract_value:expr) => {
+        process_simple_attribute!($keys, $target_array, $arg_type, $extract_value, frame0_override = |_: &mut $arg_type| {})
+    };
+    // `frame0_override` runs on a synthesized frame-0 key, letting an attribute
+    // adjust the back-filled value (used by Hide; see its match arm).
+    ($keys:expr, $target_array:expr, $arg_type:ty, $extract_value:expr, frame0_override = $frame0_override:expr) => {{
+        let frame0_override = $frame0_override;
         for key in $keys {
             let mut args = <$arg_type>::default();
             args.index = key.time as u16;
@@ -968,6 +955,7 @@ macro_rules! process_simple_attribute {
                 if key.time > 0 {
                     let mut args_frame_0 = args.clone();
                     args_frame_0.index = 0;
+                    frame0_override(&mut args_frame_0);
                     array_new.push(args_frame_0);
                 }
                 array_new
@@ -983,156 +971,131 @@ macro_rules! process_simple_attribute {
     }};
 }
 
-fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimationDataT, part_anime: &sspj::ssae::SsPartAnime) {
+fn convert_part_animation_data(p_arg: &mut super::keyframes::PartKeys, part_anime: &sspj::ssae::SsPartAnime, cellmaps: &CellmapResolver, is_setup: bool, part_type: &sspj::sstypes::SsPartType) {
     part_anime.attributes.iter().for_each(|attribute| match attribute {
         sspj::ssattribute::SsAttributeKind::Cell(v) => {
-            process_simple_attribute!(&v.keys, p_arg.cell_array, ssab::ssab::ss::format::PartAnimationDataCellValueT, |k: &sspj::ssattribute::SsAttributeCellKey| {
+            process_simple_attribute!(&v.keys, p_arg.cell_array, super::keyframes::CellKey, |k: &sspj::ssattribute::SsAttributeCellKey| {
                 let mut c_args = ssab::ssab::ss::format::PartAttributeCellT::default();
-                c_args.map_id = k.value.map_id;
+                c_args.cellmap_name_hash = cellmaps.name_hash(k.value.map_id);
                 c_args.name_hash = crate::utils::fnv1a_hash_str(&k.value.name);
-                Some(Box::new(c_args))
+                Box::new(c_args)
             });
         }
         sspj::ssattribute::SsAttributeKind::PosX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.position_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.position_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::PosY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.position_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.position_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::PosZ(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.position_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.position_z_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::RotX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.rotation_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.rotation_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::RotY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.rotation_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.rotation_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::RotZ(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.rotation_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.rotation_z_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::SclX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.scale_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::SclY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.scale_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::LosclX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.local_scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.local_scale_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::LosclY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.local_scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.local_scale_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::Alpha(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.alpha_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.alpha_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::LoAlpha(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.local_alpha_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.local_alpha_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::Prio(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.priority_array, ssab::ssab::ss::format::PartAnimationDataIntValueT, |k: &sspj::ssattribute::SsAttributeIntKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.priority_array, super::keyframes::IntKey, |k: &sspj::ssattribute::SsAttributeIntKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::FlipH(v) => {
-            process_simple_attribute!(&v.keys, p_arg.flip_h_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+            process_simple_attribute!(&v.keys, p_arg.flip_h_array, super::keyframes::BoolKey, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::FlipV(v) => {
-            process_simple_attribute!(&v.keys, p_arg.flip_v_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+            process_simple_attribute!(&v.keys, p_arg.flip_v_array, super::keyframes::BoolKey, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::Hide(v) => {
-            process_simple_attribute!(&v.keys, p_arg.hide_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+            // Hide is special-cased: when no frame-0 key is supplied by the setup
+            // animation, a part defaults to hidden (`true`) rather than back-filling
+            // frame 0 from the first frame-1+ key (the behavior of every other
+            // attribute). A frame-0 key synthesized while processing the setup
+            // animation itself keeps the back-fill behavior.
+            process_simple_attribute!(
+                &v.keys,
+                p_arg.hide_array,
+                super::keyframes::BoolKey,
+                |k: &sspj::ssattribute::SsAttributeBoolKey| k.value,
+                frame0_override = |frame0: &mut super::keyframes::BoolKey| {
+                    if !is_setup {
+                        frame0.value = true;
+                    }
+                }
+            );
         }
         sspj::ssattribute::SsAttributeKind::PivotX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.pivot_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.pivot_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::PivotY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.pivot_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.pivot_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::AnchorX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.anchor_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.anchor_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::AnchorY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.anchor_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.anchor_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::SizeX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.size_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.size_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::SizeY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.size_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.size_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::ImgFlipH(v) => {
-            process_simple_attribute!(&v.keys, p_arg.img_flip_h_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+            process_simple_attribute!(&v.keys, p_arg.img_flip_h_array, super::keyframes::BoolKey, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::ImgFlipV(v) => {
-            process_simple_attribute!(&v.keys, p_arg.img_flip_v_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+            process_simple_attribute!(&v.keys, p_arg.img_flip_v_array, super::keyframes::BoolKey, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::UvtX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::UvtY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::UvrZ(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.uv_rotation_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_rotation_z_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::UvsX(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_x_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::UvsY(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_y_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::Boundr(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.bounding_radius_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.bounding_radius_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::Mask(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.mask_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+            process_interpolatable_attribute!(&v.keys, p_arg.mask_array, super::keyframes::FloatKey, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.part_color_array, ssab::ssab::ss::format::PartAnimationDataPartColorT, |k: &sspj::ssattribute::SsAttributePartsColorKey| {
-                let mut value = ssab::ssab::ss::format::PartAttributePartColorT::default();
-                value.blend_type = convert_alpha_blend_type(&k.value.blend_type);
-                let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-                rgba.a = k.value.lt.rgba.a;
-                rgba.r = k.value.lt.rgba.r;
-                rgba.g = k.value.lt.rgba.g;
-                rgba.b = k.value.lt.rgba.b;
-                key_value.rgba = Some(Box::new(rgba));
-                key_value.rate = k.value.lt.rate;
-                value.lt = Some(Box::new(key_value));
-                let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-                rgba.a = k.value.rt.rgba.a;
-                rgba.r = k.value.rt.rgba.r;
-                rgba.g = k.value.rt.rgba.g;
-                rgba.b = k.value.rt.rgba.b;
-                key_value.rgba = Some(Box::new(rgba));
-                key_value.rate = k.value.rt.rate;
-                value.rt = Some(Box::new(key_value));
-                let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-                rgba.a = k.value.lb.rgba.a;
-                rgba.r = k.value.lb.rgba.r;
-                rgba.g = k.value.lb.rgba.g;
-                rgba.b = k.value.lb.rgba.b;
-                key_value.rgba = Some(Box::new(rgba));
-                key_value.rate = k.value.lb.rate;
-                value.lb = Some(Box::new(key_value));
-                let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-                rgba.a = k.value.rb.rgba.a;
-                rgba.r = k.value.rb.rgba.r;
-                rgba.g = k.value.rb.rgba.g;
-                rgba.b = k.value.rb.rgba.b;
-                key_value.rgba = Some(Box::new(rgba));
-                key_value.rate = k.value.rb.rate;
-                value.rb = Some(Box::new(key_value));
-                Some(Box::new(value))
-            });
+            process_interpolatable_attribute!(&v.keys, p_arg.part_color_array, super::keyframes::PartColorKey, |k: &sspj::ssattribute::SsAttributePartsColorKey| { Box::new(build_part_attribute_part_color_t(&k.value, part_type)) });
         }
         sspj::ssattribute::SsAttributeKind::Shader(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.shader_array, ssab::ssab::ss::format::PartAnimationDataShaderT, |k: &sspj::ssattribute::SsAttributeShaderKey| {
+            process_interpolatable_attribute!(&v.keys, p_arg.shader_array, super::keyframes::ShaderKey, |k: &sspj::ssattribute::SsAttributeShaderKey| {
                 let mut value = ssab::ssab::ss::format::PartAttributeShaderT::default();
-                value.id = Some(k.value.id.clone());
+                value.id = k.value.id.clone();
                 value.id_hash = crate::utils::fnv1a_hash_str(&k.value.id);
                 value.param0 = k.value.param0;
                 value.param1 = k.value.param1;
@@ -1142,11 +1105,11 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                 value.param5 = k.value.param5;
                 value.param6 = k.value.param6;
                 value.param7 = k.value.param7;
-                value.map0_id = k.value.map0.map_id;
+                value.map0_cellmap_name_hash = cellmaps.name_hash(k.value.map0.map_id);
                 value.map0_name_hash = crate::utils::fnv1a_hash_str(&k.value.map0.name);
-                value.map1_id = k.value.map1.map_id;
+                value.map1_cellmap_name_hash = cellmaps.name_hash(k.value.map1.map_id);
                 value.map1_name_hash = crate::utils::fnv1a_hash_str(&k.value.map1.name);
-                Some(Box::new(value))
+                Box::new(value)
             });
         }
         sspj::ssattribute::SsAttributeKind::Vertex(v) => {
@@ -1160,17 +1123,17 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                 }
             }
             if !skew_keys.is_empty() {
-                process_interpolatable_attribute!(&skew_keys, p_arg.skew_array, ssab::ssab::ss::format::PartAnimationDataVec2T, |k: &sspj::ssattribute::SsAttributeVertexKey| {
-                    k.value.skew.as_ref().map(|v| {
-                        let mut val = ssab::ssab::ss::format::Vec2T::default();
+                process_interpolatable_attribute!(&skew_keys, p_arg.skew_array, super::keyframes::SkewKey, |k: &sspj::ssattribute::SsAttributeVertexKey| {
+                    let mut val = ssab::ssab::ss::format::Vec2T::default();
+                    if let Some(v) = k.value.skew.as_ref() {
                         val.v1 = v.x;
                         val.v2 = v.y;
-                        Box::new(val)
-                    })
+                    }
+                    Box::new(val)
                 });
             }
             if !vertex_keys.is_empty() {
-                process_interpolatable_attribute!(&vertex_keys, p_arg.vertex_array, ssab::ssab::ss::format::PartAnimationDataVertexT, |k: &sspj::ssattribute::SsAttributeVertexKey| {
+                process_interpolatable_attribute!(&vertex_keys, p_arg.vertex_array, super::keyframes::VertexKey, |k: &sspj::ssattribute::SsAttributeVertexKey| {
                     let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
                     let mut c = ssab::ssab::ss::format::Vec2T::default();
                     if let Some(p) = k.value.lt.as_ref() {
@@ -1196,31 +1159,21 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                         c.v2 = p.y;
                     }
                     value.rb = Some(Box::new(c));
-                    Some(Box::new(value))
+                    Box::new(value)
                 });
             }
         }
         sspj::ssattribute::SsAttributeKind::Deform(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.deform_array, ssab::ssab::ss::format::PartAnimationDataDeformT, |k: &sspj::ssattribute::SsAttributeDeformKey| {
+            process_interpolatable_attribute!(&v.keys, p_arg.deform_array, super::keyframes::DeformKey, |k: &sspj::ssattribute::SsAttributeDeformKey| {
                 let mut value = ssab::ssab::ss::format::PartAttributeDeformT::default();
-                value.coordinate = Some(
-                    k.value
-                        .vchg
-                        .iter()
-                        .map(|p| {
-                            let mut v = ssab::ssab::ss::format::Vec2T::default();
-                            v.v1 = p.x;
-                            v.v2 = p.y;
-                            v
-                        })
-                        .collect(),
-                );
+                value.coord_x = Some(k.value.vchg.iter().map(|p| p.x).collect());
+                value.coord_y = Some(k.value.vchg.iter().map(|p| p.y).collect());
                 value.index = Some(k.value.vchg.iter().map(|p| p.x_index as i16).collect());
-                Some(Box::new(value))
+                Box::new(value)
             });
         }
         sspj::ssattribute::SsAttributeKind::Texchange(v) => {
-            process_simple_attribute!(&v.keys, p_arg.texture_array, ssab::ssab::ss::format::PartAnimationDataUIntValueT, |k: &sspj::ssattribute::SsAttributeTexchangeKey| { crate::utils::fnv1a_hash_str(&k.value.texture_name) });
+            process_simple_attribute!(&v.keys, p_arg.texture_array, super::keyframes::TextureKey, |k: &sspj::ssattribute::SsAttributeTexchangeKey| { crate::utils::fnv1a_hash_texture_name(&k.value.texture_name) });
         }
         _ => {}
     });
@@ -1256,7 +1209,6 @@ fn optimize_part_animation_data_value_changing_range(interpolation: &ssab::ssab:
     }
 }
 
-#[cfg(false)]
 macro_rules! impl_optimize_interpolatable_attribute {
     ($fn_name:ident, $type_t:ty) => {
         fn $fn_name(attribute: &[$type_t]) -> Option<Vec<$type_t>> {
@@ -1264,44 +1216,7 @@ macro_rules! impl_optimize_interpolatable_attribute {
                 return None;
             }
             let mut optimized = Vec::with_capacity(attribute.len());
-
-            for i in 0..attribute.len() {
-                let current = &attribute[i];
-                let is_first = i == 0;
-                let is_last = i == attribute.len() - 1;
-
-                if is_first || is_last {
-                    let mut key = current.clone();
-                    if is_last {
-                        key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                    }
-                    optimized.push(key);
-                    continue;
-                }
-
-                let prev = &attribute[i - 1];
-                let next = &attribute[i + 1];
-
-                // 冗長なキーの判定: 前後と同じ値で、補間も発生しない場合
-                // MEMO: 値の変化がない区間でも、補間タイプによっては曲線を描く可能性があるため interpolation もチェックする
-                let is_redundant = current.value == prev.value && current.value == next.value && !optimize_part_animation_data_value_changing_range(&prev.interpolation) && !optimize_part_animation_data_value_changing_range(&current.interpolation);
-
-                if !is_redundant {
-                    optimized.push(current.clone());
-                }
-            }
-            if optimized.is_empty() { None } else { Some(optimized) }
-        }
-    };
-}
-macro_rules! impl_optimize_interpolatable_attribute {
-    ($fn_name:ident, $type_t:ty) => {
-        fn $fn_name(attribute: &[$type_t]) -> Option<Vec<$type_t>> {
-            if attribute.is_empty() {
-                return None;
-            }
-            let mut optimized = Vec::with_capacity(attribute.len());
-            optimized.push(attribute[0].clone()); // First key always exist.
+            optimized.push(attribute[0].clone());
 
             for i in 1..attribute.len() {
                 let current = &attribute[i];
@@ -1360,19 +1275,18 @@ macro_rules! impl_optimize_simple_attribute {
     };
 }
 
-impl_optimize_interpolatable_attribute!(optimize_part_animation_data_float, ssab::ssab::ss::format::PartAnimationDataFloatValueT);
-impl_optimize_interpolatable_attribute!(optimize_part_animation_data_int, ssab::ssab::ss::format::PartAnimationDataIntValueT);
-impl_optimize_simple_attribute!(optimize_part_animation_data_bool, ssab::ssab::ss::format::PartAnimationDataBoolValueT);
-impl_optimize_simple_attribute!(optimize_part_animation_data_cell, ssab::ssab::ss::format::PartAnimationDataCellValueT);
-impl_optimize_interpolatable_attribute!(optimize_part_animation_data_partcolor, ssab::ssab::ss::format::PartAnimationDataPartColorT);
-impl_optimize_interpolatable_attribute!(optimize_part_animation_data_shader, ssab::ssab::ss::format::PartAnimationDataShaderT);
-impl_optimize_interpolatable_attribute!(optimize_part_animation_data_vertex, ssab::ssab::ss::format::PartAnimationDataVertexT);
-impl_optimize_interpolatable_attribute!(optimize_part_animation_data_skew, ssab::ssab::ss::format::PartAnimationDataVec2T);
-impl_optimize_interpolatable_attribute!(optimize_part_animation_data_deform, ssab::ssab::ss::format::PartAnimationDataDeformT);
-impl_optimize_simple_attribute!(optimize_part_animation_data_texture, ssab::ssab::ss::format::PartAnimationDataUIntValueT);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_float, super::keyframes::FloatKey);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_int, super::keyframes::IntKey);
+impl_optimize_simple_attribute!(optimize_part_animation_data_bool, super::keyframes::BoolKey);
+impl_optimize_simple_attribute!(optimize_part_animation_data_cell, super::keyframes::CellKey);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_partcolor, super::keyframes::PartColorKey);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_shader, super::keyframes::ShaderKey);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_vertex, super::keyframes::VertexKey);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_skew, super::keyframes::SkewKey);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_deform, super::keyframes::DeformKey);
+impl_optimize_simple_attribute!(optimize_part_animation_data_texture, super::keyframes::TextureKey);
 
-fn modify_part_animation_data(p_args: &mut ssab::ssab::ss::format::PartAnimationDataT, _part_type: &sspj::sstypes::SsPartType, _anime_data: &sspj::ssae::SsPartAnime) {
-    // Key-data optimization per attribute
+fn modify_part_animation_data(p_args: &mut super::keyframes::PartKeys, _part_type: &sspj::sstypes::SsPartType, _anime_data: &sspj::ssae::SsPartAnime) {
     p_args.cell_array = p_args.cell_array.as_ref().and_then(|v| optimize_part_animation_data_cell(v));
     p_args.position_x_array = p_args.position_x_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
     p_args.position_y_array = p_args.position_y_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
@@ -1413,32 +1327,268 @@ fn modify_part_animation_data(p_args: &mut ssab::ssab::ss::format::PartAnimation
     p_args.texture_array = p_args.texture_array.as_ref().and_then(|v| optimize_part_animation_data_texture(v));
 }
 
-fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Vec<ssab::ssab::ss::format::PartAnimationDataT> {
-    let mut parts_animation_data_t = Vec::<ssab::ssab::ss::format::PartAnimationDataT>::new();
-    parts_animation_data_t.resize(parts_map.len(), ssab::ssab::ss::format::PartAnimationDataT::default());
+fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, cellmaps: &CellmapResolver) -> Vec<super::keyframes::PartKeys> {
+    let mut parts_animation_data_t = Vec::<super::keyframes::PartKeys>::new();
+    parts_animation_data_t.resize(parts_map.len(), super::keyframes::PartKeys::default());
 
     for part_anime in &setup_animation.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
-            // not found part (an illegal case)
             continue;
         };
 
         let index_part = p.array_index as usize;
-        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime);
+        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime, cellmaps, true, &p.part_type);
     }
 
     for part_anime in &anime_data.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
-            // not found part (an illegal case)
             continue;
         };
 
         let index_part = p.array_index as usize;
-        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime);
+        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime, cellmaps, false, &p.part_type);
         modify_part_animation_data(&mut parts_animation_data_t[index_part], &p.part_type, part_anime);
     }
 
+    for part in parts_map.values() {
+        let index_part = part.array_index as usize;
+        apply_part_type_defaults(&mut parts_animation_data_t[index_part], part);
+    }
+
+    bake_hide_inheritance(&mut parts_animation_data_t, parts_map);
+
     parts_animation_data_t
+}
+
+/// Bakes SpriteStudio's per-part HIDE inheritance into each part's `hide_array`.
+///
+/// In SpriteStudio the `hide` attribute does NOT unconditionally cascade to children:
+/// whether a part follows its parent's hidden state is controlled per-part by
+/// the `ineheritRates/HIDE` flag (`SsPart.inherit_rates.hide`). The runtime
+/// treats `hide` as a pure per-part attribute and never propagates it, so any
+/// inheritance is resolved here at convert time — a part that inherits HIDE has
+/// its parent's already-resolved hidden state OR-ed into its own `hide_array`.
+///
+/// Parts are visited in `array_index` order; SS stores a parent before its
+/// children, so a parent's effective hide is always resolved first, which makes
+/// the inheritance transitive (a grandparent reaches a grandchild only when
+/// every link in the chain has the flag set).
+fn bake_hide_inheritance(parts_animation_data_t: &mut [super::keyframes::PartKeys], parts_map: &HashMap<String, &sspj::ssae::SsPart>) {
+    let num_parts = parts_animation_data_t.len();
+
+    // Index parts by `array_index` for parent lookups.
+    let mut parts_by_index: Vec<Option<&sspj::ssae::SsPart>> = vec![None; num_parts];
+    for part in parts_map.values() {
+        let idx = part.array_index as usize;
+        if idx < num_parts {
+            parts_by_index[idx] = Some(part);
+        }
+    }
+
+    // effective[i] = minimal `(frame, hidden)` step keyframes for part i after
+    // resolving inheritance. Always non-empty and starting at frame 0.
+    let mut effective: Vec<Vec<(u16, bool)>> = Vec::with_capacity(num_parts);
+
+    for i in 0..num_parts {
+        let own = hide_steps(parts_animation_data_t[i].hide_array.as_deref());
+
+        let Some(part) = parts_by_index[i] else {
+            effective.push(own);
+            continue;
+        };
+
+        let parent_idx = part.parent_index;
+        let inherits = part.inherit_rates.hide && parent_idx >= 0 && (parent_idx as usize) < i;
+        if !inherits {
+            effective.push(own);
+            continue;
+        }
+
+        let eff = or_hide_steps(&own, &effective[parent_idx as usize]);
+        if eff != own {
+            parts_animation_data_t[i].hide_array = Some(
+                eff.iter()
+                    .map(|&(index, value)| {
+                        let mut k = super::keyframes::BoolKey::default();
+                        k.index = index;
+                        k.value = value;
+                        k
+                    })
+                    .collect(),
+            );
+        }
+        effective.push(eff);
+    }
+}
+
+/// Extracts a part's own hide attribute as minimal `(frame, hidden)` step
+/// keyframes. A missing `hide_array` means "never hidden"; the result always
+/// begins at frame 0 so it can be sampled at any frame >= 0.
+fn hide_steps(hide_array: Option<&[super::keyframes::BoolKey]>) -> Vec<(u16, bool)> {
+    match hide_array {
+        Some(keys) if !keys.is_empty() => keys.iter().map(|k| (k.index, k.value)).collect(),
+        _ => vec![(0, false)],
+    }
+}
+
+/// Value of a `(frame, hidden)` step function at `frame`. `steps` is sorted
+/// ascending and begins at frame 0.
+fn hide_value_at(steps: &[(u16, bool)], frame: u16) -> bool {
+    let mut value = steps[0].1;
+    for &(idx, val) in steps {
+        if idx <= frame {
+            value = val;
+        } else {
+            break;
+        }
+    }
+    value
+}
+
+/// OR of two `(frame, hidden)` step functions, returned as minimal keyframes
+/// (frame 0 plus one keyframe per value change — matching the layout produced
+/// by `optimize_part_animation_data_bool`).
+fn or_hide_steps(a: &[(u16, bool)], b: &[(u16, bool)]) -> Vec<(u16, bool)> {
+    let mut frames: Vec<u16> = a.iter().map(|&(i, _)| i).chain(b.iter().map(|&(i, _)| i)).collect();
+    frames.sort_unstable();
+    frames.dedup();
+
+    let mut result: Vec<(u16, bool)> = Vec::new();
+    for frame in frames {
+        let hidden = hide_value_at(a, frame) || hide_value_at(b, frame);
+        if result.last().map(|&(_, v)| v) != Some(hidden) {
+            result.push((frame, hidden));
+        }
+    }
+    result
+}
+
+fn apply_part_type_defaults(p_args: &mut super::keyframes::PartKeys, part: &sspj::ssae::SsPart) {
+    match &part.part_type {
+        sspj::sstypes::SsPartType::Shape => {
+            const SHAPE_DEFAULT_SIZE: f32 = 64.0;
+            if p_args.size_x_array.as_ref().is_none_or(|v| v.is_empty()) {
+                p_args.size_x_array = Some(vec![float_value_constant_key(SHAPE_DEFAULT_SIZE)]);
+            }
+            if p_args.size_y_array.as_ref().is_none_or(|v| v.is_empty()) {
+                p_args.size_y_array = Some(vec![float_value_constant_key(SHAPE_DEFAULT_SIZE)]);
+            }
+        }
+        sspj::sstypes::SsPartType::Armature => {
+            // A bone's rest pose is authored in the ssae `bonePosition`/`boneRotation`
+            // tags, not as setup keyframes. Reflect them as the bone's default
+            // transform so the runtime poses the bone correctly on animations that
+            // do not key it; an animation that does key the bone overrides these.
+            if p_args.position_x_array.as_ref().is_none_or(|v| v.is_empty()) {
+                p_args.position_x_array = Some(vec![float_value_constant_key(part.bone_position.x)]);
+            }
+            if p_args.position_y_array.as_ref().is_none_or(|v| v.is_empty()) {
+                p_args.position_y_array = Some(vec![float_value_constant_key(part.bone_position.y)]);
+            }
+            if p_args.rotation_z_array.as_ref().is_none_or(|v| v.is_empty()) {
+                p_args.rotation_z_array = Some(vec![float_value_constant_key(part.bone_rotation)]);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn float_value_constant_key(value: f32) -> super::keyframes::FloatKey {
+    let mut k = super::keyframes::FloatKey::default();
+    k.index = 0;
+    k.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+    k.value = value;
+    k
+}
+
+// PartColor mediation. The XML carries (rgba, rate) per corner plus a per-attribute
+// (blend_type, target). Older SpriteStudio runtimes encoded the same compatibility
+// quirk that lives here: under Mix, `rate` and `rgba.a` differ in role between Whole
+// and Vertex. The same
+// pair carries two unrelated semantics (a "blend weight" and a "final-alpha source"),
+// and which XML field carries which depends on (blend_type, target).
+//
+// The `.ssab` schema reuses the same two slots after mediation:
+//   - rgba.a (u8)  ← rateAlpha: source for the final-alpha multiplier (later
+//                     multiplied by the part's overall alpha in the player).
+//   - rate   (f32) ← colorA:    the PartColor blend weight (the renderer's
+//                     ColorOverlay.a equivalent).
+// `r/g/b` pass through unchanged. The `target` distinction is consumed here when
+// the per-attribute is expanded into four corner entries; downstream code never
+// sees it again.
+//
+// SS6PlayerForUnity's `ParseAnimationAttributePartsColor` applies the same table. The
+// C++ SDK applies an equivalent split at draw time, using a fixed-function texture
+// combiner constant instead of vertex data; this follows the shader-friendly Unity
+// encoding.
+fn build_part_color_key_value_color_t(
+    src: &sspj::ssattribute::SsAttributePartsColorKeyValueColor,
+    blend_type: &sspj::sstypes::SsBlendType,
+    target: &sspj::sstypes::SsColorBlendTarget,
+    part_type: &sspj::sstypes::SsPartType,
+) -> ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT {
+    let mut color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+    let mut rgba = ssab::ssab::ss::format::U8ColorT::default();
+    rgba.r = src.rgba.r;
+    rgba.g = src.rgba.g;
+    rgba.b = src.rgba.b;
+
+    let (rate_alpha_u8, color_a_f32) = match (blend_type, target) {
+        // Mix + Whole: the XML `rate` carries the blend weight, `rgba.a` the final alpha.
+        (sspj::sstypes::SsBlendType::Mix, sspj::sstypes::SsColorBlendTarget::Whole) => (src.rgba.a, src.rate),
+        // Mix + Vertex: per-corner `rgba.a` carries the blend weight; XML `rate`
+        // is documented to be ~1.0 in this mode and feeds the final alpha.
+        (sspj::sstypes::SsBlendType::Mix, sspj::sstypes::SsColorBlendTarget::Vertex) => {
+            let rate_u8 = (src.rate * 255.0).clamp(0.0, 255.0) as u8;
+            (rate_u8, (src.rgba.a as f32) / 255.0)
+        }
+        // All other blend types (Add/Sub/Mul and the newer additions): the blend
+        // weight is implicitly 1.0; XML `rate` is unused; `rgba.a` is the final alpha.
+        _ => (src.rgba.a, 1.0),
+    };
+
+    // Shape-specific override on top of the general mediation: Shape parts
+    // don't apply the PartColor compositing formula — the per-vertex color is
+    // just pc.rgba, and the GPU framebuffer blend (part.alpha_blend_type) does
+    // the rest. The per-corner alpha rule, however, is special:
+    //   - PartColor blend_type = Mix : vertex.a is forced to 1.0
+    //   - PartColor blend_type ≠ Mix : vertex.a = pc.rgba.a (opacity, multiplied
+    //                                   with part_alpha downstream)
+    // The player forces (rate=1, blend_idx=Mix) per vertex so the shader formula
+    // collapses to lerp(white, pc.rgb, 1.0) = pc.rgb (and the original PartColor
+    // blend_type stays in ssab for inspection). To make Mix shape's vertex.a be
+    // 1.0, we override rgba.a here.
+    let rate_alpha_u8 = if matches!(part_type, sspj::sstypes::SsPartType::Shape) && matches!(blend_type, sspj::sstypes::SsBlendType::Mix) { 255 } else { rate_alpha_u8 };
+
+    rgba.a = rate_alpha_u8;
+    color.rgba = Some(Box::new(rgba));
+    color.rate = color_a_f32;
+    color
+}
+
+// SpriteStudio stores PartColor with a `target` of either Whole (single overall color in `color`)
+// or Vertex (four per-corner colors). The `.ssab` schema only carries four corners,
+// so Whole is expanded into four identical corner entries here. See
+// `build_part_color_key_value_color_t` for the rate/alpha mediation applied per corner.
+fn build_part_attribute_part_color_t(src: &sspj::ssattribute::SsAttributePartsColorKeyValue, part_type: &sspj::sstypes::SsPartType) -> ssab::ssab::ss::format::PartAttributePartColorT {
+    let mut value = ssab::ssab::ss::format::PartAttributePartColorT::default();
+    value.blend_type = convert_alpha_blend_type(&src.blend_type);
+    match src.target {
+        sspj::sstypes::SsColorBlendTarget::Whole => {
+            let c = build_part_color_key_value_color_t(&src.color, &src.blend_type, &src.target, part_type);
+            value.lt = Some(Box::new(c.clone()));
+            value.rt = Some(Box::new(c.clone()));
+            value.lb = Some(Box::new(c.clone()));
+            value.rb = Some(Box::new(c));
+        }
+        sspj::sstypes::SsColorBlendTarget::Vertex => {
+            value.lt = Some(Box::new(build_part_color_key_value_color_t(&src.lt, &src.blend_type, &src.target, part_type)));
+            value.rt = Some(Box::new(build_part_color_key_value_color_t(&src.rt, &src.blend_type, &src.target, part_type)));
+            value.lb = Some(Box::new(build_part_color_key_value_color_t(&src.lb, &src.blend_type, &src.target, part_type)));
+            value.rb = Some(Box::new(build_part_color_key_value_color_t(&src.rb, &src.blend_type, &src.target, part_type)));
+        }
+    }
+    value
 }
 
 fn convert_alpha_blend_type(blend_type: &sspj::sstypes::SsBlendType) -> ssab::ssab::ss::format::BlendType {
@@ -1459,23 +1609,85 @@ fn convert_alpha_blend_type(blend_type: &sspj::sstypes::SsBlendType) -> ssab::ss
 }
 
 pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab::ss::format::PartDataT> {
+    let bone_index_to_part_index: std::collections::HashMap<i32, u16> = anime_pack
+        .model
+        .bone_list
+        .iter()
+        .filter_map(|(part_name, &bone_idx)| {
+            let part_idx = anime_pack.model.part_list.iter().position(|p| &p.name == part_name)?;
+            Some((bone_idx, part_idx as u16))
+        })
+        .collect();
+
+    // Running counter into the compact, mesh-part-ordered `mesh_list`.
+    let mut mesh_part_index = 0usize;
     anime_pack
         .model
         .part_list
         .iter()
         .map(|part| {
             let mut part_data_t = ssab::ssab::ss::format::PartDataT::default();
-            part_data_t.name = Some(part.name.to_string());
+            part_data_t.name = part.name.to_string();
             part_data_t.parent_index = part.parent_index as i16;
             part_data_t.bounds_type = match &part.bounds_type {
                 sspj::sstypes::SsBoundsType::None => ssab::ssab::ss::format::BoundsType::None,
                 sspj::sstypes::SsBoundsType::Quad => ssab::ssab::ss::format::BoundsType::Quad,
                 sspj::sstypes::SsBoundsType::Aabb => ssab::ssab::ss::format::BoundsType::Aabb,
                 sspj::sstypes::SsBoundsType::Circle => ssab::ssab::ss::format::BoundsType::Circle,
-                sspj::sstypes::SsBoundsType::CircleSmin => ssab::ssab::ss::format::BoundsType::Circle,
-                sspj::sstypes::SsBoundsType::CircleSmax => ssab::ssab::ss::format::BoundsType::Circle,
+                sspj::sstypes::SsBoundsType::CircleSmin => ssab::ssab::ss::format::BoundsType::CircleSmin,
+                sspj::sstypes::SsBoundsType::CircleSmax => ssab::ssab::ss::format::BoundsType::CircleSmax,
             };
             part_data_t.blend_type = convert_alpha_blend_type(&part.alpha_blend_type);
+            part_data_t.mask_influence = part.mask_influence;
+            part_data_t.mask_write = part.write_mask;
+            part_data_t.visible_inside_mask = part.visible_inside_mask;
+            // Fold the per-type pure-mask flag from the source .ssae into the unified draw_as_mask.
+            part_data_t.draw_as_mask = match &part.part_type {
+                sspj::sstypes::SsPartType::Shape => part.shape_mask,
+                sspj::sstypes::SsPartType::Text => part.text_mask,
+                sspj::sstypes::SsPartType::Nines => part.nines_mask,
+                _ => false,
+            };
+            part_data_t.output_influence = part.output_influence;
+
+            // `mesh_list` is a compact list ordered by Mesh part (one SsMeshBind
+            // per Mesh part — it carries no part identity), so index it by a
+            // running mesh-part counter, not the global part index.
+            part_data_t.mesh_binding = matches!(&part.part_type, sspj::sstypes::SsPartType::Mesh)
+                .then(|| {
+                    let i = mesh_part_index;
+                    mesh_part_index += 1;
+                    anime_pack.model.mesh_list.get(i)
+                })
+                .flatten()
+                .filter(|mesh_bind| !mesh_bind.mesh_vertices_bind_array.is_empty())
+                .map(|mesh_bind| {
+                    let num_vertices = mesh_bind.mesh_vertices_bind_array.len();
+                    let total_influences: usize = mesh_bind.mesh_vertices_bind_array.iter().map(|b| b.bind_bone_num.max(0) as usize).sum();
+                    let mut vertex_influence_offset: Vec<u32> = Vec::with_capacity(num_vertices + 1);
+                    let mut influence_bone: Vec<u16> = Vec::with_capacity(total_influences);
+                    let mut influence_weight: Vec<f32> = Vec::with_capacity(total_influences);
+                    let mut influence_coord_x: Vec<f32> = Vec::with_capacity(total_influences);
+                    let mut influence_coord_y: Vec<f32> = Vec::with_capacity(total_influences);
+                    vertex_influence_offset.push(0);
+                    for bind_info in &mesh_bind.mesh_vertices_bind_array {
+                        for i in 0..bind_info.bind_bone_num.max(0) as usize {
+                            influence_bone.push(bone_index_to_part_index.get(&bind_info.bone_index[i]).copied().unwrap_or(0));
+                            influence_weight.push(bind_info.weight[i] as f32 / 100.0);
+                            influence_coord_x.push(bind_info.offset[i].x);
+                            influence_coord_y.push(bind_info.offset[i].y);
+                        }
+                        vertex_influence_offset.push(influence_bone.len() as u32);
+                    }
+                    let mut binding = ssab::ssab::ss::format::PartMeshBindingT::default();
+                    binding.vertex_influence_offset = Some(vertex_influence_offset);
+                    binding.influence_bone = Some(influence_bone);
+                    binding.influence_weight = Some(influence_weight);
+                    binding.influence_coord_x = Some(influence_coord_x);
+                    binding.influence_coord_y = Some(influence_coord_y);
+                    Box::new(binding)
+                });
+
             part_data_t.part_type = match &part.part_type {
                 sspj::sstypes::SsPartType::Null => ssab::ssab::ss::format::PartTypeT::PartTypeNull(Box::default()),
                 sspj::sstypes::SsPartType::Normal => ssab::ssab::ss::format::PartTypeT::PartTypeNormal(Box::default()),
@@ -1488,8 +1700,6 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                         sspj::sstypes::SsShapeType::Arrow => ssab::ssab::ss::format::ShapeType::Arrow,
                         sspj::sstypes::SsShapeType::Star => ssab::ssab::ss::format::ShapeType::Star,
                     };
-                    part_type.shape_mask = part.shape_mask;
-
                     ssab::ssab::ss::format::PartTypeT::PartTypeShape(Box::new(part_type))
                 }
                 sspj::sstypes::SsPartType::Text => {
@@ -1501,7 +1711,6 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                     part_type.text_size = part.text_size;
                     part_type.text_space = part.text_space;
                     part_type.text_smooth = part.text_smooth;
-                    part_type.text_mask = part.text_mask;
                     part_type.text_width = part.text_width;
                     part_type.text_height = part.text_height;
                     part_type.e_anchor = match part.e_anchor {
@@ -1527,13 +1736,15 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                     part_type.nines_margin_t = part.nines_margin_t;
                     part_type.nines_margin_b = part.nines_margin_b;
                     part_type.nines_fill_mode = part.nines_fill_mode;
-                    part_type.nines_mask = part.nines_mask;
 
                     ssab::ssab::ss::format::PartTypeT::PartTypeNines(Box::new(part_type))
                 }
                 sspj::sstypes::SsPartType::Instance => {
                     let mut part_type = ssab::ssab::ss::format::PartTypeInstanceT::default();
-                    part_type.ref_anime_hash = crate::utils::fnv1a_hash_str(&part.ref_anime);
+                    part_type.ref_anime_pack = part.ref_anime_pack.clone();
+                    part_type.ref_anime_pack_hash = crate::utils::fnv1a_hash_str(&part.ref_anime_pack);
+                    part_type.ref_anime_name = part.ref_anime.clone();
+                    part_type.ref_anime_name_hash = crate::utils::fnv1a_hash_str(&part.ref_anime);
                     ssab::ssab::ss::format::PartTypeT::PartTypeInstance(Box::new(part_type))
                 }
                 sspj::sstypes::SsPartType::Armature => ssab::ssab::ss::format::PartTypeT::PartTypeArmature(Box::default()),
@@ -1558,53 +1769,143 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
         .collect::<Vec<_>>()
 }
 
-pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>) -> Vec<ssab::ssab::ss::format::AnimationDataT> {
+pub fn convert_animation_data_list(
+    anime_pack: &sspj::ssae::SsAnimePack,
+    parts_map: &HashMap<String, &sspj::ssae::SsPart>,
+    sound_list_id_to_name_hash: &HashMap<i32, u32>,
+    cellmaps: &CellmapResolver,
+) -> Result<(Vec<ssab::ssab::ss::format::AnimationDataT>, ssab::ssab::ss::format::KeyframesT), crate::ConverterError> {
+    let mut keyframes = super::keyframes::KeyframesBuilder::new(&anime_pack.name);
     let Some(setup_animation) = anime_pack.anime_list.iter().find(|anime_data| anime_data.is_setup) else {
-        // not found setup animation
-        return vec![];
+        return Ok((vec![], keyframes.finish()));
     };
 
-    anime_pack
-        .anime_list
-        .iter()
-        .filter_map(|anime_data| {
-            if anime_data == setup_animation {
-                return None;
+    let animations =
+        anime_pack.anime_list.iter().filter(|anime_data| *anime_data != setup_animation).map(|anime_data| convert_animedatat(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash, cellmaps, &mut keyframes)).collect::<Result<Vec<_>, _>>()?;
+    Ok((animations, keyframes.finish()))
+}
+
+/// Resolves a cellmap `map_id` to its name hash.
+///
+/// `map_id` indexes the same `cellmap_names` list that produced it, so a value
+/// outside it means the sspj is malformed. Every lookup happens inside a
+/// `for_each` closure several calls down, which has no way to return an error,
+/// so the first offending id is recorded here and [`Self::check`] reads it once
+/// the walk is over. An index would panic, and `panic = "abort"` would turn a
+/// malformed pack into a dead host process.
+pub struct CellmapResolver<'a> {
+    names: &'a [String],
+    out_of_range: core::cell::Cell<Option<i32>>,
+}
+
+impl<'a> CellmapResolver<'a> {
+    pub fn new(names: &'a [String]) -> Self {
+        Self { names, out_of_range: core::cell::Cell::new(None) }
+    }
+
+    /// Negative `map_id` is the documented "no map" convention in sspj (e.g. an
+    /// unset shader map slot) and resolves to `0`.
+    fn name_hash(&self, map_id: i32) -> u32 {
+        if map_id < 0 {
+            return 0;
+        }
+        match self.names.get(map_id as usize) {
+            Some(file_name) => crate::utils::fnv1a_hash_str(crate::utils::cellmap_basename(file_name)),
+            None => {
+                if self.out_of_range.get().is_none() {
+                    self.out_of_range.set(Some(map_id));
+                }
+                0
             }
-            Some(convert_animedatat(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash))
-        })
-        .collect::<Vec<ssab::ssab::ss::format::AnimationDataT>>()
+        }
+    }
+
+    /// The error for whatever [`Self::name_hash`] could not resolve, or `Ok`.
+    pub fn check(&self, pack_name: &str) -> Result<(), crate::ConverterError> {
+        match self.out_of_range.get() {
+            Some(map_id) => Err(crate::ConverterError::ConversionFailed(format!("{}: a cell references cellmap {}, outside 0..{}", pack_name, map_id, self.names.len()))),
+            None => Ok(()),
+        }
+    }
+}
+
+#[cfg(test)]
+mod cellmap_resolver_tests {
+    use super::*;
+
+    fn names() -> Vec<String> {
+        vec!["ground.ssce".to_string(), "sky.ssce".to_string()]
+    }
+
+    #[test]
+    fn an_in_range_map_id_resolves_and_passes() {
+        let names = names();
+        let r = CellmapResolver::new(&names);
+        assert_eq!(r.name_hash(0), crate::utils::fnv1a_hash_str("ground"));
+        assert_eq!(r.name_hash(1), crate::utils::fnv1a_hash_str("sky"));
+        r.check("pack").expect("both ids are in range");
+    }
+
+    #[test]
+    fn a_negative_map_id_is_the_no_map_convention() {
+        let names = names();
+        let r = CellmapResolver::new(&names);
+        assert_eq!(r.name_hash(-1), 0);
+        r.check("pack").expect("negative is sspj's documented \"no map\"");
+    }
+
+    #[test]
+    fn an_out_of_range_map_id_is_an_error() {
+        let names = names();
+        let r = CellmapResolver::new(&names);
+        assert_eq!(r.name_hash(2), 0, "the walk has to keep going to reach check()");
+        let e = r.check("Action01_Body").expect_err("2 is outside 0..2");
+        let text = format!("{e}");
+        assert!(text.contains("Action01_Body"), "{text}");
+        assert!(text.contains("cellmap 2"), "{text}");
+    }
+
+    #[test]
+    fn the_first_offending_map_id_is_the_one_reported() {
+        let names = names();
+        let r = CellmapResolver::new(&names);
+        r.name_hash(7);
+        r.name_hash(9);
+        let text = format!("{}", r.check("pack").expect_err("both are out of range"));
+        assert!(text.contains("cellmap 7"), "{text}");
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::super::keyframes::FloatKey;
     use super::*;
-    use ssab::ssab::ss::format::{InterpolationType, PartAnimationDataFloatValueT};
+    use ssab::ssab::ss::format::InterpolationType;
 
     #[test]
     fn test_optimize_part_animation_data_float_deduplication() {
         // Test data: [index(time)=0, val=1.0], [index=1, val=1.0], [index=2, val=1.0], [index=3, val=2.0]
         let mut data = Vec::new();
 
-        let mut item = PartAnimationDataFloatValueT::default();
+        let mut item = FloatKey::default();
         item.index = 0;
         item.value = 1.0;
         item.interpolation = InterpolationType::Linear;
         data.push(item);
 
-        let mut item = PartAnimationDataFloatValueT::default();
+        let mut item = FloatKey::default();
         item.index = 1;
         item.value = 1.0;
         item.interpolation = InterpolationType::Linear;
         data.push(item);
 
-        let mut item = PartAnimationDataFloatValueT::default();
+        let mut item = FloatKey::default();
         item.index = 2;
         item.value = 1.0;
         item.interpolation = InterpolationType::Linear;
         data.push(item);
 
-        let mut item = PartAnimationDataFloatValueT::default();
+        let mut item = FloatKey::default();
         item.index = 3;
         item.value = 2.0;
         item.interpolation = InterpolationType::None;
@@ -1630,5 +1931,48 @@ mod tests {
         assert!(optimize_part_animation_data_value_changing_range(&InterpolationType::Hermite));
         assert!(optimize_part_animation_data_value_changing_range(&InterpolationType::Bezier));
         assert!(!optimize_part_animation_data_value_changing_range(&InterpolationType::None));
+    }
+
+    #[test]
+    fn test_hide_value_at() {
+        let steps = [(0u16, false), (87, true), (213, false)];
+        assert!(!hide_value_at(&steps, 0));
+        assert!(!hide_value_at(&steps, 86));
+        assert!(hide_value_at(&steps, 87));
+        assert!(hide_value_at(&steps, 200));
+        assert!(!hide_value_at(&steps, 213));
+        assert!(!hide_value_at(&steps, 9999));
+    }
+
+    #[test]
+    fn test_or_hide_steps_inherits_parent_window() {
+        // A part that is never hidden on its own takes its parent's hidden window.
+        let own = [(0u16, false)];
+        let parent = [(0u16, false), (87, true), (213, false)];
+        assert_eq!(or_hide_steps(&own, &parent), vec![(0, false), (87, true), (213, false)]);
+    }
+
+    #[test]
+    fn test_or_hide_steps_union_of_windows() {
+        // OR of two overlapping hidden windows, collapsed to minimal keyframes.
+        let own = [(0u16, false), (10, true), (20, false)];
+        let parent = [(0u16, false), (5, true), (15, false)];
+        assert_eq!(or_hide_steps(&own, &parent), vec![(0, false), (5, true), (20, false)]);
+    }
+
+    #[test]
+    fn test_or_hide_steps_collapses_when_always_hidden() {
+        // When the union is hidden at every frame, only the frame-0 keyframe remains.
+        let own = [(0u16, true), (130, false), (199, true)];
+        let parent = [(0u16, false), (87, true), (213, false)];
+        assert_eq!(or_hide_steps(&own, &parent), vec![(0, true)]);
+    }
+
+    #[test]
+    fn test_or_hide_steps_unchanged_when_parent_never_hidden() {
+        // A parent that is never hidden leaves the child's own keyframes intact.
+        let own = [(0u16, false), (130, true), (200, false)];
+        let parent = [(0u16, false)];
+        assert_eq!(or_hide_steps(&own, &parent), own.to_vec());
     }
 }

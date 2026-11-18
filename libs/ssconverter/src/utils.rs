@@ -6,6 +6,16 @@ pub fn version_string() -> String {
     format!("{}+{}", env!("CARGO_PKG_VERSION"), short_sha)
 }
 
+/// `.ssab` format version emitted (distinct from build [`version_string`]).
+pub fn ssab_schema_version() -> u32 {
+    ssab::ssab_schema_version()
+}
+
+/// `.ssqb` format version emitted (distinct from build [`version_string`]).
+pub fn ssqb_schema_version() -> u32 {
+    ssab::ssqb_schema_version()
+}
+
 pub fn fnv1a_hash_str(text: &str) -> u32 {
     let mut hash: u32 = 2166136261;
     let prime: u32 = 16777619;
@@ -17,6 +27,43 @@ pub fn fnv1a_hash_str(text: &str) -> u32 {
     hash
 }
 
+/// Hash a `TCHG` `TextureName`, mapping the authored "no override" to `0`.
+///
+/// An empty `TextureName` means "keep the cell's own texture". Hashing it verbatim would
+/// yield the FNV offset basis (`2166136261`) — a value indistinguishable from a real texture
+/// that no lookup table can resolve, so the Player would fail to bind a texture at all.
+/// `0` is the schema default for `InitialPartAttributes.texture` and is reserved for this.
+pub fn fnv1a_hash_texture_name(texture_name: &str) -> u32 {
+    if texture_name.is_empty() {
+        return 0;
+    }
+    fnv1a_hash_str(texture_name)
+}
+
+pub use sspj::asset_path::{ASSET_PATH_SEPARATOR, join_asset_path};
+
+pub fn asset_path_parent(path: &str) -> Option<&str> {
+    path.rsplit_once(ASSET_PATH_SEPARATOR).map(|(parent, _)| parent)
+}
+
+/// File extension used by sspj cellmap entries.
+pub const CELLMAP_FILE_EXT: &str = ".ssce";
+
+/// Strip the `.ssce` suffix from a cellmap file name. Inputs without the
+/// suffix are returned unchanged so callers can pass either form.
+pub fn cellmap_basename(file_name: &str) -> &str {
+    file_name.strip_suffix(CELLMAP_FILE_EXT).unwrap_or(file_name)
+}
+
+#[cfg(feature = "native")]
+fn resolve_within(base: &std::path::Path, path: &std::path::Path) -> Result<std::path::PathBuf, std::io::Error> {
+    let base = if base.as_os_str().is_empty() { std::path::Path::new(".") } else { base };
+    let base = base.canonicalize()?;
+    let resolved = path.canonicalize()?;
+    if resolved.starts_with(&base) { Ok(resolved) } else { Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "outside the base directory")) }
+}
+
+#[cfg(feature = "native")]
 pub fn validate_file_path(file: &str, dir: &std::path::Path) -> Result<(), crate::ConverterError> {
     let file_path_buf = std::path::PathBuf::from(file);
     if file_path_buf.is_absolute() {
@@ -32,15 +79,17 @@ pub fn validate_file_path(file: &str, dir: &std::path::Path) -> Result<(), crate
     if !path_buf.is_file() {
         return Err(crate::ConverterError::ConversionFailed(format!("The file is not file: {}", file)));
     }
-    if path_buf.is_symlink() {
-        return Err(crate::ConverterError::ConversionFailed(format!("The file is symlink: {}", file)));
+
+    if resolve_within(dir, &path_buf).is_err() {
+        return Err(crate::ConverterError::ConversionFailed(format!("The file resolves outside the project directory: {}", file)));
     }
 
     Ok(())
 }
 
+#[cfg(feature = "native")]
 pub fn get_ssab_output_directory(sspj_path: &std::path::Path, embedded: bool) -> Result<std::path::PathBuf, crate::ConverterError> {
-    let suffix = if embedded { "_emb_ssab" } else { "_ssab" };
+    let suffix = if embedded { "_emb" } else { "" };
     let Some(stem) = sspj_path.file_stem() else {
         return Err(crate::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("not found: path stem: {}", sspj_path.as_os_str().to_string_lossy()))));
     };
@@ -55,14 +104,17 @@ pub fn get_assets_of_ssab_object_class(ssab_obj: &ssab::ssab::ss::format::SsAnim
         .cellmaps
         .iter()
         .flat_map(|cellmaps| cellmaps.iter())
-        .flat_map(|cellmap| cellmap.image_path.as_ref().map(|s| (s.to_string(), std::path::PathBuf::from(&sspj.settings.image_base_directory).join(s).to_string_lossy().to_string())))
+        .map(|cellmap| {
+            let s = &cellmap.image_path;
+            (s.to_string(), join_asset_path(&sspj.settings.image_base_directory, s))
+        })
         .collect::<HashMap<_, _>>();
 
     let external_textures = ssab_obj
         .external_textures
         .iter()
         .flat_map(|external_textures| external_textures.iter())
-        .flat_map(|external_texture| external_texture.name.as_ref().map(|s| (s.to_string(), std::path::PathBuf::from(&sspj.settings.image_base_directory).join(s).to_string_lossy().to_string())))
+        .flat_map(|external_texture| external_texture.name.as_ref().map(|s| (s.to_string(), join_asset_path(&sspj.settings.image_base_directory, s))))
         .collect::<HashMap<String, String>>();
 
     let sounds = ssab_obj
@@ -96,7 +148,15 @@ pub fn get_assets_of_ssab_file(ssab_pair: (&String, &[u8]), sspj: &sspj::sspj::S
     let ssab_data = ssab_pair.1;
     let anime = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_data) };
 
-    let images = anime.cellmaps().iter().flatten().flat_map(|cellmap| cellmap.image_path().map(|s| (s.to_string(), std::path::PathBuf::from(&sspj.settings.image_base_directory).join(s).to_string_lossy().to_string()))).collect::<HashMap<_, _>>();
+    let images = anime
+        .cellmaps()
+        .iter()
+        .flatten()
+        .map(|cellmap| {
+            let s = cellmap.image_path();
+            (s.to_string(), join_asset_path(&sspj.settings.image_base_directory, s))
+        })
+        .collect::<HashMap<_, _>>();
 
     let external_textures = anime
         .external_textures()
@@ -104,7 +164,7 @@ pub fn get_assets_of_ssab_file(ssab_pair: (&String, &[u8]), sspj: &sspj::sspj::S
         .flatten()
         .filter_map(|external_texture| {
             let s = external_texture.name()?;
-            Some((s.to_string(), std::path::PathBuf::from(&sspj.settings.image_base_directory).join(s).to_string_lossy().to_string()))
+            Some((s.to_string(), join_asset_path(&sspj.settings.image_base_directory, s)))
         })
         .collect::<HashMap<_, _>>();
 
@@ -130,9 +190,120 @@ pub fn get_assets_of_ssab_file(ssab_pair: (&String, &[u8]), sspj: &sspj::sspj::S
     output
 }
 
+#[cfg(any(feature = "native", feature = "web"))]
 pub fn get_assets_of_ssab_files(ssab_map: &HashMap<String, Vec<u8>>, sspj: &sspj::sspj::SsProject) -> HashMap<String, String> {
-    ssab_map.iter().flat_map(|(key, value)| self::get_assets_of_ssab_file((key, value), sspj).into_iter().map(|(k, v)| (k.clone(), v.clone()))).collect()
+    // The conversion's output holds the `.ssqb` files too, whose tables are not an `.ssab`'s.
+    ssab_map.iter().filter(|(_, value)| ssab::ssab::ss::format::ss_anime_binary_buffer_has_identifier(value)).flat_map(|(key, value)| self::get_assets_of_ssab_file((key, value), sspj).into_iter().map(|(k, v)| (k.clone(), v.clone()))).collect()
 }
 
 #[cfg(test)]
-mod test {}
+mod test {
+    use super::*;
+
+    #[test]
+    fn asset_path_parent_splits_on_forward_slash_only() {
+        assert_eq!(asset_path_parent("font/RoundedMPlus.fnt"), Some("font"));
+        assert_eq!(asset_path_parent("font/nested/RoundedMPlus.fnt"), Some("font/nested"));
+        assert_eq!(asset_path_parent("RoundedMPlus.fnt"), None);
+    }
+
+    #[cfg(feature = "native")]
+    fn scratch_dir(tag: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!("ssconverter-{}-{}", tag, std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("Failed to create the scratch directory");
+        dir
+    }
+
+    #[test]
+    #[cfg(feature = "native")]
+    fn a_path_that_leaves_the_project_directory_is_rejected() {
+        let dir = scratch_dir("leaves");
+        let project = dir.join("project");
+        std::fs::create_dir_all(project.join("nested")).expect("Failed to create the project directory");
+        std::fs::write(project.join("kept.png"), b"x").expect("Failed to write the asset");
+        let outside = dir.join("outside");
+        std::fs::create_dir_all(&outside).expect("Failed to create the outside directory");
+        std::fs::write(outside.join("escaped.png"), b"x").expect("Failed to write the asset");
+
+        assert!(validate_file_path("../outside/escaped.png", &project).is_err());
+        assert!(validate_file_path("nested/../../outside/escaped.png", &project).is_err());
+
+        assert!(validate_file_path("kept.png", &project).is_ok());
+        assert!(validate_file_path("./kept.png", &project).is_ok());
+        assert!(validate_file_path("nested/../kept.png", &project).is_ok());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    #[cfg(all(unix, feature = "native"))]
+    fn a_symlink_that_stays_inside_the_project_is_accepted() {
+        let dir = scratch_dir("symlink-inside");
+        let project = dir.join("project");
+        std::fs::create_dir_all(project.join("nested")).expect("Failed to create the project directory");
+        std::fs::write(project.join("real.png"), b"x").expect("Failed to write the asset");
+        std::os::unix::fs::symlink("real.png", project.join("link.png")).expect("Failed to create the symlink");
+        std::os::unix::fs::symlink("../real.png", project.join("nested").join("deep.png")).expect("Failed to create the symlink");
+
+        assert!(validate_file_path("link.png", &project).is_ok());
+        assert!(validate_file_path("nested/deep.png", &project).is_ok());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    #[cfg(all(unix, feature = "native"))]
+    fn a_symlink_that_points_outside_the_project_is_rejected() {
+        let dir = scratch_dir("symlink-outside");
+        let project = dir.join("project");
+        std::fs::create_dir_all(&project).expect("Failed to create the project directory");
+        let outside = dir.join("outside");
+        std::fs::create_dir_all(&outside).expect("Failed to create the outside directory");
+        std::fs::write(outside.join("escaped.png"), b"x").expect("Failed to write the asset");
+        std::os::unix::fs::symlink("../outside/escaped.png", project.join("link.png")).expect("Failed to create the symlink");
+
+        assert!(validate_file_path("link.png", &project).is_err());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    #[cfg(feature = "native")]
+    fn an_absolute_path_is_rejected() {
+        let dir = scratch_dir("absolute");
+        let asset = dir.join("real.png");
+        std::fs::write(&asset, b"x").expect("Failed to write the asset");
+
+        assert!(validate_file_path(asset.to_str().expect("Failed to render the path"), &dir).is_err());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    // The same table under each identifier: what the slots of an `.ssqb` hold is not
+    // what those of an `.ssab` hold, so its bytes are not read as one.
+    #[test]
+    #[cfg(feature = "native")]
+    fn only_an_ssab_is_read_for_its_assets() {
+        use ssab::ssab::ss::format::{CellMapT, SsAnimeBinaryT};
+        use sspj::ssloader::SsLoader;
+
+        let pack = |identifier: &str| {
+            let mut cellmap = CellMapT::default();
+            cellmap.image_path = "image.png".to_string();
+            let mut anime = SsAnimeBinaryT::default();
+            anime.cellmaps = Some(vec![cellmap]);
+            let mut fbb = flatbuffers::FlatBufferBuilder::new();
+            let offset = anime.pack(&mut fbb);
+            fbb.finish(offset, Some(identifier));
+            fbb.finished_data().to_vec()
+        };
+        let base = std::env::current_dir().expect("Failed to get the current directory");
+        let sspj = sspj::sspj::SsProject::load_from_file(&base.ancestors().nth(2).expect("Failed to get the base directory").join("tests/Ringo/Ringo.sspj")).expect("Failed to load the project");
+
+        let ssab = HashMap::from([("pack.ssab".to_string(), pack(ssab::ssab::ss::format::SS_ANIME_BINARY_IDENTIFIER))]);
+        assert!(get_assets_of_ssab_files(&ssab, &sspj).contains_key("image.png"));
+        let ssqb = HashMap::from([("pack.ssqb".to_string(), pack(ssab::ssqb::ss::format::SS_SEQUENCE_BINARY_IDENTIFIER))]);
+        assert!(get_assets_of_ssab_files(&ssqb, &sspj).is_empty());
+    }
+}

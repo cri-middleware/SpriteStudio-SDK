@@ -45,6 +45,12 @@ pub struct SsPart {
     #[serde(default)]
     pub color_label: String,
     pub mask_influence: bool,
+    #[serde(default)]
+    pub write_mask: bool,
+    #[serde(default)]
+    pub visible_inside_mask: bool,
+    #[serde(default = "default_true")]
+    pub output_influence: bool,
     #[serde(rename = "ineheritRates")]
     pub inherit_rates: InheritRates,
     #[serde(default)]
@@ -73,7 +79,6 @@ pub struct SsPart {
     pub ik_depth: i32,
     #[serde(rename = "IKRotationArrow", default)]
     pub ik_rotation_arrow: SsIkRotationArrow,
-    // m_pPartValueInfo // TODO:
     #[serde(default)]
     pub shape_type: SsShapeType,
     #[serde(default)]
@@ -114,6 +119,10 @@ pub struct SsPart {
     pub nines_fill_mode: i32,
     #[serde(default)]
     pub nines_mask: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -195,18 +204,24 @@ impl FromStr for SsMeshBindInfo {
         if array.is_empty() {
             return Err("SsMeshBindInfo::from_str: array.len() <= 1".to_string());
         }
-        let num: i32 = array[0] as i32;
-        if (1 + num * 4) != array.len() as i32 {
+        // Chunk layout: one header field followed by influence groups of 4
+        // values each (bone, weight, offset_x, offset_y). The header is the
+        // per-vertex influence count in SpriteStudio exports, but the part's total bone
+        // count in older exports — where each vertex still lists only
+        // the bones that actually influence it. So the header can't be trusted
+        // as the influence count; derive the count from the data length.
+        if !(array.len() - 1).is_multiple_of(4) {
             return Err("SsMeshBindInfo::from_str: invalid array length".to_string());
         }
+        let num: i32 = (array.len() as i32 - 1) / 4;
         let mut weight_vec: Vec<i32> = vec![];
         let mut bone_index_vec: Vec<i32> = vec![];
         let mut offset_vec: Vec<SsPoint2> = vec![];
         for idx in 0..num {
             let offset: usize = (1 + idx * 4) as usize;
 
-            let weight: i32 = array[offset] as i32;
-            let bone_index: i32 = array[offset + 1] as i32;
+            let bone_index: i32 = array[offset] as i32;
+            let weight: i32 = array[offset + 1] as i32;
             let x: f32 = array[offset + 2];
             let y: f32 = array[offset + 3];
             weight_vec.push(weight);
@@ -272,6 +287,7 @@ pub struct SsModel {
 
     #[serde(deserialize_with = "parse_mesh_list")]
     pub mesh_list: Vec<SsMeshBind>,
+    #[serde(deserialize_with = "parse_bone_list")]
     pub bone_list: HashMap<String, i32>,
 
     #[serde(default)]
@@ -288,6 +304,25 @@ where
         value: Vec<SsPart>,
     }
     Ok(PartList::deserialize(deserializer)?.value)
+}
+
+fn parse_bone_list<'de, D>(deserializer: D) -> Result<HashMap<String, i32>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    struct BoneListItem {
+        #[serde(rename = "@key")]
+        key: String,
+        #[serde(rename = "$text")]
+        value: i32,
+    }
+    #[derive(Deserialize)]
+    struct BoneList {
+        #[serde(default)]
+        item: Vec<BoneListItem>,
+    }
+    Ok(BoneList::deserialize(deserializer)?.item.into_iter().map(|e| (e.key, e.value)).collect())
 }
 
 fn parse_mesh_list<'de, D>(deserializer: D) -> Result<Vec<SsMeshBind>, D::Error>
@@ -322,13 +357,9 @@ impl SsLoader for SsAnimePack {
 
     fn load(s: &str) -> Result<Self::Output, SspjError> {
         let mut ssae = quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)?;
-        let r = ssae.anime_list.binary_search_by(|anime| anime.is_setup.cmp(&true));
-        match r {
-            Ok(idx) => {
-                ssae.model.ref_setup_anime_pack = ssae.name.clone();
-                ssae.model.ref_setup_animation = ssae.anime_list[idx].name.clone();
-            }
-            Err(_e) => {}
+        if let Some(setup) = ssae.anime_list.iter().find(|anime| anime.is_setup) {
+            ssae.model.ref_setup_anime_pack = ssae.name.clone();
+            ssae.model.ref_setup_animation = setup.name.clone();
         }
         Ok(ssae)
     }
@@ -364,18 +395,19 @@ mod tests {
     use std::path::{Path, PathBuf};
 
     fn load_ssae(path: &Path) {
-        let r = SsAnimePack::load_from_file(path);
-        match r {
-            Ok(ss_anime_pack) => {
-                println!("{:?}", ss_anime_pack);
-            }
-            Err(e) => {
-                panic!("{:?}", e)
-            }
-        }
+        SsAnimePack::load_from_file(path).unwrap();
     }
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()
+    }
+
+    #[test]
+    fn the_setup_animation_is_found_wherever_the_list_puts_it() {
+        for f in ["tests/overall/Basic.ssae", "tests/Doll/Eye.ssae"] {
+            let pack = SsAnimePack::load_from_file(&get_test_base_path().join(f)).expect(f);
+            assert_eq!(pack.model.ref_setup_animation, "Setup", "{f}");
+            assert_eq!(pack.model.ref_setup_anime_pack, pack.name, "{f}");
+        }
     }
 
     #[test]

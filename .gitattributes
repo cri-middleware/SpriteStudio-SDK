@@ -1,8 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto eol=lf
 
-# Explicitly declare text files you want to always be normalized and converted
-# to native line endings on checkout.
+# Always text, whatever auto-detection says; eol=lf above still applies.
 *.c text
 *.cpp text
 *.h text
@@ -20,7 +19,7 @@
 *.js text
 *.ts text
 *.sh text eol=lf
-*.ps1 text eol=crlf
+*.ps1 text eol=lf
 
 # SpriteStudio Project Files (XML-based)
 *.sspj text eol=crlf
@@ -42,6 +41,7 @@
 *.flac binary
 *.aiff binary
 *.aac binary
+*.psd binary
 
 # SpriteStudio Binary Files
 *.ssab binary

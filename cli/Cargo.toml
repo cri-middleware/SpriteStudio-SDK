@@ -1,18 +1,22 @@
 [package]
 name = "ssconverter-cli"
+# Ships as binaries on the GitHub Release, not through crates.io.
+publish = false
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
-license-file.workspace = true
+rust-version.workspace = true
+license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description.workspace = true
+description = "Command-line converter from SpriteStudio projects to .ssab / .ssqb runtime binaries"
+keywords = ["spritestudio", "animation", "gamedev", "cli", "converter"]
+categories = ["command-line-utilities", "game-development"]
 
 [dependencies]
-clap = { version = "4.5.56", features = ["derive"] }
-ctrlc = "3.5.2"
-rayon = { workspace = true }
-ssconverter = { workspace = true }
+clap = { workspace = true }
+# The CLI is the native path by definition: it walks directories and converts in parallel.
+ssconverter = { workspace = true, features = ["native"] }
 
 [build-dependencies]
 vergen-gitcl = { workspace = true }

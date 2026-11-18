@@ -1,6 +1,8 @@
+[**日本語**](./USAGE.ja.md) | [**English**](./USAGE.md)
+
 # libssconverter Integration Guide
 
-`libssconverter` is a C-compatible library for converting SpriteStudio 7 project files (`.sspj`) into a runtime-optimized binary format (`.ssab`).
+`libssconverter` is a C-compatible library for converting SpriteStudio project files (`.sspj`) into runtime-optimized binary formats (`.ssab`, `.ssqb`).
 It is designed to be integrated into custom game engines, tools, or development editors for in-process conversion.
 
 ## 1. Preparation
@@ -8,10 +10,10 @@ It is designed to be integrated into custom game engines, tools, or development 
 ### Linking the Library
 
 `libssconverter` is implemented in Rust and is used via its C-API.
-Link the static or dynamic library appropriate for your platform to your project.
+Link the static or dynamic library appropriate for your platform to your project. Both, and the header, are in the release's native library archives ([SDK README](../../../README.md#1-download-the-tools-or-libraries)).
 
-- **Windows**: `ssconverter.lib` (and `ssconverter.dll` if shared)
-- **macOS/Linux**: `libssconverter.a` (and `libssconverter.dylib`/`.so` if shared)
+- **Windows**: `ssconverter.lib` (static) or `ssconverter.dll` (shared)
+- **macOS/Linux**: `libssconverter.a` (static) or `libssconverter.dylib` / `.so` (shared)
 
 Also, add any necessary system libraries for each platform (e.g., pthread, dl).
 
@@ -44,8 +46,10 @@ const char* sspj_path = "C:/Assets/Character.sspj";
 const char* output_dir = "C:/Project/Assets/SSAB/";
 
 // Start conversion
-// The 4th argument is a log callback (nullptr if not needed)
-ss_converter_convert(ctx, sspj_path, output_dir, [](const char* msg) {
+// The 4th argument enables embedded output (textures packed into the .ssab); pass false for
+// the conventional layout (textures referenced as sibling PNGs).
+// The 5th argument is a log callback (nullptr if not needed)
+ss_converter_convert(ctx, sspj_path, output_dir, /*embedded=*/false, [](const char* msg) {
     printf("SSConverter: %s\n", msg);
 });
 ```
@@ -59,6 +63,7 @@ void on_update() {
     if (ctx && ss_converter_is_finished(ctx)) {
         // Conversion is complete
         on_conversion_complete(ctx);
+        ctx = nullptr;  // destroyed above; stop polling it
     }
 }
 ```
@@ -75,12 +80,12 @@ void on_conversion_complete(Context* ctx) {
         printf("Conversion successful!\n");
     } else {
         // Retrieve error details
-        char* err_msg = nullptr;
+        const char* err_msg = nullptr;
         uintptr_t len = 0;
         ss_converter_get_error(ctx, &err_msg, &len);
         if (err_msg) {
             printf("Error: %.*s\n", (int)len, err_msg);
-            // Memory obtained via ss_converter_get_error is freed by ss_converter_destroy
+            // The buffer returned by ss_converter_get_error remains valid until the next conversion starts on this Context or ss_converter_destroy is called
         }
     }
 
@@ -99,39 +104,22 @@ Call `ss_converter_abort` if a long-running process is cancelled by the user.
 ss_converter_abort(ctx);
 ```
 
-## 4. Implementation Example: Godot Plugin Integration
+> **Note**: do not call `ss_converter_destroy` straight after `ss_converter_abort`. Wait for the worker thread to come to a complete stop — keep polling until `ss_converter_is_finished(ctx) == true`, and destroy only then. See the editor-integration best practices below.
 
-In `SSPlayerForGodot`, `libssconverter` is called when a file is dropped into the editor to generate `.ssab` files in-process.
+## 4. Integrating into an editor, and best practices
 
-```cpp
-// Excerpt from gd_ss_import_dock.cpp
+Embedding `libssconverter` as an editor extension for a game engine (Godot, Unity and so on) asks for more than converting a single file:
 
-void GdSsImportControl::_notification(int p_what) {
-    if (p_what == NOTIFICATION_PROCESS) {
-        if (is_importing) {
-            bool all_finished = true;
-            for (void* ctx : import_contexts) {
-                if (!ss_converter_is_finished((Context*)ctx)) {
-                    all_finished = false;
-                    break;
-                }
-            }
+- Recursive batch conversion over several files and directories
+- Polling from the editor's main loop, and showing progress
+- Stopping safely when the user cancels (pairing `abort` with `destroy` so there is no use-after-free)
 
-            if (all_finished) {
-                // Finalization and resource scanning
-                is_importing = false;
-                set_process(false);
-                // ... cleanup contexts ...
-            }
-        }
-    }
-}
-```
+For the implementation patterns, and for concrete Godot and Unity code, see the Player Porting Guide:
 
-This allows multiple files to be converted in parallel (while `libssconverter` itself uses `rayon` for parallel processing, creating multiple contexts allows multiple projects to be handled concurrently).
+👉 **[Editor Integration](../../ssruntime/docs/50_features/60_editor_integration.md)**
 
 ## 5. Notes
 
 - **Memory Management**: Always destroy contexts created with `ss_converter_create` using `ss_converter_destroy`.
-- **Thread Safety**: While conversion happens in an internal thread, do not call `ss_converter_convert` multiple times simultaneously on the same `Context`.
+- **Thread Safety**: A `Context` runs one job at a time; while a job is running in its internal thread, do not start another `ss_converter_convert` or `ss_converter_scan_dir` on the same `Context`.
 - **Path Format**: It is recommended to use absolute paths when passing them to the library.

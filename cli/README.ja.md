@@ -2,25 +2,53 @@
 
 # ssconverter-cli
 
-SpriteStudio 7 のプロジェクトファイル (`.sspj`) を解析し、ランタイムに最適化されたバイナリファイル (`.ssab`, `.ssqb`) に変換するコマンドラインツールです。
+[SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/README.ja.md) のワークフローにおけるビルド時のツールです。SpriteStudio のプロジェクトファイル (`.sspj` と、そこから参照される `.ssae` / `.ssee` / `.ssqe` / `.ssce`) を解析し、SDK が再生するランタイムバイナリ — `.ssab`（アニメーション）と `.ssqb`（シーケンスパック） — を生成します。
 
-[libssconverter](../libs/ssconverter) のラッパーとして機能し、コマンドラインから手軽に変換機能を利用できます。
+本 CLI は [libssconverter](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssconverter) のラッパーで、各 Player に組み込まれたインポーターと同じ変換を行います。ランタイム側は [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime) を参照してください。
+
+# インストール
+
+## ビルド済みバイナリ（推奨）
+
+[GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) ページから **Windows**、**macOS**、**Linux** 向けのリリースをダウンロードしてください。ビルド環境は不要です。
+
+各リリースにはプラットフォームごとの zip が固定の名前で入っているため、最新版は常に同じ URL で取得できます。
+
+| プラットフォーム | アーカイブ |
+|---|---|
+| macOS（Apple silicon・Intel） | `ssconverter-cli-macos.zip` |
+| Windows x64 | `ssconverter-cli-windows.zip` |
+| Windows ARM64 | `ssconverter-cli-windows-arm64.zip` |
+| Linux x64 | `ssconverter-cli-linux.zip` |
+| Linux ARM64 | `ssconverter-cli-linux-aarch64.zip` |
+
+```bash
+$ curl -fsSLO https://github.com/cri-middleware/SpriteStudio-SDK/releases/latest/download/ssconverter-cli-macos.zip
+$ unzip ssconverter-cli-macos.zip -d ssconverter-cli
+$ ./ssconverter-cli/ssconverter-cli --version
+```
+
+版を固定するには `latest/download` を `download/<tag>` に置き換えてください。同じリリースの `SHA256SUMS` で zip を検証できます。
+
+## ソースからビルド
+
+Rust ツールチェイン（[rustup](https://rustup.rs/)）の **1.100 以降** が必要です。リポジトリのルートから:
+
+```bash
+$ cargo install --path cli
+```
 
 # 使い方
 
-`ssconverter-cli` には、**シングルモード** と **バッチモード** の2つの動作モードがあります。
+`ssconverter-cli` は、渡されたパスから `.sspj` ファイルを収集し（ディレクトリは再帰的に探索）、対象が 1 プロジェクトなら**シングルモード**、2 プロジェクト以上なら並列の**バッチモード**で動作します。
 
 ## シングルモード (Single Mode)
 
-単一の `.sspj` プロジェクトファイル、またはプロジェクトが含まれる `.zip` ファイルを変換します。
-このモードでは、出力ディレクトリの指定や、ファイル監視（Watcher）機能が利用可能です。
+単一の `.sspj` プロジェクトファイルを変換します。このモードでは、出力ディレクトリの指定が可能です。
 
 ```bash
 # 単一のプロジェクトを変換
 $ ssconverter-cli project.sspj
-
-# ZIP 圧縮されたプロジェクトを変換
-$ ssconverter-cli project.zip
 
 # 出力ディレクトリを指定して変換
 $ ssconverter-cli project.sspj -o ./output_folder
@@ -29,14 +57,12 @@ $ ssconverter-cli project.sspj -o ./output_folder
 ### オプション (シングルモード)
 - `-e`, `--embedded`: 参照されているアセット（画像など）を生成される `.ssab` ファイル内に直接埋め込みます。
 - `-o`, `--out-dir <directory>`: 生成ファイルの出力先ディレクトリを指定します。
-- `-w`, `--watch`: プロジェクトディレクトリを監視し、ファイルが変更されたら自動的に再変換を行います。
 - `-h`, `--help`: ヘルプを表示します。
+- `-V`, `--version`: バージョン情報を表示します。
 
 ## バッチモード (Batch Mode)
 
-複数の `.sspj` プロジェクトをまとめて変換します。
-複数の file パス、またはディレクトリを指定することができます（ディレクトリ内の `.sspj` は再帰的に検索されます）。
-このモードでは `--out-dir` オプションは無視され、出力ファイルはソースファイルの横（またはデフォルトのディレクトリ）に生成されます。
+複数の `.sspj` プロジェクトをまとめて変換します。複数のファイルパス、またはディレクトリを指定することができます（ディレクトリ内の `.sspj` は再帰的に検索されます）。このモードでは `--out-dir` オプションは無視され、出力は各 `.sspj` の隣に生成されます（[出力](#出力) を参照）。
 
 ```bash
 # 特定の複数ファイルを変換
@@ -49,55 +75,51 @@ $ ssconverter-cli ./assets/projects ./extra_assets
 ### オプション (バッチモード)
 - `-e`, `--embedded`: アセットを `.ssab` ファイル内に埋め込みます。
 - `-h`, `--help`: ヘルプを表示します。
+- `-V`, `--version`: バージョン情報を表示します。
 
-_注意: バッチモードでは `--out-dir` および `--watch` オプションは利用できません。_
+_注意: バッチモードでは `--out-dir` オプションは利用できません。_
 
-# インストール
+## 終了ステータス
 
-システムに `ssconverter-cli` をインストールするには、`cargo install` を使用します。
-
-```bash
-# リポジトリのルートから
-$ cargo install --path cli
-```
+どちらのモードでも、指定したパスが存在しないとき、指定したパスに `.sspj` が見つからないとき、プロジェクトの変換に失敗したときは、0 以外の終了ステータスで終わります。該当するパスとプロジェクトはすべて標準エラーに出力され、変換できるプロジェクトはそのまま変換されます。
 
 # 使用例
 
 **1. 基本的な変換**
-`project.sspj` と同じ階層に `project_ssab/` フォルダが生成されます。
+
+`project.sspj` と同じ階層に `project/` フォルダが生成されます。
 
 ```bash
 $ ssconverter-cli my_game/project.sspj
 ```
 
-**2. 監視モード (Watch Mode)**
-プロセスを常駐させ、SpriteStudio で保存などの変更が行われるたびに自動で再変換します。
+**2. アセット埋め込み**
 
-```bash
-$ ssconverter-cli my_game/project.sspj --watch
-```
-
-**3. アセット埋め込み**
 テクスチャなどの依存ファイルをすべて含んだ単一のバイナリを生成します。配布や管理を単純化したい場合に便利です。
 
 ```bash
 $ ssconverter-cli my_game/project.sspj --embedded
 ```
 
+# 出力
+
+`.sspj` を変換するたびに、ソースファイルの隣にディレクトリが生成されます（シングルモードで `--out-dir` を指定した場合を除く）:
+
+| モード | 出力ディレクトリ | 中身 |
+|---|---|---|
+| デフォルト | `<name>/` | `.ssab`（アニメパック `.ssae` ごとに 1 つ）、`.ssqb`（`.ssqe` が参照されている場合のシーケンスパック）、参照されているテクスチャのコピー |
+| `--embedded` | `<name>_emb/` | 同上ですが、参照アセットは各 `.ssab` 内に埋め込まれます（テクスチャの別ファイルは生成されません） |
+
+実行すると、書き出したバイナリごとに `Wrote <path> (animations: …)`（`.ssqb` なら `(sequences: …)`）の行が出ます。Player に渡せる名前はここで分かります。
+
+# 次のステップ
+
+`.ssab` ファイルが生成できたら、お使いの Player に渡します。置き場所はその Player のドキュメントにあります。ゲームエンジンに自分で組み込む場合は [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/HEAD/libs/ssruntime) を通じて読み込みます。実装手順は [Player 移植ガイド](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/docs/README.ja.md) を参照してください。
+
 # 開発者向け
-## ビルド
 
-Rust 環境が必要です。
-
-```bash
-$ cargo build --release
-# バイナリは ./target/release/ssconverter-cli に生成されます
-```
-
-## テスト
-
-`src/main.rs` に定義された統合テストを実行します。
+ビルド・テスト・コントリビュートの手順は [CONTRIBUTING.md](../CONTRIBUTING.md#開発環境のセットアップ) を参照してください。このクレートの統合テスト（`cli/tests/`）だけを実行するには、リポジトリのルートで次を実行します。
 
 ```bash
-$ cargo test
+$ cargo test -p ssconverter-cli
 ```

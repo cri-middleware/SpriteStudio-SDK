@@ -3,29 +3,43 @@ name = "ssconverter"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
-license-file.workspace = true
+rust-version.workspace = true
+license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description.workspace = true
+description = "Converts SpriteStudio projects into the .ssab / .ssqb runtime binaries"
+keywords = ["spritestudio", "animation", "gamedev", "flatbuffers", "converter"]
+categories = ["game-development", "graphics", "multimedia"]
 
 [lib]
-crate-type = ["rlib", "staticlib", "cdylib"]
+crate-type = ["rlib"]
 
 [dependencies]
-zip = "8.6.0"
 flatbuffers = { workspace = true, features = ["std"] }
-rayon = { workspace = true }
-walkdir = "2.5.0"
-ordered-float = "5.3.0"
+ordered-float = { workspace = true }
 sspj = { workspace = true }
 ssab = { workspace = true, features = ["converter"] }
+rayon = { workspace = true, optional = true }
+walkdir = { workspace = true, optional = true }
 wasm-bindgen = { workspace = true, optional = true }
-notify-debouncer-mini = "0.7.0"
+js-sys = { workspace = true, optional = true }
 
 [features]
-default = ["ffi"]
-ffi = []
-web = ["wasm-bindgen"]
+default = ["native"]
+# C-API exports. Requires the native (filesystem) conversion paths.
+ffi = ["native"]
+# Native build (CLI / Tauri backend): parallel conversion, filesystem I/O,
+# and directory scanning.
+native = ["parallel", "scan"]
+# Parallel conversion via rayon. Propagates to sspj's parallel parsing.
+parallel = ["dep:rayon", "sspj/parallel"]
+# Directory traversal for batch conversion (CLI).
+scan = ["dep:walkdir"]
+# Browser WASM bindings (wasm32-unknown-unknown). Implies sequential
+# conversion since rayon cannot spawn threads there.
+# Build with: --no-default-features --features web
+web = ["dep:wasm-bindgen", "wasm-bindgen/std", "dep:js-sys"]
+
 
 [lints.clippy]
 field_reassign_with_default = "allow"
@@ -34,6 +48,10 @@ module_inception = "allow"
 no_effect = "allow"
 unnecessary_get_then_check = "allow"
 
+[dev-dependencies]
+# The integration tests read the emitted packs back; `ssab` is a normal
+# dependency, which an integration test cannot name on its own.
+ssab = { workspace = true, features = ["converter"] }
+
 [build-dependencies]
-cbindgen = { workspace = true }
 vergen-gitcl = { workspace = true }

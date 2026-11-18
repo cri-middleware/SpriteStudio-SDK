@@ -13,7 +13,8 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                 sspj::ssee::SsEffectNodeType::Particle => ssab::ssab::ss::format::EffectNodeType::Particle,
             };
             let behavior = &node.behavior;
-            // effect_node_t.cell_index = ; // TODO: impl
+            effect_node_t.cell_map_name_hash = crate::utils::fnv1a_hash_str(crate::utils::cellmap_basename(&behavior.cell_map_name));
+            effect_node_t.cell_name_hash = crate::utils::fnv1a_hash_str(&behavior.cell_name);
             effect_node_t.blend_type = match &behavior.blend_type {
                 sspj::sstypes::SsRenderBlendType::Mix => ssab::ssab::ss::format::RenderBlendType::Mix,
                 sspj::sstypes::SsRenderBlendType::Add => ssab::ssab::ss::format::RenderBlendType::Add,
@@ -59,15 +60,15 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                     }
                     sspj::ssee::SsEffectFunctionType::Gravity(p) => {
                         let mut behavior_t = ssab::ssab::ss::format::Vec2ValueEntryT::default();
-                        behavior_t.value = Some(Box::new(model_t::common::convert_vec2t(&p.gravity)));
+                        behavior_t.value = Box::new(model_t::common::convert_vec2t(&p.gravity));
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementGravity(Box::new(behavior_t));
                         Some(wrap)
                     }
                     sspj::ssee::SsEffectFunctionType::Position(p) => {
-                        let mut behavior_t = ssab::ssab::ss::format::RectValueEntryT::default();
-                        behavior_t.value = Some(Box::new(model_t::common::convert_rectt(p.offset_x.value, p.offset_y.value, p.offset_x.subvalue, p.offset_y.subvalue)));
+                        let mut behavior_t = ssab::ssab::ss::format::MinMax2ValueEntryT::default();
+                        behavior_t.value = Box::new(model_t::common::convert_min_max2t(p.offset_x.value, p.offset_y.value, p.offset_x.subvalue, p.offset_y.subvalue));
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementPosition(Box::new(behavior_t));
@@ -78,11 +79,11 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         let mut rotation_value = ssab::ssab::ss::format::Vec2T::default();
                         rotation_value.v1 = p.rotation.value;
                         rotation_value.v2 = p.rotation.subvalue;
-                        behavior_t.rotation_value = Some(Box::new(rotation_value));
+                        behavior_t.rotation_value = Box::new(rotation_value);
                         let mut rotation_add_value = ssab::ssab::ss::format::Vec2T::default();
                         rotation_add_value.v1 = p.rotation_add.value;
                         rotation_add_value.v2 = p.rotation_add.subvalue;
-                        behavior_t.rotation_add_value = Some(Box::new(rotation_add_value));
+                        behavior_t.rotation_add_value = Box::new(rotation_add_value);
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementRotation(Box::new(behavior_t));
@@ -102,7 +103,7 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         let mut speed = ssab::ssab::ss::format::Vec2T::default();
                         speed.v1 = p.speed.value;
                         speed.v2 = p.speed.subvalue;
-                        behavior_t.value = Some(Box::new(speed));
+                        behavior_t.value = Box::new(speed);
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementTransSpeed(Box::new(behavior_t));
@@ -113,7 +114,7 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         let mut acceleration = ssab::ssab::ss::format::Vec2T::default();
                         acceleration.v1 = p.acceleration.value;
                         acceleration.v2 = p.acceleration.subvalue;
-                        behavior_t.value = Some(Box::new(acceleration));
+                        behavior_t.value = Box::new(acceleration);
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementTangentialAcceleration(Box::new(behavior_t));
@@ -142,41 +143,41 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         let mut alpha = ssab::ssab::ss::format::Vec2T::default();
                         alpha.v1 = p.disprange.value;
                         alpha.v2 = p.disprange.subvalue;
-                        behavior_t.value = Some(Box::new(alpha));
+                        behavior_t.value = Box::new(alpha);
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementAlphaFade(Box::new(behavior_t));
                         Some(wrap)
                     }
                     sspj::ssee::SsEffectFunctionType::Size(p) => {
-                        let mut behavior_t = ssab::ssab::ss::format::RectAndVec2ValueTableT::default();
-                        let mut size = ssab::ssab::ss::format::RectT::default();
-                        size.x1 = p.size_x.value;
-                        size.x2 = p.size_x.subvalue;
-                        size.y1 = p.size_y.value;
-                        size.y2 = p.size_y.subvalue;
+                        let mut behavior_t = ssab::ssab::ss::format::MinMax2AndVec2ValueTableT::default();
+                        let mut size = ssab::ssab::ss::format::MinMax2T::default();
+                        size.x_min = p.size_x.value;
+                        size.x_max = p.size_x.subvalue;
+                        size.y_min = p.size_y.value;
+                        size.y_max = p.size_y.subvalue;
                         behavior_t.size = Some(Box::new(size));
                         let mut scale_factor_value = ssab::ssab::ss::format::Vec2T::default();
                         scale_factor_value.v1 = p.scale_factor.value;
                         scale_factor_value.v2 = p.scale_factor.subvalue;
-                        behavior_t.scale_factor_value = Some(Box::new(scale_factor_value));
+                        behavior_t.scale_factor_value = Box::new(scale_factor_value);
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementSize(Box::new(behavior_t));
                         Some(wrap)
                     }
                     sspj::ssee::SsEffectFunctionType::TransSize(p) => {
-                        let mut behavior_t = ssab::ssab::ss::format::RectAndVec2ValueTableT::default();
-                        let mut size = ssab::ssab::ss::format::RectT::default();
-                        size.x1 = p.size_x.value;
-                        size.x2 = p.size_x.subvalue;
-                        size.y1 = p.size_y.value;
-                        size.y2 = p.size_y.subvalue;
+                        let mut behavior_t = ssab::ssab::ss::format::MinMax2AndVec2ValueTableT::default();
+                        let mut size = ssab::ssab::ss::format::MinMax2T::default();
+                        size.x_min = p.size_x.value;
+                        size.x_max = p.size_x.subvalue;
+                        size.y_min = p.size_y.value;
+                        size.y_max = p.size_y.subvalue;
                         behavior_t.size = Some(Box::new(size));
                         let mut scale_factor_value = ssab::ssab::ss::format::Vec2T::default();
                         scale_factor_value.v1 = p.scale_factor.value;
                         scale_factor_value.v2 = p.scale_factor.subvalue;
-                        behavior_t.scale_factor_value = Some(Box::new(scale_factor_value));
+                        behavior_t.scale_factor_value = Box::new(scale_factor_value);
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementTransSize(Box::new(behavior_t));
@@ -187,7 +188,7 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         let mut position = ssab::ssab::ss::format::Vec2T::default();
                         position.v1 = p.position.x;
                         position.v2 = p.position.y;
-                        behavior_t.position = Some(Box::new(position));
+                        behavior_t.position = Box::new(position);
                         behavior_t.power = p.power;
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
@@ -219,25 +220,84 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
         .collect::<Vec<ssab::ssab::ss::format::EffectNodeT>>()
 }
 
-pub fn convert_effect_list(_sspj: &sspj::sspj::SsProject, effect_file_vec: &[&sspj::ssee::SsEffectFile]) -> Vec<ssab::ssab::ss::format::EffectT> {
+/// The runtime reads a node's parent by position and climbs toward the root, so
+/// `arrayIndex` has to be the node's position and its parent has to come before
+/// it. The editor writes nodes that way; a parent at or after its node is
+/// malformed and can close a loop.
+fn validate_effect_node_list(effect_file: &sspj::ssee::SsEffectFile) -> Result<(), crate::ConverterError> {
+    for (position, node) in effect_file.effect_data.node_list.iter().enumerate() {
+        if node.array_index != position as i32 {
+            return Err(crate::ConverterError::ConversionFailed(format!("{}: effect node \"{}\" has arrayIndex {}, not its position {}", effect_file.name, node.name, node.array_index, position)));
+        }
+        if !(-1..node.array_index).contains(&node.parent_index) {
+            return Err(crate::ConverterError::ConversionFailed(format!("{}: effect node \"{}\" has parentIndex {}, outside -1..{}", effect_file.name, node.name, node.parent_index, node.array_index)));
+        }
+    }
+    Ok(())
+}
+
+pub fn convert_effect_list(_sspj: &sspj::sspj::SsProject, effect_file_vec: &[&sspj::ssee::SsEffectFile]) -> Result<Vec<ssab::ssab::ss::format::EffectT>, crate::ConverterError> {
     let mut v = effect_file_vec
         .iter()
         .map(|effect_file| {
+            validate_effect_node_list(effect_file)?;
             let mut effect_t = ssab::ssab::ss::format::EffectT::default();
             effect_t.name_hash = crate::utils::fnv1a_hash_str(&effect_file.name);
-            effect_t.name = if effect_file.name.is_empty() { None } else { Some(effect_file.name.to_string()) };
+            effect_t.name = effect_file.name.to_string();
             effect_t.fps = effect_file.effect_data.fps as i16;
             effect_t.is_lock_rand_seed = effect_file.effect_data.is_lock_rand_seed;
             effect_t.lock_rand_seed = effect_file.effect_data.lock_rand_seed as i16;
             let mut layout_scale = ssab::ssab::ss::format::Vec2T::default();
             layout_scale.v1 = effect_file.effect_data.layout_scale_x as f32;
             layout_scale.v2 = effect_file.effect_data.layout_scale_y as f32;
-            effect_t.layout_scale = Some(Box::new(layout_scale));
-            effect_t.effect_node = if effect_file.effect_data.node_list.is_empty() { None } else { Some(convert_effect_node_list(&effect_file.effect_data.node_list)) };
+            effect_t.layout_scale = Box::new(layout_scale);
+            effect_t.effect_node = convert_effect_node_list(&effect_file.effect_data.node_list);
 
-            effect_t
+            Ok(effect_t)
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>, crate::ConverterError>>()?;
     v.sort_by_key(|e| e.name_hash);
-    v
+    Ok(v)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sspj::ssloader::SsLoader;
+
+    fn load_effect() -> sspj::ssee::SsEffectFile {
+        let mut path = std::env::current_dir().unwrap();
+        if path.ends_with("ssconverter") {
+            path = path.parent().unwrap().parent().unwrap().to_path_buf();
+        }
+        path.push("tests/Doll/Effect01.ssee");
+        sspj::ssee::SsEffectFile::load_from_file(&path).expect("failed to load the fixture")
+    }
+
+    #[test]
+    fn a_well_formed_node_list_validates() {
+        validate_effect_node_list(&load_effect()).expect("the fixture is well formed");
+    }
+
+    #[test]
+    fn a_parent_after_its_node_is_an_error() {
+        let mut effect = load_effect();
+        effect.effect_data.node_list[0].parent_index = 2;
+        let e = validate_effect_node_list(&effect).expect_err("a parent after its node can close a loop");
+        assert!(format!("{e}").contains("Root"), "{e}");
+    }
+
+    #[test]
+    fn a_node_that_is_its_own_parent_is_an_error() {
+        let mut effect = load_effect();
+        effect.effect_data.node_list[1].parent_index = 1;
+        validate_effect_node_list(&effect).expect_err("a node that is its own parent is a loop");
+    }
+
+    #[test]
+    fn an_array_index_off_its_position_is_an_error() {
+        let mut effect = load_effect();
+        effect.effect_data.node_list[1].array_index = 2;
+        validate_effect_node_list(&effect).expect_err("the runtime reads a parent by position");
+    }
 }

@@ -1,11 +1,29 @@
 name: CI
 
+# Two tiers. Every pull request runs what a change most often breaks: format,
+# clippy and rustdoc, the Linux and wasm32 builds with the workspace tests, the
+# declared MSRV, cargo-audit, and Miri over the C ABI's handles. The other
+# platforms the SDK ships (Windows, macOS, iOS, Android) and the documentation
+# site are built by the weekly run, a dispatch, and the release PR (release/X.Y
+# into main), where a break is still cheap to fix.
+# The site goes through docs.yml, which a pull request that touches the docs
+# runs on its own.
 on:
-  push:
-    branches: [ main ]
-    tags: [ 'v*' ]
   pull_request:
-    branches: [ main ]
+    paths-ignore:
+      - '**/*.md'
+      - '.gitignore'
+      - 'LICENSE*'
+  # The weekly run also writes the develop caches that PRs restore from, since
+  # PRs do not save (see save-if in .github/actions/setup). Weekly is enough:
+  # when Cargo.lock differs, rust-cache still restores the newest cache built by
+  # the same toolchain, so a PR that changes dependencies rebuilds only what
+  # changed.
+  schedule:
+    # Each repository of the family takes its own hour on Sunday, so their
+    # weekly runs do not queue for the organization's runners; :17 keeps clear
+    # of the top of the hour, when GitHub delays scheduled runs.
+    - cron: '17 0 * * 0'
   workflow_dispatch:
 
 env:
@@ -19,18 +37,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # scripts/check.sh and check.ps1 run this job and the Test step below on a
+  # contributor's machine, and `msrv=yes` the msrv job: a step changed here
+  # changes there too.
+  #
+  # No job waits for this one. On a pull request every job starts at once, so
+  # the run takes as long as its slowest job, not lint and then that job. In the
+  # weekly run, which is where a new stable Rust's clippy lints first show up,
+  # the platform builds and their caches still go ahead that week.
   lint:
     name: 💅 Lint & Format
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          submodules: recursive
+          persist-credentials: false
 
-      - name: setup for SpriteStudio7-SDK
+      - name: setup for SpriteStudio-SDK
         uses: ./.github/actions/setup
         with:
           platform: linux
@@ -40,15 +67,41 @@ jobs:
         run: cargo fmt --all -- --check
         shell: bash
 
+      # cargo package and wasm-pack ship each crate's own copy of the root
+      # LICENSE files, which scripts/generate-licenses.sh keeps in sync.
+      - name: License copies match the root
+        run: |
+          status=0
+          for copy in $(git ls-files '*/LICENSE.md' '*/LICENSE.ja.md'); do
+            root=$(basename "$copy")
+            if ! cmp -s "$root" "$copy"; then
+              echo "::error file=$copy::differs from the root $root: copy it over, or run scripts/generate-licenses.sh"
+              status=1
+            fi
+          done
+          exit $status
+        shell: bash
+
+      # --all-features, like the rustdoc step below: the test modules sit behind
+      # `feature = "std"`, so without it the largest body of code in the
+      # workspace is the one part clippy never sees.
       - name: Clippy (workspace)
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+        shell: bash
+
+      # Catches broken intra-doc links, which `cargo test --doc` does not see.
+      - name: Rustdoc (workspace)
+        run: cargo doc --workspace --no-deps --all-features
+        env:
+          RUSTDOCFLAGS: -D warnings
         shell: bash
 
   ci:
     name: ${{ matrix.name }}
-    needs: lint
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -58,43 +111,237 @@ jobs:
             platform: linux
             arch: x86_64
 
-          - name: 🏁 Windows (x86_64, MSVC)
-            os: windows-latest
-            platform: windows
-            arch: x86_64
-
-          - name: 🍎 macOS (universal)
-            os: macos-latest
-            platform: macos
-            arch: universal
-
-          - name: 🤖 Android (arm64)
-            os: ubuntu-latest
-            platform: android
-            arch: arm64
-
-          - name: 🍏 iOS (arm64)
-            os: macos-latest
-            platform: ios
-            arch: universal
-
           - name: 🌐 Web (wasm32)
             os: ubuntu-latest
             platform: web
             arch: wasm32
 
-          - name: ⚙️ no_std (build verification)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: setup for SpriteStudio-SDK
+        uses: ./.github/actions/setup
+        with:
+          platform: ${{ matrix.platform }}
+          os: ${{ matrix.os }}
+
+      - name: Install targets (Rust)
+        if: matrix.platform == 'web'
+        run: |
+          rustup target add wasm32-unknown-unknown
+          # Nightly is required for PIC support in wasm32-unknown-unknown (Godot GDExtension)
+          rustup toolchain install nightly
+          rustup target add wasm32-unknown-unknown --toolchain nightly
+          rustup component add rust-src --toolchain nightly
+        shell: bash
+
+      - name: Build
+        run: |
+          if [ "${{ matrix.platform }}" == "web" ]; then
+            # Build for general FFI and Web (Stable)
+            cargo build --target wasm32-unknown-unknown --verbose -p ssruntime-ffi --no-default-features --features "ffi,std"
+            cargo build --target wasm32-unknown-unknown --verbose -p ssruntime-ffi --no-default-features --features "web"
+
+            # Browser converter, the library. rayon spans ssconverter AND sspj, so
+            # this is the check that the sequential `parallel`-off fallback still
+            # compiles for wasm32.
+            cargo build --target wasm32-unknown-unknown --verbose -p ssconverter --no-default-features --features "web"
+
+            # Browser converter, the artifact. This is the crate release-web.sh
+            # actually ships as pkg/converter-web, and building the library alone
+            # says nothing about it: features are resolved per dependency edge, so
+            # the wrapper can drag `native` (rayon + walkdir + std::fs) into the
+            # graph while the line above stays green.
+            cargo build --target wasm32-unknown-unknown --verbose -p ssconverter-ffi --no-default-features --features "web"
+            if cargo tree --target wasm32-unknown-unknown -p ssconverter-ffi --no-default-features --features "web" -e normal | grep -qE '\b(rayon|walkdir)\b'; then
+              echo "::error::the browser converter pulled in a native-only dependency (rayon / walkdir)"
+              exit 1
+            fi
+
+            # WebAssembly without a JavaScript dependency, the recipe the porting
+            # guide gives (libs/ssruntime/docs/20_design/40_no_std_integration.md
+            # §1). Leave out `ffi` and it still builds, exporting nothing.
+            cargo build --target wasm32-unknown-unknown --verbose -p ssruntime-ffi --no-default-features --features "ffi,wasm_alloc,panic-handler"
+            if ! grep -q ss_runtime_create target/wasm32-unknown-unknown/debug/ssruntime.wasm; then
+              echo "::error::the WebAssembly build without JavaScript exports no C-API (no ss_runtime_create)"
+              exit 1
+            fi
+
+            # Emscripten deliverable (release.yml ships its .a). Needs no emsdk —
+            # the nightly toolchain and wasm target installed above are enough.
+            # Debug, here and in the weekly run alike: a compile check needs no
+            # optimizer, the weekly run writes the cache PRs restore so both must
+            # build the same profile, and release.yml builds the release .a.
+            ./scripts/release-emscripten.sh debug
+          else
+            cargo build --verbose
+            cargo build --verbose -p ssruntime-ffi --features "libc_alloc,panic-handler"
+
+            # Custom-allocator (console/engine) build. staticlib only: the
+            # ss_custom_* symbols stay unresolved until the host links them, so a
+            # cdylib link would fail standalone on macOS/MSVC.
+            cargo rustc --verbose -p ssruntime-ffi --features "custom_alloc,panic-handler" --crate-type staticlib
+          fi
+        shell: bash
+
+      - name: Test (workspace)
+        if: matrix.platform == 'linux'
+        run: cargo test --workspace --all-features --verbose -- --test-threads=1
+        shell: bash
+
+  msrv:
+    name: 🦀 MSRV (declared rust-version)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Extract MSRV from Cargo.toml
+        id: msrv
+        run: |
+          msrv=$(grep -E '^rust-version = ' Cargo.toml | sed -E 's/rust-version = "(.+)"/\1/')
+          if [ -z "$msrv" ]; then
+            echo "::error::rust-version not found in workspace Cargo.toml"
+            exit 1
+          fi
+          echo "version=$msrv" >> "$GITHUB_OUTPUT"
+          echo "Declared MSRV: $msrv"
+        shell: bash
+
+      - name: Install pinned Rust toolchain
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          toolchain: ${{ steps.msrv.outputs.version }}
+
+      - name: Setup Rust cache (MSRV)
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          # Same rule as .github/actions/setup: only develop writes caches.
+          save-if: ${{ github.ref == 'refs/heads/develop' }}
+
+      - name: cargo check (workspace, all targets, all features)
+        run: cargo check --workspace --all-targets --all-features --locked
+        shell: bash
+
+  audit:
+    name: 🔒 Security audit (cargo-audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
+        with:
+          # Pinned by SHA, so the channel must be named explicitly here.
+          toolchain: stable
+
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
+        with:
+          tool: cargo-audit
+
+      - name: Run cargo audit
+        run: cargo audit
+        shell: bash
+
+  # The C ABI keeps its handles alive through Arc counts held as raw pointers,
+  # and lends a resource out as 'static. A mistake there is undefined behaviour
+  # that the plain test run passes; Miri
+  # reports it. The packs are converted natively first: Miri cannot run the
+  # converter in any reasonable time.
+  miri:
+    name: 🔬 Miri (C ABI handles)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: setup for SpriteStudio-SDK
+        uses: ./.github/actions/setup
+        with:
+          platform: miri
+          os: ubuntu-latest
+
+      - name: Install Miri
+        run: |
+          rustup toolchain install nightly --component miri,rust-src
+          cargo +nightly miri setup
+        shell: bash
+
+      - name: Convert the packs the test plays
+        run: cargo run -p ssconverter-cli -- -o target/miri-fixtures/overall tests/overall/overall.sspj
+        shell: bash
+
+      # nextest runs each test in a process of its own, as many at once as the
+      # runner has CPUs, where `cargo miri test` interprets them one after
+      # another in a single process.
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
+        with:
+          tool: cargo-nextest
+
+      - name: Test the C ABI handles under Miri
+        run: cargo +nightly miri nextest run -p ssruntime --features ffi --test ffi_lifecycle
+        env:
+          MIRIFLAGS: -Zmiri-disable-isolation
+          SSRUNTIME_FIXTURES: ${{ github.workspace }}/target/miri-fixtures
+        shell: bash
+
+  # The weekly tier. `github.base_ref == 'main'` is the release PR: under git-flow
+  # only release/X.Y is merged into main.
+  platforms:
+    name: ${{ matrix.name }}
+    if: github.event_name != 'pull_request' || github.base_ref == 'main'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: 🏁 Windows (x86_64, MSVC)
+            os: windows-latest
+            platform: windows
+
+          - name: 🍎 macOS (universal)
+            os: macos-latest
+            platform: macos
+
+          - name: 🍏 iOS (arm64)
+            os: macos-latest
+            platform: ios
+
+          - name: 🤖 Android (arm64)
             os: ubuntu-latest
-            platform: no_std
-            arch: x86_64
+            platform: android
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          submodules: recursive
+          persist-credentials: false
 
-      - name: setup for SpriteStudio7-SDK
+      - name: setup for SpriteStudio-SDK
         uses: ./.github/actions/setup
         with:
           platform: ${{ matrix.platform }}
@@ -108,29 +355,30 @@ jobs:
             rustup target add aarch64-apple-ios
           elif [ "${{ matrix.platform }}" == "android" ]; then
             rustup target add aarch64-linux-android
-            cargo install cargo-ndk
-          elif [ "${{ matrix.platform }}" == "web" ]; then
-            rustup target add wasm32-unknown-unknown
+            cargo install cargo-ndk --locked
           fi
         shell: bash
 
       - name: Build
         run: |
           if [ "${{ matrix.platform }}" == "android" ]; then
-            cargo ndk --target aarch64-linux-android build --verbose -p ssruntime --no-default-features --features "ffi,libc_alloc,panic-handler"
+            cargo ndk --target aarch64-linux-android build --verbose -p ssruntime-ffi --features "libc_alloc,panic-handler"
           elif [ "${{ matrix.platform }}" == "ios" ]; then
-            cargo build --target aarch64-apple-ios --verbose -p ssruntime --no-default-features --features "ffi,libc_alloc,panic-handler"
-          elif [ "${{ matrix.platform }}" == "web" ]; then
-            cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "ffi,std"
-            cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "web"
-          elif [ "${{ matrix.platform }}" == "no_std" ]; then
-            cargo build --release --verbose -p ssruntime --no-default-features --features "ffi,libc_alloc,panic-handler"
+            cargo build --target aarch64-apple-ios --verbose -p ssruntime-ffi --features "libc_alloc,panic-handler"
           else
             cargo build --verbose
+            cargo build --verbose -p ssruntime-ffi --features "libc_alloc,panic-handler"
           fi
         shell: bash
 
       - name: Test (workspace)
-        if: matrix.platform == 'linux' || matrix.platform == 'windows' || matrix.platform == 'macos'
+        if: matrix.platform == 'macos' || matrix.platform == 'windows'
         run: cargo test --workspace --all-features --verbose -- --test-threads=1
         shell: bash
+
+  # docs.yml, the build pages.yml publishes, both locales --strict. A pull
+  # request into anything but main that touches the docs runs it on its own.
+  docs:
+    name: 📚 Docs site
+    if: github.event_name != 'pull_request' || github.base_ref == 'main'
+    uses: ./.github/workflows/docs.yml
