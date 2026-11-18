@@ -4,13 +4,13 @@ Maintainers only. Contributors do not run any of this — see [CONTRIBUTING.md](
 
 ## Cutting a release
 
-Anyone with the Write role on this repository can cut a release: every step is a branch, a pull request, a tag, a workflow run or a Release, and the signing credentials are organization secrets, so nothing depends on whose machine runs it. You need `git`, `gh` 2.87 or later (run `gh auth login` once), a Rust toolchain and Python 3. The repository needs GitHub Pages enabled with GitHub Actions as its source, and a `v*` tag rule on its `github-pages` environment, or publishing a Release deploys nothing; both are settings a repository admin makes. The commands are bash: in zsh, run `setopt interactive_comments` first, so that the `#` comments are not taken as arguments; on Windows, use Git Bash. Steps 1, 4 and 7 switch branches, so run them in a checkout of their own — a clone, or one made with `git worktree add` — not in one where other work is going on.
+Anyone with the Write role on this repository can cut a release: every step but one is a branch, a pull request, a tag, a workflow run or a Release, and the signing credentials are organization secrets, so nothing depends on whose machine runs it. The one is step 7, which publishes the crates to crates.io with the token of a member of the `cri-middleware/spritestudio` GitHub team, the team that owns them there. You need `git`, `gh` 2.87 or later (run `gh auth login` once), a Rust toolchain and Python 3. The repository needs GitHub Pages enabled with GitHub Actions as its source, and a `v*` tag rule on its `github-pages` environment, or publishing a Release deploys nothing; both are settings a repository admin makes. The commands are bash: in zsh, run `setopt interactive_comments` first, so that the `#` comments are not taken as arguments; on Windows, use Git Bash. Steps 1, 4, 7 and 8 switch branches, so run them in a checkout of their own — a clone, or one made with `git worktree add` — not in one where other work is going on.
 
 A release is a tag on `main`, pushed first and built second. The version is written in one place, `[workspace.package] version` in the root `Cargo.toml`: `scripts/release-version.sh` prints it, the tag is `v` followed by it, and the release build refuses a tag that disagrees — the six Players that download the SDK pin that tag. Branches follow git-flow: `develop` integrates, `main` holds released commits only, and `release/X.Y` lives for one release — cut from `develop` when the release ships `develop`'s work, or from the line's latest tag when it ships only fixes on top of it, and deleted once the release is out.
 
 Every block runs as written in a new shell: it works out what it needs from the checkout, git and GitHub. The one value set by hand is the version being released, written `<version>` in steps 1 and 2 — fill it in, as in `7.0.1`; left as it is, the line stops with a syntax error. A value that would not stop a command by itself when empty is read as `${VAR:?}`: an empty `OLD` in step 2, for one, would match every `""` in the repository.
 
-An agent can run every block, but a person sorts the scan's summary in step 3, and two steps are a person's to decide: the merge in step 4, which puts the release on `main`, and step 6, which publishes it for good.
+An agent can run every block, but a person sorts the scan's summary in step 3, and three steps are a person's: the merge in step 4, which puts the release on `main`, and steps 6 and 7, which publish the Release and the crates for good.
 
 ### 1. Branch
 
@@ -156,7 +156,29 @@ done
 gh run watch "${RUN:?}" --exit-status
 ```
 
-### 7. Merge back
+### 7. Publish the crates
+
+**A person runs this step**: it takes a crates.io token of their own, and a version on crates.io is permanent — crates.io never lets its number be used again. The block checks out the tag and publishes every crate of the workspace not marked `publish = false`, each after the ones it depends on. Make the token on crates.io under Account Settings → API Tokens, with the `publish-update` scope, limited to this workspace's crates and set to expire within days, and revoke it there once the block is done. The block waits for it to be pasted and does not show it, so it stays out of the shell's history.
+
+```bash
+git fetch origin --tags
+TAG=$(git describe --exact-match --tags --match 'v[0-9]*' origin/main)
+git switch --detach "${TAG:?}" &&
+  read -rs CARGO_REGISTRY_TOKEN && export CARGO_REGISTRY_TOKEN="${CARGO_REGISTRY_TOKEN:?}" &&   # paste the token
+  cargo publish --workspace --locked
+```
+
+A run that stops partway leaves what it uploaded published, and the next run stops before uploading anything, reporting that the first of those `already exists on crates.io index`. Add `--exclude <crate>` to the last line for each crate already there, and run the block again.
+
+A crate that is not on crates.io yet needs the `publish-new` scope on the token as well, and its first publisher becomes its only owner. Right after, with a token that has the `change-owners` scope, add the team as an owner with the block below, which only a member of the team can run, and a second person too, with `cargo owner --add` and their crates.io login: the team can publish and yank but not change owners, and crates.io never leaves a crate without a person among its owners.
+
+```bash
+CRATE=<crate>
+read -rs CARGO_REGISTRY_TOKEN && export CARGO_REGISTRY_TOKEN="${CARGO_REGISTRY_TOKEN:?}" &&   # paste the token
+  cargo owner --add github:cri-middleware:spritestudio "${CRATE:?}"
+```
+
+### 8. Merge back
 
 Merge `main` into `develop`. After a patch release this conflicts where `develop` has moved on: keep `develop`'s version and its `Unreleased` heading, with the patch's section below it. The block merges on a detached `origin/develop`, so it runs in a worktree whichever branch the other checkouts hold, and a conflict stops it there: resolve it, `git commit`, and run the block's two `git push` lines. When the next version is decided, open it on `develop` the way step 2 does, under a `## [X.Y.Z] - Unreleased` heading.
 
@@ -177,8 +199,8 @@ Fixes go to the latest release (SECURITY.md). When one has to reach an earlier l
 
 1. **Steps 1 to 3, without the pull request.** Step 1's patch block cuts `release/X.Y` from the line's latest tag. Commit or cherry-pick the fix onto it, set the version and date its changelog section as step 2 does, and run step 3 but leave out its `gh pr create`: nothing of this line goes into `main`.
 2. **The tag goes on the branch.** Once step 3's runs are green, the first block below tags the head of `release/X.Y`.
-3. **Build it, and publish it as an earlier line.** `scripts/release-channel.sh` calls the release `old`: the draft is not a pre-release, its generated notes start from the full release before it in that line, and `pages.yml` deploys nothing for it. Publish the Release with the last block, not from the Releases page, whose default would make it Latest.
-4. **No merge back.** Cherry-pick the fix onto `develop` if it still needs it; the last block deletes `release/X.Y`.
+3. **Build it, and publish it as an earlier line.** `scripts/release-channel.sh` calls the release `old`: the draft is not a pre-release, its generated notes start from the full release before it in that line, and `pages.yml` deploys nothing for it. Publish the Release with the third block, not from the Releases page, whose default would make it Latest. The fourth then publishes the crates as step 7 does, from the tag on the branch; crates.io keeps the newer line as their default version.
+4. **No merge back.** Cherry-pick the fix onto `develop` if it still needs it; the third block deletes `release/X.Y`.
 
 ```bash
 BRANCH=$(git branch --show-current | grep '^release/')
@@ -202,6 +224,12 @@ gh release edit "${TAG:?}" --draft=false --latest=false &&
   git push origin --delete "${BRANCH:?}"
 ```
 
+```bash
+git describe --exact-match --tags --match 'v[0-9]*' HEAD &&                                    # the tag the branch's head is on
+  read -rs CARGO_REGISTRY_TOKEN && export CARGO_REGISTRY_TOKEN="${CARGO_REGISTRY_TOKEN:?}" &&   # paste the token
+  cargo publish --workspace --locked
+```
+
 ## Undoing a release
 
 Until the Release is published, it can be undone. The draft goes first, if the run made one:
@@ -220,7 +248,7 @@ TAG=$(git describe --exact-match --tags --match 'v[0-9]*' origin/main)
 git push origin ":refs/tags/${TAG:?}" && git tag -d "${TAG:?}"
 ```
 
-**Once published, the tag and its assets are permanent** — six Players download them by that tag — so a fix is a new patch version.
+**Once published, the tag and its assets are permanent** — six Players download them by that tag — so a fix is a new patch version. So are the crates: crates.io neither replaces nor deletes a version. It can only be yanked, with `cargo yank --version <version> <crate>` and a token that has the `yank` scope, which stops new lockfiles from resolving to it and leaves those that already have as they are.
 
 ## Replaying the packaging
 
@@ -245,13 +273,13 @@ git checkout "$(gh run view "${RUN:?}" --json headSha -q .headSha)" &&
 
 ## リリースの手順
 
-このリポジトリの Write ロールを持つ人なら誰でもリリースできます。どの手順もブランチ・プルリクエスト・タグ・ワークフローの実行・Release のいずれかで、署名の資格情報は組織の Secret なので、誰の手元で実行しても結果は変わりません。必要なのは `git`、`gh` 2.87 以降（最初に一度 `gh auth login`）、Rust ツールチェーン、Python 3 です。リポジトリ側では、GitHub Pages を有効にしてソースを GitHub Actions にし、`github-pages` environment に `v*` のタグのルールを足しておく必要があります。どちらかが欠けると、Release を公開しても何もデプロイされません。どちらもリポジトリの admin が行う設定です。コマンドは bash です。zsh では、`#` のコメントが引数として渡されないよう、先に `setopt interactive_comments` を実行します。Windows では Git Bash を使います。手順 1・4・7 はブランチを切り替えるので、ほかの作業をしていない専用のチェックアウト（クローンか、`git worktree add` で作ったもの）で実行してください。
+このリポジトリの Write ロールを持つ人なら誰でもリリースできます。1 つを除くどの手順もブランチ・プルリクエスト・タグ・ワークフローの実行・Release のいずれかで、署名の資格情報は組織の Secret なので、誰の手元で実行しても結果は変わりません。その 1 つは手順 7 で、crates.io でクレートを所有する GitHub チーム `cri-middleware/spritestudio` のメンバーが、自分のトークンでクレートを公開します。必要なのは `git`、`gh` 2.87 以降（最初に一度 `gh auth login`）、Rust ツールチェーン、Python 3 です。リポジトリ側では、GitHub Pages を有効にしてソースを GitHub Actions にし、`github-pages` environment に `v*` のタグのルールを足しておく必要があります。どちらかが欠けると、Release を公開しても何もデプロイされません。どちらもリポジトリの admin が行う設定です。コマンドは bash です。zsh では、`#` のコメントが引数として渡されないよう、先に `setopt interactive_comments` を実行します。Windows では Git Bash を使います。手順 1・4・7・8 はブランチを切り替えるので、ほかの作業をしていない専用のチェックアウト（クローンか、`git worktree add` で作ったもの）で実行してください。
 
 リリースは `main` 上のタグです。先にタグを push し、ビルドはその後です。バージョンが書かれているのはルートの `Cargo.toml` の `[workspace.package] version` の 1 か所だけで、`scripts/release-version.sh` がそれを出力し、タグはその頭に `v` を付けたものです。食い違うタグはリリースビルドが拒否します。SDK をダウンロードする 6 つの Player がこのタグにピンしています。ブランチは git-flow です。`develop` が統合ブランチで、`main` にはリリース済みのコミットだけが入ります。`release/X.Y` は 1 回のリリースの間だけ使います。`develop` の作業を出すリリースなら `develop` から、タグの上に修正だけを載せるリリースならその系統の最新のタグから切り、リリースが済んだら消します。
 
 どのブロックも、新しいシェルで書かれたとおりに実行できます。必要なものはチェックアウト・git・GitHub から求めます。手で設定する値はリリースするバージョンだけで、手順 1 と 2 に `<version>` と書いてあります。`7.0.1` のように埋めてください。埋めずに実行すると、その行は構文エラーで止まります。空でもそれだけでは止まらない値は `${VAR:?}` で読みます。たとえば手順 2 の `OLD` が空だと、リポジトリ中の `""` すべてに一致してしまいます。
 
-どのブロックもエージェントに実行させられますが、手順 3 の検査の一覧は人が仕分け、2 つの手順は人が判断します。リリースを `main` に入れる手順 4 のマージと、取り消せない公開を行う手順 6 です。
+どのブロックもエージェントに実行させられますが、手順 3 の検査の一覧は人が仕分け、3 つの手順は人が行います。リリースを `main` に入れる手順 4 のマージと、Release とクレートを取り消せない形で公開する手順 6・7 です。
 
 ### 1. ブランチ
 
@@ -397,7 +425,29 @@ done
 gh run watch "${RUN:?}" --exit-status
 ```
 
-### 7. develop へ戻す
+### 7. クレートの公開
+
+**この手順は人が行います。** 本人の crates.io のトークンが要り、crates.io に出したバージョンは取り消せないためです（同じ番号は二度と使えません）。ブロックはタグをチェックアウトし、ワークスペースのクレートのうち `publish = false` の付いていないものをすべて、依存先を先にして公開します。トークンは crates.io の Account Settings → API Tokens で、スコープを `publish-update`、対象をこのワークスペースのクレートに絞り、数日で切れる期限を付けて作ります。ブロックが終わったら同じ画面で失効させます。ブロックはトークンが貼り付けられるのを待ち、表示しないので、シェルの履歴にも残りません。
+
+```bash
+git fetch origin --tags
+TAG=$(git describe --exact-match --tags --match 'v[0-9]*' origin/main)
+git switch --detach "${TAG:?}" &&
+  read -rs CARGO_REGISTRY_TOKEN && export CARGO_REGISTRY_TOKEN="${CARGO_REGISTRY_TOKEN:?}" &&   # トークンを貼り付ける
+  cargo publish --workspace --locked
+```
+
+途中で止まった run が上げたものは公開されたまま残ります。次の run は何も上げる前に止まり、そのうち最初のものについて `already exists on crates.io index` と出します。すでにあるクレートごとに最後の行へ `--exclude <crate>` を足し、ブロックをもう一度実行します。
+
+crates.io にまだ無いクレートには、トークンにスコープ `publish-new` も要り、最初に公開した人がただ 1 人の owner になります。その直後に、スコープ `change-owners` のトークンで、チームを下のブロックで owner に足します（チームのメンバーしか実行できません）。もう 1 人、人も `cargo owner --add` とその人の crates.io のログイン名で足します。チームは publish と yank はできても owner は変えられず、crates.io は owner に人が 1 人もいない状態を許さないためです。
+
+```bash
+CRATE=<crate>
+read -rs CARGO_REGISTRY_TOKEN && export CARGO_REGISTRY_TOKEN="${CARGO_REGISTRY_TOKEN:?}" &&   # トークンを貼り付ける
+  cargo owner --add github:cri-middleware:spritestudio "${CRATE:?}"
+```
+
+### 8. develop へ戻す
 
 `main` を `develop` へマージします。パッチリリースの後は、`develop` が先へ進んだ箇所で衝突します。`develop` のバージョンと `Unreleased` の見出しを残し、パッチの節をその下に置いてください。ブロックは切り離した `origin/develop` の上でマージするので、ほかのチェックアウトがどのブランチにあっても worktree で実行できます。衝突したらそこで止まります。解決して `git commit` し、ブロックの 2 つの `git push` を実行してください。次のバージョンが決まったら、手順 2 と同じやり方で `develop` に `## [X.Y.Z] - Unreleased` の見出しを立てます。
 
@@ -418,8 +468,8 @@ git switch --detach origin/develop &&
 
 1. **手順 1〜3 を、プルリクエストなしで。** 手順 1 のパッチのブロックで、その系統の最新のタグから `release/X.Y` を切ります。修正をコミットするか cherry-pick し、手順 2 のとおりにバージョンを設定して CHANGELOG の節に日付を入れ、手順 3 を `gh pr create` を除いて実行します。この系統のものは `main` に入れません。
 2. **タグはブランチに打つ。** 手順 3 の run が通ったら、最初のブロックで `release/X.Y` の先頭にタグを打ちます。
-3. **ビルドして、古い系統として公開する。** `scripts/release-channel.sh` がこのリリースを `old` と判定します。下書きは pre-release にならず、自動生成のノートはその系統の 1 つ前の正式版から比べ、`pages.yml` は何もデプロイしません。公開は Releases ページではなく最後のブロックで行います。ページの既定のままだと Latest になるためです。
-4. **develop へは戻さない。** `develop` にも要る修正なら cherry-pick します。最後のブロックが `release/X.Y` を消します。
+3. **ビルドして、古い系統として公開する。** `scripts/release-channel.sh` がこのリリースを `old` と判定します。下書きは pre-release にならず、自動生成のノートはその系統の 1 つ前の正式版から比べ、`pages.yml` は何もデプロイしません。公開は Releases ページではなく 3 つ目のブロックで行います。ページの既定のままだと Latest になるためです。続く 4 つ目のブロックが、手順 7 と同じようにクレートを、ブランチ上のタグから公開します。crates.io の既定のバージョンは新しい系統のままです。
+4. **develop へは戻さない。** `develop` にも要る修正なら cherry-pick します。3 つ目のブロックが `release/X.Y` を消します。
 
 ```bash
 BRANCH=$(git branch --show-current | grep '^release/')
@@ -443,6 +493,12 @@ gh release edit "${TAG:?}" --draft=false --latest=false &&
   git push origin --delete "${BRANCH:?}"
 ```
 
+```bash
+git describe --exact-match --tags --match 'v[0-9]*' HEAD &&                                    # ブランチの先頭が載っているタグ
+  read -rs CARGO_REGISTRY_TOKEN && export CARGO_REGISTRY_TOKEN="${CARGO_REGISTRY_TOKEN:?}" &&   # トークンを貼り付ける
+  cargo publish --workspace --locked
+```
+
 ## リリースの取り消し
 
 Release を公開するまでは取り消せます。run が下書きを作っていれば、先にそれを消します。
@@ -461,7 +517,7 @@ TAG=$(git describe --exact-match --tags --match 'v[0-9]*' origin/main)
 git push origin ":refs/tags/${TAG:?}" && git tag -d "${TAG:?}"
 ```
 
-**公開した後のタグとアセットは恒久的です。** 6 つの Player がそのタグで取得するので、修正は新しいパッチバージョンで出します。
+**公開した後のタグとアセットは恒久的です。** 6 つの Player がそのタグで取得するので、修正は新しいパッチバージョンで出します。クレートも同じで、crates.io はバージョンを差し替えも削除もしません。できるのは yank だけです。スコープ `yank` のトークンで `cargo yank --version <version> <crate>` を実行すると、新しい lockfile はそのバージョンを選ばなくなり、すでに選んでいる lockfile はそのまま使えます。
 
 ## パッケージングの再実行
 
