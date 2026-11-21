@@ -24,6 +24,48 @@ extra:
       link: https://x.com/spritestudio
       name: X の SpriteStudio
 
+plugins:
+  - search
+  - redirects
+  - llmstxt:
+      full_output: llms-full.txt
+      markdown_description: |
+        Player 移植ガイドです。`libssruntime` を使って、任意のエンジンに SpriteStudio の Player を実装する方法を説明します。最初に `10_introduction/20_limitations.md` と `20_design/30_api_conventions.md` を読んでください。どちらも Player の設計を左右します。`ssruntime` の Rust API は、サイトのルートの `api/ssruntime/` にある rustdoc の HTML で、このファイルには含まれません。変換 CLI の `ssconverter-cli` は `cli/README.md`（https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/cli/README.md）に書かれていて、プラットフォームごとに固定のダウンロード URL があります。
+      sections:
+        はじめに:
+          - README.md: "Player を実装する段階の順序と、各段階で確かめる `tests/overall/overall.sspj` のアニメーション、ページが必須と推奨を書き分ける約束、全ページの目次。"
+          - 10_introduction/10_overview.md: "このガイドの読者、Brain（`libssruntime`）が計算するものと Player が行うこと（読み込み・描画・イベント・音）の分担、WebAssembly のバインディングと C-API の対応。"
+          - 10_introduction/20_limitations.md: "Player の設計に影響する制約。テキストと音は Player の実装、SIMD 版と非 SIMD 版の wasm、独立再生と逆再生・シーク、シークで飛ばすイベント、ssab を検証しない Brain、borrow した ssab のバイト列の保持、埋め込みモードの ssab、ミキシングの制約、逆方向の再生中の音、`partTransform` で追従できないボーンにバインドしたメッシュパーツ。"
+          - 10_introduction/30_glossary.md: "ファイルの種類（`sspj`・`ssae`・`ssce`・`ssee`・`ssse`・`ssqe`・charmap・`ssab`・`ssqb`）、SpriteStudio の概念、Brain と Player の用語（Resource・Context・FrameData・DrawBatch・スロット・tick・トラック・オーバーライド・UI 状態）の定義。"
+        設計:
+          - 20_design/10_preparation.md: "対応できるかの確認（Rust のビルド対象、C 関数または WebAssembly を呼べるか、FlatBuffers のコード生成の対応言語）、`flatc` で生成したコードと `libssruntime` を入れた空のプロジェクト、`ssconverter-cli` で `tests/overall/overall.sspj` を変換したテスト用の ssab。"
+          - 20_design/20_architecture.md: "実装の前に決めること。静的ライブラリ・動的ライブラリ・WebAssembly のどれで組み込むか、ssab のメモリを borrow と copy のどちらで持つか（WebAssembly での持ち方も）、クラス構成と既存の Player での分け方、ECS のエンジン、直接描画とシーングラフ、Y-Up と Y-Down などの座標系の設定、参照モードと埋め込みモードの ssab、最初に対応する機能の範囲。"
+          - 20_design/30_api_conventions.md: "すべての Player で揃える公開 API の規則。オーバーライドのメソッドの引数の順、パーツ名とインデックス、状態・イベント・ミキシングの標準の語幹、tick の単位、オーバーライドとパーツ追従の既定値、失敗の伝え方、`setAnimation` と `play` を分けること、直前の tick のフレームから答えるパーツの読み出し、規約から外れるときの書き方。"
+          - 20_design/40_no_std_integration.md: "`libssruntime` を自分でビルドする手順。feature の一覧と、静的ライブラリ・wasm-bindgen・JavaScript に依存しない WebAssembly の cargo コマンド、libc の `malloc` かエンジンのアロケータ（`custom_alloc`）の使い方、`std` と `no_std` の違い（数学関数・パニック・グローバルアロケータ）。"
+        基本の再生:
+          - 30_core/10_initialization.md: "ssab から Resource と Context を作る手順と破棄の順、borrow と copy、ssab を渡す前の検証（ファイル識別子 `SSAB`、FlatBuffers の Verifier）、参照モードと埋め込みモードで `cellmaps()` と `external_textures()` を 1 つのマップに読み込むこと、ログのコールバックと `ss_runtime_get_last_error`、アニメーション名の一覧。"
+          - 30_core/20_playback_control.md: "1 フレームごとの `ss_runtime_update` と `ss_runtime_get_frame_data` の流れ、セットアップと再生とループ回数、セットアップが戻す設定、`play`・`pause`・`resume`・`stop` とシーク、速度・フレームレート・再生方向・再生区間、サブフレームと受け付けるフレーム番号、ループと終了（`looped`・`finished`）の検知。"
+          - 30_core/30_events.md: "`ss_runtime_update` の後にユーザーデータ・シグナル・オーディオのイベントを読む手順（`AnimationData.events()` のインデックス）、イベントが報告されるフレーム、開始フレームのイベント、シークで飛ばしたイベント、走らせなかった tick、複数のアニメーションを重ねているときのイベント。"
+          - 30_core/40_render_loop.md: "フレームの描き方。SoA バッファ（ワールド行列・ローカル頂点・UV・セル情報）、鏡像のワールド行列、DrawBatch とその種類、バインドするテクスチャ、RenderMode の `Direct` と `SceneGraph`、性能（コピーしない読み出し、マルチスレッドの描画と破棄、FrameData のベクタの直接読み、続く DrawBatch をまとめて描くこと）。"
+        パーツ:
+          - 40_parts/10_parts_color.md: "頂点ごとのパーツカラー。描画先との合成との違い、4 種類の合成（Mix・Mul・Add・Sub）、FrameData の `parts_color` の読み方（`rgba.a` に不透明度が入っている）、通常のパーツ・メッシュ・シェイプごとの規則、パーツカラーが無いパーツ、シェーダの例。"
+          - 40_parts/20_mesh.md: "メッシュパーツの読み方。ワールド座標の頂点・UV・インデックスの SoA バッファを累積和のオフセットでパーツごとに切り出す手順、フレームをまたいで変わらないもの、`SceneGraph` モードで空になること。"
+          - 40_parts/30_special_parts.md: "9 スライスとシェイプの頂点バッファ（Stretch と Tile、三角形ファンの頂点）と、テキストパーツ（Brain が渡す DrawBatch、ssab に入っているもの、ビットマップフォントのレイアウト、アウトラインフォント）。"
+          - 40_parts/40_mask.md: "マスクとクリッピングの違い、描画の優先度で決まる効く範囲、`mask_influence`、極性とカットアウトの閾値、インスタンスを通した合成とクリッピングの持ち越し、FrameData から読むもの、ステンシルでの実装（書き込み方ごとのビットのプレーン）、ステンシルの無いエンジンでの被覆ビットマップ。"
+          - 40_parts/50_instance.md: "インスタンスパーツの子アニメーション。子の Context とスロットの用意、`ss_instance_slot_step` で進めること、独立再生、子に渡すもの、親の変換と不透明度を掛けた描画、再生し直すときのスロットのリセット、子の終了とループ。"
+          - 40_parts/60_effect.md: "パーティクルのエフェクト。乱数の種を渡したスロットの作成、`ss_effect_slot_step` の引数、`EffectDrawPlan`（コマンド・頂点・UV・色）の描き方、コマンドをまとめてドローコールを減らすこと。"
+        機能:
+          - 50_features/10_animation_mixing.md: "複数のアニメーションの同時再生。トラック、`alpha` と `weight` の使い分け、加算のトラック、`ss_runtime_crossfade` での切り替え、同じトラックでの混ぜ方、track 0 と同じ位相からの開始、重ねたソースのイベント、C-API と WebAssembly の呼び出し、制約、性能。"
+          - 50_features/20_part_overrides.md: "パーツのカラー・セル・表示の実行時の上書き。フレームの計算のどこで効くか、優先度モード（`OverwriteOnNextKeyframe`・`HoldUntilNextAnimation`・`Permanent`）、何が上書きを消すか、フレーム番号でキャッシュしているときや `Direct` モードで `cells` が無いときに効いていないように見える理由。"
+          - 50_features/30_external_resources.md: "テクスチャのキー（`texture_hash`）、描画ループだけで描ける作画のテクスチャ変更（`TCHG`）、衣装替えや表情の差分のための実行時のテクスチャの差し替え（共有するテクスチャの表も）、インスタンスパーツが参照する別の ssab の読み込み。"
+          - 50_features/40_sequence.md: "`ssqb` のシーケンスの再生。テーブルの中身（`type`・項目・`repeat_count`）と、`ss_runtime_is_finished` の立ち上がりで次の項目へ進める手順。"
+          - 50_features/50_audio.md: "`audios` イベントからの音の再生。事前の読み込み、`sound_list_name_hash` と `sound_name_hash` での検索、逆方向の再生中は鳴らさないこと、`loop_num` は再生回数であること、シークで鳴らさないこと、鳴っている音の寿命を誰が持つか。"
+          - 50_features/60_editor_integration.md: "エンジンのエディタで、非同期の `libssconverter` の C-API（`ss_converter_create`）を使って sspj を変換する方法。ディレクトリの走査とまとめた変換、`ss_converter_abort` でのキャンセル、`try` / `finally` での後始末、インポートプラグインなどのエディタの拡張。"
+          - 50_features/70_placement.md: "ホストがレイアウトした箱にアニメーションを収める方法。`fit`（`contain`・`cover`・`none`）、`align`、`frame`、`offset`、`scale`、反転、作画のキャンバスとピボットから箱を取ること、計算、座標の空間。"
+          - 50_features/80_ui_integration.md: "アニメーションをボタンにする方法。`hitTestPart` とパーツの輪郭、ラベルの区間で再生する UI 状態（`normal`・`hover`・`pressed`・`disabled`・`focused`）、選択状態、reduced motion、読み上げの既定、ホストごとの違い。"
+        トラブルシューティング:
+          - 60_troubleshooting/10_troubleshooting.md: "症状から原因と解説のページを引く表、名前のハッシュが合わないとき、MSVC のリンクエラー（`LNK2019`・`LNK2005`）と macOS の `ld` のシンボルの重複。"
+
 nav:
   - 🏠 ホーム: README.md
   - 🚀 はじめに:
