@@ -24,6 +24,54 @@ extra:
       link: https://x.com/spritestudio
       name: SpriteStudio on X
 
+plugins:
+  - search
+  - redirects
+  - llmstxt:
+      full_output: llms-full.txt
+      markdown_description: |
+        Player Porting Guide: how to implement a SpriteStudio player for any engine on top of
+        `libssruntime`. Read `10_introduction/20_limitations.md` and `20_design/30_api_conventions.md`
+        first, since both shape a player's design. The Rust API of `ssruntime` is rustdoc HTML at
+        `api/ssruntime/` under the site root; it is not part of this file. The converter CLI,
+        `ssconverter-cli`, is documented in `cli/README.md`
+        (https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/cli/README.md), with a fixed
+        download URL per platform.
+      sections:
+        Introduction:
+          - README.md: "The order to implement a player in, each stage checked against an animation of `tests/overall/overall.sspj`, how the pages mark what a player must do and what it may choose, and a table of every page."
+          - 10_introduction/10_overview.md: "Who the guide is for, what the Brain (`libssruntime`) computes and what the Player must do (loading, drawing, events, sound), and how the WebAssembly bindings map onto the C-API."
+          - 10_introduction/20_limitations.md: "Constraints that shape a player: text and sound are the Player's job, SIMD and non-SIMD wasm builds, independent playback under reverse playback and seeking, seeks skipping events, an ssab the Brain does not validate, borrowed ssab bytes, embedded-mode ssabs, animation mixing limits, no audio in reverse, and skinned mesh parts that `partTransform` does not follow."
+          - 10_introduction/30_glossary.md: "Definitions of the file types (`sspj`, `ssae`, `ssce`, `ssee`, `ssse`, `ssqe`, charmap, `ssab`, `ssqb`), SpriteStudio concepts, and the Brain and Player terms (Resource, Context, FrameData, DrawBatch, slot, tick, track, override, UI state)."
+        Design:
+          - 20_design/10_preparation.md: "Checking that Rust can build for your platform, that your language can call C or WebAssembly and that FlatBuffers supports it; an empty project with `flatc` output and `libssruntime`; converting `tests/overall/overall.sspj` into a test ssab with `ssconverter-cli`."
+          - 20_design/20_architecture.md: "Decisions to make before implementing: static, dynamic or WebAssembly library, borrow or copy for ssab memory (and holding it in WebAssembly), class structure and how existing Players split it, ECS engines, direct drawing or scene graph, Y-Up or Y-Down coordinate settings, reference or embedded ssabs, and which features to support first."
+          - 20_design/30_api_conventions.md: "The rules every Player's public API shares: argument order of the override methods, part name or index, standard stems for state, events and animation mixing, tick units, defaults for overrides and part following, how failures are reported, `setAnimation` apart from `play`, reading a part from the last tick's frame, and how to depart from the rules."
+          - 20_design/40_no_std_integration.md: "Building `libssruntime` yourself: the feature list and the cargo commands for a static library, wasm-bindgen and JavaScript-free WebAssembly, libc's `malloc` or the engine's allocator through `custom_alloc`, and how `std` and `no_std` builds differ in math functions, panics and the global allocator."
+        Core Playback:
+          - 30_core/10_initialization.md: "Creating a Resource and a Context from an ssab and destroying them, borrow or copy, validating an ssab before passing it (the `SSAB` file identifier, the FlatBuffers Verifier), loading `cellmaps()` and `external_textures()` into one map for reference and embedded ssabs, the log callback and `ss_runtime_get_last_error`, and listing animation names."
+          - 30_core/20_playback_control.md: "The per-frame `ss_runtime_update` and `ss_runtime_get_frame_data` flow, setup, play and the loop count, what setup resets, `play`, `pause`, `resume`, `stop` and seeking, speed, frame rate, playback direction and section, sub-frames and the frame numbers accepted, and detecting `looped` and `finished`."
+          - 30_core/30_events.md: "Reading user data, signal and audio events after `ss_runtime_update` (indices into `AnimationData.events()`), which frames are reported, events on the start frame, events skipped by a seek, ticks the Player does not run, and events from layered animations."
+          - 30_core/40_render_loop.md: "Drawing a frame: the SoA buffers (world matrices, local vertices, UVs, cell info), mirrored world matrices, DrawBatch and its kinds, the texture to bind, RenderMode `Direct` or `SceneGraph`, and performance: reading without copying, multi-threaded drawing and destruction, reading FrameData vectors directly, drawing consecutive DrawBatches as one."
+        Parts:
+          - 40_parts/10_parts_color.md: "Per-vertex parts color: how it differs from the blend with the render target, the four blend types (Mix, Mul, Add, Sub), reading `parts_color` from FrameData (`rgba.a` already carries the opacity), the rules for normal, mesh and shape parts, parts without a parts color, and a shader example."
+          - 40_parts/20_mesh.md: "Reading mesh parts: the world-space vertex, UV and index SoA buffers sliced per part by prefix-sum offsets, which of them stay fixed across frames, and why they are empty in `SceneGraph` mode."
+          - 40_parts/30_special_parts.md: "The 9-slice and shape vertex buffers (Stretch and Tile fill, triangle-fan shape vertices) and text parts: the DrawBatch the Brain passes, what the ssab holds, bitmap-font layout, and outline fonts."
+          - 40_parts/40_mask.md: "How mask and clipping differ, the parts a mask reaches by draw priority, `mask_influence`, polarity and the cutout threshold, composing masks through instances and carrying clipping out of them, what to read from FrameData, the stencil implementation (separate bit planes per write op), and a coverage bitmap for engines without a stencil."
+          - 40_parts/50_instance.md: "Child animations of instance parts: preparing a child Context and slot, advancing it with `ss_instance_slot_step`, independent playback, what to pass the child, drawing it with the parent's transform and opacity, resetting slots on restart, and the child ending or looping."
+          - 40_parts/60_effect.md: "Particle effects: creating an effect slot with a seed, the arguments of `ss_effect_slot_step`, drawing the `EffectDrawPlan` (commands, vertices, UVs, colors), and merging commands to cut draw calls."
+        Features:
+          - 50_features/10_animation_mixing.md: "Playing several animations at once: tracks, `alpha` against `weight`, additive tracks, switching with `ss_runtime_crossfade`, mixing animations on one track, starting in phase with track 0, events from layered sources, the C-API and WebAssembly calls, constraints, and performance."
+          - 50_features/20_part_overrides.md: "Overriding a part's color, cell or visibility at runtime: where in a frame's computation overrides apply, the priority modes (`OverwriteOnNextKeyframe`, `HoldUntilNextAnimation`, `Permanent`), what clears them, and why they look ineffective when frames are cached by frame number or `Direct` mode has no `cells`."
+          - 50_features/30_external_resources.md: "Texture keys (`texture_hash`), the authored texture change (`TCHG`) that the render loop already handles, replacing textures at runtime for costumes and expressions (including shared texture tables), and loading the other ssab that an instance part references."
+          - 50_features/40_sequence.md: "Playing an `ssqb` sequence: what its tables hold (`type`, items, `repeat_count`) and moving to the next item on the rising edge of `ss_runtime_is_finished`."
+          - 50_features/50_audio.md: "Playing sound from `audios` events: loading ahead, finding the sound by `sound_list_name_hash` and `sound_name_hash`, no sound in reverse, `loop_num` as a play count, no sound on seek, and who owns the lifetime of a playing sound."
+          - 50_features/60_editor_integration.md: "Converting an sspj in an engine's editor with the asynchronous `libssconverter` C-API (`ss_converter_create`): scanning a directory and converting in batch, cancelling with `ss_converter_abort`, cleaning up in `try` / `finally`, and editor extensions such as import plugins."
+          - 50_features/70_placement.md: "Fitting an animation into a box the host laid out: `fit` (`contain`, `cover`, `none`), `align`, `frame`, `offset`, `scale` and flips, taking the box from the authored canvas and pivot, the arithmetic, and the coordinate space."
+          - 50_features/80_ui_integration.md: "Using an animation as a button: `hitTestPart` and part outlines, UI states (`normal`, `hover`, `pressed`, `disabled`, `focused`) played from label sections, the selected state, reduced motion, the accessibility default, and differences between hosts."
+        Troubleshooting:
+          - 60_troubleshooting/10_troubleshooting.md: "A table from symptom to cause and the page that explains it, name hashes that do not match, and MSVC link errors (`LNK2019`, `LNK2005`) and macOS `ld` duplicate symbols."
+
 nav:
   - 🏠 Home: README.md
   - 🚀 Introduction:
