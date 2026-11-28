@@ -151,7 +151,7 @@ Values not in the SoA buffers, such as **`parts`** (part state) and **`parts_col
 - **C++**: FlatBuffers structs are packed contiguously, so you can treat the start of the vector as an array. The accessor cost is small to begin with, but reading directly is faster on frequently used paths.
 
 > [!CAUTION]
-> **"Zero copy", pointing the FlatBuffers `ByteBuffer` at native memory, does not solve this (it is slower instead).** What is heavy is not the copy but the per-element accessors themselves.
+> **"Zero copy", pointing the FlatBuffers `ByteBuffer` at native memory, does not solve this.** What is heavy is not the copy but the per-element accessors themselves. Skipping the copy still leaves the accessor's cost on every value it reads (in the Unity Player it was sometimes slower instead, when few animations were playing).
 
 A structure for direct reading must match the FlatBuffers struct layout exactly (alignment, padding, little endian). So that you notice if the layout drifts when you regenerate from the `.fbs`, we recommend adding a check that **compares, at startup, the values read through the generated accessors with the values read directly, for every field**. Comparing `sizeof` alone misses fields that swapped order while the size stayed the same.
 
